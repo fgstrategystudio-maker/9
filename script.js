@@ -17,7 +17,21 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   nav.querySelectorAll("a").forEach(function (link) {
-    link.addEventListener("click", closeMenu);
+    if (!link.classList.contains("nav-dropdown-toggle")) {
+      link.addEventListener("click", closeMenu);
+    }
+  });
+
+  // Dropdown mobile toggle
+  nav.querySelectorAll(".has-dropdown").forEach(function (item) {
+    const toggle = item.querySelector(".nav-dropdown-toggle");
+    if (!toggle) return;
+    toggle.addEventListener("click", function (e) {
+      if (window.innerWidth <= 680) {
+        e.preventDefault();
+        item.classList.toggle("is-open");
+      }
+    });
   });
 
   document.addEventListener("click", function (event) {

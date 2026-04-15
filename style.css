@@ -277,3 +277,43 @@ h1{font-size:56px;line-height:1.03;letter-spacing:-.04em;margin:0 0 18px;color:v
 
 .lead-form-copy{padding-top:0;align-self:start}
 .lead-form-wrap.card{padding-top:20px;padding-bottom:20px}
+
+/* === Dropdown nav === */
+.has-dropdown{position:relative}
+.nav-dropdown-toggle{display:flex;align-items:center;gap:4px;cursor:pointer;color:var(--muted);font-size:14px;white-space:nowrap}
+.nav-dropdown-toggle:hover{color:var(--blue)}
+.nav-caret{font-size:10px;transition:transform .2s ease;display:inline-block;line-height:1}
+.has-dropdown:hover .nav-caret,.has-dropdown.is-open .nav-caret{transform:rotate(180deg)}
+.nav-dropdown{display:none;position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);min-width:190px;background:rgba(255,255,255,.98);border:1px solid var(--line);border-radius:16px;box-shadow:0 16px 36px rgba(22,39,74,.12);padding:8px;z-index:40}
+.has-dropdown:hover .nav-dropdown,.has-dropdown.is-open .nav-dropdown{display:flex;flex-direction:column}
+.nav-dropdown a{display:block;padding:10px 14px;font-size:14px;color:var(--text);border-radius:10px;white-space:nowrap}
+.nav-dropdown a:hover{background:var(--surface-2);color:var(--blue)}
+
+/* === Logo chip testo (homepage, senza base64) === */
+.logo-chip-text{flex:0 0 200px;min-height:96px;padding:18px;border-radius:22px;border:1px solid var(--line);background:linear-gradient(180deg,#ffffff 0%,#f7f9ff 100%);box-shadow:0 8px 22px rgba(22,39,74,.04);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:6px;text-decoration:none}
+.logo-chip-text strong{font-size:15px;line-height:1.2;color:var(--blue);font-weight:700}
+.logo-chip-text span{font-size:12px;color:var(--muted)}
+
+/* === Riduzione testo mobile ~30% === */
+@media (max-width:680px){
+  .hero .lead{display:none}
+  .service-card>p{display:none}
+  .project-col p{display:none}
+  .contact-box-sub{display:none}
+  .page-hero .lead{display:none}
+  .logo-marquee-copy{display:none}
+  .feature p{display:none}
+  .signal-item span,.output-item span{display:none}
+  .logo-chip-text{flex-basis:160px;min-height:80px}
+}
+
+/* === Dropdown mobile === */
+@media (max-width:680px){
+  .has-dropdown{width:100%;border-top:1px solid var(--line)}
+  .has-dropdown + a{border-top:1px solid var(--line)}
+  .nav-dropdown-toggle{width:100%;padding:12px 14px;font-size:14px;color:var(--text);justify-content:space-between}
+  .nav-dropdown{position:static;transform:none;box-shadow:none;border:none;border-radius:0;background:var(--surface-2);padding:0;min-width:0}
+  .has-dropdown:hover .nav-dropdown{display:none}
+  .has-dropdown.is-open .nav-dropdown{display:flex;flex-direction:column}
+  .nav-dropdown a{border-radius:0;padding:10px 14px 10px 28px;font-size:13px;border-top:1px solid var(--line)}
+}
