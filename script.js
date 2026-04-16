@@ -72,8 +72,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
   var els = document.querySelectorAll(revealSelectors);
   els.forEach(function (el) {
-    // Non applicare nell'hero (già visibile)
+    // Non applicare nell'hero e nei caroselli orizzontali (evita movimento verticale su mobile)
     if (el.closest(".hero")) return;
+    if (el.closest(".services-grid") || el.closest(".projects") ||
+        el.closest("#blogHomeTrack") || el.closest(".logo-marquee")) return;
     el.classList.add("reveal");
     // Stagger per elementi fratelli nella stessa griglia
     var parent = el.parentNode;

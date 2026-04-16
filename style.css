@@ -462,3 +462,14 @@ h1{font-size:56px;line-height:1.03;letter-spacing:-.04em;margin:0 0 18px;color:v
 
 /* ── Footer dark ── */
 .footer{background:var(--bg-dark) !important;color:rgba(255,255,255,.4) !important;border-top:1px solid rgba(255,255,255,.07) !important}
+
+/* ── Hero photo: sfumato nel dark hero ── */
+.hero .hero-photo{background:none !important;border:none !important;padding:0 !important;box-shadow:none !important;position:relative !important}
+.hero .hero-photo img{border-radius:22px !important;display:block}
+.hero .hero-photo::after{content:'';position:absolute;bottom:0;left:0;right:0;height:38%;background:linear-gradient(to top,var(--bg-dark) 0%,transparent 100%);pointer-events:none;z-index:1;border-radius:0 0 22px 22px}
+
+/* ── Fix scroll verticale mobile nei caroselli ── */
+@media(max-width:680px){
+  .services-grid,.projects{touch-action:pan-x;overscroll-behavior-x:contain}
+  .logo-marquee{overscroll-behavior-x:contain}
+}
