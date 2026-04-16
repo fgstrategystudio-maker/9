@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Concept B — Editorial Bianco Puro</title>
+<style>
+/* ── CONCEPT B: Bianco puro, tipografia editoriale bold, accenti blu elettrico ── */
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --blue:#0032ff;
+  --blue-dk:#001bcc;
+  --text:#0a0a0a;
+  --muted:#6b6b6b;
+  --line:#ebebeb;
+  --bg:#fff;
+  --soft:#f5f5f7;
+}
+body{font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+
+/* NAV */
+nav{padding:0 60px;height:64px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);z-index:10}
+.nav-logo{font-weight:800;font-size:17px;letter-spacing:-.03em;color:var(--text)}
+.nav-links{display:flex;gap:36px}
+.nav-links a{color:var(--muted);text-decoration:none;font-size:14px;font-weight:500}
+.nav-links a:hover{color:var(--text)}
+.nav-cta{background:var(--text);color:#fff;padding:10px 22px;border-radius:6px;font-size:13px;font-weight:700;text-decoration:none;letter-spacing:.01em}
+
+/* HERO */
+.hero{padding:100px 60px 80px;border-bottom:1px solid var(--line);display:grid;grid-template-columns:1fr 420px;gap:80px;align-items:end}
+.hero-eyebrow{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--blue);font-weight:700;margin-bottom:28px}
+.hero h1{font-size:72px;line-height:1.0;font-weight:900;letter-spacing:-.045em;color:var(--text);margin-bottom:32px}
+.hero h1 span{color:var(--blue)}
+.hero-lead{font-size:18px;color:var(--muted);line-height:1.6;margin-bottom:40px;max-width:480px}
+.hero-btns{display:flex;gap:12px;align-items:center}
+.btn-fill{background:var(--blue);color:#fff;padding:14px 28px;border-radius:8px;font-size:15px;font-weight:700;text-decoration:none}
+.btn-outline{color:var(--blue);font-size:15px;font-weight:600;text-decoration:none;display:flex;align-items:center;gap:6px}
+.hero-aside{background:var(--soft);border-radius:20px;padding:40px;border:1px solid var(--line)}
+.metric{padding:20px 0;border-bottom:1px solid var(--line)}
+.metric:last-child{border-bottom:none}
+.metric-n{font-size:42px;font-weight:900;letter-spacing:-.04em;color:var(--text)}
+.metric-n span{color:var(--blue)}
+.metric-l{font-size:13px;color:var(--muted);margin-top:4px}
+
+/* SERVICES */
+.services{padding:80px 60px;background:var(--soft)}
+.tag{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--blue);font-weight:700;margin-bottom:12px}
+.section-h{font-size:48px;font-weight:900;letter-spacing:-.04em;margin-bottom:56px;line-height:1.05}
+.svc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:2px}
+.svc{background:#fff;padding:36px 28px;transition:background .15s}
+.svc:first-child{border-radius:16px 0 0 16px}
+.svc:last-child{border-radius:0 16px 16px 0}
+.svc:hover{background:var(--blue)}
+.svc:hover h3,.svc:hover p,.svc:hover .svc-num{color:#fff}
+.svc-num{font-size:12px;letter-spacing:.12em;font-weight:700;color:var(--muted);margin-bottom:20px;text-transform:uppercase;transition:color .15s}
+.svc h3{font-size:24px;font-weight:800;letter-spacing:-.02em;margin-bottom:12px;color:var(--text);transition:color .15s}
+.svc p{font-size:14px;color:var(--muted);line-height:1.6;transition:color .15s}
+
+/* STRIP */
+.strip{background:var(--blue);padding:72px 60px;display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center}
+.strip h2{font-size:48px;font-weight:900;color:#fff;letter-spacing:-.04em;line-height:1.05}
+.strip p{font-size:17px;color:rgba(255,255,255,.7);line-height:1.7}
+
+/* CONCEPT NOTE */
+.concept-note{position:fixed;bottom:16px;right:16px;background:var(--blue);color:#fff;padding:10px 18px;border-radius:999px;font-size:13px;font-weight:600;box-shadow:0 4px 20px rgba(0,50,255,.3)}
+</style>
+</head>
+<body>
+
+<nav>
+  <span class="nav-logo">Francesco Gizzi</span>
+  <div class="nav-links">
+    <a href="#">Chi sono</a>
+    <a href="#">Servizi</a>
+    <a href="#">Progetti</a>
+    <a href="#">Blog</a>
+  </div>
+  <a class="nav-cta" href="#">Iniziamo Ora</a>
+</nav>
+
+<section class="hero">
+  <div>
+    <p class="hero-eyebrow">Consulenza · Marketing · Data · Sales</p>
+    <h1>Faccio crescere le aziende <span>sul serio.</span></h1>
+    <p class="hero-lead">Studio ed analizzo il contesto, definisco le priorità e costruisco sistemi di crescita più chiari, misurabili e sostenibili.</p>
+    <div class="hero-btns">
+      <a class="btn-fill" href="#">Iniziamo Ora</a>
+      <a class="btn-outline" href="#">Vedi i progetti →</a>
+    </div>
+  </div>
+  <aside class="hero-aside">
+    <div class="metric"><div class="metric-n">+<span>18</span></div><div class="metric-l">progetti supportati nel tempo</div></div>
+    <div class="metric"><div class="metric-n"><span>15</span>+</div><div class="metric-l">settori</div></div>
+    <div class="metric"><div class="metric-n"><span>13</span>+</div><div class="metric-l">anni di esperienza</div></div>
+  </aside>
+</section>
+
+<section class="services">
+  <p class="tag">Cosa faccio</p>
+  <h2 class="section-h">Aree di lavoro supportate</h2>
+  <div class="svc-grid">
+    <div class="svc"><p class="svc-num">01 — Marketing</p><h3>Marketing</h3><p>Posizionamento, funnel, acquisizione, contenuti, performance e ottimizzazione.</p></div>
+    <div class="svc"><p class="svc-num">02 — Data</p><h3>Data</h3><p>Tracking, KPI, dashboard e reportistica per decisioni meno istintive e più utili.</p></div>
+    <div class="svc"><p class="svc-num">03 — Sales</p><h3>Sales</h3><p>Pipeline, conversione, processo commerciale e business development.</p></div>
+    <div class="svc"><p class="svc-num">04 — Strategy</p><h3>Strategy</h3><p>Priorità, roadmap, allineamento tra funzioni e direzione strategica.</p></div>
+  </div>
+</section>
+
+<div class="strip">
+  <h2>Consulenza strategica ed operativa, con mentalità imprenditoriale.</h2>
+  <p>Con un forte background tech e manageriale, non entro per fare una campagna isolata o sistemare un solo canale. Entro per capire lo storico, leggere i numeri, scegliere le priorità e costruire un sistema di crescita.</p>
+</div>
+
+<div class="concept-note">Concept B — Editorial Bold</div>
+</body>
+</html>

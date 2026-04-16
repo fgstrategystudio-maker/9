@@ -61,6 +61,112 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 
+// ── 1. Scroll reveal ──
+document.addEventListener("DOMContentLoaded", function () {
+  var revealSelectors = [
+    ".section-title", "section h2", ".page-hero h1", ".page-hero p",
+    ".service-card", ".project-row", ".blog-card", ".compare-card",
+    ".blog-row", ".metrics", ".logo-marquee-header", ".precontact-box",
+    ".lead-form-wrap", ".rich p", ".feature", ".soft-card"
+  ].join(",");
+
+  var els = document.querySelectorAll(revealSelectors);
+  els.forEach(function (el) {
+    // Non applicare nell'hero e nei caroselli orizzontali (evita movimento verticale su mobile)
+    if (el.closest(".hero")) return;
+    if (el.closest(".services-grid") || el.closest(".projects") ||
+        el.closest("#blogHomeTrack") || el.closest(".logo-marquee")) return;
+    el.classList.add("reveal");
+    // Stagger per elementi fratelli nella stessa griglia
+    var parent = el.parentNode;
+    var revealSiblings = Array.from(parent.children).filter(function (c) {
+      return c.classList.contains("reveal");
+    });
+    var idx = revealSiblings.indexOf(el);
+    if (idx > 0) el.style.transitionDelay = (idx * 0.09) + "s";
+  });
+
+  var observer = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add("visible");
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1, rootMargin: "0px 0px -32px 0px" });
+
+  document.querySelectorAll(".reveal").forEach(function (el) {
+    observer.observe(el);
+  });
+});
+
+// ── 2. Counter animato per le metriche ──
+document.addEventListener("DOMContentLoaded", function () {
+  function animateCounter(el) {
+    var raw = el.textContent.trim();
+    var prefix = raw.startsWith("+") ? "+" : "";
+    var suffix = raw.endsWith("+") ? "+" : "";
+    var target = parseInt(raw.replace(/\D/g, ""), 10);
+    if (!target) return;
+    var duration = 1400;
+    var startTs = null;
+    function step(ts) {
+      if (!startTs) startTs = ts;
+      var p = Math.min((ts - startTs) / duration, 1);
+      var eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = prefix + Math.floor(eased * target) + suffix;
+      if (p < 1) requestAnimationFrame(step);
+      else el.textContent = prefix + target + suffix;
+    }
+    requestAnimationFrame(step);
+  }
+
+  var counterObserver = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (entry.isIntersecting) {
+        animateCounter(entry.target);
+        counterObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.6 });
+
+  document.querySelectorAll(".metric-value").forEach(function (el) {
+    counterObserver.observe(el);
+  });
+});
+
+// Pagination dots per caroselli mobile (progetti e servizi)
+document.addEventListener("DOMContentLoaded", function () {
+  function initDots(container, childSelector) {
+    if (!container) return;
+    var cards = container.querySelectorAll(childSelector);
+    if (cards.length < 2) return;
+
+    var wrap = document.createElement("div");
+    wrap.className = "carousel-dots";
+    var dots = [];
+    cards.forEach(function (_, i) {
+      var d = document.createElement("button");
+      d.className = "carousel-dot" + (i === 0 ? " active" : "");
+      d.setAttribute("aria-label", "Elemento " + (i + 1));
+      d.addEventListener("click", function () {
+        container.scrollTo({ left: cards[i].offsetLeft, behavior: "smooth" });
+      });
+      dots.push(d);
+      wrap.appendChild(d);
+    });
+    container.parentNode.insertBefore(wrap, container.nextSibling);
+
+    container.addEventListener("scroll", function () {
+      var cardW = cards[0].offsetWidth + 14;
+      var idx = Math.min(cards.length - 1, Math.round(container.scrollLeft / cardW));
+      dots.forEach(function (d, i) { d.classList.toggle("active", i === idx); });
+    }, { passive: true });
+  }
+
+  initDots(document.querySelector(".projects"), ".project-row");
+  initDots(document.querySelector(".services-grid"), ".service-card");
+});
 
 document.addEventListener("DOMContentLoaded", function () {
   document.querySelectorAll('form').forEach(function (form) {
@@ -69,10 +175,50 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 
+// Logo marquee: auto-scroll JS (funziona su tutti i dispositivi, swipe su mobile)
+document.addEventListener("DOMContentLoaded", function () {
+  var marquee = document.querySelector('.logo-marquee');
+  if (!marquee) return;
+
+  var speed = 1.1; // px per frame (~66px/s a 60fps, simile all'animazione CSS originale)
+  var paused = false;
+
+  function step() {
+    if (!paused) {
+      marquee.scrollLeft += speed;
+      // Loop senza stacco: quando raggiungi la metà (i duplicati), torna all'inizio
+      if (marquee.scrollLeft >= marquee.scrollWidth / 2) {
+        marquee.scrollLeft -= marquee.scrollWidth / 2;
+      }
+    }
+    requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+
+  // Desktop: pausa su hover
+  marquee.addEventListener('mouseenter', function () { paused = true; });
+  marquee.addEventListener('mouseleave', function () { paused = false; });
+
+  // Mobile: pausa su touch, riprende 1s dopo
+  marquee.addEventListener('touchstart', function () { paused = true; }, { passive: true });
+  marquee.addEventListener('touchend', function () {
+    setTimeout(function () { paused = false; }, 1000);
+  }, { passive: true });
+  // Mantieni il loop anche durante lo scroll manuale
+  marquee.addEventListener('scroll', function () {
+    if (marquee.scrollLeft >= marquee.scrollWidth / 2) {
+      marquee.scrollLeft -= marquee.scrollWidth / 2;
+    }
+    if (marquee.scrollLeft < 0) {
+      marquee.scrollLeft += marquee.scrollWidth / 2;
+    }
+  }, { passive: true });
+});
+
 // Blog filtri categoria
 document.addEventListener("DOMContentLoaded", function () {
   const filterBtns = document.querySelectorAll(".filter-btn");
-  const cards = document.querySelectorAll(".blog-card, .blog-featured");
+  const cards = document.querySelectorAll(".blog-card, .blog-featured, .blog-row");
   if (!filterBtns.length) return;
 
   filterBtns.forEach(function (btn) {
@@ -91,33 +237,3 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 
-
-
-document.addEventListener("DOMContentLoaded", function () {
-  document.querySelectorAll('form').forEach(function (form) {
-    const nextInput = form.querySelector('input[data-next-target="grazie"]');
-    if (nextInput) nextInput.value = window.location.origin + '/grazie.html';
-  });
-});
-
-// Blog filtri categoria
-document.addEventListener("DOMContentLoaded", function () {
-  const filterBtns = document.querySelectorAll(".filter-btn");
-  const cards = document.querySelectorAll(".blog-card");
-  if (!filterBtns.length) return;
-
-  filterBtns.forEach(function (btn) {
-    btn.addEventListener("click", function () {
-      filterBtns.forEach(function (b) { b.classList.remove("active"); });
-      btn.classList.add("active");
-      const filter = btn.dataset.filter;
-      cards.forEach(function (card) {
-        if (filter === "tutti" || card.dataset.category === filter) {
-          card.classList.remove("hidden");
-        } else {
-          card.classList.add("hidden");
-        }
-      });
-    });
-  });
-});
