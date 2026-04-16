@@ -69,6 +69,46 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 
+// Logo marquee: auto-scroll JS (funziona su tutti i dispositivi, swipe su mobile)
+document.addEventListener("DOMContentLoaded", function () {
+  var marquee = document.querySelector('.logo-marquee');
+  if (!marquee) return;
+
+  var speed = 1.1; // px per frame (~66px/s a 60fps, simile all'animazione CSS originale)
+  var paused = false;
+
+  function step() {
+    if (!paused) {
+      marquee.scrollLeft += speed;
+      // Loop senza stacco: quando raggiungi la metà (i duplicati), torna all'inizio
+      if (marquee.scrollLeft >= marquee.scrollWidth / 2) {
+        marquee.scrollLeft -= marquee.scrollWidth / 2;
+      }
+    }
+    requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+
+  // Desktop: pausa su hover
+  marquee.addEventListener('mouseenter', function () { paused = true; });
+  marquee.addEventListener('mouseleave', function () { paused = false; });
+
+  // Mobile: pausa su touch, riprende 1s dopo
+  marquee.addEventListener('touchstart', function () { paused = true; }, { passive: true });
+  marquee.addEventListener('touchend', function () {
+    setTimeout(function () { paused = false; }, 1000);
+  }, { passive: true });
+  // Mantieni il loop anche durante lo scroll manuale
+  marquee.addEventListener('scroll', function () {
+    if (marquee.scrollLeft >= marquee.scrollWidth / 2) {
+      marquee.scrollLeft -= marquee.scrollWidth / 2;
+    }
+    if (marquee.scrollLeft < 0) {
+      marquee.scrollLeft += marquee.scrollWidth / 2;
+    }
+  }, { passive: true });
+});
+
 // Blog filtri categoria
 document.addEventListener("DOMContentLoaded", function () {
   const filterBtns = document.querySelectorAll(".filter-btn");

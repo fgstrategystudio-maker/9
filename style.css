@@ -211,9 +211,9 @@ h1{font-size:56px;line-height:1.03;letter-spacing:-.04em;margin:0 0 18px;color:v
 
 .logo-marquee-header{max-width:860px;margin-bottom:18px}
 .logo-marquee-copy{font-size:17px;color:var(--muted)}
-.logo-marquee{overflow:hidden;position:relative}
-.logo-track{display:flex;gap:16px;width:max-content;animation:marquee 42s linear infinite;will-change:transform;padding-bottom:6px}
-.logo-marquee:hover .logo-track{animation-play-state:paused}
+.logo-marquee{overflow-x:auto;overflow-y:hidden;position:relative;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.logo-marquee::-webkit-scrollbar{display:none}
+.logo-track{display:flex;gap:16px;width:max-content;padding-bottom:6px}
 .logo-chip{
   flex:0 0 220px;min-height:182px;padding:20px 18px;border-radius:22px;border:1px solid var(--line);
   background:linear-gradient(180deg,#ffffff 0%,#f7f9ff 100%);
@@ -356,15 +356,14 @@ h1{font-size:56px;line-height:1.03;letter-spacing:-.04em;margin:0 0 18px;color:v
   .nav-dropdown a{border-radius:0;padding:10px 14px 10px 28px;font-size:13px;border-top:1px solid var(--line)}
 }
 
-/* === Mobile touch scroll: loghi e blog home === */
+/* === Mobile: blog home swipe + progetti swipe === */
 @media(max-width:680px){
-  /* Logo: disabilita animazione CSS, abilita swipe touch */
-  .logo-marquee{overflow-x:auto;overflow-y:visible;scroll-behavior:smooth;-webkit-overflow-scrolling:touch;scrollbar-width:none}
-  .logo-marquee::-webkit-scrollbar{display:none}
-  .logo-track{animation:none !important;width:auto}
-  .logo-track .logo-chip:nth-child(n+13){display:none}
   /* Blog home: scroll orizzontale swipe */
   #blogHomeTrack{display:flex;flex-wrap:nowrap;overflow-x:auto;scroll-behavior:smooth;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:14px}
   #blogHomeTrack::-webkit-scrollbar{display:none}
   #blogHomeTrack .blog-card{flex:0 0 270px;min-width:270px;width:270px}
+  /* Progetti: scroll orizzontale swipe (prossimo card peeking) */
+  .projects{display:flex;overflow-x:auto;gap:14px;scroll-behavior:smooth;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:4px}
+  .projects::-webkit-scrollbar{display:none}
+  .projects .project-row{min-width:86vw;width:86vw;flex-shrink:0}
 }
