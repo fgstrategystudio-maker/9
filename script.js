@@ -215,6 +215,48 @@ document.addEventListener("DOMContentLoaded", function () {
   }, { passive: true });
 });
 
+// ── Hero H1 split-text word reveal ──
+document.addEventListener("DOMContentLoaded", function () {
+  var h1 = document.querySelector(".hero h1");
+  if (!h1) return;
+  var words = h1.textContent.trim().split(/\s+/);
+  h1.innerHTML = words.map(function (w, i) {
+    return '<span class="word" style="opacity:0;transform:translateY(14px) scale(.97);transition:opacity .55s cubic-bezier(.22,1,.36,1) ' + (0.08 + i * 0.055) + 's,transform .55s cubic-bezier(.22,1,.36,1) ' + (0.08 + i * 0.055) + 's">' + w + '</span>';
+  }).join(' ');
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      h1.querySelectorAll(".word").forEach(function (w) {
+        w.style.opacity = "1";
+        w.style.transform = "translateY(0) scale(1)";
+      });
+    });
+  });
+});
+
+// ── Magnetic buttons ──
+document.addEventListener("DOMContentLoaded", function () {
+  document.querySelectorAll(".btn.primary").forEach(function (btn) {
+    btn.addEventListener("mousemove", function (e) {
+      var rect = btn.getBoundingClientRect();
+      var x = e.clientX - rect.left - rect.width / 2;
+      var y = e.clientY - rect.top - rect.height / 2;
+      btn.style.transform = "translate(" + (x * 0.22) + "px," + (y * 0.28) + "px)";
+    });
+    btn.addEventListener("mouseleave", function () {
+      btn.style.transform = "";
+    });
+  });
+});
+
+// ── Hero image parallax ──
+document.addEventListener("DOMContentLoaded", function () {
+  var heroPhoto = document.querySelector(".hero .hero-photo");
+  if (!heroPhoto) return;
+  window.addEventListener("scroll", function () {
+    heroPhoto.style.transform = "translateY(" + (window.scrollY * 0.12) + "px)";
+  }, { passive: true });
+});
+
 // Blog filtri categoria
 document.addEventListener("DOMContentLoaded", function () {
   const filterBtns = document.querySelectorAll(".filter-btn");

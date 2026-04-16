@@ -473,3 +473,27 @@ h1{font-size:56px;line-height:1.03;letter-spacing:-.04em;margin:0 0 18px;color:v
   .services-grid,.projects{overscroll-behavior-x:contain}
   .logo-marquee{overscroll-behavior-x:contain}
 }
+
+/* ── Sezione contatti — dark ── */
+#contatti.section{background:var(--bg-dark) !important}
+#contatti .section-title{color:var(--gold) !important}
+#contatti .contact-box-main{color:#fff !important}
+#contatti .contact-box-sub{color:rgba(255,255,255,.52) !important}
+#contatti .lead-form-wrap.card{background:rgba(255,255,255,.04) !important;border-color:rgba(255,255,255,.1) !important;box-shadow:none !important}
+#contatti .form-grid span{color:rgba(255,255,255,.5) !important;letter-spacing:.08em}
+#contatti .form-grid input,
+#contatti .form-grid select,
+#contatti .form-grid textarea{background:rgba(255,255,255,.07) !important;border-color:rgba(255,255,255,.14) !important;color:#fff !important}
+#contatti .form-grid input::placeholder{color:rgba(255,255,255,.25) !important}
+#contatti .form-grid input:focus,
+#contatti .form-grid select:focus,
+#contatti .form-grid textarea:focus{border-color:var(--gold) !important;box-shadow:0 0 0 3px rgba(200,169,110,.14) !important;outline:none}
+#contatti select option{background:var(--bg-dark);color:#fff}
+#contatti .consent span{color:rgba(255,255,255,.42) !important;font-size:13px}
+#contatti .consent input{accent-color:var(--gold)}
+
+/* ── Magnetic button — smooth return ── */
+.btn.primary{transition:transform .35s cubic-bezier(.25,1,.4,1),background .2s,box-shadow .2s !important}
+
+/* ── Word reveal hero ── */
+.hero h1 .word{display:inline-block;will-change:transform,opacity}
