@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Concept A — Dark Hero Premium</title>
+<style>
+/* ── CONCEPT A: Dark hero + minimal bianco + dettagli dorati ── */
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0f1e;
+  --bg2:#f8f9fc;
+  --blue:#0d2261;
+  --accent:#c8a96e;
+  --text:#1a1f2e;
+  --muted:#6b7280;
+  --line:#e5e7eb;
+  --white:#fff;
+  --card:#fff;
+}
+body{font-family:'Helvetica Neue',Arial,sans-serif;background:var(--bg2);color:var(--text)}
+
+/* NAV */
+nav{background:var(--bg);padding:20px 48px;display:flex;justify-content:space-between;align-items:center}
+.nav-logo{color:#fff;font-weight:700;font-size:18px;letter-spacing:-.02em}
+.nav-links{display:flex;gap:32px}
+.nav-links a{color:rgba(255,255,255,.65);text-decoration:none;font-size:14px;letter-spacing:.04em}
+.nav-links a:hover{color:#fff}
+.nav-cta{background:var(--accent);color:#fff;padding:10px 22px;border-radius:8px;font-size:14px;font-weight:600;text-decoration:none}
+
+/* HERO */
+.hero{background:var(--bg);padding:120px 48px 100px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-40%;right:-10%;width:600px;height:600px;background:radial-gradient(circle,rgba(200,169,110,.12) 0%,transparent 70%);pointer-events:none}
+.hero-eyebrow{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);font-weight:600;margin-bottom:24px}
+.hero h1{font-size:64px;line-height:1.06;font-weight:800;color:#fff;max-width:780px;letter-spacing:-.03em;margin-bottom:28px}
+.hero h1 em{font-style:normal;color:var(--accent)}
+.hero p{font-size:19px;color:rgba(255,255,255,.6);max-width:560px;line-height:1.65;margin-bottom:44px}
+.hero-btns{display:flex;gap:14px}
+.btn-primary{background:var(--accent);color:#fff;padding:16px 32px;border-radius:10px;font-weight:700;font-size:15px;text-decoration:none;letter-spacing:.01em}
+.btn-ghost{border:1px solid rgba(255,255,255,.25);color:rgba(255,255,255,.8);padding:16px 32px;border-radius:10px;font-size:15px;text-decoration:none}
+
+/* STATS BAR */
+.stats{background:#111827;padding:32px 48px;display:flex;gap:64px;border-top:1px solid rgba(255,255,255,.06)}
+.stat-n{font-size:36px;font-weight:800;color:var(--accent);letter-spacing:-.02em}
+.stat-l{font-size:13px;color:rgba(255,255,255,.45);margin-top:4px;letter-spacing:.02em}
+
+/* SECTION */
+.section{padding:96px 48px}
+.section-tag{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);font-weight:600;margin-bottom:16px}
+.section h2{font-size:46px;font-weight:800;color:var(--blue);letter-spacing:-.025em;line-height:1.08;max-width:680px;margin-bottom:48px}
+
+/* SERVICE CARDS */
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+.card{background:var(--white);border-radius:20px;padding:36px 28px;border:1px solid var(--line);position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s}
+.card:hover{transform:translateY(-4px);box-shadow:0 20px 48px rgba(13,34,97,.1)}
+.card-accent{position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--accent),var(--blue))}
+.card h3{font-size:22px;font-weight:700;color:var(--blue);margin:20px 0 12px}
+.card p{font-size:14px;color:var(--muted);line-height:1.65;margin-bottom:20px}
+.card-tag{font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--accent);text-transform:uppercase}
+
+/* LABEL */
+.label-band{background:var(--bg);padding:72px 48px;display:flex;align-items:center;gap:64px}
+.label-band h2{font-size:42px;font-weight:800;color:#fff;letter-spacing:-.025em;line-height:1.1;max-width:520px}
+.label-band p{font-size:17px;color:rgba(255,255,255,.55);line-height:1.7;max-width:420px}
+
+/* FOOTER NOTE */
+.concept-note{position:fixed;bottom:16px;right:16px;background:var(--accent);color:#fff;padding:10px 18px;border-radius:999px;font-size:13px;font-weight:600;box-shadow:0 4px 20px rgba(200,169,110,.4)}
+</style>
+</head>
+<body>
+
+<nav>
+  <span class="nav-logo">Francesco Gizzi</span>
+  <div class="nav-links">
+    <a href="#">Chi sono</a>
+    <a href="#">Servizi</a>
+    <a href="#">Progetti</a>
+    <a href="#">Blog</a>
+  </div>
+  <a class="nav-cta" href="#">Iniziamo Ora</a>
+</nav>
+
+<section class="hero">
+  <p class="hero-eyebrow">Marketing · Data · Sales · Strategy</p>
+  <h1>Aiuto aziende a crescere <em>allineando</em> marketing, dati, sales e direzione strategica.</h1>
+  <p>Studio il contesto, definisco le priorità e costruisco sistemi di crescita misurabili e sostenibili.</p>
+  <div class="hero-btns">
+    <a class="btn-primary" href="#">Iniziamo Ora</a>
+    <a class="btn-ghost" href="#">Vedi i progetti</a>
+  </div>
+</section>
+
+<div class="stats">
+  <div><div class="stat-n">+18</div><div class="stat-l">Progetti supportati</div></div>
+  <div><div class="stat-n">15+</div><div class="stat-l">Settori</div></div>
+  <div><div class="stat-n">13+</div><div class="stat-l">Anni di esperienza</div></div>
+</div>
+
+<section class="section" style="background:#fff">
+  <p class="section-tag">Cosa faccio</p>
+  <h2>Aree di lavoro supportate</h2>
+  <div class="cards">
+    <div class="card"><div class="card-accent"></div><div class="card-tag">01</div><h3>Marketing</h3><p>Posizionamento, funnel, acquisizione, contenuti, performance e ottimizzazione.</p></div>
+    <div class="card"><div class="card-accent"></div><div class="card-tag">02</div><h3>Data</h3><p>Tracking, KPI, dashboard e reportistica per decisioni meno istintive e più utili.</p></div>
+    <div class="card"><div class="card-accent"></div><div class="card-tag">03</div><h3>Sales</h3><p>Pipeline, conversione, processo commerciale, materiali sales e business development.</p></div>
+    <div class="card"><div class="card-accent"></div><div class="card-tag">04</div><h3>Strategy</h3><p>Priorità, roadmap, allineamento tra funzioni e direzione strategica della crescita.</p></div>
+  </div>
+</section>
+
+<div class="label-band">
+  <h2>Un approccio consulenziale, ma operativo.</h2>
+  <p>Con un forte background tech e manageriale, non entro per fare una campagna isolata. Entro per capire lo storico, leggere i numeri e costruire un sistema di crescita.</p>
+</div>
+
+<div class="concept-note">Concept A — Dark Premium</div>
+</body>
+</html>
