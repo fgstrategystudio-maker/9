@@ -50,3 +50,25 @@ document.addEventListener("DOMContentLoaded", function () {
     if (nextInput) nextInput.value = window.location.origin + '/grazie.html';
   });
 });
+
+// Blog filtri categoria
+document.addEventListener("DOMContentLoaded", function () {
+  const filterBtns = document.querySelectorAll(".filter-btn");
+  const cards = document.querySelectorAll(".blog-card");
+  if (!filterBtns.length) return;
+
+  filterBtns.forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      filterBtns.forEach(function (b) { b.classList.remove("active"); });
+      btn.classList.add("active");
+      const filter = btn.dataset.filter;
+      cards.forEach(function (card) {
+        if (filter === "tutti" || card.dataset.category === filter) {
+          card.classList.remove("hidden");
+        } else {
+          card.classList.add("hidden");
+        }
+      });
+    });
+  });
+});

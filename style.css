@@ -293,6 +293,14 @@ h1{font-size:56px;line-height:1.03;letter-spacing:-.04em;margin:0 0 18px;color:v
 .logo-chip-text{flex:0 0 200px;min-height:96px;padding:18px;border-radius:22px;border:1px solid var(--line);background:linear-gradient(180deg,#ffffff 0%,#f7f9ff 100%);box-shadow:0 8px 22px rgba(22,39,74,.04);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:6px;text-decoration:none}
 .logo-chip-text strong{font-size:15px;line-height:1.2;color:var(--blue);font-weight:700}
 .logo-chip-text span{font-size:12px;color:var(--muted)}
+.chip-favicon{width:20px;height:20px;object-fit:contain;border-radius:4px}
+
+/* === Blog filtri categoria === */
+.blog-filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:32px}
+.filter-btn{padding:8px 18px;border-radius:999px;border:1px solid var(--line);background:#fff;color:var(--text);font-size:14px;font-weight:500;cursor:pointer;transition:background .18s,color .18s,border-color .18s}
+.filter-btn:hover{border-color:var(--blue);color:var(--blue)}
+.filter-btn.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+.blog-card.hidden{display:none}
 
 /* === Riduzione testo mobile ~30% === */
 @media (max-width:680px){
@@ -305,6 +313,18 @@ h1{font-size:56px;line-height:1.03;letter-spacing:-.04em;margin:0 0 18px;color:v
   .feature p{display:none}
   .signal-item span,.output-item span{display:none}
   .logo-chip-text{flex-basis:160px;min-height:80px}
+  /* Riduzione font-size ulteriore -25% */
+  h1{font-size:calc(var(--h1,2rem) * 0.75)}
+  h2{font-size:calc(var(--h2,1.5rem) * 0.75)}
+  h3{font-size:calc(var(--h3,1.2rem) * 0.75)}
+  .section-title{font-size:calc(0.75em)}
+  .btn{font-size:13px;padding:10px 18px}
+  .eyebrow{font-size:11px}
+  .blog-meta{font-size:11px}
+  .card{padding:18px}
+  .hero h1,.page-hero h1{font-size:1.6rem}
+  .service-card h3,.feature h3{font-size:1rem}
+  .contact-box-main{font-size:1.1rem!important}
 }
 
 /* === Dropdown mobile === */
