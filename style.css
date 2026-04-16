@@ -497,3 +497,12 @@ h1{font-size:56px;line-height:1.03;letter-spacing:-.04em;margin:0 0 18px;color:v
 
 /* ── Word reveal hero ── */
 .hero h1 .word{display:inline-block;will-change:transform,opacity}
+
+/* ── LinkedIn link (chi-sono) ── */
+.linkedin-link{display:inline-flex;align-items:center;gap:8px;margin-top:20px;color:var(--gold);font-size:14px;font-weight:600;text-decoration:none;transition:opacity .2s}
+.linkedin-link:hover{opacity:.75}
+
+/* ── Footer with LinkedIn ── */
+.footer-inner{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.footer-linkedin{display:inline-flex;align-items:center;gap:6px;color:rgba(255,255,255,.45);font-size:13px;text-decoration:none;transition:color .2s}
+.footer-linkedin:hover{color:var(--gold)}
