@@ -405,7 +405,13 @@ h1{font-size:56px;line-height:1.03;letter-spacing:-.04em;margin:0 0 18px;color:v
 
 /* ── Hero dark ── */
 .hero{background:var(--bg-dark) !important;overflow:hidden !important;position:relative !important}
-.hero::after{content:'';position:absolute;top:-30%;right:-8%;width:560px;height:560px;background:radial-gradient(circle,rgba(200,169,110,.13) 0%,transparent 68%);pointer-events:none;z-index:0}
+@keyframes glow-pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.22);opacity:.5}}
+.hero::after{content:'';position:absolute;top:-30%;right:-8%;width:560px;height:560px;background:radial-gradient(circle,rgba(200,169,110,.16) 0%,transparent 68%);pointer-events:none;z-index:0;animation:glow-pulse 5s ease-in-out infinite;transform-origin:center}
+
+/* ── Scroll reveal ── */
+@keyframes reveal-up{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
+.reveal{opacity:0;transform:translateY(28px);transition:opacity .7s cubic-bezier(.22,1,.36,1),transform .7s cubic-bezier(.22,1,.36,1);will-change:opacity,transform}
+.reveal.visible{opacity:1;transform:translateY(0)}
 .hero .container,.hero-grid,.hero h1,.hero p,.hero .eyebrow,.hero .cta-row{position:relative;z-index:1}
 .hero h1{color:#fff !important}
 .hero .lead{color:rgba(255,255,255,.62) !important}

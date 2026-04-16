@@ -61,6 +61,78 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 
+// ── 1. Scroll reveal ──
+document.addEventListener("DOMContentLoaded", function () {
+  var revealSelectors = [
+    ".section-title", "section h2", ".page-hero h1", ".page-hero p",
+    ".service-card", ".project-row", ".blog-card", ".compare-card",
+    ".blog-row", ".metrics", ".logo-marquee-header", ".precontact-box",
+    ".lead-form-wrap", ".rich p", ".feature", ".soft-card"
+  ].join(",");
+
+  var els = document.querySelectorAll(revealSelectors);
+  els.forEach(function (el) {
+    // Non applicare nell'hero (già visibile)
+    if (el.closest(".hero")) return;
+    el.classList.add("reveal");
+    // Stagger per elementi fratelli nella stessa griglia
+    var parent = el.parentNode;
+    var revealSiblings = Array.from(parent.children).filter(function (c) {
+      return c.classList.contains("reveal");
+    });
+    var idx = revealSiblings.indexOf(el);
+    if (idx > 0) el.style.transitionDelay = (idx * 0.09) + "s";
+  });
+
+  var observer = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add("visible");
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1, rootMargin: "0px 0px -32px 0px" });
+
+  document.querySelectorAll(".reveal").forEach(function (el) {
+    observer.observe(el);
+  });
+});
+
+// ── 2. Counter animato per le metriche ──
+document.addEventListener("DOMContentLoaded", function () {
+  function animateCounter(el) {
+    var raw = el.textContent.trim();
+    var prefix = raw.startsWith("+") ? "+" : "";
+    var suffix = raw.endsWith("+") ? "+" : "";
+    var target = parseInt(raw.replace(/\D/g, ""), 10);
+    if (!target) return;
+    var duration = 1400;
+    var startTs = null;
+    function step(ts) {
+      if (!startTs) startTs = ts;
+      var p = Math.min((ts - startTs) / duration, 1);
+      var eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = prefix + Math.floor(eased * target) + suffix;
+      if (p < 1) requestAnimationFrame(step);
+      else el.textContent = prefix + target + suffix;
+    }
+    requestAnimationFrame(step);
+  }
+
+  var counterObserver = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (entry.isIntersecting) {
+        animateCounter(entry.target);
+        counterObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.6 });
+
+  document.querySelectorAll(".metric-value").forEach(function (el) {
+    counterObserver.observe(el);
+  });
+});
+
 // Pagination dots per caroselli mobile (progetti e servizi)
 document.addEventListener("DOMContentLoaded", function () {
   function initDots(container, childSelector) {
