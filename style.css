@@ -356,3 +356,21 @@ h1{font-size:56px;line-height:1.03;letter-spacing:-.04em;margin:0 0 18px;color:v
   .has-dropdown.is-open .nav-dropdown{display:flex;flex-direction:column}
   .nav-dropdown a{border-radius:0;padding:10px 14px 10px 28px;font-size:13px;border-top:1px solid var(--line)}
 }
+
+/* === Scroll carousel arrows === */
+.scroll-btn{display:none;position:absolute;top:50%;transform:translateY(-50%);z-index:10;background:#fff;border:1px solid var(--line);border-radius:50%;width:36px;height:36px;font-size:24px;font-weight:300;cursor:pointer;box-shadow:0 2px 10px rgba(22,39,74,.14);color:var(--blue);padding:0;line-height:1;align-items:center;justify-content:center;flex-shrink:0}
+.scroll-btn--prev{left:-8px}
+.scroll-btn--next{right:-8px}
+.logo-carousel-outer,.blog-carousel-outer{position:relative;padding:0 12px}
+@media(max-width:680px){
+  .scroll-btn{display:flex}
+  /* Logo: disable CSS animation, enable touch scroll */
+  .logo-marquee{overflow-x:auto;overflow-y:visible;scroll-behavior:smooth;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .logo-marquee::-webkit-scrollbar{display:none}
+  .logo-track{animation:none !important;width:auto}
+  .logo-track .logo-chip:nth-child(n+13){display:none}
+  /* Blog home: horizontal flex scroll */
+  #blogHomeTrack{display:flex;flex-wrap:nowrap;overflow-x:auto;scroll-behavior:smooth;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:14px}
+  #blogHomeTrack::-webkit-scrollbar{display:none}
+  #blogHomeTrack .blog-card{flex:0 0 270px;min-width:270px;width:270px}
+}

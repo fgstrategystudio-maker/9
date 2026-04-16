@@ -72,7 +72,7 @@ document.addEventListener("DOMContentLoaded", function () {
 // Blog filtri categoria
 document.addEventListener("DOMContentLoaded", function () {
   const filterBtns = document.querySelectorAll(".filter-btn");
-  const cards = document.querySelectorAll(".blog-card, .blog-featured");
+  const cards = document.querySelectorAll(".blog-card, .blog-featured, .blog-row");
   if (!filterBtns.length) return;
 
   filterBtns.forEach(function (btn) {
@@ -91,33 +91,27 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 
-
-
+// Carousel scroll arrows
 document.addEventListener("DOMContentLoaded", function () {
-  document.querySelectorAll('form').forEach(function (form) {
-    const nextInput = form.querySelector('input[data-next-target="grazie"]');
-    if (nextInput) nextInput.value = window.location.origin + '/grazie.html';
-  });
-});
-
-// Blog filtri categoria
-document.addEventListener("DOMContentLoaded", function () {
-  const filterBtns = document.querySelectorAll(".filter-btn");
-  const cards = document.querySelectorAll(".blog-card");
-  if (!filterBtns.length) return;
-
-  filterBtns.forEach(function (btn) {
-    btn.addEventListener("click", function () {
-      filterBtns.forEach(function (b) { b.classList.remove("active"); });
-      btn.classList.add("active");
-      const filter = btn.dataset.filter;
-      cards.forEach(function (card) {
-        if (filter === "tutti" || card.dataset.category === filter) {
-          card.classList.remove("hidden");
-        } else {
-          card.classList.add("hidden");
-        }
-      });
+  function makeScroller(trackEl, prevBtn, nextBtn, amount) {
+    if (!trackEl) return;
+    if (prevBtn) prevBtn.addEventListener("click", function () {
+      trackEl.scrollBy({ left: -amount, behavior: "smooth" });
     });
-  });
+    if (nextBtn) nextBtn.addEventListener("click", function () {
+      trackEl.scrollBy({ left: amount, behavior: "smooth" });
+    });
+  }
+  makeScroller(
+    document.querySelector(".logo-marquee"),
+    document.querySelector(".logo-btn-prev"),
+    document.querySelector(".logo-btn-next"),
+    280
+  );
+  makeScroller(
+    document.getElementById("blogHomeTrack"),
+    document.querySelector(".blog-btn-prev"),
+    document.querySelector(".blog-btn-next"),
+    290
+  );
 });
