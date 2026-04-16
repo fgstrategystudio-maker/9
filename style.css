@@ -356,14 +356,24 @@ h1{font-size:56px;line-height:1.03;letter-spacing:-.04em;margin:0 0 18px;color:v
   .nav-dropdown a{border-radius:0;padding:10px 14px 10px 28px;font-size:13px;border-top:1px solid var(--line)}
 }
 
-/* === Mobile: blog home swipe + progetti swipe === */
+/* === Pagination dots (carousel) === */
+.carousel-dots{display:none;justify-content:center;gap:7px;margin-top:16px}
+.carousel-dot{width:8px;height:8px;border-radius:50%;background:var(--line);border:none;cursor:pointer;padding:0;transition:background .2s,transform .2s,width .2s}
+.carousel-dot.active{background:var(--blue);transform:scale(1.3)}
+
+/* === Mobile: blog home swipe + progetti + servizi swipe === */
 @media(max-width:680px){
+  .carousel-dots{display:flex}
   /* Blog home: scroll orizzontale swipe */
   #blogHomeTrack{display:flex;flex-wrap:nowrap;overflow-x:auto;scroll-behavior:smooth;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:14px}
   #blogHomeTrack::-webkit-scrollbar{display:none}
   #blogHomeTrack .blog-card{flex:0 0 270px;min-width:270px;width:270px}
-  /* Progetti: scroll orizzontale swipe (prossimo card peeking) */
+  /* Progetti: scroll orizzontale con peek del prossimo card */
   .projects{display:flex;overflow-x:auto;gap:14px;scroll-behavior:smooth;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:4px}
   .projects::-webkit-scrollbar{display:none}
-  .projects .project-row{min-width:86vw;width:86vw;flex-shrink:0}
+  .projects .project-row{min-width:78vw;width:78vw;flex-shrink:0}
+  /* Servizi: scroll orizzontale con peek */
+  .services-grid{display:flex;flex-wrap:nowrap;overflow-x:auto;gap:14px;scroll-behavior:smooth;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:4px}
+  .services-grid::-webkit-scrollbar{display:none}
+  .services-grid .service-card{flex:0 0 78vw;min-width:78vw;width:78vw}
 }

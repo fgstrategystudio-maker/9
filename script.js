@@ -61,6 +61,38 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 
+// Pagination dots per caroselli mobile (progetti e servizi)
+document.addEventListener("DOMContentLoaded", function () {
+  function initDots(container, childSelector) {
+    if (!container) return;
+    var cards = container.querySelectorAll(childSelector);
+    if (cards.length < 2) return;
+
+    var wrap = document.createElement("div");
+    wrap.className = "carousel-dots";
+    var dots = [];
+    cards.forEach(function (_, i) {
+      var d = document.createElement("button");
+      d.className = "carousel-dot" + (i === 0 ? " active" : "");
+      d.setAttribute("aria-label", "Elemento " + (i + 1));
+      d.addEventListener("click", function () {
+        container.scrollTo({ left: cards[i].offsetLeft, behavior: "smooth" });
+      });
+      dots.push(d);
+      wrap.appendChild(d);
+    });
+    container.parentNode.insertBefore(wrap, container.nextSibling);
+
+    container.addEventListener("scroll", function () {
+      var cardW = cards[0].offsetWidth + 14;
+      var idx = Math.min(cards.length - 1, Math.round(container.scrollLeft / cardW));
+      dots.forEach(function (d, i) { d.classList.toggle("active", i === idx); });
+    }, { passive: true });
+  }
+
+  initDots(document.querySelector(".projects"), ".project-row");
+  initDots(document.querySelector(".services-grid"), ".service-card");
+});
 
 document.addEventListener("DOMContentLoaded", function () {
   document.querySelectorAll('form').forEach(function (form) {
