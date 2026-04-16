@@ -22,10 +22,28 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
-  // Dropdown mobile toggle
+  // Dropdown: hover desktop con delay per permettere di raggiungere le opzioni
   nav.querySelectorAll(".has-dropdown").forEach(function (item) {
     const toggle = item.querySelector(".nav-dropdown-toggle");
     if (!toggle) return;
+    let closeTimer = null;
+
+    // Desktop: hover con delay
+    item.addEventListener("mouseenter", function () {
+      if (window.innerWidth > 680) {
+        if (closeTimer) { clearTimeout(closeTimer); closeTimer = null; }
+        item.classList.add("is-hovering");
+      }
+    });
+    item.addEventListener("mouseleave", function () {
+      if (window.innerWidth > 680) {
+        closeTimer = setTimeout(function () {
+          item.classList.remove("is-hovering");
+        }, 180);
+      }
+    });
+
+    // Mobile: click toggle
     toggle.addEventListener("click", function (e) {
       if (window.innerWidth <= 680) {
         e.preventDefault();
@@ -42,6 +60,37 @@ document.addEventListener("DOMContentLoaded", function () {
     if (window.innerWidth > 680) closeMenu();
   });
 });
+
+
+document.addEventListener("DOMContentLoaded", function () {
+  document.querySelectorAll('form').forEach(function (form) {
+    const nextInput = form.querySelector('input[data-next-target="grazie"]');
+    if (nextInput) nextInput.value = window.location.origin + '/grazie.html';
+  });
+});
+
+// Blog filtri categoria
+document.addEventListener("DOMContentLoaded", function () {
+  const filterBtns = document.querySelectorAll(".filter-btn");
+  const cards = document.querySelectorAll(".blog-card, .blog-featured");
+  if (!filterBtns.length) return;
+
+  filterBtns.forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      filterBtns.forEach(function (b) { b.classList.remove("active"); });
+      btn.classList.add("active");
+      const filter = btn.dataset.filter;
+      cards.forEach(function (card) {
+        if (filter === "tutti" || card.dataset.category === filter) {
+          card.classList.remove("hidden");
+        } else {
+          card.classList.add("hidden");
+        }
+      });
+    });
+  });
+});
+
 
 
 document.addEventListener("DOMContentLoaded", function () {

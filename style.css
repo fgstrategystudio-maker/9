@@ -283,9 +283,10 @@ h1{font-size:56px;line-height:1.03;letter-spacing:-.04em;margin:0 0 18px;color:v
 .nav-dropdown-toggle{display:flex;align-items:center;gap:4px;cursor:pointer;color:var(--muted);font-size:14px;white-space:nowrap}
 .nav-dropdown-toggle:hover{color:var(--blue)}
 .nav-caret{font-size:10px;transition:transform .2s ease;display:inline-block;line-height:1}
-.has-dropdown:hover .nav-caret,.has-dropdown.is-open .nav-caret{transform:rotate(180deg)}
+.has-dropdown.is-open .nav-caret{transform:rotate(180deg)}
 .nav-dropdown{display:none;position:absolute;top:100%;left:50%;transform:translateX(-50%);min-width:190px;background:rgba(255,255,255,.98);border:1px solid var(--line);border-radius:16px;box-shadow:0 16px 36px rgba(22,39,74,.12);padding:16px 8px 8px;z-index:40}
-.has-dropdown:hover .nav-dropdown,.has-dropdown.is-open .nav-dropdown{display:flex;flex-direction:column}
+.has-dropdown:hover .nav-dropdown,.has-dropdown.is-open .nav-dropdown,.has-dropdown.is-hovering .nav-dropdown{display:flex;flex-direction:column}
+.has-dropdown:hover .nav-caret,.has-dropdown.is-hovering .nav-caret{transform:rotate(180deg)}
 .nav-dropdown a{display:block;padding:10px 14px;font-size:14px;color:var(--text);border-radius:10px;white-space:nowrap}
 .nav-dropdown a:hover{background:var(--surface-2);color:var(--blue)}
 
@@ -295,17 +296,35 @@ h1{font-size:56px;line-height:1.03;letter-spacing:-.04em;margin:0 0 18px;color:v
 .logo-chip-text span{font-size:12px;color:var(--muted)}
 .chip-favicon{width:20px;height:20px;object-fit:contain;border-radius:4px}
 
-/* === Blog featured article === */
-.blog-featured{margin-bottom:32px;padding:36px;background:linear-gradient(135deg,#eef3ff 0%,#dde8ff 100%);border:1px solid var(--line)}
-.blog-featured .blog-meta{margin-bottom:12px}
-.blog-featured h2{font-size:32px;line-height:1.15;letter-spacing:-.02em;margin:0 0 14px;color:var(--blue)}
-.blog-featured h2 a{color:inherit;text-decoration:none}
-.blog-featured h2 a:hover{text-decoration:underline}
-.blog-featured p{font-size:17px;color:var(--muted);margin:0 0 20px;max-width:760px}
-.blog-read-more{font-weight:700;color:var(--blue);font-size:15px}
-.blog-card h3 a{color:var(--blue);text-decoration:none}
-.blog-card h3 a:hover{text-decoration:underline}
-@media(max-width:680px){.blog-featured{padding:22px}.blog-featured h2{font-size:22px}}
+/* === Blog lista editoriale === */
+.blog-hero{padding-bottom:0}
+.blog-section{padding-top:32px}
+.blog-list{border-top:2px solid var(--blue);margin-top:28px}
+.blog-row{display:grid;grid-template-columns:200px 1fr 48px;gap:28px;align-items:center;padding:28px 0;border-bottom:1px solid var(--line);text-decoration:none;transition:background .15s}
+.blog-row:hover{background:var(--surface-2);margin:0 -24px;padding-left:24px;padding-right:24px}
+.blog-row-cat{display:flex;align-items:flex-start;padding-top:4px}
+.blog-pill{display:inline-block;padding:5px 12px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
+.blog-pill--crescita{background:#e8f4e8;color:#1a7a1a}
+.blog-pill--marketing{background:#fff0e0;color:#c05800}
+.blog-pill--sales{background:#e8eeff;color:#1a3abf}
+.blog-pill--data{background:#f0e8ff;color:#6b1abf}
+.blog-pill--gestione{background:#fff8e0;color:#8a6a00}
+.blog-pill--strategy{background:#ffe8e8;color:#bf1a1a}
+.blog-pill--seo{background:#e0f6ff;color:#005a8a}
+.blog-row-title{font-size:20px;line-height:1.22;letter-spacing:-.02em;margin:0 0 8px;color:var(--blue)}
+.blog-row-title a{color:inherit;text-decoration:none}
+.blog-row-title a:hover{text-decoration:underline}
+.blog-row-excerpt{font-size:15px;color:var(--muted);margin:0;line-height:1.5}
+.blog-arrow{font-size:22px;color:var(--blue);font-weight:300;text-decoration:none;display:flex;align-items:center;justify-content:center;opacity:.4;transition:opacity .15s}
+.blog-row:hover .blog-arrow{opacity:1}
+.blog-card.hidden{display:none}
+@media(max-width:980px){.blog-row{grid-template-columns:160px 1fr 40px;gap:18px}}
+@media(max-width:680px){
+  .blog-row{grid-template-columns:1fr;gap:10px;padding:22px 0}
+  .blog-row:hover{margin:0;padding-left:0;padding-right:0}
+  .blog-row-action{display:none}
+  .blog-row-title{font-size:17px}
+}
 
 /* === Blog filtri categoria === */
 .blog-filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:32px}
