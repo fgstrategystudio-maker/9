@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /grazie.html
+
+Sitemap: https://9-mauve-kappa.vercel.app/sitemap.xml
