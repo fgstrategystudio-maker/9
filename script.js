@@ -91,27 +91,3 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 
-// Carousel scroll arrows
-document.addEventListener("DOMContentLoaded", function () {
-  function makeScroller(trackEl, prevBtn, nextBtn, amount) {
-    if (!trackEl) return;
-    if (prevBtn) prevBtn.addEventListener("click", function () {
-      trackEl.scrollBy({ left: -amount, behavior: "smooth" });
-    });
-    if (nextBtn) nextBtn.addEventListener("click", function () {
-      trackEl.scrollBy({ left: amount, behavior: "smooth" });
-    });
-  }
-  makeScroller(
-    document.querySelector(".logo-marquee"),
-    document.querySelector(".logo-btn-prev"),
-    document.querySelector(".logo-btn-next"),
-    280
-  );
-  makeScroller(
-    document.getElementById("blogHomeTrack"),
-    document.querySelector(".blog-btn-prev"),
-    document.querySelector(".blog-btn-next"),
-    290
-  );
-});
