@@ -470,6 +470,6 @@ h1{font-size:56px;line-height:1.03;letter-spacing:-.04em;margin:0 0 18px;color:v
 
 /* ── Fix scroll verticale mobile nei caroselli ── */
 @media(max-width:680px){
-  .services-grid,.projects{touch-action:pan-x;overscroll-behavior-x:contain}
+  .services-grid,.projects{overscroll-behavior-x:contain}
   .logo-marquee{overscroll-behavior-x:contain}
 }
