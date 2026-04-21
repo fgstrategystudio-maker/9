@@ -28,7 +28,7 @@
 <h2>Perché nelle PMI il tema arriva sempre a un certo punto</h2>
 <p>Le PMI non hanno bisogno di controlli pesanti. Hanno bisogno di <strong>visibilità economica sufficiente</strong> per decidere meglio. <a href="https://www.ifac.org/knowledge-gateway/discussion/performance-and-financial-management-key-factors-small-and-medium-sized-entities-survival-volatile" target="_blank" rel="noopener"><strong>IFAC</strong></a> evidenzia proprio come performance e financial management siano fattori chiave di sopravvivenza e resilienza per le piccole e medie imprese. In pratica: quando l’ambiente diventa più instabile, la gestione finanziaria e delle performance smette di essere un tema tecnico e diventa un tema di continuità aziendale.</p>
 <h2>I segnali che dicono che serve più controllo</h2>
-<p class="callout">Di solito i segnali arrivano prima del problema pieno:Se questa descrizione ti assomiglia, allora contattami: possiamo iniziare da un audit e capire dove la crescita sta diventando meno leggibile, prima che il disordine diventi strutturale.</p>
+<a class="callout-box" href="#contatti">Di solito i segnali arrivano prima del problema pieno:Se questa descrizione ti assomiglia, allora contattami: possiamo iniziare da un audit e capire dove la crescita sta diventando meno leggibile, prima che il disordine diventi strutturale.</a>
 <ul>
   <li>cresce il fatturato ma non cresce la serenità del management</li>
   <li>si aprono molte iniziative senza sapere bene quali rendono</li>
@@ -83,15 +83,18 @@
 </div></div></section>
 <footer class="footer"><div class="container">Francesco Gizzi, marketing, data, sales e strategy.</div></footer>
 <script src="script.js"></script>
+
 <script>
 (function(){
-  var bar=document.getElementById('reading-progress');
-  if(!bar)return;
-  window.addEventListener('scroll',function(){
-    var s=document.documentElement;
-    var pct=(s.scrollTop||document.body.scrollTop)/(s.scrollHeight-s.clientHeight)*100;
-    bar.style.width=Math.min(pct,100)+'%';
-  },{passive:true});
+  var bar = document.getElementById('reading-progress');
+  if (!bar) return;
+  function update() {
+    var scrollTop = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+    var docH = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight) - window.innerHeight;
+    bar.style.width = (docH > 0 ? Math.min(scrollTop / docH * 100, 100) : 0) + '%';
+  }
+  window.addEventListener('scroll', update, {passive: true});
+  update();
 })();
 </script>
 </body></html>

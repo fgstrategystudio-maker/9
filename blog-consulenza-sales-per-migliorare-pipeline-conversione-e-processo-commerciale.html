@@ -60,7 +60,7 @@
 <p>Quando pipeline, conversione e processo tornano allineati, il primo risultato non è sempre un picco immediato di vendite. Spesso è una maggiore <strong>lucidità operativa</strong>: meno dispersione, più affidabilità del forecast, più qualità nel confronto con il management, meno tempo sprecato su opportunità deboli.</p>
 <p>Da lì arrivano anche gli effetti più visibili: migliore conversione, migliore uso del CRM, maggiore coerenza tra lead generation e commerciale, più capacità di scalare senza perdere controllo.</p>
 <p>Se vuoi capire dove la tua pipeline perde qualità e quali leve possono rendere il processo commerciale più chiaro, più misurabile e più utile al business, il passo più sensato è partire da una lettura strutturata del sistema e trasformarla in priorità operative prima di aggiungere altra pressione al team.</p>
-<p class="callout">Se vuoi capire dove si blocca la conversione, dove il funnel perde valore e quali scelte possono rendere il commerciale più leggibile e più forte, possiamo partire da un audit iniziale e costruire un piano operativo concreto.</p>
+<a class="callout-box" href="#contatti">Se vuoi capire dove si blocca la conversione, dove il funnel perde valore e quali scelte possono rendere il commerciale più leggibile e più forte, possiamo partire da un audit iniziale e costruire un piano operativo concreto.</a>
 <h2>FAQ</h2>
 <h3>Quando serve una consulenza sales?</h3>
 <p>Serve quando pipeline, conversione e processo esistono già, ma non sono abbastanza leggibili da sostenere una crescita ordinata.</p>
@@ -105,15 +105,18 @@
 </div></div></section>
 <footer class="footer"><div class="container">Francesco Gizzi, marketing, data, sales e strategy.</div></footer>
 <script src="script.js"></script>
+
 <script>
 (function(){
-  var bar=document.getElementById('reading-progress');
-  if(!bar)return;
-  window.addEventListener('scroll',function(){
-    var s=document.documentElement;
-    var pct=(s.scrollTop||document.body.scrollTop)/(s.scrollHeight-s.clientHeight)*100;
-    bar.style.width=Math.min(pct,100)+'%';
-  },{passive:true});
+  var bar = document.getElementById('reading-progress');
+  if (!bar) return;
+  function update() {
+    var scrollTop = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+    var docH = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight) - window.innerHeight;
+    bar.style.width = (docH > 0 ? Math.min(scrollTop / docH * 100, 100) : 0) + '%';
+  }
+  window.addEventListener('scroll', update, {passive: true});
+  update();
 })();
 </script>
 </body></html>

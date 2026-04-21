@@ -54,7 +54,7 @@
   <li>inseguire keyword di volume alto ma lontane dal business</li>
 </ul>
 <h2>Come capire se un articolo sta portando domanda migliore</h2>
-<p class="callout">Gli indicatori più utili, in questi casi, non sono solo ranking e traffico. Conta anche capire:Scrivere per traffico qualificato significa fare meno contenuti casuali e più pagine capaci di creare continuità tra ricerca, fiducia e contatto. Se vuoi costruire articoli che non si limitino a portare visite ma preparino meglio il dialogo con potenziali clienti in target, <strong>contattami</strong>: possiamo rivedere insieme la mappa dei contenuti e capire quali temi presidiare davvero.</p>
+<a class="callout-box" href="#contatti">Gli indicatori più utili, in questi casi, non sono solo ranking e traffico. Conta anche capire:Scrivere per traffico qualificato significa fare meno contenuti casuali e più pagine capaci di creare continuità tra ricerca, fiducia e contatto. Se vuoi costruire articoli che non si limitino a portare visite ma preparino meglio il dialogo con potenziali clienti in target, <strong>contattami</strong>: possiamo rivedere insieme la mappa dei contenuti e capire quali temi presidiare davvero.</a>
 <ul>
   <li>quanto l’articolo porta visite verso pagine servizio</li>
   <li>se genera click su contenuti correlati</li>
@@ -96,15 +96,18 @@
 </div></div></section>
 <footer class="footer"><div class="container">Francesco Gizzi, marketing, data, sales e strategy.</div></footer>
 <script src="script.js"></script>
+
 <script>
 (function(){
-  var bar=document.getElementById('reading-progress');
-  if(!bar)return;
-  window.addEventListener('scroll',function(){
-    var s=document.documentElement;
-    var pct=(s.scrollTop||document.body.scrollTop)/(s.scrollHeight-s.clientHeight)*100;
-    bar.style.width=Math.min(pct,100)+'%';
-  },{passive:true});
+  var bar = document.getElementById('reading-progress');
+  if (!bar) return;
+  function update() {
+    var scrollTop = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+    var docH = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight) - window.innerHeight;
+    bar.style.width = (docH > 0 ? Math.min(scrollTop / docH * 100, 100) : 0) + '%';
+  }
+  window.addEventListener('scroll', update, {passive: true});
+  update();
 })();
 </script>
 </body></html>
