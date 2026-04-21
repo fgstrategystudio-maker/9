@@ -17,16 +17,18 @@
   <link rel="canonical" href="https://francescogizzi.com/blog-controllo-di-gestione-per-capire-margini-costi-e-priorita.html" />
 </head>
 <body>
+<div id="reading-progress"></div>
 <header class="site-header"><div class="container header-inner"><a href="index.html" class="logo">Francesco Gizzi</a><button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Apri il menu"><span class="line"></span><span class="line"></span><span class="line"></span></button><nav class="nav" id="site-nav"><a href="index.html#chi-sono">Chi sono</a><div class="has-dropdown"><a href="index.html#servizi" class="nav-dropdown-toggle">Servizi <span class="nav-caret">&#9660;</span></a><div class="nav-dropdown"><a href="servizi-marketing.html">Marketing</a><a href="servizi-data.html">Data</a><a href="servizi-sales.html">Sales</a><a href="servizi-strategy.html">Strategy</a></div></div><a href="index.html#progetti">Progetti</a><a href="blog.html">Blog</a><a href="index.html#contatti">Contatti</a></nav></div></header>
 <main class="section">
   <div class="container article">
     <p class="eyebrow">Controllo di gestione</p>
     <h1>Controllo di gestione per capire margini, costi e priorità</h1>
+    <p class="reading-meta">Lettura: circa 4 minuti</p>
     <p>In molte aziende il problema non è la mancanza di numeri. Il problema è che i numeri esistono, ma non aiutano davvero a decidere. Si chiudono mesi, si aggiornano file, si commentano scostamenti, ma quando arriva il momento di scegliere dove investire, cosa fermare o quali clienti difendere, la discussione torna rapidamente su impressioni, urgenze e abitudini. È qui che il <strong>controllo di gestione</strong> diventa utile: non come sovrastruttura amministrativa, ma come strumento per leggere meglio margini, costi e priorità.</p>
 <h2>Perché oggi conta più di prima</h2>
 <p>Negli ultimi anni molte imprese si sono trovate a gestire crescita irregolare, aumento dei costi fissi, volatilità commerciale e maggiore pressione sulla redditività. In questo scenario, leggere solo il fatturato non basta più. Anche <a href="https://www.ifac.org/knowledge-gateway/discussion/performance-and-financial-management-key-factors-small-and-medium-sized-entities-survival-volatile" target="_blank" rel="noopener"><strong>IFAC</strong></a> sottolinea come performance e financial management siano tra i fattori più rilevanti per la sopravvivenza e la crescita delle PMI in contesti volatili. A questa lettura si aggiunge una linea simile da parte di <a href="https://www.mckinsey.com/capabilities/strategy-and-corporate-finance/our-insights/fostering-better-decisions-through-holistic-roi-estimates" target="_blank" rel="noopener"><strong>McKinsey</strong></a>, che insiste sul valore di decisioni più complete e meno miopi quando si ragiona di ROI, allocazione delle risorse e priorità.</p>
 <h2>Le tre lenti utili: margini, costi, priorità</h2>
-<p>Se dovessi sintetizzare la funzione del controllo di gestione in tre parole, userei queste: <strong>margini</strong>, <strong>costi</strong> e <strong>priorità</strong>. Sono tre lenti diverse e vanno tenute insieme.Se oggi stai prendendo decisioni su prezzo, canali o mix clienti senza questa base, allora contattami: possiamo iniziare da un audit e capire cosa non va davvero, prima di aggiungere altre attività.</p>
+<p class="callout">Se dovessi sintetizzare la funzione del controllo di gestione in tre parole, userei queste: <strong>margini</strong>, <strong>costi</strong> e <strong>priorità</strong>. Sono tre lenti diverse e vanno tenute insieme.Se oggi stai prendendo decisioni su prezzo, canali o mix clienti senza questa base, allora contattami: possiamo iniziare da un audit e capire cosa non va davvero, prima di aggiungere altre attività.</p>
 <ul>
   <li>I margini aiutano a capire dove l’azienda crea davvero valore e dove invece lo erode.</li>
   <li>I costi aiutano a distinguere tra struttura necessaria, inefficienze e spese che hanno perso relazione con la strategia.</li>
@@ -80,4 +82,15 @@
 </div></div></section>
 <footer class="footer"><div class="container">Francesco Gizzi, marketing, data, sales e strategy.</div></footer>
 <script src="script.js"></script>
+<script>
+(function(){
+  var bar=document.getElementById('reading-progress');
+  if(!bar)return;
+  window.addEventListener('scroll',function(){
+    var s=document.documentElement;
+    var pct=(s.scrollTop||document.body.scrollTop)/(s.scrollHeight-s.clientHeight)*100;
+    bar.style.width=Math.min(pct,100)+'%';
+  },{passive:true});
+})();
+</script>
 </body></html>

@@ -17,11 +17,13 @@
   <link rel="canonical" href="https://francescogizzi.com/blog-come-costruire-una-roadmap-strategica-utile-alla-crescita-aziendale.html" />
 </head>
 <body>
+<div id="reading-progress"></div>
 <header class="site-header"><div class="container header-inner"><a href="index.html" class="logo">Francesco Gizzi</a><button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Apri il menu"><span class="line"></span><span class="line"></span><span class="line"></span></button><nav class="nav" id="site-nav"><a href="index.html#chi-sono">Chi sono</a><div class="has-dropdown"><a href="index.html#servizi" class="nav-dropdown-toggle">Servizi <span class="nav-caret">&#9660;</span></a><div class="nav-dropdown"><a href="servizi-marketing.html">Marketing</a><a href="servizi-data.html">Data</a><a href="servizi-sales.html">Sales</a><a href="servizi-strategy.html">Strategy</a></div></div><a href="index.html#progetti">Progetti</a><a href="blog.html">Blog</a><a href="index.html#contatti">Contatti</a></nav></div></header>
 <main class="section">
   <div class="container article">
     <p class="eyebrow">Strategy</p>
     <h1>Come costruire una roadmap strategica utile alla crescita aziendale</h1>
+    <p class="reading-meta">Lettura: circa 3 minuti</p>
     <p>Molte strategie falliscono non perché siano sbagliate, ma perché non diventano mai una roadmap credibile. Restano ambizione, linee guida o elenco di iniziative. Una roadmap utile, invece, serve a dare sequenza, priorità e ordine alla crescita. Non è un esercizio grafico. È il modo in cui la strategia smette di essere solo dichiarazione e inizia a diventare execution.</p>
 <h2>Che cos’è davvero una roadmap strategica</h2>
 <p>Una roadmap strategica non è una lista di progetti. È una <strong>sequenza ragionata di priorità</strong> nel tempo. Dovrebbe chiarire cosa viene prima, cosa viene dopo, cosa dipende da cosa e quali risorse richiede ogni passaggio. <a href="https://www.mckinsey.com/capabilities/transformation/our-insights/defining-your-true-north-a-road-map-to-successful-transformation" target="_blank" rel="noopener"><strong>McKinsey</strong></a> parla di roadmap di trasformazione proprio in questo senso: come strumento per chiarire dove creare valore e come avanzare senza disperdere risorse.</p>
@@ -34,7 +36,7 @@
   <li>non vengono riviste abbastanza spesso</li>
 </ul>
 <p>Quando succede questo, la roadmap smette di orientare e diventa un documento decorativo. <a href="https://hbr.org/2024/06/how-to-manage-executing-strategy" target="_blank" rel="noopener"><strong>HBR</strong></a> ricorda bene che l’execution richiede capacità di aggiornare il piano, gestire resistenze e tradurre la strategia in progressi leggibili.</p>
-<p>Se senti che nella tua azienda esistono molti obiettivi ma poca sequenza reale, contattami: possiamo partire da una lettura delle priorità e capire come trasformarle in una roadmap più credibile.</p>
+<p class="callout">Se senti che nella tua azienda esistono molti obiettivi ma poca sequenza reale, contattami: possiamo partire da una lettura delle priorità e capire come trasformarle in una roadmap più credibile.</p>
 <h2>Che cosa deve contenere una roadmap utile</h2>
 <p>Una roadmap utile dovrebbe aiutare a vedere almeno questi elementi:</p>
 <ul>
@@ -48,7 +50,7 @@
 <p>La parte più importante è questa: la roadmap non deve essere solo strategicamente sensata. Deve essere <strong>organizzativamente sostenibile</strong>. <a href="https://www.deloitte.com/us/en/services/consulting/articles/changing-operating-model.html" target="_blank" rel="noopener"><strong>Deloitte</strong></a> e <a href="https://www.mckinsey.com/capabilities/people-and-organizational-performance/our-insights/how-to-get-your-operating-model-transformation-back-on-track" target="_blank" rel="noopener"><strong>McKinsey</strong></a> insistono entrambe sul legame tra operating model, execution e risultati della trasformazione. Se la roadmap ignora capacità e struttura, resta teorica.</p>
 <h2>Quando una roadmap inizia a produrre vantaggio</h2>
 <p>Il vantaggio non è solo avere un piano. È riuscire a scegliere meglio cosa non fare, dove concentrare risorse e come leggere il progresso. Una roadmap utile protegge l’azienda dall’overload strategico e rende la crescita più ordinata, leggibile e sostenibile.</p>
-<p>Se vuoi trasformare obiettivi sparsi in una roadmap strategica che aiuti davvero il management a decidere, scrivimi: possiamo iniziare da un audit e capire come dare priorità, sequenza e realismo alla crescita.</p>
+<p class="callout">Se vuoi trasformare obiettivi sparsi in una roadmap strategica che aiuti davvero il management a decidere, scrivimi: possiamo iniziare da un audit e capire come dare priorità, sequenza e realismo alla crescita.</p>
 <p>Se vuoi capire come una consulenza strategica può aiutarti a costruire direzione e continuità, leggi anche <a href="blog-consulenza-strategica-per-aziende-che-vogliono-crescere-con-piu-direzione.html">consulenza strategica per aziende che vogliono crescere con più direzione</a>.</p>
 <h2>FAQ</h2>
 <p><strong>Quante priorità dovrebbe avere una roadmap?</strong>Poche. Se tutto è prioritario, niente orienta davvero le decisioni.</p>
@@ -84,4 +86,15 @@
 </div></div></section>
 <footer class="footer"><div class="container">Francesco Gizzi, marketing, data, sales e strategy.</div></footer>
 <script src="script.js"></script>
+<script>
+(function(){
+  var bar=document.getElementById('reading-progress');
+  if(!bar)return;
+  window.addEventListener('scroll',function(){
+    var s=document.documentElement;
+    var pct=(s.scrollTop||document.body.scrollTop)/(s.scrollHeight-s.clientHeight)*100;
+    bar.style.width=Math.min(pct,100)+'%';
+  },{passive:true});
+})();
+</script>
 </body></html>

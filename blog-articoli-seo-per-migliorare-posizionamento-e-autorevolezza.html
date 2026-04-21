@@ -17,11 +17,13 @@
   <link rel="canonical" href="https://francescogizzi.com/blog-articoli-seo-per-migliorare-posizionamento-e-autorevolezza.html" />
 </head>
 <body>
+<div id="reading-progress"></div>
 <header class="site-header"><div class="container header-inner"><a href="index.html" class="logo">Francesco Gizzi</a><button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Apri il menu"><span class="line"></span><span class="line"></span><span class="line"></span></button><nav class="nav" id="site-nav"><a href="index.html#chi-sono">Chi sono</a><div class="has-dropdown"><a href="index.html#servizi" class="nav-dropdown-toggle">Servizi <span class="nav-caret">&#9660;</span></a><div class="nav-dropdown"><a href="servizi-marketing.html">Marketing</a><a href="servizi-data.html">Data</a><a href="servizi-sales.html">Sales</a><a href="servizi-strategy.html">Strategy</a></div></div><a href="index.html#progetti">Progetti</a><a href="blog.html">Blog</a><a href="index.html#contatti">Contatti</a></nav></div></header>
 <main class="section">
   <div class="container article">
     <p class="eyebrow">Redazione articoli SEO</p>
     <h1>Articoli SEO per migliorare posizionamento e autorevolezza</h1>
+    <p class="reading-meta">Lettura: circa 4 minuti</p>
     <p>Un articolo SEO non serve solo a comparire nei risultati di ricerca. Serve anche a far capire al lettore <strong>chi sei, come ragioni e perché dovresti essere credibile</strong>. Per questo, quando un blog funziona bene, non migliora soltanto la visibilità organica. Migliora anche il posizionamento percepito e l’autorevolezza del brand. I due piani non sono separati: si rafforzano a vicenda.</p>
 <h2>Perché SEO e posizionamento non vanno trattati come mondi diversi</h2>
 <p>La SEO aiuta il contenuto a essere scoperto. Il posizionamento aiuta il contenuto a essere riconosciuto come coerente e memorabile. Se manca uno dei due, il risultato si indebolisce. <a href="https://developers.google.com/search/docs/essentials" target="_blank" rel="noopener"><strong>Google Search Essentials</strong></a> insiste su contenuti chiari, affidabili e ben strutturati; <a href="https://contentmarketinginstitute.com/articles/brand-differentiation-content-marketing/" target="_blank" rel="noopener"><strong>Content Marketing Institute</strong></a> richiama invece la necessità di differenziazione e identità del brand. È proprio nell’incrocio tra questi due piani che gli articoli iniziano a generare vero valore.</p>
@@ -39,7 +41,7 @@
 <h2>Il ruolo dei collegamenti interni e dei cluster</h2>
 <p>Il posizionamento non si costruisce con pagine isolate. Si costruisce con contenuti che si richiamano tra loro e che presidiano un cluster tematico. <a href="https://developers.google.com/search/docs/fundamentals/seo-starter-guide" target="_blank" rel="noopener"><strong>Google SEO Starter Guide</strong></a> ricorda che i link crawlable aiutano Google a capire la relazione tra le pagine. Dal punto di vista del lettore, fanno anche di più: aiutano a seguire un percorso. Un articolo forte dovrebbe quasi sempre rimandare a una pagina servizio e a uno o due contenuti correlati.</p>
 <h2>Che cosa cambia quando il blog smette di essere neutro</h2>
-<p>Molti blog sembrano “giusti”, ma restano neutri. Informano, ma non lasciano un’impressione. Quando invece il contenuto inizia a ordinare problemi, offrire criteri e mostrare un punto di vista, cresce la <strong>forza reputazionale</strong> del sito. Non è una reputazione costruita con slogan, ma con coerenza editoriale.Se vuoi usare gli articoli SEO non solo per aumentare la visibilità ma per chiarire meglio il tuo spazio nel mercato e alzare la percezione di autorevolezza, <strong>contattami</strong>: possiamo costruire un piano di contenuti che lavori davvero su entrambi i fronti.</p>
+<p class="callout">Molti blog sembrano “giusti”, ma restano neutri. Informano, ma non lasciano un’impressione. Quando invece il contenuto inizia a ordinare problemi, offrire criteri e mostrare un punto di vista, cresce la <strong>forza reputazionale</strong> del sito. Non è una reputazione costruita con slogan, ma con coerenza editoriale.Se vuoi usare gli articoli SEO non solo per aumentare la visibilità ma per chiarire meglio il tuo spazio nel mercato e alzare la percezione di autorevolezza, <strong>contattami</strong>: possiamo costruire un piano di contenuti che lavori davvero su entrambi i fronti.</p>
 <p>Per chi lavora in contesti B2B, può essere utile approfondire il tema del <a href="blog-servizio-di-redazione-articoli-per-blog-aziendali-b2b.html">servizio di redazione articoli per blog aziendali B2B</a>.</p>
 <h2>FAQ</h2>
 <p><strong>Gli articoli SEO servono davvero anche alla reputazione del </strong><strong>brand</strong><strong>?</strong>Sì, perché aiutano il mercato a capire come ragioni e quanto sei credibile su certi temi.</p>
@@ -75,4 +77,15 @@
 </div></div></section>
 <footer class="footer"><div class="container">Francesco Gizzi, marketing, data, sales e strategy.</div></footer>
 <script src="script.js"></script>
+<script>
+(function(){
+  var bar=document.getElementById('reading-progress');
+  if(!bar)return;
+  window.addEventListener('scroll',function(){
+    var s=document.documentElement;
+    var pct=(s.scrollTop||document.body.scrollTop)/(s.scrollHeight-s.clientHeight)*100;
+    bar.style.width=Math.min(pct,100)+'%';
+  },{passive:true});
+})();
+</script>
 </body></html>

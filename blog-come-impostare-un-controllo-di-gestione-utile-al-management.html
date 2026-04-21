@@ -17,16 +17,18 @@
   <link rel="canonical" href="https://francescogizzi.com/blog-come-impostare-un-controllo-di-gestione-utile-al-management.html" />
 </head>
 <body>
+<div id="reading-progress"></div>
 <header class="site-header"><div class="container header-inner"><a href="index.html" class="logo">Francesco Gizzi</a><button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Apri il menu"><span class="line"></span><span class="line"></span><span class="line"></span></button><nav class="nav" id="site-nav"><a href="index.html#chi-sono">Chi sono</a><div class="has-dropdown"><a href="index.html#servizi" class="nav-dropdown-toggle">Servizi <span class="nav-caret">&#9660;</span></a><div class="nav-dropdown"><a href="servizi-marketing.html">Marketing</a><a href="servizi-data.html">Data</a><a href="servizi-sales.html">Sales</a><a href="servizi-strategy.html">Strategy</a></div></div><a href="index.html#progetti">Progetti</a><a href="blog.html">Blog</a><a href="index.html#contatti">Contatti</a></nav></div></header>
 <main class="section">
   <div class="container article">
     <p class="eyebrow">Controllo di gestione</p>
     <h1>Come impostare un controllo di gestione utile al management</h1>
+    <p class="reading-meta">Lettura: circa 3 minuti</p>
     <p>Il <strong>controllo di gestione</strong> diventa inutile quando produce documenti che nessuno usa. Il punto non è avere più file, più colonne o più dettaglio. Il punto è costruire un sistema che aiuti davvero il management a capire cosa sta succedendo, perché sta succedendo e cosa fare dopo. Se il controllo non migliora la qualità delle decisioni, resta solo burocrazia ben impaginata.</p>
 <h2>Partire dalle decisioni, non dai report</h2>
 <p>L’errore più comune è impostare il controllo di gestione partendo dal formato del report. Bisognerebbe fare l’opposto: partire dalle <strong>decisioni ricorrenti</strong> che il management deve prendere. Prezzi? Assunzioni? Mix clienti? Budget marketing? Investimenti? Ogni report utile nasce da qui. Anche <a href="https://www.ifac.org/knowledge-gateway/discussion/changing-role-accounting-enterprise-performance-management" target="_blank" rel="noopener"><strong>IFAC</strong></a> descrive l’evoluzione della management accounting in questa direzione: meno retrospettiva pura, più informazione tempestiva e orientata alla gestione.</p>
 <h2>I cinque elementi minimi del sistema</h2>
-<p>Un impianto semplice ma utile dovrebbe includere almeno cinque elementi:Il management non ha bisogno di tutto. Ha bisogno di <strong>poche viste affidabili</strong> e coerenti. Se oggi il sistema è pesante o confuso, allora contattami: possiamo iniziare da un audit e capire cosa non va, prima di aggiungere altra reportistica.</p>
+<p class="callout">Un impianto semplice ma utile dovrebbe includere almeno cinque elementi:Il management non ha bisogno di tutto. Ha bisogno di <strong>poche viste affidabili</strong> e coerenti. Se oggi il sistema è pesante o confuso, allora contattami: possiamo iniziare da un audit e capire cosa non va, prima di aggiungere altra reportistica.</p>
 <ul>
   <li>un conto economico gestionale coerente con il modo in cui l’azienda decide</li>
   <li>una vista per centri di responsabilità o aree rilevanti</li>
@@ -86,4 +88,15 @@
 </div></div></section>
 <footer class="footer"><div class="container">Francesco Gizzi, marketing, data, sales e strategy.</div></footer>
 <script src="script.js"></script>
+<script>
+(function(){
+  var bar=document.getElementById('reading-progress');
+  if(!bar)return;
+  window.addEventListener('scroll',function(){
+    var s=document.documentElement;
+    var pct=(s.scrollTop||document.body.scrollTop)/(s.scrollHeight-s.clientHeight)*100;
+    bar.style.width=Math.min(pct,100)+'%';
+  },{passive:true});
+})();
+</script>
 </body></html>

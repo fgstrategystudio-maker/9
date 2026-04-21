@@ -17,11 +17,13 @@
   <link rel="canonical" href="https://francescogizzi.com/blog-tracking-dashboard-e-reportistica-per-aziende-in-crescita.html" />
 </head>
 <body>
+<div id="reading-progress"></div>
 <header class="site-header"><div class="container header-inner"><a href="index.html" class="logo">Francesco Gizzi</a><button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Apri il menu"><span class="line"></span><span class="line"></span><span class="line"></span></button><nav class="nav" id="site-nav"><a href="index.html#chi-sono">Chi sono</a><div class="has-dropdown"><a href="index.html#servizi" class="nav-dropdown-toggle">Servizi <span class="nav-caret">&#9660;</span></a><div class="nav-dropdown"><a href="servizi-marketing.html">Marketing</a><a href="servizi-data.html">Data</a><a href="servizi-sales.html">Sales</a><a href="servizi-strategy.html">Strategy</a></div></div><a href="index.html#progetti">Progetti</a><a href="blog.html">Blog</a><a href="index.html#contatti">Contatti</a></nav></div></header>
 <main class="section">
   <div class="container article">
     <p class="eyebrow">Data</p>
     <h1>Tracking, dashboard e reportistica per aziende in crescita</h1>
+    <p class="reading-meta">Lettura: circa 5 minuti</p>
     <p><strong>Perché nelle aziende in crescita il problema non è solo vedere i dati, ma fidarsi dei dati</strong></p>
 <p>Quando un’azienda cresce, aumentano canali, tool, touchpoint, reparti e responsabilità. È in questa fase che tracking, dashboard e reportistica dovrebbero diventare più robusti. Invece, molto spesso succede il contrario: i sistemi si frammentano, le fonti si moltiplicano e la fiducia nei numeri si abbassa.</p>
 <p>Una dashboard elegante non risolve un tracking fragile. Un report ordinato non compensa una fonte incoerente. E un sistema di misurazione che il team non considera affidabile smette molto in fretta di essere usato. <strong>La prima condizione per una reportistica utile è la fiducia.</strong></p>
@@ -43,7 +45,7 @@
 <p>Quando il sistema torna coerente, si vedono subito alcuni effetti concreti:</p>
 <p>Secondo <a href="https://www.mckinsey.com/quarterly/the-five-fifty/five-fifty-the-data-driven-enterprise" target="_blank" rel="noopener"><strong>McKinsey</strong></a> la maturità data driven dipende sempre di più dalla capacità di costruire prodotti di dato riusabili e letture condivise, non soltanto dalla raccolta. È un principio molto pratico: le aziende in crescita non hanno bisogno di più complessità. Hanno bisogno di un sistema che trasformi i dati in orientamento.</p>
 <p>Se senti che la tua azienda ha già abbastanza numeri ma non abbastanza chiarezza, questo è il punto in cui conviene intervenire. Migliorare tracking, dashboard e reportistica non è un tema tecnico isolato: è un modo per restituire qualità alle decisioni.</p>
-<p>Se vuoi capire come trasformare <strong>KPI, dashboard e reporting</strong> in un sistema che aiuti davvero la tua azienda a decidere meglio, possiamo partire da un audit iniziale e costruire insieme un impianto più chiaro, leggibile e utile al management.</p>
+<p class="callout">Se vuoi capire come trasformare <strong>KPI, dashboard e reporting</strong> in un sistema che aiuti davvero la tua azienda a decidere meglio, possiamo partire da un audit iniziale e costruire insieme un impianto più chiaro, leggibile e utile al management.</p>
 <p><strong>FAQ</strong></p>
 <p><strong>È meglio rifare tutto o migliorare l’esistente?</strong></p>
 <p>Dipende. Nella maggior parte dei casi conviene partire dall’esistente, capire dove si rompe la filiera del dato e intervenire sui punti più critici.</p>
@@ -82,4 +84,15 @@
 </div></div></section>
 <footer class="footer"><div class="container">Francesco Gizzi, marketing, data, sales e strategy.</div></footer>
 <script src="script.js"></script>
+<script>
+(function(){
+  var bar=document.getElementById('reading-progress');
+  if(!bar)return;
+  window.addEventListener('scroll',function(){
+    var s=document.documentElement;
+    var pct=(s.scrollTop||document.body.scrollTop)/(s.scrollHeight-s.clientHeight)*100;
+    bar.style.width=Math.min(pct,100)+'%';
+  },{passive:true});
+})();
+</script>
 </body></html>

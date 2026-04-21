@@ -17,11 +17,13 @@
   <link rel="canonical" href="https://francescogizzi.com/blog-servizio-di-redazione-articoli-per-blog-aziendali-b2b.html" />
 </head>
 <body>
+<div id="reading-progress"></div>
 <header class="site-header"><div class="container header-inner"><a href="index.html" class="logo">Francesco Gizzi</a><button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Apri il menu"><span class="line"></span><span class="line"></span><span class="line"></span></button><nav class="nav" id="site-nav"><a href="index.html#chi-sono">Chi sono</a><div class="has-dropdown"><a href="index.html#servizi" class="nav-dropdown-toggle">Servizi <span class="nav-caret">&#9660;</span></a><div class="nav-dropdown"><a href="servizi-marketing.html">Marketing</a><a href="servizi-data.html">Data</a><a href="servizi-sales.html">Sales</a><a href="servizi-strategy.html">Strategy</a></div></div><a href="index.html#progetti">Progetti</a><a href="blog.html">Blog</a><a href="index.html#contatti">Contatti</a></nav></div></header>
 <main class="section">
   <div class="container article">
     <p class="eyebrow">Redazione articoli SEO</p>
     <h1>Servizio di redazione articoli per blog aziendali B2B</h1>
+    <p class="reading-meta">Lettura: circa 4 minuti</p>
     <p>Scrivere per un blog aziendale B2B è diverso dal pubblicare contenuti generici o consumer. Il lettore B2B ha cicli decisionali più lunghi, obiezioni più strutturate e spesso cerca contenuti che lo aiutino a leggere meglio un problema, non solo a ottenere una risposta rapida. Per questo un <strong>servizio di redazione articoli B2B</strong> non dovrebbe limitarsi alla scrittura: dovrebbe tradurre la complessità del business in contenuti credibili, leggibili e realmente utili alla crescita.</p>
 <h2>Perché nel B2B il contenuto ha una funzione diversa</h2>
 <p>Nel B2B il blog non lavora solo per la SEO. Lavora anche come supporto alla fiducia, alla qualificazione dei lead e alla chiarezza del posizionamento. <a href="https://contentmarketinginstitute.com/b2b-research/b2b-content-marketing-trends-research-2025" target="_blank" rel="noopener"><strong>Content Marketing Institute</strong></a> mostra che thought leadership e ottimizzazione dei contenuti restano tra le aree in cui i marketer prevedono maggiori investimenti. Questo succede perché, in molti settori, il contenuto è una parte del processo commerciale prima ancora di essere una leva di visibilità.</p>
@@ -34,7 +36,7 @@
   <li>creare collegamenti tra contenuti, servizi e criteri decisionali</li>
 </ul>
 <h2>Dove si inceppa più spesso il blog aziendale</h2>
-<p>I problemi tipici sono tre:Questi sintomi nascono spesso da una mancanza di regia editoriale. Se oggi il blog della tua azienda esiste ma non aiuta davvero né la SEO né il commerciale, <strong>allora contattami</strong>: possiamo partire da una revisione degli articoli esistenti e capire quali contenuti servono davvero per sostenere la crescita.</p>
+<p class="callout">I problemi tipici sono tre:Questi sintomi nascono spesso da una mancanza di regia editoriale. Se oggi il blog della tua azienda esiste ma non aiuta davvero né la SEO né il commerciale, <strong>allora contattami</strong>: possiamo partire da una revisione degli articoli esistenti e capire quali contenuti servono davvero per sostenere la crescita.</p>
 <ul>
   <li>blog fermo o pubblicato in modo discontinuo</li>
   <li>articoli troppo interni, troppo tecnici o troppo promozionali</li>
@@ -49,7 +51,7 @@
   <li>framework, errori da evitare, criteri di valutazione</li>
 </ul>
 <h2>Che cosa ottieni quando il blog smette di essere un contenitore e diventa un asset</h2>
-<p>Quando il blog è impostato bene, non migliora solo il traffico. Migliora il <strong>modo in cui il mercato percepisce la tua competenza</strong>. Aiuta il team commerciale a usare contenuti come supporto. Riduce l’effetto di blog “vuoto” o puramente formale. E soprattutto costruisce un archivio di argomenti che continua a lavorare nel tempo.Se vuoi trasformare il tuo blog B2B in uno strumento che aiuti davvero posizionamento, autorevolezza e qualità dei contatti, <strong>scrivimi</strong>: possiamo costruire un sistema editoriale più ordinato e realmente utile al business.</p>
+<p class="callout">Quando il blog è impostato bene, non migliora solo il traffico. Migliora il <strong>modo in cui il mercato percepisce la tua competenza</strong>. Aiuta il team commerciale a usare contenuti come supporto. Riduce l’effetto di blog “vuoto” o puramente formale. E soprattutto costruisce un archivio di argomenti che continua a lavorare nel tempo.Se vuoi trasformare il tuo blog B2B in uno strumento che aiuti davvero posizionamento, autorevolezza e qualità dei contatti, <strong>scrivimi</strong>: possiamo costruire un sistema editoriale più ordinato e realmente utile al business.</p>
 <p>Per capire come costruire un sistema editoriale completo che sostenga la crescita organica, leggi anche <a href="blog-redazione-articoli-seo-per-aziende-che-vogliono-crescere.html">redazione articoli SEO per aziende che vogliono crescere</a>.</p>
 <h2>FAQ</h2>
 <p><strong>Un blog B2B deve per forza essere molto tecnico?</strong>No. Deve essere preciso e credibile, ma soprattutto leggibile e utile per chi decide.</p>
@@ -85,4 +87,15 @@
 </div></div></section>
 <footer class="footer"><div class="container">Francesco Gizzi, marketing, data, sales e strategy.</div></footer>
 <script src="script.js"></script>
+<script>
+(function(){
+  var bar=document.getElementById('reading-progress');
+  if(!bar)return;
+  window.addEventListener('scroll',function(){
+    var s=document.documentElement;
+    var pct=(s.scrollTop||document.body.scrollTop)/(s.scrollHeight-s.clientHeight)*100;
+    bar.style.width=Math.min(pct,100)+'%';
+  },{passive:true});
+})();
+</script>
 </body></html>

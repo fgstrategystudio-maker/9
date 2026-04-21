@@ -17,11 +17,13 @@
   <link rel="canonical" href="https://francescogizzi.com/blog-sviluppo-del-business-per-aziende-che-vogliono-aprire-nuove-opportunita.html" />
 </head>
 <body>
+<div id="reading-progress"></div>
 <header class="site-header"><div class="container header-inner"><a href="index.html" class="logo">Francesco Gizzi</a><button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Apri il menu"><span class="line"></span><span class="line"></span><span class="line"></span></button><nav class="nav" id="site-nav"><a href="index.html#chi-sono">Chi sono</a><div class="has-dropdown"><a href="index.html#servizi" class="nav-dropdown-toggle">Servizi <span class="nav-caret">&#9660;</span></a><div class="nav-dropdown"><a href="servizi-marketing.html">Marketing</a><a href="servizi-data.html">Data</a><a href="servizi-sales.html">Sales</a><a href="servizi-strategy.html">Strategy</a></div></div><a href="index.html#progetti">Progetti</a><a href="blog.html">Blog</a><a href="index.html#contatti">Contatti</a></nav></div></header>
 <main class="section">
   <div class="container article">
     <p class="eyebrow">Strategy</p>
     <h1>Sviluppo del business per aziende che vogliono aprire nuove opportunità</h1>
+    <p class="reading-meta">Lettura: circa 3 minuti</p>
     <p>Aprire nuove opportunità è una delle ambizioni più naturali per un’azienda che vuole crescere. Il rischio, però, è confondere sviluppo del business con semplice espansione commerciale. Le due cose non coincidono. Lo sviluppo del business utile non consiste nel moltiplicare contatti o iniziative. Consiste nel capire quali opportunità abbiano davvero senso strategico, operativo ed economico.</p>
 <h2>Perché sviluppare il business non significa inseguire tutto</h2>
 <p>Quando il mercato si muove più velocemente, l’istinto porta spesso ad aprire troppo: nuovi segmenti, nuovi partner, nuovi canali, nuove geografie. Ma <a href="https://www.bain.com/insights/a-strong-core-business-is-key/" target="_blank" rel="noopener"><strong>Bain</strong></a> ricorda da tempo il valore del core business come base della crescita profittevole. Il messaggio è semplice: senza una base forte, espandersi troppo presto può aumentare volume e complessità più di quanto aumenti il valore creato.</p>
@@ -34,14 +36,14 @@
   <li>esiste una reale coerenza tra opportunità commerciale e struttura operativa</li>
 </ul>
 <p>Lo sviluppo del business serio parte quasi sempre da qui: <strong>selezione</strong>, non moltiplicazione.</p>
-<p>Se oggi stai valutando nuove opportunità ma non è chiaro quali abbiano davvero senso per il tuo business, contattami: possiamo partire da una lettura del contesto e capire dove convenga aprire davvero.</p>
+<p class="callout">Se oggi stai valutando nuove opportunità ma non è chiaro quali abbiano davvero senso per il tuo business, contattami: possiamo partire da una lettura del contesto e capire dove convenga aprire davvero.</p>
 <h2>Dove si vede la differenza tra crescita opportunistica e crescita costruita</h2>
 <p>La crescita opportunistica tende a sommare iniziative. La crescita costruita seleziona, collega e ordina. <a href="https://www.mckinsey.com/capabilities/strategy-and-corporate-finance/how-we-help-clients/strategic-growth-and-innovation" target="_blank" rel="noopener"><strong>McKinsey</strong></a> insiste sul tema delle granular growth opportunities: un richiamo utile, perché mostra che non tutte le opportunità hanno lo stesso valore e che la crescita migliore nasce spesso da letture granulari, non da slogan generici.</p>
 <h2>Che ruolo hanno partnership e nuove linee</h2>
 <p>Partnership, distribuzione, nuove linee di offerta e nuovi segmenti possono essere leve molto forti. Ma vanno letti con la stessa logica con cui si leggono gli investimenti: quali competenze richiedono, quali margini portano, quale livello di attrito introducono, quanto rafforzano il core. <a href="https://hbr.org/2026/02/why-some-companies-grow-rapidly-while-others-stall" target="_blank" rel="noopener"><strong>Harvard Business Review</strong></a> richiama proprio il ruolo dell’allineamento dei leader e dell’organizzazione nel sostenere la crescita. Senza allineamento, anche una buona opportunità può essere gestita male.</p>
 <h2>Quando lo sviluppo del business diventa una vera leva</h2>
 <p>Lo sviluppo del business diventa una leva quando aiuta l’azienda a crescere con <strong>maggiore qualità</strong> della domanda, delle partnership e del mix opportunità. Non è solo apertura commerciale: è una forma di selezione strategica che protegge la sostenibilità mentre amplia le possibilità future.</p>
-<p>Se vuoi aprire nuove opportunità senza disperdere energie in direzioni poco coerenti, scrivimi: possiamo iniziare da un audit e capire quali leve di sviluppo abbiano davvero senso oggi per la tua azienda.</p>
+<p class="callout">Se vuoi aprire nuove opportunità senza disperdere energie in direzioni poco coerenti, scrivimi: possiamo iniziare da un audit e capire quali leve di sviluppo abbiano davvero senso oggi per la tua azienda.</p>
 <p>Se stai valutando come consolidare la crescita attraverso partnership strategiche, leggi anche <a href="blog-consulenza-per-sviluppo-del-business-partnership-e-crescita-sostenibile.html">consulenza per sviluppo del business, partnership e crescita sostenibile</a>.</p>
 <h2>FAQ</h2>
 <p><strong>Sviluppo del business e commerciale sono la stessa cosa?</strong>No. Il commerciale lavora sul presente e sulla pipeline; lo sviluppo del business ha anche una funzione più selettiva e strategica sulle opportunità future.</p>
@@ -77,4 +79,15 @@
 </div></div></section>
 <footer class="footer"><div class="container">Francesco Gizzi, marketing, data, sales e strategy.</div></footer>
 <script src="script.js"></script>
+<script>
+(function(){
+  var bar=document.getElementById('reading-progress');
+  if(!bar)return;
+  window.addEventListener('scroll',function(){
+    var s=document.documentElement;
+    var pct=(s.scrollTop||document.body.scrollTop)/(s.scrollHeight-s.clientHeight)*100;
+    bar.style.width=Math.min(pct,100)+'%';
+  },{passive:true});
+})();
+</script>
 </body></html>
