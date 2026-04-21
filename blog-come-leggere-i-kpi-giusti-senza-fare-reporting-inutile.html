@@ -46,7 +46,7 @@
 <p>In una struttura sana di reporting, il management vede pochi indicatori realmente decisivi. I team operativi hanno accesso a una lettura più granulare. Le analisi di dettaglio vengono attivate quando c’è un’anomalia o un’ipotesi da testare.</p>
 <p>Questo cambia molto anche la qualità del lavoro interno. Le riunioni diventano più leggere, i conflitti sui numeri diminuiscono e il reporting smette di essere percepito come un fardello. Se senti che nella tua azienda state misurando tanto ma imparando poco, questo è esattamente il punto in cui vale la pena intervenire con un supporto esterno: ridefinire KPI, dashboard e frequenze di lettura con un criterio più solido.</p>
 <p>Alla fine, leggere i KPI giusti serve a una sola cosa: decidere meglio. Se il tuo reporting non ti aiuta a farlo, allora non va “riempito”. Va semplificato, ordinato e ricostruito. È in quel momento che i dati iniziano a diventare davvero un vantaggio competitivo.</p>
-<p class="callout">Se vuoi capire come trasformare <strong>KPI, dashboard e reporting</strong> in un sistema che aiuti davvero la tua azienda a decidere meglio, possiamo partire da un audit iniziale e costruire insieme un impianto più chiaro, leggibile e utile al management.</p>
+<a class="callout-box" href="#contatti">Se vuoi capire come trasformare <strong>KPI, dashboard e reporting</strong> in un sistema che aiuti davvero la tua azienda a decidere meglio, possiamo partire da un audit iniziale e costruire insieme un impianto più chiaro, leggibile e utile al management.</a>
 <p><strong>FAQ</strong></p>
 <p><strong>Come faccio a capire se una metrica è davvero un KPI?</strong></p>
 <p>Se misura un obiettivo prioritario e se il suo andamento può cambiare una decisione, allora ha le caratteristiche di un KPI.</p>
@@ -85,15 +85,18 @@
 </div></div></section>
 <footer class="footer"><div class="container">Francesco Gizzi, marketing, data, sales e strategy.</div></footer>
 <script src="script.js"></script>
+
 <script>
 (function(){
-  var bar=document.getElementById('reading-progress');
-  if(!bar)return;
-  window.addEventListener('scroll',function(){
-    var s=document.documentElement;
-    var pct=(s.scrollTop||document.body.scrollTop)/(s.scrollHeight-s.clientHeight)*100;
-    bar.style.width=Math.min(pct,100)+'%';
-  },{passive:true});
+  var bar = document.getElementById('reading-progress');
+  if (!bar) return;
+  function update() {
+    var scrollTop = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+    var docH = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight) - window.innerHeight;
+    bar.style.width = (docH > 0 ? Math.min(scrollTop / docH * 100, 100) : 0) + '%';
+  }
+  window.addEventListener('scroll', update, {passive: true});
+  update();
 })();
 </script>
 </body></html>

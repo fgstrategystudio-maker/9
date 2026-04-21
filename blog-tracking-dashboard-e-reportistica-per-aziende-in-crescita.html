@@ -45,7 +45,7 @@
 <p>Quando il sistema torna coerente, si vedono subito alcuni effetti concreti:</p>
 <p>Secondo <a href="https://www.mckinsey.com/quarterly/the-five-fifty/five-fifty-the-data-driven-enterprise" target="_blank" rel="noopener"><strong>McKinsey</strong></a> la maturità data driven dipende sempre di più dalla capacità di costruire prodotti di dato riusabili e letture condivise, non soltanto dalla raccolta. È un principio molto pratico: le aziende in crescita non hanno bisogno di più complessità. Hanno bisogno di un sistema che trasformi i dati in orientamento.</p>
 <p>Se senti che la tua azienda ha già abbastanza numeri ma non abbastanza chiarezza, questo è il punto in cui conviene intervenire. Migliorare tracking, dashboard e reportistica non è un tema tecnico isolato: è un modo per restituire qualità alle decisioni.</p>
-<p class="callout">Se vuoi capire come trasformare <strong>KPI, dashboard e reporting</strong> in un sistema che aiuti davvero la tua azienda a decidere meglio, possiamo partire da un audit iniziale e costruire insieme un impianto più chiaro, leggibile e utile al management.</p>
+<a class="callout-box" href="#contatti">Se vuoi capire come trasformare <strong>KPI, dashboard e reporting</strong> in un sistema che aiuti davvero la tua azienda a decidere meglio, possiamo partire da un audit iniziale e costruire insieme un impianto più chiaro, leggibile e utile al management.</a>
 <p><strong>FAQ</strong></p>
 <p><strong>È meglio rifare tutto o migliorare l’esistente?</strong></p>
 <p>Dipende. Nella maggior parte dei casi conviene partire dall’esistente, capire dove si rompe la filiera del dato e intervenire sui punti più critici.</p>
@@ -84,15 +84,18 @@
 </div></div></section>
 <footer class="footer"><div class="container">Francesco Gizzi, marketing, data, sales e strategy.</div></footer>
 <script src="script.js"></script>
+
 <script>
 (function(){
-  var bar=document.getElementById('reading-progress');
-  if(!bar)return;
-  window.addEventListener('scroll',function(){
-    var s=document.documentElement;
-    var pct=(s.scrollTop||document.body.scrollTop)/(s.scrollHeight-s.clientHeight)*100;
-    bar.style.width=Math.min(pct,100)+'%';
-  },{passive:true});
+  var bar = document.getElementById('reading-progress');
+  if (!bar) return;
+  function update() {
+    var scrollTop = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+    var docH = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight) - window.innerHeight;
+    bar.style.width = (docH > 0 ? Math.min(scrollTop / docH * 100, 100) : 0) + '%';
+  }
+  window.addEventListener('scroll', update, {passive: true});
+  update();
 })();
 </script>
 </body></html>

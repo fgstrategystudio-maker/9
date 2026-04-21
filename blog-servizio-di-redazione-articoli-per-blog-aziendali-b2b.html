@@ -36,7 +36,7 @@
   <li>creare collegamenti tra contenuti, servizi e criteri decisionali</li>
 </ul>
 <h2>Dove si inceppa più spesso il blog aziendale</h2>
-<p class="callout">I problemi tipici sono tre:Questi sintomi nascono spesso da una mancanza di regia editoriale. Se oggi il blog della tua azienda esiste ma non aiuta davvero né la SEO né il commerciale, <strong>allora contattami</strong>: possiamo partire da una revisione degli articoli esistenti e capire quali contenuti servono davvero per sostenere la crescita.</p>
+<a class="callout-box" href="#contatti">I problemi tipici sono tre:Questi sintomi nascono spesso da una mancanza di regia editoriale. Se oggi il blog della tua azienda esiste ma non aiuta davvero né la SEO né il commerciale, <strong>allora contattami</strong>: possiamo partire da una revisione degli articoli esistenti e capire quali contenuti servono davvero per sostenere la crescita.</a>
 <ul>
   <li>blog fermo o pubblicato in modo discontinuo</li>
   <li>articoli troppo interni, troppo tecnici o troppo promozionali</li>
@@ -51,7 +51,7 @@
   <li>framework, errori da evitare, criteri di valutazione</li>
 </ul>
 <h2>Che cosa ottieni quando il blog smette di essere un contenitore e diventa un asset</h2>
-<p class="callout">Quando il blog è impostato bene, non migliora solo il traffico. Migliora il <strong>modo in cui il mercato percepisce la tua competenza</strong>. Aiuta il team commerciale a usare contenuti come supporto. Riduce l’effetto di blog “vuoto” o puramente formale. E soprattutto costruisce un archivio di argomenti che continua a lavorare nel tempo.Se vuoi trasformare il tuo blog B2B in uno strumento che aiuti davvero posizionamento, autorevolezza e qualità dei contatti, <strong>scrivimi</strong>: possiamo costruire un sistema editoriale più ordinato e realmente utile al business.</p>
+<a class="callout-box" href="#contatti">Quando il blog è impostato bene, non migliora solo il traffico. Migliora il <strong>modo in cui il mercato percepisce la tua competenza</strong>. Aiuta il team commerciale a usare contenuti come supporto. Riduce l’effetto di blog “vuoto” o puramente formale. E soprattutto costruisce un archivio di argomenti che continua a lavorare nel tempo.Se vuoi trasformare il tuo blog B2B in uno strumento che aiuti davvero posizionamento, autorevolezza e qualità dei contatti, <strong>scrivimi</strong>: possiamo costruire un sistema editoriale più ordinato e realmente utile al business.</a>
 <p>Per capire come costruire un sistema editoriale completo che sostenga la crescita organica, leggi anche <a href="blog-redazione-articoli-seo-per-aziende-che-vogliono-crescere.html">redazione articoli SEO per aziende che vogliono crescere</a>.</p>
 <h2>FAQ</h2>
 <p><strong>Un blog B2B deve per forza essere molto tecnico?</strong>No. Deve essere preciso e credibile, ma soprattutto leggibile e utile per chi decide.</p>
@@ -87,15 +87,18 @@
 </div></div></section>
 <footer class="footer"><div class="container">Francesco Gizzi, marketing, data, sales e strategy.</div></footer>
 <script src="script.js"></script>
+
 <script>
 (function(){
-  var bar=document.getElementById('reading-progress');
-  if(!bar)return;
-  window.addEventListener('scroll',function(){
-    var s=document.documentElement;
-    var pct=(s.scrollTop||document.body.scrollTop)/(s.scrollHeight-s.clientHeight)*100;
-    bar.style.width=Math.min(pct,100)+'%';
-  },{passive:true});
+  var bar = document.getElementById('reading-progress');
+  if (!bar) return;
+  function update() {
+    var scrollTop = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+    var docH = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight) - window.innerHeight;
+    bar.style.width = (docH > 0 ? Math.min(scrollTop / docH * 100, 100) : 0) + '%';
+  }
+  window.addEventListener('scroll', update, {passive: true});
+  update();
 })();
 </script>
 </body></html>

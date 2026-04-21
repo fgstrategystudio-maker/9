@@ -51,7 +51,7 @@
   <li>metriche che aiutano davvero forecast e priorità</li>
 </ul>
 <p>Quando questi elementi vengono condivisi, il processo smette di essere una checklist burocratica e diventa uno strumento di governo. È questo il punto che rende la vendita più efficace: non più attività in assoluto, ma più capacità di leggere ciò che conta.</p>
-<p class="callout">Se oggi il tuo team lavora tanto ma fatica a vedere dove si crea il vero avanzamento, possiamo partire da qui: rimettere in ordine il processo, chiarire i criteri e trasformare il CRM in uno strumento utile invece che in un archivio da aggiornare.</p>
+<a class="callout-box" href="#contatti">Se oggi il tuo team lavora tanto ma fatica a vedere dove si crea il vero avanzamento, possiamo partire da qui: rimettere in ordine il processo, chiarire i criteri e trasformare il CRM in uno strumento utile invece che in un archivio da aggiornare.</a>
 <h2>Perché efficacia non significa fare più attività</h2>
 <p>Molte aziende associano un processo più efficace a un aumento di attività: più call, più email, più task, più touchpoint. In realtà la vera efficacia commerciale nasce quasi sempre da una migliore qualità delle decisioni. Fare di più con un processo confuso produce solo più rumore.</p>
 <p>Lo stesso ragionamento emerge dal <a href="https://business.linkedin.com/sales-solutions/b2b-sales-strategy-guides/linkedin-state-of-sales-report-2022" target="_blank" rel="noopener"><strong>LinkedIn State of Sales 2022</strong></a> in cui i top performer vengono descritti come team capaci di usare dati, tecnologia e metodo per essere più pertinenti, non semplicemente più insistenti. È un punto molto importante: un buon processo non aumenta solo il ritmo, aumenta la qualità della pertinenza.</p>
@@ -66,7 +66,7 @@
 </ul>
 <p>Il vantaggio più importante, in molti casi, è che il commerciale smette di essere una black box. Diventa leggibile, discutibile e migliorabile. Questo è ciò che trasforma un processo in una leva di crescita.</p>
 <p>Se vuoi costruire un processo sales più chiaro, più coerente e più utile per il management, il punto di partenza non è un nuovo tool. È una rilettura del percorso commerciale e dei criteri con cui oggi interpreti avanzamento, priorità e conversione.</p>
-<p class="callout">Se vuoi mettere ordine agli stage, chiarire i criteri di avanzamento e costruire un processo commerciale che il team riesca davvero a usare, possiamo partire da un lavoro di analisi e portarlo subito su un piano operativo.</p>
+<a class="callout-box" href="#contatti">Se vuoi mettere ordine agli stage, chiarire i criteri di avanzamento e costruire un processo commerciale che il team riesca davvero a usare, possiamo partire da un lavoro di analisi e portarlo subito su un piano operativo.</a>
 <h2>FAQ</h2>
 <h3>Che differenza c’è tra processo sales e pipeline?</h3>
 <p>La pipeline rappresenta le opportunità. Il processo sales definisce regole, passaggi, criteri e responsabilità che guidano quelle opportunità.</p>
@@ -111,15 +111,18 @@
 </div></div></section>
 <footer class="footer"><div class="container">Francesco Gizzi, marketing, data, sales e strategy.</div></footer>
 <script src="script.js"></script>
+
 <script>
 (function(){
-  var bar=document.getElementById('reading-progress');
-  if(!bar)return;
-  window.addEventListener('scroll',function(){
-    var s=document.documentElement;
-    var pct=(s.scrollTop||document.body.scrollTop)/(s.scrollHeight-s.clientHeight)*100;
-    bar.style.width=Math.min(pct,100)+'%';
-  },{passive:true});
+  var bar = document.getElementById('reading-progress');
+  if (!bar) return;
+  function update() {
+    var scrollTop = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+    var docH = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight) - window.innerHeight;
+    bar.style.width = (docH > 0 ? Math.min(scrollTop / docH * 100, 100) : 0) + '%';
+  }
+  window.addEventListener('scroll', update, {passive: true});
+  update();
 })();
 </script>
 </body></html>

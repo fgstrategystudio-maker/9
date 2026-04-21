@@ -41,7 +41,7 @@
 <h2>Il ruolo dei collegamenti interni e dei cluster</h2>
 <p>Il posizionamento non si costruisce con pagine isolate. Si costruisce con contenuti che si richiamano tra loro e che presidiano un cluster tematico. <a href="https://developers.google.com/search/docs/fundamentals/seo-starter-guide" target="_blank" rel="noopener"><strong>Google SEO Starter Guide</strong></a> ricorda che i link crawlable aiutano Google a capire la relazione tra le pagine. Dal punto di vista del lettore, fanno anche di più: aiutano a seguire un percorso. Un articolo forte dovrebbe quasi sempre rimandare a una pagina servizio e a uno o due contenuti correlati.</p>
 <h2>Che cosa cambia quando il blog smette di essere neutro</h2>
-<p class="callout">Molti blog sembrano “giusti”, ma restano neutri. Informano, ma non lasciano un’impressione. Quando invece il contenuto inizia a ordinare problemi, offrire criteri e mostrare un punto di vista, cresce la <strong>forza reputazionale</strong> del sito. Non è una reputazione costruita con slogan, ma con coerenza editoriale.Se vuoi usare gli articoli SEO non solo per aumentare la visibilità ma per chiarire meglio il tuo spazio nel mercato e alzare la percezione di autorevolezza, <strong>contattami</strong>: possiamo costruire un piano di contenuti che lavori davvero su entrambi i fronti.</p>
+<a class="callout-box" href="#contatti">Molti blog sembrano “giusti”, ma restano neutri. Informano, ma non lasciano un’impressione. Quando invece il contenuto inizia a ordinare problemi, offrire criteri e mostrare un punto di vista, cresce la <strong>forza reputazionale</strong> del sito. Non è una reputazione costruita con slogan, ma con coerenza editoriale.Se vuoi usare gli articoli SEO non solo per aumentare la visibilità ma per chiarire meglio il tuo spazio nel mercato e alzare la percezione di autorevolezza, <strong>contattami</strong>: possiamo costruire un piano di contenuti che lavori davvero su entrambi i fronti.</a>
 <p>Per chi lavora in contesti B2B, può essere utile approfondire il tema del <a href="blog-servizio-di-redazione-articoli-per-blog-aziendali-b2b.html">servizio di redazione articoli per blog aziendali B2B</a>.</p>
 <h2>FAQ</h2>
 <p><strong>Gli articoli SEO servono davvero anche alla reputazione del </strong><strong>brand</strong><strong>?</strong>Sì, perché aiutano il mercato a capire come ragioni e quanto sei credibile su certi temi.</p>
@@ -77,15 +77,18 @@
 </div></div></section>
 <footer class="footer"><div class="container">Francesco Gizzi, marketing, data, sales e strategy.</div></footer>
 <script src="script.js"></script>
+
 <script>
 (function(){
-  var bar=document.getElementById('reading-progress');
-  if(!bar)return;
-  window.addEventListener('scroll',function(){
-    var s=document.documentElement;
-    var pct=(s.scrollTop||document.body.scrollTop)/(s.scrollHeight-s.clientHeight)*100;
-    bar.style.width=Math.min(pct,100)+'%';
-  },{passive:true});
+  var bar = document.getElementById('reading-progress');
+  if (!bar) return;
+  function update() {
+    var scrollTop = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+    var docH = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight) - window.innerHeight;
+    bar.style.width = (docH > 0 ? Math.min(scrollTop / docH * 100, 100) : 0) + '%';
+  }
+  window.addEventListener('scroll', update, {passive: true});
+  update();
 })();
 </script>
 </body></html>

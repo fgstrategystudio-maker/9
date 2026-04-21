@@ -28,7 +28,7 @@
 <h2>Partire dalle decisioni, non dai report</h2>
 <p>L’errore più comune è impostare il controllo di gestione partendo dal formato del report. Bisognerebbe fare l’opposto: partire dalle <strong>decisioni ricorrenti</strong> che il management deve prendere. Prezzi? Assunzioni? Mix clienti? Budget marketing? Investimenti? Ogni report utile nasce da qui. Anche <a href="https://www.ifac.org/knowledge-gateway/discussion/changing-role-accounting-enterprise-performance-management" target="_blank" rel="noopener"><strong>IFAC</strong></a> descrive l’evoluzione della management accounting in questa direzione: meno retrospettiva pura, più informazione tempestiva e orientata alla gestione.</p>
 <h2>I cinque elementi minimi del sistema</h2>
-<p class="callout">Un impianto semplice ma utile dovrebbe includere almeno cinque elementi:Il management non ha bisogno di tutto. Ha bisogno di <strong>poche viste affidabili</strong> e coerenti. Se oggi il sistema è pesante o confuso, allora contattami: possiamo iniziare da un audit e capire cosa non va, prima di aggiungere altra reportistica.</p>
+<a class="callout-box" href="#contatti">Un impianto semplice ma utile dovrebbe includere almeno cinque elementi:Il management non ha bisogno di tutto. Ha bisogno di <strong>poche viste affidabili</strong> e coerenti. Se oggi il sistema è pesante o confuso, allora contattami: possiamo iniziare da un audit e capire cosa non va, prima di aggiungere altra reportistica.</a>
 <ul>
   <li>un conto economico gestionale coerente con il modo in cui l’azienda decide</li>
   <li>una vista per centri di responsabilità o aree rilevanti</li>
@@ -88,15 +88,18 @@
 </div></div></section>
 <footer class="footer"><div class="container">Francesco Gizzi, marketing, data, sales e strategy.</div></footer>
 <script src="script.js"></script>
+
 <script>
 (function(){
-  var bar=document.getElementById('reading-progress');
-  if(!bar)return;
-  window.addEventListener('scroll',function(){
-    var s=document.documentElement;
-    var pct=(s.scrollTop||document.body.scrollTop)/(s.scrollHeight-s.clientHeight)*100;
-    bar.style.width=Math.min(pct,100)+'%';
-  },{passive:true});
+  var bar = document.getElementById('reading-progress');
+  if (!bar) return;
+  function update() {
+    var scrollTop = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+    var docH = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight) - window.innerHeight;
+    bar.style.width = (docH > 0 ? Math.min(scrollTop / docH * 100, 100) : 0) + '%';
+  }
+  window.addEventListener('scroll', update, {passive: true});
+  update();
 })();
 </script>
 </body></html>

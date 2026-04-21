@@ -64,7 +64,7 @@
 </ul>
 <p>Il vantaggio più importante, spesso, è che il management inizia a capire quali opportunità sono davvero adatte all’azienda e quali invece rischiano di allargare il perimetro senza produrre valore reale.</p>
 <p>Se vuoi collegare meglio sviluppo del business, partnership e processo commerciale, ha senso lavorare su una strategia che unisca apertura e conversione dentro lo stesso disegno di crescita.</p>
-<p class="callout">Se vuoi costruire nuove opportunità senza disperdere energie e vuoi collegare meglio partnership, sviluppo del business e processo commerciale, possiamo partire da una lettura strategica e trasformarla in un piano utile alla crescita.</p>
+<a class="callout-box" href="#contatti">Se vuoi costruire nuove opportunità senza disperdere energie e vuoi collegare meglio partnership, sviluppo del business e processo commerciale, possiamo partire da una lettura strategica e trasformarla in un piano utile alla crescita.</a>
 <h2>FAQ</h2>
 <h3>Business development e sales strategy coincidono?</h3>
 <p>No. Il primo apre opportunità, il secondo costruisce il sistema che le trasforma in risultati. Lavorano meglio quando restano strettamente collegati.</p>
@@ -108,15 +108,18 @@
 </div></div></section>
 <footer class="footer"><div class="container">Francesco Gizzi, marketing, data, sales e strategy.</div></footer>
 <script src="script.js"></script>
+
 <script>
 (function(){
-  var bar=document.getElementById('reading-progress');
-  if(!bar)return;
-  window.addEventListener('scroll',function(){
-    var s=document.documentElement;
-    var pct=(s.scrollTop||document.body.scrollTop)/(s.scrollHeight-s.clientHeight)*100;
-    bar.style.width=Math.min(pct,100)+'%';
-  },{passive:true});
+  var bar = document.getElementById('reading-progress');
+  if (!bar) return;
+  function update() {
+    var scrollTop = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+    var docH = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight) - window.innerHeight;
+    bar.style.width = (docH > 0 ? Math.min(scrollTop / docH * 100, 100) : 0) + '%';
+  }
+  window.addEventListener('scroll', update, {passive: true});
+  update();
 })();
 </script>
 </body></html>

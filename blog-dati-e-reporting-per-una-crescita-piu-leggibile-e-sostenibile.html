@@ -45,7 +45,7 @@
 <p>Quando il reporting funziona bene, le differenze si vedono presto:</p>
 <p>È qui che il reporting smette di essere burocrazia e diventa una leva di crescita. Non perché aggiunge complessità, ma perché restituisce ordine. <a href="https://online.hbs.edu/blog/post/data-driven-decision-making" target="_blank" rel="noopener"><strong>Harvard Business School Online</strong></a> e <a href="https://www.mckinsey.com/capabilities/quantumblack/our-insights/the-data-driven-enterprise-of-2025" target="_blank" rel="noopener"><strong>McKinsey</strong></a> convergono su un punto: i dati generano vantaggio quando migliorano davvero la capacità organizzativa di decidere.</p>
 <p>Se vuoi arrivare a questo livello, vale la pena partire da una domanda molto semplice: i dati che produci oggi aiutano davvero la tua azienda a crescere con più lucidità? Se la risposta non è chiara, allora forse è il momento giusto per rimettere ordine.</p>
-<p class="callout">Se vuoi capire come trasformare <strong>KPI, dashboard e reporting</strong> in un sistema che aiuti davvero la tua azienda a decidere meglio, possiamo partire da un audit iniziale e costruire insieme un impianto più chiaro, leggibile e utile al management.</p>
+<a class="callout-box" href="#contatti">Se vuoi capire come trasformare <strong>KPI, dashboard e reporting</strong> in un sistema che aiuti davvero la tua azienda a decidere meglio, possiamo partire da un audit iniziale e costruire insieme un impianto più chiaro, leggibile e utile al management.</a>
 <p><strong>FAQ</strong></p>
 <p><strong>Che cosa significa crescita leggibile?</strong></p>
 <p>Significa una crescita che può essere interpretata con chiarezza attraverso pochi indicatori davvero utili, senza dipendere da report opachi o ridondanti.</p>
@@ -84,15 +84,18 @@
 </div></div></section>
 <footer class="footer"><div class="container">Francesco Gizzi, marketing, data, sales e strategy.</div></footer>
 <script src="script.js"></script>
+
 <script>
 (function(){
-  var bar=document.getElementById('reading-progress');
-  if(!bar)return;
-  window.addEventListener('scroll',function(){
-    var s=document.documentElement;
-    var pct=(s.scrollTop||document.body.scrollTop)/(s.scrollHeight-s.clientHeight)*100;
-    bar.style.width=Math.min(pct,100)+'%';
-  },{passive:true});
+  var bar = document.getElementById('reading-progress');
+  if (!bar) return;
+  function update() {
+    var scrollTop = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+    var docH = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight) - window.innerHeight;
+    bar.style.width = (docH > 0 ? Math.min(scrollTop / docH * 100, 100) : 0) + '%';
+  }
+  window.addEventListener('scroll', update, {passive: true});
+  update();
 })();
 </script>
 </body></html>

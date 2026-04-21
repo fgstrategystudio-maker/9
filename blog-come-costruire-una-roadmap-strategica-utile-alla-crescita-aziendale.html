@@ -36,7 +36,7 @@
   <li>non vengono riviste abbastanza spesso</li>
 </ul>
 <p>Quando succede questo, la roadmap smette di orientare e diventa un documento decorativo. <a href="https://hbr.org/2024/06/how-to-manage-executing-strategy" target="_blank" rel="noopener"><strong>HBR</strong></a> ricorda bene che l’execution richiede capacità di aggiornare il piano, gestire resistenze e tradurre la strategia in progressi leggibili.</p>
-<p class="callout">Se senti che nella tua azienda esistono molti obiettivi ma poca sequenza reale, contattami: possiamo partire da una lettura delle priorità e capire come trasformarle in una roadmap più credibile.</p>
+<a class="callout-box" href="#contatti">Se senti che nella tua azienda esistono molti obiettivi ma poca sequenza reale, contattami: possiamo partire da una lettura delle priorità e capire come trasformarle in una roadmap più credibile.</a>
 <h2>Che cosa deve contenere una roadmap utile</h2>
 <p>Una roadmap utile dovrebbe aiutare a vedere almeno questi elementi:</p>
 <ul>
@@ -50,7 +50,7 @@
 <p>La parte più importante è questa: la roadmap non deve essere solo strategicamente sensata. Deve essere <strong>organizzativamente sostenibile</strong>. <a href="https://www.deloitte.com/us/en/services/consulting/articles/changing-operating-model.html" target="_blank" rel="noopener"><strong>Deloitte</strong></a> e <a href="https://www.mckinsey.com/capabilities/people-and-organizational-performance/our-insights/how-to-get-your-operating-model-transformation-back-on-track" target="_blank" rel="noopener"><strong>McKinsey</strong></a> insistono entrambe sul legame tra operating model, execution e risultati della trasformazione. Se la roadmap ignora capacità e struttura, resta teorica.</p>
 <h2>Quando una roadmap inizia a produrre vantaggio</h2>
 <p>Il vantaggio non è solo avere un piano. È riuscire a scegliere meglio cosa non fare, dove concentrare risorse e come leggere il progresso. Una roadmap utile protegge l’azienda dall’overload strategico e rende la crescita più ordinata, leggibile e sostenibile.</p>
-<p class="callout">Se vuoi trasformare obiettivi sparsi in una roadmap strategica che aiuti davvero il management a decidere, scrivimi: possiamo iniziare da un audit e capire come dare priorità, sequenza e realismo alla crescita.</p>
+<a class="callout-box" href="#contatti">Se vuoi trasformare obiettivi sparsi in una roadmap strategica che aiuti davvero il management a decidere, scrivimi: possiamo iniziare da un audit e capire come dare priorità, sequenza e realismo alla crescita.</a>
 <p>Se vuoi capire come una consulenza strategica può aiutarti a costruire direzione e continuità, leggi anche <a href="blog-consulenza-strategica-per-aziende-che-vogliono-crescere-con-piu-direzione.html">consulenza strategica per aziende che vogliono crescere con più direzione</a>.</p>
 <h2>FAQ</h2>
 <p><strong>Quante priorità dovrebbe avere una roadmap?</strong>Poche. Se tutto è prioritario, niente orienta davvero le decisioni.</p>
@@ -86,15 +86,18 @@
 </div></div></section>
 <footer class="footer"><div class="container">Francesco Gizzi, marketing, data, sales e strategy.</div></footer>
 <script src="script.js"></script>
+
 <script>
 (function(){
-  var bar=document.getElementById('reading-progress');
-  if(!bar)return;
-  window.addEventListener('scroll',function(){
-    var s=document.documentElement;
-    var pct=(s.scrollTop||document.body.scrollTop)/(s.scrollHeight-s.clientHeight)*100;
-    bar.style.width=Math.min(pct,100)+'%';
-  },{passive:true});
+  var bar = document.getElementById('reading-progress');
+  if (!bar) return;
+  function update() {
+    var scrollTop = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+    var docH = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight) - window.innerHeight;
+    bar.style.width = (docH > 0 ? Math.min(scrollTop / docH * 100, 100) : 0) + '%';
+  }
+  window.addEventListener('scroll', update, {passive: true});
+  update();
 })();
 </script>
 </body></html>

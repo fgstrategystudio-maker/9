@@ -47,7 +47,7 @@
 <p>Poi arrivano benefici più tangibili:</p>
 <p>Anche qui il punto non è “usare i dati” in astratto. Il punto è creare un sistema in cui i dati aiutino davvero l’azienda a muoversi. <a href="https://www.mckinsey.com/quarterly/the-five-fifty/five-fifty-the-data-driven-enterprise" target="_blank" rel="noopener"><strong>McKinsey</strong></a> continua a sottolineare che le imprese più forti sul piano data driven sono quelle che trattano i dati come una capacità organizzativa, non come un semplice output di business intelligence.</p>
 <p>Se vuoi lavorare in questa direzione, il passaggio utile non è partire da un nuovo report. È partire da un audit iniziale: capire quali KPI contano, quali dashboard hanno senso e quali decisioni devono essere prese meglio. È lì che un approccio data driven smette di essere un’etichetta e diventa una leva reale di crescita.</p>
-<p class="callout">Se vuoi capire come trasformare <strong>KPI, dashboard e reporting</strong> in un sistema che aiuti davvero la tua azienda a decidere meglio, possiamo partire da un audit iniziale e costruire insieme un impianto più chiaro, leggibile e utile al management.</p>
+<a class="callout-box" href="#contatti">Se vuoi capire come trasformare <strong>KPI, dashboard e reporting</strong> in un sistema che aiuti davvero la tua azienda a decidere meglio, possiamo partire da un audit iniziale e costruire insieme un impianto più chiaro, leggibile e utile al management.</a>
 <p><strong>FAQ</strong></p>
 <p><strong>Cosa significa davvero essere data driven?</strong></p>
 <p>Significa prendere decisioni migliori grazie a dati affidabili, leggibili e collegati a obiettivi chiari, non semplicemente produrre più report.</p>
@@ -86,15 +86,18 @@
 </div></div></section>
 <footer class="footer"><div class="container">Francesco Gizzi, marketing, data, sales e strategy.</div></footer>
 <script src="script.js"></script>
+
 <script>
 (function(){
-  var bar=document.getElementById('reading-progress');
-  if(!bar)return;
-  window.addEventListener('scroll',function(){
-    var s=document.documentElement;
-    var pct=(s.scrollTop||document.body.scrollTop)/(s.scrollHeight-s.clientHeight)*100;
-    bar.style.width=Math.min(pct,100)+'%';
-  },{passive:true});
+  var bar = document.getElementById('reading-progress');
+  if (!bar) return;
+  function update() {
+    var scrollTop = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+    var docH = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight) - window.innerHeight;
+    bar.style.width = (docH > 0 ? Math.min(scrollTop / docH * 100, 100) : 0) + '%';
+  }
+  window.addEventListener('scroll', update, {passive: true});
+  update();
 })();
 </script>
 </body></html>

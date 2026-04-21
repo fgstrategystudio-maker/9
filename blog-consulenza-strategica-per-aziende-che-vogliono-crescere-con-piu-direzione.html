@@ -36,12 +36,12 @@
   <li>dove esistono disallineamenti tra visione, execution e struttura</li>
   <li>quali iniziative vanno fermate, corrette o accelerate</li>
 </ul>
-<p class="callout">Se oggi senti che la tua azienda si muove molto ma non sempre nella stessa direzione, allora contattami: possiamo partire da una lettura delle priorità e capire dove si sta creando dispersione.</p>
+<a class="callout-box" href="#contatti">Se oggi senti che la tua azienda si muove molto ma non sempre nella stessa direzione, allora contattami: possiamo partire da una lettura delle priorità e capire dove si sta creando dispersione.</a>
 <h2>Come riconoscere se manca davvero direzione</h2>
 <p>I sintomi sono spesso ricorrenti. Il management apre più progetti di quanti il team riesca davvero a sostenere. Il commerciale spinge opportunità che non sempre si integrano con il posizionamento. Il marketing lavora su obiettivi che cambiano troppo in fretta. La direzione continua a correggere rotta, ma senza una vista abbastanza chiara del sistema. <a href="https://hbr.org/2015/03/why-strategy-execution-unravelsand-what-to-do-about-it" target="_blank" rel="noopener"><strong>Harvard Business Review</strong></a> descrive bene questo scollamento tra formulazione ed execution: la strategia si rompe quando non riesce a tenere insieme coordinamento, adattamento e allineamento.</p>
 <h2>Cosa ottiene l’azienda quando torna a scegliere meglio</h2>
 <p>Il primo beneficio non è sempre economico in senso immediato. Spesso è una maggiore <strong>lucidità organizzativa</strong>: meno riunioni inconcludenti, meno micro-priorità, meno iniziative decorative. Poi arrivano effetti più visibili: migliore qualità delle decisioni, migliore uso delle risorse e più coerenza tra crescita e struttura. <a href="https://www.bain.com/how-we-help/unlocking-sustainable-profitable-growth-a-three-pillar-algorithm-for-success/" target="_blank" rel="noopener"><strong>Bain &amp; Company</strong></a> insiste sul tema della profitable growth: è un richiamo utile, perché ricorda che la crescita sostenibile non dipende solo dal fare più attività, ma dal combinare bene investimenti, priorità e capacità esecutiva.</p>
-<p class="callout">Se vuoi dare alla tua azienda una direzione più leggibile e costruire un sistema di priorità più serio, scrivimi: possiamo iniziare da un audit strategico e capire cosa oggi sta frenando la crescita più di quanto sembri.</p>
+<a class="callout-box" href="#contatti">Se vuoi dare alla tua azienda una direzione più leggibile e costruire un sistema di priorità più serio, scrivimi: possiamo iniziare da un audit strategico e capire cosa oggi sta frenando la crescita più di quanto sembri.</a>
 <p>Per tradurre la direzione strategica in allineamento concreto tra le funzioni, leggi anche <a href="blog-strategy-per-allineare-marketing-sales-dati-e-obiettivi-di-business.html">strategy per allineare marketing, sales, dati e obiettivi di business</a>.</p>
 <h2>FAQ</h2>
 <p><strong>Quando serve davvero una consulenza strategica?</strong>Quando l’azienda cresce, cambia fase o sente che le decisioni vengono prese con troppa dispersione e poca gerarchia.</p>
@@ -77,15 +77,18 @@
 </div></div></section>
 <footer class="footer"><div class="container">Francesco Gizzi, marketing, data, sales e strategy.</div></footer>
 <script src="script.js"></script>
+
 <script>
 (function(){
-  var bar=document.getElementById('reading-progress');
-  if(!bar)return;
-  window.addEventListener('scroll',function(){
-    var s=document.documentElement;
-    var pct=(s.scrollTop||document.body.scrollTop)/(s.scrollHeight-s.clientHeight)*100;
-    bar.style.width=Math.min(pct,100)+'%';
-  },{passive:true});
+  var bar = document.getElementById('reading-progress');
+  if (!bar) return;
+  function update() {
+    var scrollTop = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+    var docH = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight) - window.innerHeight;
+    bar.style.width = (docH > 0 ? Math.min(scrollTop / docH * 100, 100) : 0) + '%';
+  }
+  window.addEventListener('scroll', update, {passive: true});
+  update();
 })();
 </script>
 </body></html>
