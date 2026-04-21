@@ -111,6 +111,7 @@ h1{font-size:56px;line-height:1.03;letter-spacing:-.04em;margin:0 0 18px;color:v
 .page-subcopy{max-width:760px}
 .service-page-grid{display:grid;grid-template-columns:1fr;gap:24px;align-items:start}
 .service-page-grid > *{grid-column:1/-1}
+.service-page-grid .section-title{color:var(--gold) !important}
 .info-panel{display:flex;flex-direction:column;gap:18px}
 .feature-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
 .feature{
