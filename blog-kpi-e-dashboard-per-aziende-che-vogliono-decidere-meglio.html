@@ -17,11 +17,13 @@
   <link rel="canonical" href="https://francescogizzi.com/blog-kpi-e-dashboard-per-aziende-che-vogliono-decidere-meglio.html" />
 </head>
 <body>
+<div id="reading-progress"></div>
 <header class="site-header"><div class="container header-inner"><a href="index.html" class="logo">Francesco Gizzi</a><button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Apri il menu"><span class="line"></span><span class="line"></span><span class="line"></span></button><nav class="nav" id="site-nav"><a href="index.html#chi-sono">Chi sono</a><div class="has-dropdown"><a href="index.html#servizi" class="nav-dropdown-toggle">Servizi <span class="nav-caret">&#9660;</span></a><div class="nav-dropdown"><a href="servizi-marketing.html">Marketing</a><a href="servizi-data.html">Data</a><a href="servizi-sales.html">Sales</a><a href="servizi-strategy.html">Strategy</a></div></div><a href="index.html#progetti">Progetti</a><a href="blog.html">Blog</a><a href="index.html#contatti">Contatti</a></nav></div></header>
 <main class="section">
   <div class="container article">
     <p class="eyebrow">Data</p>
     <h1>KPI e dashboard per aziende che vogliono decidere meglio</h1>
+    <p class="reading-meta">Lettura: circa 4 minuti</p>
     <p><strong>Perché KPI e dashboard non servono a mostrare dati, ma a orientare scelte</strong></p>
 <p>Nelle aziende che vogliono crescere, il valore di KPI e dashboard non sta nel rendere il business più “data rich”. Sta nel rendere il business più <strong>decidibile</strong>. Se i numeri non aiutano a capire dove stai guadagnando, dove stai perdendo efficienza o dove devi concentrare il focus, allora non stanno svolgendo il loro compito.</p>
 <p>Questo è uno dei motivi per cui molte dashboard restano sotto-utilizzate. Raccolgono troppi indicatori, si rivolgono a tutti e a nessuno, non distinguono tra visione direzionale e bisogno operativo. Risultato: il team continua a produrre cruscotti, ma le scelte importanti si prendono ancora a sensazione.</p>
@@ -42,7 +44,7 @@
 <p>Quando KPI e dashboard sono costruiti bene, il primo beneficio è una maggiore velocità cognitiva: il management capisce più rapidamente dove guardare. Il secondo è una maggiore coerenza tra reparti: marketing, commerciale e direzione iniziano a discutere sulla stessa base. Il terzo è una migliore qualità delle decisioni, perché diventa più facile capire dove intervenire prima.</p>
 <p>Secondo <a href="https://www.mckinsey.com/capabilities/quantumblack/our-insights/the-data-driven-enterprise-of-2025" target="_blank" rel="noopener"><strong>McKinsey</strong></a> e <a href="https://www.mckinsey.com/quarterly/the-five-fifty/five-fifty-the-data-driven-enterprise" target="_blank" rel="noopener"><strong>McKinsey</strong></a> le organizzazioni più mature sul fronte data driven trasformano i dati in capacità organizzativa diffusa. Non vincono perché hanno più dashboard, ma perché hanno sistemi che aiutano il business a decidere con più continuità.</p>
 <p>Se vuoi arrivare a questo risultato, la domanda giusta non è “quanti dashboard ci servono?”. La domanda giusta è: quali KPI devono aiutare davvero l’azienda a decidere meglio? Da lì si parte. E da lì, spesso, si capisce anche dove ha senso essere affiancati per rimettere ordine.</p>
-<p>Se vuoi capire come trasformare <strong>KPI, dashboard e reporting</strong> in un sistema che aiuti davvero la tua azienda a decidere meglio, possiamo partire da un audit iniziale e costruire insieme un impianto più chiaro, leggibile e utile al management.</p>
+<p class="callout">Se vuoi capire come trasformare <strong>KPI, dashboard e reporting</strong> in un sistema che aiuti davvero la tua azienda a decidere meglio, possiamo partire da un audit iniziale e costruire insieme un impianto più chiaro, leggibile e utile al management.</p>
 <p><strong>FAQ</strong></p>
 <p><strong>Quanti KPI dovrebbe avere un dashboard direzionale?</strong></p>
 <p>Dipende dal contesto, ma in genere pochi e molto chiari funzionano meglio di una schermata sovraccarica di metriche.</p>
@@ -81,4 +83,15 @@
 </div></div></section>
 <footer class="footer"><div class="container">Francesco Gizzi, marketing, data, sales e strategy.</div></footer>
 <script src="script.js"></script>
+<script>
+(function(){
+  var bar=document.getElementById('reading-progress');
+  if(!bar)return;
+  window.addEventListener('scroll',function(){
+    var s=document.documentElement;
+    var pct=(s.scrollTop||document.body.scrollTop)/(s.scrollHeight-s.clientHeight)*100;
+    bar.style.width=Math.min(pct,100)+'%';
+  },{passive:true});
+})();
+</script>
 </body></html>

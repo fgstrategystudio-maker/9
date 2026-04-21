@@ -17,11 +17,13 @@
   <link rel="canonical" href="https://francescogizzi.com/blog-margini-costi-e-sostenibilita-il-valore-del-controllo-di-gestione.html" />
 </head>
 <body>
+<div id="reading-progress"></div>
 <header class="site-header"><div class="container header-inner"><a href="index.html" class="logo">Francesco Gizzi</a><button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Apri il menu"><span class="line"></span><span class="line"></span><span class="line"></span></button><nav class="nav" id="site-nav"><a href="index.html#chi-sono">Chi sono</a><div class="has-dropdown"><a href="index.html#servizi" class="nav-dropdown-toggle">Servizi <span class="nav-caret">&#9660;</span></a><div class="nav-dropdown"><a href="servizi-marketing.html">Marketing</a><a href="servizi-data.html">Data</a><a href="servizi-sales.html">Sales</a><a href="servizi-strategy.html">Strategy</a></div></div><a href="index.html#progetti">Progetti</a><a href="blog.html">Blog</a><a href="index.html#contatti">Contatti</a></nav></div></header>
 <main class="section">
   <div class="container article">
     <p class="eyebrow">Controllo di gestione</p>
     <h1>Margini, costi e sostenibilità: il valore del controllo di gestione</h1>
+    <p class="reading-meta">Lettura: circa 3 minuti</p>
     <p>Parlare di <strong>sostenibilità aziendale</strong> senza parlare di margini e costi è spesso un esercizio incompleto. La sostenibilità non riguarda solo visione di lungo periodo. In molte PMI e aziende in crescita riguarda prima di tutto una domanda concreta: il modello attuale regge economicamente nel tempo? Il controllo di gestione serve anche a questo: capire se la crescita è davvero sostenibile o se sta consumando valore sotto la superficie.</p>
 <h2>La sostenibilità economica prima delle etichette</h2>
 <p>Quando il mercato rallenta o i costi cambiano rapidamente, il primo rischio è confondere volume e solidità. Crescere di fatturato non significa crescere in qualità economica. <a href="https://www.ifac.org/knowledge-gateway/discussion/using-management-accounting-drive-environmental-performance" target="_blank" rel="noopener"><strong>IFAC</strong></a> mostra come la management accounting possa supportare performance più ampie, ma il principio di base resta lo stesso: servono misure utili per capire l’impatto reale delle scelte, non solo la loro apparenza.</p>
@@ -79,4 +81,15 @@
 </div></div></section>
 <footer class="footer"><div class="container">Francesco Gizzi, marketing, data, sales e strategy.</div></footer>
 <script src="script.js"></script>
+<script>
+(function(){
+  var bar=document.getElementById('reading-progress');
+  if(!bar)return;
+  window.addEventListener('scroll',function(){
+    var s=document.documentElement;
+    var pct=(s.scrollTop||document.body.scrollTop)/(s.scrollHeight-s.clientHeight)*100;
+    bar.style.width=Math.min(pct,100)+'%';
+  },{passive:true});
+})();
+</script>
 </body></html>

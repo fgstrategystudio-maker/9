@@ -17,16 +17,18 @@
   <link rel="canonical" href="https://francescogizzi.com/blog-piano-editoriale-e-redazione-articoli-per-la-crescita-organica.html" />
 </head>
 <body>
+<div id="reading-progress"></div>
 <header class="site-header"><div class="container header-inner"><a href="index.html" class="logo">Francesco Gizzi</a><button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Apri il menu"><span class="line"></span><span class="line"></span><span class="line"></span></button><nav class="nav" id="site-nav"><a href="index.html#chi-sono">Chi sono</a><div class="has-dropdown"><a href="index.html#servizi" class="nav-dropdown-toggle">Servizi <span class="nav-caret">&#9660;</span></a><div class="nav-dropdown"><a href="servizi-marketing.html">Marketing</a><a href="servizi-data.html">Data</a><a href="servizi-sales.html">Sales</a><a href="servizi-strategy.html">Strategy</a></div></div><a href="index.html#progetti">Progetti</a><a href="blog.html">Blog</a><a href="index.html#contatti">Contatti</a></nav></div></header>
 <main class="section">
   <div class="container article">
     <p class="eyebrow">Redazione articoli SEO</p>
     <h1>Piano editoriale e redazione articoli per la crescita organica</h1>
+    <p class="reading-meta">Lettura: circa 4 minuti</p>
     <p>Molte aziende associano il piano editoriale a un semplice calendario di pubblicazione. In realtà il piano editoriale diventa utile quando smette di essere un elenco di titoli e inizia a funzionare come <strong>mappa di crescita organica</strong>. Significa scegliere temi, priorità, profondità e collegamenti con i servizi in modo coerente, invece di pubblicare contenuti in serie senza una direzione chiara.</p>
 <h2>Perché calendario editoriale e strategia editoriale non sono la stessa cosa</h2>
 <p>Il calendario dice <strong>quando</strong> pubblichi. La strategia editoriale dice <strong>perché</strong> stai pubblicando, per chi e con quale funzione. <a href="https://blog.hubspot.com/marketing/content-marketing-plan" target="_blank" rel="noopener"><strong>HubSpot</strong></a> continua a distinguere chiaramente questi due livelli, perché la semplice continuità non garantisce crescita. <a href="https://contentmarketinginstitute.com/articles/develop-content-marketing-strategy/" target="_blank" rel="noopener"><strong>Content Marketing Institute</strong></a> insiste sullo stesso punto: il contenuto funziona quando è collegato a obiettivi, audience e distribuzione.</p>
 <h2>Come scegliere i temi che hanno senso per il business</h2>
-<p>La prima domanda non è “quanti articoli scriviamo?”. È “quali cluster hanno davvero senso per il nostro posizionamento?”. In un sito come il tuo, per esempio, ha senso costruire contenuti intorno a marketing, sales, data, controllo di gestione, strategy e sviluppo del business. Questo permette di creare relazioni più forti tra blog e servizi.Per decidere i temi giusti conviene usare alcuni criteri:Se oggi il tuo blog esiste ma non ha una gerarchia chiara, <strong>allora contattami</strong>: possiamo partire da una mappa editoriale e capire quali temi meritano davvero priorità.</p>
+<p class="callout">La prima domanda non è “quanti articoli scriviamo?”. È “quali cluster hanno davvero senso per il nostro posizionamento?”. In un sito come il tuo, per esempio, ha senso costruire contenuti intorno a marketing, sales, data, controllo di gestione, strategy e sviluppo del business. Questo permette di creare relazioni più forti tra blog e servizi.Per decidere i temi giusti conviene usare alcuni criteri:Se oggi il tuo blog esiste ma non ha una gerarchia chiara, <strong>allora contattami</strong>: possiamo partire da una mappa editoriale e capire quali temi meritano davvero priorità.</p>
 <ul>
   <li>coerenza con i servizi o l’expertise reale</li>
   <li>presenza di query con intento interessante</li>
@@ -49,7 +51,7 @@
   <li>aggiornabilità dei contenuti migliori</li>
 </ul>
 <h2>Perché il piano editoriale è una leva di crescita, non un rito di marketing</h2>
-<p>Quando è fatto bene, il piano editoriale riduce l’improvvisazione. Aiuta a scegliere meglio, a non produrre contenuti fuori fuoco e a creare un archivio che cresce in valore nel tempo. È il contrario della pubblicazione casuale.Se vuoi costruire un piano editoriale che non serva solo a “pubblicare con costanza” ma a sostenere davvero la crescita organica e il posizionamento del sito, <strong>scrivimi</strong>: possiamo impostare insieme una mappa contenuti più chiara, sostenibile e utile anche commercialmente.</p>
+<p class="callout">Quando è fatto bene, il piano editoriale riduce l’improvvisazione. Aiuta a scegliere meglio, a non produrre contenuti fuori fuoco e a creare un archivio che cresce in valore nel tempo. È il contrario della pubblicazione casuale.Se vuoi costruire un piano editoriale che non serva solo a “pubblicare con costanza” ma a sostenere davvero la crescita organica e il posizionamento del sito, <strong>scrivimi</strong>: possiamo impostare insieme una mappa contenuti più chiara, sostenibile e utile anche commercialmente.</p>
 <p>Se vuoi approfondire come i contenuti rafforzano il posizionamento e l'autorevolezza del sito, leggi anche <a href="blog-articoli-seo-per-migliorare-posizionamento-e-autorevolezza.html">articoli SEO per migliorare posizionamento e autorevolezza</a>.</p>
 <h2>FAQ</h2>
 <p><strong>Quanti articoli al mese servono per partire?</strong>Dipende dalle risorse e dal settore, ma conta più la coerenza che il volume puro.</p>
@@ -85,4 +87,15 @@
 </div></div></section>
 <footer class="footer"><div class="container">Francesco Gizzi, marketing, data, sales e strategy.</div></footer>
 <script src="script.js"></script>
+<script>
+(function(){
+  var bar=document.getElementById('reading-progress');
+  if(!bar)return;
+  window.addEventListener('scroll',function(){
+    var s=document.documentElement;
+    var pct=(s.scrollTop||document.body.scrollTop)/(s.scrollHeight-s.clientHeight)*100;
+    bar.style.width=Math.min(pct,100)+'%';
+  },{passive:true});
+})();
+</script>
 </body></html>

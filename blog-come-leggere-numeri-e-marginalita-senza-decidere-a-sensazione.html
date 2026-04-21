@@ -17,16 +17,18 @@
   <link rel="canonical" href="https://francescogizzi.com/blog-come-leggere-numeri-e-marginalita-senza-decidere-a-sensazione.html" />
 </head>
 <body>
+<div id="reading-progress"></div>
 <header class="site-header"><div class="container header-inner"><a href="index.html" class="logo">Francesco Gizzi</a><button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Apri il menu"><span class="line"></span><span class="line"></span><span class="line"></span></button><nav class="nav" id="site-nav"><a href="index.html#chi-sono">Chi sono</a><div class="has-dropdown"><a href="index.html#servizi" class="nav-dropdown-toggle">Servizi <span class="nav-caret">&#9660;</span></a><div class="nav-dropdown"><a href="servizi-marketing.html">Marketing</a><a href="servizi-data.html">Data</a><a href="servizi-sales.html">Sales</a><a href="servizi-strategy.html">Strategy</a></div></div><a href="index.html#progetti">Progetti</a><a href="blog.html">Blog</a><a href="index.html#contatti">Contatti</a></nav></div></header>
 <main class="section">
   <div class="container article">
     <p class="eyebrow">Controllo di gestione</p>
     <h1>Come leggere numeri e marginalità senza decidere a sensazione</h1>
+    <p class="reading-meta">Lettura: circa 4 minuti</p>
     <p>Molte decisioni aziendali vengono giustificate con i numeri, ma in realtà sono già state prese prima, a sensazione. I numeri arrivano dopo, come conferma o decorazione. Questo succede più spesso di quanto si pensi: nelle revisioni prezzi, nelle valutazioni dei clienti, negli investimenti commerciali, nelle assunzioni, nei tagli ai costi. Leggere bene la <strong>marginalità</strong> non serve solo ad avere più precisione. Serve a togliere forza alle impressioni quando le impressioni non bastano.</p>
 <h2>Il problema non è il dato, è l’interpretazione</h2>
 <p>In quasi tutte le aziende ci sono dati sufficienti per iniziare a capire molto meglio il business. Quello che manca spesso è una <strong>disciplina di lettura</strong> coerente. Si guardano i numeri migliori del mese, si commentano gli scostamenti più evidenti, si ragiona sul fatturato, ma si fa più fatica a leggere struttura dei costi, qualità del margine e sostenibilità delle scelte.<a href="https://myfuture.cimaglobal.com/starting-a-career-in-management-accounting/" target="_blank" rel="noopener"><strong>CIMA</strong></a> descrive il management accountant come business leader, innovatore, decision-maker e forecaster: una definizione utile proprio perché ricorda che il valore dei numeri emerge quando orientano l’azione.</p>
 <h2>Le trappole più frequenti nella lettura della marginalità</h2>
-<p>Le distorsioni più frequenti sono queste:Se in questo momento senti che i numeri ci sono ma non riescono ancora a spostare davvero la qualità delle decisioni, allora contattami: possiamo iniziare da un audit e capire dove si rompe la lettura economica.</p>
+<p class="callout">Le distorsioni più frequenti sono queste:Se in questo momento senti che i numeri ci sono ma non riescono ancora a spostare davvero la qualità delle decisioni, allora contattami: possiamo iniziare da un audit e capire dove si rompe la lettura economica.</p>
 <ul>
   <li>confondere un cliente importante con un cliente redditizio</li>
   <li>leggere i costi solo in aggregato e non nel loro impatto reale</li>
@@ -81,4 +83,15 @@
 </div></div></section>
 <footer class="footer"><div class="container">Francesco Gizzi, marketing, data, sales e strategy.</div></footer>
 <script src="script.js"></script>
+<script>
+(function(){
+  var bar=document.getElementById('reading-progress');
+  if(!bar)return;
+  window.addEventListener('scroll',function(){
+    var s=document.documentElement;
+    var pct=(s.scrollTop||document.body.scrollTop)/(s.scrollHeight-s.clientHeight)*100;
+    bar.style.width=Math.min(pct,100)+'%';
+  },{passive:true});
+})();
+</script>
 </body></html>

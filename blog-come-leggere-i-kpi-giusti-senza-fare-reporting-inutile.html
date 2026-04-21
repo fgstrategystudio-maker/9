@@ -17,11 +17,13 @@
   <link rel="canonical" href="https://francescogizzi.com/blog-come-leggere-i-kpi-giusti-senza-fare-reporting-inutile.html" />
 </head>
 <body>
+<div id="reading-progress"></div>
 <header class="site-header"><div class="container header-inner"><a href="index.html" class="logo">Francesco Gizzi</a><button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Apri il menu"><span class="line"></span><span class="line"></span><span class="line"></span></button><nav class="nav" id="site-nav"><a href="index.html#chi-sono">Chi sono</a><div class="has-dropdown"><a href="index.html#servizi" class="nav-dropdown-toggle">Servizi <span class="nav-caret">&#9660;</span></a><div class="nav-dropdown"><a href="servizi-marketing.html">Marketing</a><a href="servizi-data.html">Data</a><a href="servizi-sales.html">Sales</a><a href="servizi-strategy.html">Strategy</a></div></div><a href="index.html#progetti">Progetti</a><a href="blog.html">Blog</a><a href="index.html#contatti">Contatti</a></nav></div></header>
 <main class="section">
   <div class="container article">
     <p class="eyebrow">Data</p>
     <h1>Come leggere i KPI giusti senza fare reporting inutile</h1>
+    <p class="reading-meta">Lettura: circa 5 minuti</p>
     <p><strong>Perché il problema non è misurare troppo poco, ma misurare senza criterio</strong></p>
 <p>Molte aziende non hanno un problema di scarsità di dati. Hanno un problema di <strong>eccesso di indicatori letti senza gerarchia</strong>. In ogni reparto si accumulano dashboard, esportazioni, fogli condivisi e report ricorrenti che dovrebbero aiutare a decidere, ma che nella pratica spesso producono solo rumore.</p>
 <p>Questo succede perché il reporting viene trattato come una routine amministrativa invece che come una parte del processo decisionale. Un KPI diventa davvero utile solo quando chiarisce una priorità, segnala uno scostamento o orienta un’azione concreta.</p>
@@ -44,7 +46,7 @@
 <p>In una struttura sana di reporting, il management vede pochi indicatori realmente decisivi. I team operativi hanno accesso a una lettura più granulare. Le analisi di dettaglio vengono attivate quando c’è un’anomalia o un’ipotesi da testare.</p>
 <p>Questo cambia molto anche la qualità del lavoro interno. Le riunioni diventano più leggere, i conflitti sui numeri diminuiscono e il reporting smette di essere percepito come un fardello. Se senti che nella tua azienda state misurando tanto ma imparando poco, questo è esattamente il punto in cui vale la pena intervenire con un supporto esterno: ridefinire KPI, dashboard e frequenze di lettura con un criterio più solido.</p>
 <p>Alla fine, leggere i KPI giusti serve a una sola cosa: decidere meglio. Se il tuo reporting non ti aiuta a farlo, allora non va “riempito”. Va semplificato, ordinato e ricostruito. È in quel momento che i dati iniziano a diventare davvero un vantaggio competitivo.</p>
-<p>Se vuoi capire come trasformare <strong>KPI, dashboard e reporting</strong> in un sistema che aiuti davvero la tua azienda a decidere meglio, possiamo partire da un audit iniziale e costruire insieme un impianto più chiaro, leggibile e utile al management.</p>
+<p class="callout">Se vuoi capire come trasformare <strong>KPI, dashboard e reporting</strong> in un sistema che aiuti davvero la tua azienda a decidere meglio, possiamo partire da un audit iniziale e costruire insieme un impianto più chiaro, leggibile e utile al management.</p>
 <p><strong>FAQ</strong></p>
 <p><strong>Come faccio a capire se una metrica è davvero un KPI?</strong></p>
 <p>Se misura un obiettivo prioritario e se il suo andamento può cambiare una decisione, allora ha le caratteristiche di un KPI.</p>
@@ -83,4 +85,15 @@
 </div></div></section>
 <footer class="footer"><div class="container">Francesco Gizzi, marketing, data, sales e strategy.</div></footer>
 <script src="script.js"></script>
+<script>
+(function(){
+  var bar=document.getElementById('reading-progress');
+  if(!bar)return;
+  window.addEventListener('scroll',function(){
+    var s=document.documentElement;
+    var pct=(s.scrollTop||document.body.scrollTop)/(s.scrollHeight-s.clientHeight)*100;
+    bar.style.width=Math.min(pct,100)+'%';
+  },{passive:true});
+})();
+</script>
 </body></html>

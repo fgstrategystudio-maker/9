@@ -17,11 +17,13 @@
   <link rel="canonical" href="https://francescogizzi.com/blog-sales-enablement-per-aziende-che-vogliono-crescere-con-piu-ordine.html" />
 </head>
 <body>
+<div id="reading-progress"></div>
 <header class="site-header"><div class="container header-inner"><a href="index.html" class="logo">Francesco Gizzi</a><button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Apri il menu"><span class="line"></span><span class="line"></span><span class="line"></span></button><nav class="nav" id="site-nav"><a href="index.html#chi-sono">Chi sono</a><div class="has-dropdown"><a href="index.html#servizi" class="nav-dropdown-toggle">Servizi <span class="nav-caret">&#9660;</span></a><div class="nav-dropdown"><a href="servizi-marketing.html">Marketing</a><a href="servizi-data.html">Data</a><a href="servizi-sales.html">Sales</a><a href="servizi-strategy.html">Strategy</a></div></div><a href="index.html#progetti">Progetti</a><a href="blog.html">Blog</a><a href="index.html#contatti">Contatti</a></nav></div></header>
 <main class="section">
   <div class="container article">
     <p class="eyebrow">Sales</p>
     <h1>Sales enablement per aziende che vogliono crescere con più ordine</h1>
+    <p class="reading-meta">Lettura: circa 4 minuti</p>
     <h2>Perché il sales enablement viene spesso frainteso</h2>
 <p>Quando si parla di <strong>sales enablement</strong> molte aziende pensano subito a deck, brochure o template commerciali. In realtà l’enablement non coincide con i materiali. Coincide con la capacità dell’azienda di mettere il team sales nelle condizioni di lavorare con più chiarezza, più velocità e più coerenza.</p>
 <p>Questo significa intervenire su contenuti, certo, ma anche su pitch, gestione delle obiezioni, uso del CRM, onboarding, collaborazione con il marketing e trasferimento della conoscenza all’interno del team.</p>
@@ -61,7 +63,7 @@
   <li>più ordine nel trasferire conoscenza dentro il team</li>
 </ul>
 <p>Se vuoi capire quali strumenti, messaggi e passaggi possono davvero aiutare il tuo team a vendere meglio con più ordine, ha senso lavorare su un enablement che nasca dalla realtà del processo e non da materiali standardizzati.</p>
-<p>Se vuoi costruire un sales enablement più utile, più coerente e più vicino al lavoro reale del team, possiamo partire dai punti di attrito del processo e tradurli in strumenti, messaggi e supporti davvero efficaci.</p>
+<p class="callout">Se vuoi costruire un sales enablement più utile, più coerente e più vicino al lavoro reale del team, possiamo partire dai punti di attrito del processo e tradurli in strumenti, messaggi e supporti davvero efficaci.</p>
 <h2>FAQ</h2>
 <h3>Sales enablement significa solo creare materiali commerciali?</h3>
 <p>No. Significa abilitare il team a vendere meglio con strumenti, linguaggio, training, criteri e supporto operativo.</p>
@@ -105,4 +107,15 @@
 </div></div></section>
 <footer class="footer"><div class="container">Francesco Gizzi, marketing, data, sales e strategy.</div></footer>
 <script src="script.js"></script>
+<script>
+(function(){
+  var bar=document.getElementById('reading-progress');
+  if(!bar)return;
+  window.addEventListener('scroll',function(){
+    var s=document.documentElement;
+    var pct=(s.scrollTop||document.body.scrollTop)/(s.scrollHeight-s.clientHeight)*100;
+    bar.style.width=Math.min(pct,100)+'%';
+  },{passive:true});
+})();
+</script>
 </body></html>

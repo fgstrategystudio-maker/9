@@ -17,11 +17,13 @@
   <link rel="canonical" href="https://francescogizzi.com/blog-consulenza-per-sviluppo-del-business-partnership-e-crescita-sostenibile.html" />
 </head>
 <body>
+<div id="reading-progress"></div>
 <header class="site-header"><div class="container header-inner"><a href="index.html" class="logo">Francesco Gizzi</a><button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Apri il menu"><span class="line"></span><span class="line"></span><span class="line"></span></button><nav class="nav" id="site-nav"><a href="index.html#chi-sono">Chi sono</a><div class="has-dropdown"><a href="index.html#servizi" class="nav-dropdown-toggle">Servizi <span class="nav-caret">&#9660;</span></a><div class="nav-dropdown"><a href="servizi-marketing.html">Marketing</a><a href="servizi-data.html">Data</a><a href="servizi-sales.html">Sales</a><a href="servizi-strategy.html">Strategy</a></div></div><a href="index.html#progetti">Progetti</a><a href="blog.html">Blog</a><a href="index.html#contatti">Contatti</a></nav></div></header>
 <main class="section">
   <div class="container article">
     <p class="eyebrow">Strategy</p>
     <h1>Consulenza per sviluppo del business, partnership e crescita sostenibile</h1>
+    <p class="reading-meta">Lettura: circa 3 minuti</p>
     <p>Molte aziende cercano nello sviluppo del business una scorciatoia per crescere più in fretta. In realtà, la vera utilità di questo lavoro non sta nell’accelerare a prescindere, ma nel farlo con più criterio. Partnership, nuove aperture commerciali, progetti di crescita e relazioni strategiche possono creare molto valore, ma solo se restano coerenti con il modello e con la capacità esecutiva dell’azienda.</p>
 <h2>Perché partnership e crescita sostenibile vanno pensate insieme</h2>
 <p>Una partnership può sembrare interessante perché apre accesso, credibilità o volumi. Ma il valore reale emerge solo quando si guarda anche a governance, margini, tempi, qualità della domanda e compatibilità operativa. <a href="https://www.pwc.com/gx/en/services/deals/publications/global-ma-industry-trends.html" target="_blank" rel="noopener"><strong>PwC</strong></a> richiama spesso il tema della disciplina strategica nelle operazioni di crescita e partnership: il punto non è firmare di più, ma scegliere meglio.</p>
@@ -34,7 +36,7 @@
   <li>costruire una sequenza di azioni sostenibile nel tempo</li>
 </ul>
 <p>Il punto non è aggiungere opportunità. È costruire <strong>una crescita più selettiva</strong>.</p>
-<p>Se stai aprendo tavoli di partnership o nuove linee di sviluppo ma non è ancora chiaro quali meritino davvero attenzione, contattami: possiamo partire da una lettura delle opportunità e capire quali abbiano senso oggi.</p>
+<p class="callout">Se stai aprendo tavoli di partnership o nuove linee di sviluppo ma non è ancora chiaro quali meritino davvero attenzione, contattami: possiamo partire da una lettura delle opportunità e capire quali abbiano senso oggi.</p>
 <h2>Come valutare una partnership prima di inseguirla</h2>
 <p>Le domande utili, di solito, sono queste:</p>
 <ul>
@@ -49,7 +51,7 @@
 <p>La crescita sostenibile nasce quando domanda, struttura e capacità di execution restano allineate. <a href="https://kpmg.com/xx/en/home/insights/2024/01/ceo-outlook.html" target="_blank" rel="noopener"><strong>KPMG</strong></a> continua a rilevare come volatilità, produttività e qualità dell’esecuzione restino fattori centrali per i CEO. È un richiamo utile: la crescita non va misurata solo sul volume, ma anche sulla capacità dell’organizzazione di sostenerla senza perdere controllo.</p>
 <h2>Perché questo lavoro ha senso prima, non dopo</h2>
 <p>Molte aziende intervengono tardi, quando partnership o aperture hanno già creato complessità. È meglio fare il contrario: valutare prima, scegliere prima, ordinare prima. È lì che una consulenza sullo sviluppo del business diventa davvero utile.</p>
-<p>Se vuoi costruire partnership e crescita con più ordine, evitando di aprire iniziative che assorbono più di quanto rendano, scrivimi: possiamo iniziare da un audit e capire quali opportunità abbiano davvero un futuro sostenibile.</p>
+<p class="callout">Se vuoi costruire partnership e crescita con più ordine, evitando di aprire iniziative che assorbono più di quanto rendano, scrivimi: possiamo iniziare da un audit e capire quali opportunità abbiano davvero un futuro sostenibile.</p>
 <p>Per strutturare questo percorso in un piano concreto e verificabile, leggi anche <a href="blog-come-costruire-una-roadmap-strategica-utile-alla-crescita-aziendale.html">come costruire una roadmap strategica utile alla crescita aziendale</a>.</p>
 <h2>FAQ</h2>
 <p><strong>Quando una partnership è davvero strategica?</strong>Quando rafforza posizionamento, qualità della domanda e sostenibilità del modello, non solo il volume.</p>
@@ -85,4 +87,15 @@
 </div></div></section>
 <footer class="footer"><div class="container">Francesco Gizzi, marketing, data, sales e strategy.</div></footer>
 <script src="script.js"></script>
+<script>
+(function(){
+  var bar=document.getElementById('reading-progress');
+  if(!bar)return;
+  window.addEventListener('scroll',function(){
+    var s=document.documentElement;
+    var pct=(s.scrollTop||document.body.scrollTop)/(s.scrollHeight-s.clientHeight)*100;
+    bar.style.width=Math.min(pct,100)+'%';
+  },{passive:true});
+})();
+</script>
 </body></html>

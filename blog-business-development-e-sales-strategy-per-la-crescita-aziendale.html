@@ -17,11 +17,13 @@
   <link rel="canonical" href="https://francescogizzi.com/blog-business-development-e-sales-strategy-per-la-crescita-aziendale.html" />
 </head>
 <body>
+<div id="reading-progress"></div>
 <header class="site-header"><div class="container header-inner"><a href="index.html" class="logo">Francesco Gizzi</a><button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Apri il menu"><span class="line"></span><span class="line"></span><span class="line"></span></button><nav class="nav" id="site-nav"><a href="index.html#chi-sono">Chi sono</a><div class="has-dropdown"><a href="index.html#servizi" class="nav-dropdown-toggle">Servizi <span class="nav-caret">&#9660;</span></a><div class="nav-dropdown"><a href="servizi-marketing.html">Marketing</a><a href="servizi-data.html">Data</a><a href="servizi-sales.html">Sales</a><a href="servizi-strategy.html">Strategy</a></div></div><a href="index.html#progetti">Progetti</a><a href="blog.html">Blog</a><a href="index.html#contatti">Contatti</a></nav></div></header>
 <main class="section">
   <div class="container article">
     <p class="eyebrow">Sales</p>
     <h1>Business development e sales strategy per la crescita aziendale</h1>
+    <p class="reading-meta">Lettura: circa 5 minuti</p>
     <h2>Perché business development e sales strategy devono lavorare insieme</h2>
 <p>Molte aziende usano i termini <strong>business development</strong> e sales strategy come se fossero intercambiabili. In realtà indicano due livelli diversi. Il primo guarda a nuove opportunità, nuovi mercati, partnership e aperture strategiche. Il secondo costruisce il sistema con cui queste opportunità diventano pipeline, priorità e risultati.</p>
 <p>Separarli troppo è un errore. Fonderli senza criterio è un altro errore. Il punto è tenerli allineati. Perché se il business development apre opportunità che il commerciale non riesce a trasformare, l’azienda si muove molto ma capitalizza poco.</p>
@@ -62,7 +64,7 @@
 </ul>
 <p>Il vantaggio più importante, spesso, è che il management inizia a capire quali opportunità sono davvero adatte all’azienda e quali invece rischiano di allargare il perimetro senza produrre valore reale.</p>
 <p>Se vuoi collegare meglio sviluppo del business, partnership e processo commerciale, ha senso lavorare su una strategia che unisca apertura e conversione dentro lo stesso disegno di crescita.</p>
-<p>Se vuoi costruire nuove opportunità senza disperdere energie e vuoi collegare meglio partnership, sviluppo del business e processo commerciale, possiamo partire da una lettura strategica e trasformarla in un piano utile alla crescita.</p>
+<p class="callout">Se vuoi costruire nuove opportunità senza disperdere energie e vuoi collegare meglio partnership, sviluppo del business e processo commerciale, possiamo partire da una lettura strategica e trasformarla in un piano utile alla crescita.</p>
 <h2>FAQ</h2>
 <h3>Business development e sales strategy coincidono?</h3>
 <p>No. Il primo apre opportunità, il secondo costruisce il sistema che le trasforma in risultati. Lavorano meglio quando restano strettamente collegati.</p>
@@ -106,4 +108,15 @@
 </div></div></section>
 <footer class="footer"><div class="container">Francesco Gizzi, marketing, data, sales e strategy.</div></footer>
 <script src="script.js"></script>
+<script>
+(function(){
+  var bar=document.getElementById('reading-progress');
+  if(!bar)return;
+  window.addEventListener('scroll',function(){
+    var s=document.documentElement;
+    var pct=(s.scrollTop||document.body.scrollTop)/(s.scrollHeight-s.clientHeight)*100;
+    bar.style.width=Math.min(pct,100)+'%';
+  },{passive:true});
+})();
+</script>
 </body></html>
