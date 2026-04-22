@@ -34,7 +34,7 @@ img{max-width:100%;display:block}
 .nav a:hover,.service-link:hover,.blog-link:hover{color:var(--blue)}
 .hero{padding:72px 0 52px}
 .hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:36px;align-items:center}
-.eyebrow{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--blue);font-weight:700;margin:0 0 18px}
+.eyebrow{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);font-weight:700;margin:0 0 18px}
 h1{font-size:56px;line-height:1.03;letter-spacing:-.04em;margin:0 0 18px;color:var(--blue)}
 .lead{font-size:20px;color:var(--muted);max-width:720px}
 .cta-row{display:flex;gap:14px;flex-wrap:wrap;margin-top:28px}
@@ -52,7 +52,7 @@ h1{font-size:56px;line-height:1.03;letter-spacing:-.04em;margin:0 0 18px;color:v
 
 .section{padding:64px 0;border-top:1px solid var(--line)}
 .section-soft{background:var(--surface-2)}
-.section-title{font-size:14px;text-transform:uppercase;letter-spacing:.18em;color:var(--blue);font-weight:700;margin:0 0 12px}
+.section-title{font-size:14px;text-transform:uppercase;letter-spacing:.18em;color:var(--gold);font-weight:700;margin:0 0 12px}
 .section h2{font-size:44px;line-height:1.06;letter-spacing:-.03em;margin:0 0 18px;color:var(--blue)}
 .section p{color:var(--muted);font-size:18px}
 .two-col{display:grid;grid-template-columns:1.1fr .9fr;gap:28px;align-items:start}
@@ -92,13 +92,13 @@ h1{font-size:56px;line-height:1.03;letter-spacing:-.04em;margin:0 0 18px;color:v
 }
 .brand-box img{max-height:84px;max-width:180px;object-fit:contain;margin-bottom:12px}
 .brand-box h3{margin:0;color:var(--blue);font-size:22px}
-.project-col-label{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--blue);font-weight:700}
+.project-col-label{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);font-weight:700}
 .project-col p{font-size:16px;margin-top:8px}
 
 .blog-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
 .blog-card{display:flex;flex-direction:column}
 .blog-card h3{font-size:24px;line-height:1.12;margin:6px 0 10px;color:var(--blue)}
-.blog-meta{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--blue);font-weight:700}
+.blog-meta{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);font-weight:700}
 .blog-link{font-weight:700;color:var(--blue)}
 
 .contact-box{text-align:center}
@@ -148,7 +148,7 @@ h1{font-size:56px;line-height:1.03;letter-spacing:-.04em;margin:0 0 18px;color:v
 .article-page-wrap>.container.article{flex:1;min-width:0;max-width:none;padding:0;width:auto}
 .article-sidebar{width:260px;flex-shrink:0;position:sticky;top:92px;max-height:calc(100vh - 108px);overflow-y:auto}
 .sidebar-widget{background:var(--surface-2);border-radius:12px;padding:20px}
-.sidebar-label{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:14px;display:block}
+.sidebar-label{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);margin-bottom:14px;display:block}
 .sidebar-article-link{display:block;padding:10px 0;border-bottom:1px solid var(--line);text-decoration:none;color:var(--blue);font-size:14px;font-weight:600;line-height:1.4;transition:color .2s}
 .sidebar-article-link:last-child{border-bottom:none;padding-bottom:0}
 .sidebar-article-link:hover{color:var(--gold)}
