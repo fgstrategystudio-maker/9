@@ -323,9 +323,18 @@ document.addEventListener("DOMContentLoaded", function () {
   arts.forEach(function(a) { if (a.f === currentFile) currentCat = a.c; });
 
   var others = arts.filter(function(a) { return a.f !== currentFile; });
-  var same = others.filter(function(a) { return a.c === currentCat; });
-  var diff = others.filter(function(a) { return a.c !== currentCat; });
-  var picks = same.slice(0, 4).concat(diff).slice(0, 5);
+
+  // One random article per category, reshuffled on every page load
+  var byCategory = {};
+  others.forEach(function(a) {
+    if (!byCategory[a.c]) byCategory[a.c] = [];
+    byCategory[a.c].push(a);
+  });
+  var picks = Object.keys(byCategory).map(function(cat) {
+    var arr = byCategory[cat];
+    return arr[Math.floor(Math.random() * arr.length)];
+  });
+  picks.sort(function() { return Math.random() - 0.5; });
   if (!picks.length) return;
 
   var html = '<aside class="article-sidebar"><div class="sidebar-widget"><span class="sidebar-label">Leggi anche</span>';
