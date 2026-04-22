@@ -279,3 +279,65 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 
+// Sidebar articoli correlati
+document.addEventListener("DOMContentLoaded", function () {
+  var articleEl = document.querySelector(".container.article");
+  if (!articleEl) return;
+  var currentFile = location.pathname.split("/").pop() || "";
+  if (!currentFile.startsWith("blog-") || currentFile === "blog.html") return;
+
+  var arts = [
+    {c:"Marketing",f:"blog-consulenza-marketing-per-aziende-che-vogliono-crescere-meglio.html",t:"Consulenza marketing per aziende che vogliono crescere davvero"},
+    {c:"Marketing",f:"blog-audit-marketing-per-capire-cosa-sta-bloccando-la-crescita.html",t:"Audit marketing per capire cosa sta bloccando la crescita"},
+    {c:"Marketing",f:"blog-come-costruire-un-marketing-piu-chiaro-misurabile-e-sostenibile.html",t:"Come costruire un marketing più chiaro, misurabile e sostenibile"},
+    {c:"Marketing",f:"blog-consulente-marketing-per-posizionamento-acquisition-ed-execution.html",t:"Consulente marketing per posizionamento, acquisition ed execution"},
+    {c:"Marketing",f:"blog-strategia-marketing-per-pmi-e-aziende-in-fase-di-crescita.html",t:"Strategia marketing per PMI e aziende in fase di crescita"},
+    {c:"Data",f:"blog-kpi-e-dashboard-per-aziende-che-vogliono-decidere-meglio.html",t:"KPI e dashboard per aziende che vogliono decidere meglio"},
+    {c:"Data",f:"blog-tracking-dashboard-e-reportistica-per-aziende-in-crescita.html",t:"Tracking, dashboard e reportistica per aziende in crescita"},
+    {c:"Data",f:"blog-dati-e-reporting-per-una-crescita-piu-leggibile-e-sostenibile.html",t:"Dati e reporting per una crescita più leggibile e sostenibile"},
+    {c:"Data",f:"blog-consulenza-data-driven-per-kpi-dashboard-e-decisioni-migliori.html",t:"Consulenza data driven per KPI, dashboard e decisioni migliori"},
+    {c:"Data",f:"blog-come-leggere-i-kpi-giusti-senza-fare-reporting-inutile.html",t:"Come leggere i KPI giusti senza fare reporting inutile"},
+    {c:"Sales",f:"blog-business-development-e-sales-strategy-per-la-crescita-aziendale.html",t:"Business development e sales strategy per la crescita aziendale"},
+    {c:"Sales",f:"blog-come-migliorare-vendite-e-conversione-in-aziende-b2b.html",t:"Come migliorare vendite e conversione in aziende B2B"},
+    {c:"Sales",f:"blog-come-strutturare-un-processo-sales-piu-chiaro-e-piu-efficace.html",t:"Come strutturare un processo sales più chiaro e più efficace"},
+    {c:"Sales",f:"blog-consulenza-sales-per-migliorare-pipeline-conversione-e-processo-commerciale.html",t:"Consulenza sales per migliorare pipeline, conversione e processo commerciale"},
+    {c:"Sales",f:"blog-sales-enablement-per-aziende-che-vogliono-crescere-con-piu-ordine.html",t:"Sales enablement per aziende che vogliono crescere con più ordine"},
+    {c:"Strategy",f:"blog-come-costruire-una-roadmap-strategica-utile-alla-crescita-aziendale.html",t:"Come costruire una roadmap strategica utile alla crescita aziendale"},
+    {c:"Strategy",f:"blog-consulenza-per-sviluppo-del-business-partnership-e-crescita-sostenibile.html",t:"Consulenza per sviluppo del business, partnership e crescita sostenibile"},
+    {c:"Strategy",f:"blog-consulenza-strategica-per-aziende-che-vogliono-crescere-con-piu-direzione.html",t:"Consulenza strategica per aziende che vogliono crescere con più direzione"},
+    {c:"Strategy",f:"blog-strategy-per-allineare-marketing-sales-dati-e-obiettivi-di-business.html",t:"Strategy per allineare marketing, sales, dati e obiettivi di business"},
+    {c:"Strategy",f:"blog-sviluppo-del-business-per-aziende-che-vogliono-aprire-nuove-opportunita.html",t:"Sviluppo del business per aziende che vogliono aprire nuove opportunità"},
+    {c:"Controllo di gestione",f:"blog-come-impostare-un-controllo-di-gestione-utile-al-management.html",t:"Come impostare un controllo di gestione utile al management"},
+    {c:"Controllo di gestione",f:"blog-come-leggere-numeri-e-marginalita-senza-decidere-a-sensazione.html",t:"Come leggere numeri e marginalità senza decidere a sensazione"},
+    {c:"Controllo di gestione",f:"blog-controllo-di-gestione-per-capire-margini-costi-e-priorita.html",t:"Controllo di gestione per capire margini, costi e priorità"},
+    {c:"Controllo di gestione",f:"blog-controllo-di-gestione-per-pmi-e-aziende-in-fase-di-crescita.html",t:"Controllo di gestione per PMI e aziende in fase di crescita"},
+    {c:"Controllo di gestione",f:"blog-margini-costi-e-sostenibilita-il-valore-del-controllo-di-gestione.html",t:"Margini, costi e sostenibilità: il valore del controllo di gestione"},
+    {c:"Redazione articoli SEO",f:"blog-articoli-seo-per-migliorare-posizionamento-e-autorevolezza.html",t:"Articoli SEO per migliorare posizionamento e autorevolezza"},
+    {c:"Redazione articoli SEO",f:"blog-come-scrivere-articoli-seo-che-portano-traffico-qualificato.html",t:"Come scrivere articoli SEO che portano traffico qualificato"},
+    {c:"Redazione articoli SEO",f:"blog-piano-editoriale-e-redazione-articoli-per-la-crescita-organica.html",t:"Piano editoriale e redazione articoli per la crescita organica"},
+    {c:"Redazione articoli SEO",f:"blog-redazione-articoli-seo-per-aziende-che-vogliono-crescere.html",t:"Redazione articoli SEO per aziende che vogliono crescere"},
+    {c:"Redazione articoli SEO",f:"blog-servizio-di-redazione-articoli-per-blog-aziendali-b2b.html",t:"Servizio di redazione articoli per blog aziendali B2B"}
+  ];
+
+  var currentCat = "";
+  arts.forEach(function(a) { if (a.f === currentFile) currentCat = a.c; });
+
+  var others = arts.filter(function(a) { return a.f !== currentFile; });
+  var same = others.filter(function(a) { return a.c === currentCat; });
+  var diff = others.filter(function(a) { return a.c !== currentCat; });
+  var picks = same.slice(0, 4).concat(diff).slice(0, 5);
+  if (!picks.length) return;
+
+  var html = '<aside class="article-sidebar"><div class="sidebar-widget"><span class="sidebar-label">Leggi anche</span>';
+  picks.forEach(function(a) {
+    html += '<a class="sidebar-article-link" href="' + a.f + '"><span class="sidebar-article-cat">' + a.c + '</span>' + a.t + '</a>';
+  });
+  html += '</div></aside>';
+
+  var wrap = document.createElement("div");
+  wrap.className = "article-page-wrap";
+  articleEl.parentNode.insertBefore(wrap, articleEl);
+  wrap.appendChild(articleEl);
+  wrap.insertAdjacentHTML("beforeend", html);
+});
+

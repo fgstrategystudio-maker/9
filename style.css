@@ -142,8 +142,18 @@ h1{font-size:56px;line-height:1.03;letter-spacing:-.04em;margin:0 0 18px;color:v
 .article p,.article li{font-size:18px;color:var(--muted)}
 .article ul{padding-left:22px}
 .article a[target="_blank"]{font-weight:700;text-decoration:underline;text-underline-offset:3px}
-.article a[href^="blog-"]{background:#dff2ea;color:#1a5c3a;border-radius:3px;padding:1px 5px;font-weight:600;text-decoration:none;transition:background .2s}
-.article a[href^="blog-"]:hover{background:#c5e8d5}
+.article a[href^="blog-"]{background:#fdf3e3;color:#8a6500;border-radius:3px;padding:1px 5px;font-weight:600;text-decoration:none;transition:background .2s}
+.article a[href^="blog-"]:hover{background:#f5e3c0}
+.article-page-wrap{display:flex;align-items:flex-start;gap:40px;max-width:1140px;margin:0 auto;padding:0 24px}
+.article-page-wrap>.container.article{flex:1;min-width:0;max-width:none;padding:0;width:auto}
+.article-sidebar{width:260px;flex-shrink:0;position:sticky;top:92px;max-height:calc(100vh - 108px);overflow-y:auto}
+.sidebar-widget{background:var(--surface-2);border-radius:12px;padding:20px}
+.sidebar-label{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:14px;display:block}
+.sidebar-article-link{display:block;padding:10px 0;border-bottom:1px solid var(--line);text-decoration:none;color:var(--blue);font-size:14px;font-weight:600;line-height:1.4;transition:color .2s}
+.sidebar-article-link:last-child{border-bottom:none;padding-bottom:0}
+.sidebar-article-link:hover{color:var(--gold)}
+.sidebar-article-cat{display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--gold);margin-bottom:3px}
+@media(max-width:960px){.article-page-wrap{flex-direction:column}.article-sidebar{width:100%;position:static;max-height:none}}
 .article a.callout-box{display:block;background:var(--surface-2) !important;border-left:3px solid var(--gold);border-radius:0 8px 8px 0;padding:18px 22px;margin:28px 0;color:var(--blue) !important;font-style:italic;font-size:18px;text-decoration:none;transition:background .2s}
 .article a.callout-box:hover{background:var(--line) !important}
 .reading-meta{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);margin-bottom:32px;margin-top:-8px}
