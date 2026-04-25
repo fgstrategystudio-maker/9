@@ -70,7 +70,7 @@ h1{font-size:56px;line-height:1.03;letter-spacing:-.04em;margin:0 0 18px;color:v
 .metric-value{font-size:46px;font-weight:800;letter-spacing:-.04em;color:var(--blue);line-height:1}
 .metric-label{font-size:15px;color:var(--muted);margin-top:10px;max-width:220px}
 
-.services-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;align-items:stretch}
+.services-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;align-items:stretch}
 .service-card{display:grid;grid-template-rows:auto auto 1fr auto;min-height:100%;padding-bottom:26px}
 .service-card h3{margin:0 0 10px;font-size:22px;color:var(--blue)}
 .service-card p{font-size:16px;margin:0 0 16px;min-height:120px}
