@@ -528,6 +528,12 @@ h1{font-size:56px;line-height:1.03;letter-spacing:-.04em;margin:0 0 18px;color:v
 
 /* ── Institutional page ── */
 .three-col{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;align-items:start}
+.inst-services{align-items:stretch}
+.inst-service-card{background:linear-gradient(180deg,#ffffff 0%,#f7f9fe 100%);border:1px solid var(--line);border-radius:22px;padding:28px;position:relative;overflow:hidden}
+.inst-service-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--gold),var(--blue));border-radius:3px 3px 0 0}
+.inst-service-card--mid{background:linear-gradient(180deg,#f0f4ff 0%,#e7efff 100%)}
+.inst-service-icon{width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,rgba(200,169,110,.15),rgba(23,59,122,.1));display:flex;align-items:center;justify-content:center;color:var(--gold)}
+.inst-service-card--mid .inst-service-icon{background:linear-gradient(135deg,rgba(23,59,122,.12),rgba(200,169,110,.08));color:var(--blue)}
 .partner-chips{display:flex;flex-wrap:wrap;gap:8px}
 .partner-chip{display:inline-block;padding:5px 12px;border:1px solid var(--line);border-radius:20px;font-size:12px;font-weight:600;color:var(--blue);text-decoration:none;background:#fff;transition:border-color .2s,color .2s}
 .partner-chip:hover{border-color:var(--gold);color:var(--gold)}
@@ -535,4 +541,9 @@ h1{font-size:56px;line-height:1.03;letter-spacing:-.04em;margin:0 0 18px;color:v
 .project-card{padding:28px}
 .project-card-body p{margin-bottom:12px}
 .project-card-title{font-size:22px;font-weight:700;color:var(--blue);margin:8px 0 16px;line-height:1.3}
+.inst-press-links{border-top:1px solid var(--line);padding-top:16px}
+.inst-press-item{display:flex;flex-direction:column;gap:2px;padding:10px 12px;border-radius:10px;text-decoration:none;transition:background .18s;margin-bottom:4px}
+.inst-press-item:hover{background:rgba(200,169,110,.08)}
+.inst-press-source{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gold)}
+.inst-press-title{font-size:13px;color:var(--blue);font-weight:500;line-height:1.4}
 @media(max-width:800px){.three-col{grid-template-columns:1fr}.project-grid{grid-template-columns:1fr}}
