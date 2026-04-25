@@ -546,4 +546,14 @@ h1{font-size:56px;line-height:1.03;letter-spacing:-.04em;margin:0 0 18px;color:v
 .inst-press-item:hover{background:rgba(200,169,110,.08)}
 .inst-press-source{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gold)}
 .inst-press-title{font-size:13px;color:var(--blue);font-weight:500;line-height:1.4}
-@media(max-width:800px){.three-col{grid-template-columns:1fr}.project-grid{grid-template-columns:1fr}}
+.project-logo-row{margin-top:28px;display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding-top:20px;border-top:1px solid var(--line)}
+.logo-cell{flex:1;min-width:80px;display:flex;align-items:center;justify-content:center;height:48px}
+.logo-cell img{max-height:40px;width:100%;max-width:140px;object-fit:contain}
+.audience-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.audience-card{display:flex;align-items:flex-start;gap:14px;background:linear-gradient(180deg,#ffffff 0%,#f7f9fe 100%);border:1px solid var(--line);border-radius:16px;padding:18px 20px}
+.audience-icon{flex-shrink:0;width:40px;height:40px;border-radius:10px;background:rgba(200,169,110,.12);display:flex;align-items:center;justify-content:center;color:var(--gold)}
+.audience-card div:last-child{display:flex;flex-direction:column;gap:4px}
+.audience-card strong{font-size:14px;font-weight:700;color:var(--blue);line-height:1.2}
+.audience-card span{font-size:13px;color:var(--muted);line-height:1.4}
+@media(max-width:960px){.audience-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:800px){.three-col{grid-template-columns:1fr}.project-grid{grid-template-columns:1fr}.audience-grid{grid-template-columns:1fr}}
