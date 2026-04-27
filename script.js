@@ -18,13 +18,14 @@
   });
 
   // Make switcher links point to same page in other language
-  var page = path.replace(/^\/(en|es|pt)\//, '/').replace(/^\/$/,'/');
+  // Use (\/|$) so /en (no trailing slash, Vercel trailingSlash:false) is also stripped
+  var page = path.replace(/^\/(en|es|pt)(\/|$)/, '/') || '/';
   document.querySelectorAll('.lang-sw a').forEach(function(a){
     var href = a.getAttribute('href');
-    if(href=='//' || href==='/') a.setAttribute('href', page === '/' ? '/' : page);
-    else if(href==='/en/') a.setAttribute('href', '/en' + (page==='/'?'/':page));
-    else if(href==='/es/') a.setAttribute('href', '/es' + (page==='/'?'/':page));
-    else if(href==='/pt/') a.setAttribute('href', '/pt' + (page==='/'?'/':page));
+    if(href==='/') a.setAttribute('href', page === '/' ? '/' : page);
+    else if(href==='/en/') a.setAttribute('href', page === '/' ? '/en' : '/en' + page);
+    else if(href==='/es/') a.setAttribute('href', page === '/' ? '/es' : '/es' + page);
+    else if(href==='/pt/') a.setAttribute('href', page === '/' ? '/pt' : '/pt' + page);
   });
 })();
 
