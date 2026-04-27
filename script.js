@@ -1,3 +1,33 @@
+// ── Language switcher: highlight active lang + smart links ──
+(function(){
+  var path = window.location.pathname;
+  var lang = 'it';
+  if(path.startsWith('/en')) lang = 'en';
+  else if(path.startsWith('/es')) lang = 'es';
+  else if(path.startsWith('/pt')) lang = 'pt';
+
+  // Highlight active language
+  document.querySelectorAll('.lang-sw a').forEach(function(a){
+    var href = a.getAttribute('href');
+    if((lang==='it' && href==='/') ||
+       (lang==='en' && href==='/en/') ||
+       (lang==='es' && href==='/es/') ||
+       (lang==='pt' && href==='/pt/')){
+      a.classList.add('active');
+    }
+  });
+
+  // Make switcher links point to same page in other language
+  var page = path.replace(/^\/(en|es|pt)\//, '/').replace(/^\/$/,'/');
+  document.querySelectorAll('.lang-sw a').forEach(function(a){
+    var href = a.getAttribute('href');
+    if(href=='//' || href==='/') a.setAttribute('href', page === '/' ? '/' : page);
+    else if(href==='/en/') a.setAttribute('href', '/en' + (page==='/'?'/':page));
+    else if(href==='/es/') a.setAttribute('href', '/es' + (page==='/'?'/':page));
+    else if(href==='/pt/') a.setAttribute('href', '/pt' + (page==='/'?'/':page));
+  });
+})();
+
 document.addEventListener("DOMContentLoaded", function () {
   const button = document.querySelector(".menu-toggle");
   const nav = document.querySelector(".nav");
