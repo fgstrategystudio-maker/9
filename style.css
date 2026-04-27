@@ -558,7 +558,8 @@ h1{font-size:56px;line-height:1.03;letter-spacing:-.04em;margin:0 0 18px;color:v
 @media(max-width:960px){.audience-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:800px){.three-col{grid-template-columns:1fr}.project-grid{grid-template-columns:1fr}.audience-grid{grid-template-columns:1fr}}
 
-.lang-sw{display:inline-flex;gap:6px;margin-left:14px;padding:4px 8px;border-left:1px solid rgba(255,255,255,0.15);align-items:center}
-.lang-sw a{font-size:12px;font-weight:600;text-transform:uppercase;color:inherit;opacity:0.6;text-decoration:none;padding:2px 5px;border-radius:3px;letter-spacing:0.5px}
-.lang-sw a:hover{opacity:1;background:rgba(255,255,255,0.08)}
-@media(max-width:760px){.lang-sw{margin:8px 0 0 0;padding:6px 0;border-left:none;border-top:1px solid rgba(255,255,255,0.1);width:100%;justify-content:center}}
+.lang-sw{display:inline-flex;gap:4px;margin-left:16px;padding:3px 4px 3px 16px;border-left:1px solid rgba(255,255,255,0.3);align-items:center}
+.lang-sw a{font-size:11px;font-weight:700;text-transform:uppercase;color:#fff;opacity:0.65;text-decoration:none;padding:3px 7px;border-radius:4px;letter-spacing:0.8px;transition:opacity .15s,background .15s}
+.lang-sw a:hover{opacity:1;background:rgba(255,255,255,0.14)}
+.lang-sw a.active{opacity:1;background:rgba(255,255,255,0.18)}
+@media(max-width:760px){.lang-sw{margin:10px 0 0 0;padding:8px 0 4px;border-left:none;border-top:1px solid rgba(255,255,255,0.15);width:100%;justify-content:center}}
