@@ -42,21 +42,6 @@
 
 })();
 
-// ── Page fade-in on load ──
-(function(){
-  var veil = document.createElement('div');
-  veil.id = 'pg-veil';
-  document.body.insertBefore(veil, document.body.firstChild);
-  requestAnimationFrame(function(){
-    requestAnimationFrame(function(){
-      veil.style.opacity = '0';
-    });
-  });
-  // Restore on bfcache (browser back/forward)
-  window.addEventListener('pageshow', function(e){
-    if(e.persisted){ veil.style.transition = 'none'; veil.style.opacity = '0'; }
-  });
-})();
 
 // ── Scroll reveal ──
 (function(){

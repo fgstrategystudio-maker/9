@@ -571,6 +571,3 @@ h1{font-size:56px;line-height:1.03;letter-spacing:-.04em;margin:0 0 18px;color:v
 .reveal-d2{transition-delay:.16s}
 .reveal-d3{transition-delay:.24s}
 .reveal-d4{transition-delay:.32s}
-
-/* ── Page transition veil ── */
-#pg-veil{position:fixed;inset:0;background:var(--bg-dark);opacity:1;z-index:9998;pointer-events:none;transition:opacity .35s ease}
