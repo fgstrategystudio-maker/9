@@ -24,6 +24,21 @@
     else if(href==='/en/') a.setAttribute('href', page === '/' ? '/en' : '/en' + page);
     else if(href==='/pt/') a.setAttribute('href', page === '/' ? '/pt' : '/pt' + page);
   });
+
+
+  // Preserve scroll position across language switches
+  var savedScroll = sessionStorage.getItem('langScrollPos');
+  if(savedScroll !== null){
+    sessionStorage.removeItem('langScrollPos');
+    window.addEventListener('load', function(){
+      window.scrollTo(0, parseInt(savedScroll, 10));
+    });
+  }
+  document.querySelectorAll('.lang-sw a').forEach(function(a){
+    a.addEventListener('click', function(){
+      sessionStorage.setItem('langScrollPos', window.scrollY);
+    });
+  });
 })();
 
 document.addEventListener("DOMContentLoaded", function () {
