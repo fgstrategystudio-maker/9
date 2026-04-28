@@ -42,28 +42,15 @@
 
 })();
 
-// ── Page transition veil ──
+// ── Page fade-in on load ──
 (function(){
   var veil = document.createElement('div');
   veil.id = 'pg-veil';
   document.body.insertBefore(veil, document.body.firstChild);
-  // Fade in the page on load
   requestAnimationFrame(function(){
     requestAnimationFrame(function(){
       veil.style.opacity = '0';
-      setTimeout(function(){ veil.style.pointerEvents = 'none'; }, 350);
     });
-  });
-  // Fade out on navigation
-  document.addEventListener('click', function(e){
-    var a = e.target.closest('a[href]');
-    if(!a) return;
-    var href = a.getAttribute('href');
-    if(!href || href.charAt(0)==='#' || href.startsWith('http') || href.startsWith('mailto') || a.getAttribute('target')==='_blank') return;
-    e.preventDefault();
-    veil.style.opacity = '1';
-    veil.style.pointerEvents = 'all';
-    setTimeout(function(){ window.location.href = href; }, 330);
   });
   // Restore on bfcache (browser back/forward)
   window.addEventListener('pageshow', function(e){
