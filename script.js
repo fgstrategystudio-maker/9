@@ -42,62 +42,6 @@
 
 })();
 
-
-// ── Scroll reveal ──
-(function(){
-  if(!window.IntersectionObserver) return;
-  var selectors = '.card, .metric, .project-row, .section > .container > h2, .section > .container > .section-title, .lead-form-wrap';
-  var obs = new IntersectionObserver(function(entries){
-    entries.forEach(function(e){
-      if(e.isIntersecting){ e.target.classList.add('in'); obs.unobserve(e.target); }
-    });
-  }, {threshold: 0.08, rootMargin: '0px 0px -30px 0px'});
-  document.querySelectorAll(selectors).forEach(function(el, i, all){
-    el.classList.add('reveal');
-    // Stagger cards/metrics in the same parent
-    var siblings = Array.prototype.filter.call(el.parentElement.children, function(c){ return c.classList.contains('reveal'); });
-    var idx = siblings.indexOf(el);
-    if(idx > 0 && idx <= 4) el.classList.add('reveal-d' + idx);
-    // Elements already in viewport: skip animation
-    var r = el.getBoundingClientRect();
-    if(r.top < window.innerHeight - 30 && r.bottom > 0){
-      el.classList.add('in');
-      el.style.transition = 'none';
-      setTimeout(function(){ el.style.transition = ''; }, 50);
-    } else {
-      obs.observe(el);
-    }
-  });
-})();
-
-// ── Number counter ──
-(function(){
-  var els = document.querySelectorAll('.metric-value');
-  if(!els.length || !window.IntersectionObserver) return;
-  var obs = new IntersectionObserver(function(entries){
-    entries.forEach(function(e){
-      if(!e.isIntersecting) return;
-      obs.unobserve(e.target);
-      var el = e.target;
-      var raw = el.textContent.trim();
-      var prefix = (raw.match(/^[^0-9]*/) || [''])[0];
-      var suffix = (raw.match(/[^0-9]*$/) || [''])[0];
-      var num = parseInt(raw.replace(/[^0-9]/g, ''), 10);
-      if(isNaN(num) || num === 0) return;
-      var t0 = null, dur = 1400;
-      function step(ts){
-        if(!t0) t0 = ts;
-        var p = Math.min((ts - t0) / dur, 1);
-        var ease = 1 - Math.pow(1 - p, 3);
-        el.textContent = prefix + Math.round(ease * num) + suffix;
-        if(p < 1) requestAnimationFrame(step);
-      }
-      requestAnimationFrame(step);
-    });
-  }, {threshold: 0.6});
-  els.forEach(function(el){ obs.observe(el); });
-})();
-
 document.addEventListener("DOMContentLoaded", function () {
   const button = document.querySelector(".menu-toggle");
   const nav = document.querySelector(".nav");
