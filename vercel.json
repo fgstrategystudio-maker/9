@@ -4,9 +4,5 @@
   "rewrites": [
     { "source": "/en", "destination": "/en/index.html" },
     { "source": "/pt", "destination": "/pt/index.html" }
-  ],
-  "routes": [
-    { "handle": "error" },
-    { "status": 404, "dest": "/404.html" }
   ]
 }
