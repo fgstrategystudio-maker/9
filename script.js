@@ -22,7 +22,7 @@
   b.id = 'cookie-banner';
   b.innerHTML = '<p>'+t.msg+'</p><div class="cookie-actions"><button class="cookie-btn cookie-accept">'+t.acc+'</button><button class="cookie-btn cookie-reject">'+t.rej+'</button></div>';
   document.body.appendChild(b);
-  setTimeout(function(){ b.classList.add('show'); }, 700);
+  setTimeout(function(){ b.classList.add('show'); }, 3000);
   function dismiss(granted){
     localStorage.setItem(KEY, granted?'granted':'denied');
     applyConsent(granted);
