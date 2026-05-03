@@ -312,6 +312,150 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 
+// ── Skip-to-content link ──
+document.addEventListener('DOMContentLoaded', function(){
+  var main = document.querySelector('main');
+  if(!main) return;
+  if(!main.id) main.id = 'main-content';
+  var lang = document.documentElement.getAttribute('lang')||'it';
+  var label = lang==='en' ? 'Skip to content' : lang==='pt' ? 'Ir para o conteúdo' : 'Vai al contenuto';
+  var skip = document.createElement('a');
+  skip.href = '#main-content';
+  skip.className = 'skip-link';
+  skip.textContent = label;
+  document.body.insertBefore(skip, document.body.firstChild);
+});
+
+// ── Breadcrumb injection (blog articles + service pages) ──
+document.addEventListener('DOMContentLoaded', function(){
+  var path = location.pathname;
+  var lang = 'it';
+  if(path.startsWith('/en')) lang = 'en';
+  else if(path.startsWith('/pt')) lang = 'pt';
+  var page = path.replace(/^\/(en|pt)(\/|$)/, '/').replace(/\/$/, '') || '/';
+
+  var isBlogArticle = /\/blog-[^/]+$/.test(page);
+  var isBlogList = page === '/blog';
+  var isService = /\/servizi-[^/]+$/.test(page);
+  if(!isBlogArticle && !isBlogList && !isService) return;
+
+  var main = document.querySelector('main');
+  if(!main) return;
+
+  var base = lang==='en' ? '/en' : lang==='pt' ? '/pt' : '';
+  var T = {
+    it:{home:'Home',blog:'Blog',services:'Servizi'},
+    en:{home:'Home',blog:'Blog',services:'Services'},
+    pt:{home:'Home',blog:'Blog',services:'Serviços'}
+  };
+  var t = T[lang];
+
+  var items = [{label:t.home, href:base+'/', current:false}];
+  if(isBlogList){
+    items.push({label:t.blog, href:null, current:true});
+  } else if(isBlogArticle){
+    items.push({label:t.blog, href:base+'/blog', current:false});
+    var h1 = document.querySelector('h1');
+    items.push({label: h1 ? h1.textContent.trim() : '', href:null, current:true});
+  } else if(isService){
+    var h1 = document.querySelector('h1');
+    items.push({label: h1 ? h1.textContent.trim() : '', href:null, current:true});
+  }
+
+  var html = '<nav class="breadcrumb" aria-label="breadcrumb">';
+  items.forEach(function(item, i){
+    if(item.current){
+      html += '<span class="breadcrumb-current">'+item.label+'</span>';
+    } else {
+      html += '<a href="'+item.href+'">'+item.label+'</a>';
+      if(i < items.length-1) html += '<span class="breadcrumb-sep" aria-hidden="true">›</span>';
+    }
+  });
+  html += '</nav>';
+
+  var bc = document.createElement('div');
+  bc.className = 'container';
+  bc.innerHTML = html;
+  main.insertBefore(bc, main.firstChild);
+});
+
+// ── Sticky CTA (mobile only) ──
+document.addEventListener('DOMContentLoaded', function(){
+  if(/grazie/.test(location.pathname)) return;
+  var lang = document.documentElement.getAttribute('lang')||'it';
+  var T = {it:'Contattami', en:'Contact me', pt:'Fale comigo'};
+  var anchor = lang==='en' ? '#contact' : lang==='pt' ? '#contato' : '#contatti';
+  var contactEl = document.querySelector(anchor);
+  var heroEl = document.querySelector('.hero');
+
+  var cta = document.createElement('div');
+  cta.id = 'sticky-cta';
+  cta.innerHTML = '<a href="'+anchor+'">'+
+    '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>'+
+    T[lang]+'</a>';
+  document.body.appendChild(cta);
+
+  function update(){
+    var scrollY = window.scrollY;
+    var heroH = heroEl ? heroEl.offsetHeight : 300;
+    var nearContact = contactEl ? contactEl.getBoundingClientRect().top < window.innerHeight * 0.6 : false;
+    cta.classList.toggle('visible', scrollY > heroH * 0.6 && !nearContact);
+  }
+  window.addEventListener('scroll', update, {passive:true});
+  update();
+});
+
+// ── Exit intent popup (desktop only, once per session) ──
+(function(){
+  if(window.innerWidth < 760) return;
+  if(sessionStorage.getItem('exit_shown')) return;
+  if(/grazie/.test(location.pathname)) return;
+
+  var lang = document.documentElement.getAttribute('lang')||'it';
+  var T = {
+    it:{h:'Prima di andare…', p:'Hai un progetto in mente? Scrivimi: rispondo entro 24 ore.', cta:'Parliamone', dismiss:'No grazie'},
+    en:{h:'Before you go…',  p:'Have a project in mind? Write to me — I reply within 24 hours.', cta:"Let's talk", dismiss:'No thanks'},
+    pt:{h:'Antes de ir…',    p:'Tem um projeto em mente? Escreva-me: respondo em 24 horas.', cta:'Vamos conversar', dismiss:'Não, obrigado'}
+  };
+  var t = T[lang];
+  var base = lang==='en' ? '/en' : lang==='pt' ? '/pt' : '';
+  var anchor = lang==='en' ? '#contact' : lang==='pt' ? '#contato' : '#contatti';
+
+  document.addEventListener('DOMContentLoaded', function(){
+    var popup = document.createElement('div');
+    popup.id = 'exit-popup';
+    popup.innerHTML =
+      '<div id="exit-popup-overlay"></div>'+
+      '<div id="exit-popup-box">'+
+        '<button id="exit-popup-close" aria-label="Chiudi">&times;</button>'+
+        '<h3>'+t.h+'</h3>'+
+        '<p>'+t.p+'</p>'+
+        '<a href="'+anchor+'" class="exit-cta">'+t.cta+'</a>'+
+        '<button class="exit-dismiss">'+t.dismiss+'</button>'+
+      '</div>';
+    document.body.appendChild(popup);
+
+    function close(){
+      popup.classList.remove('show');
+      sessionStorage.setItem('exit_shown','1');
+    }
+    popup.querySelector('#exit-popup-close').addEventListener('click', close);
+    popup.querySelector('#exit-popup-overlay').addEventListener('click', close);
+    popup.querySelector('.exit-dismiss').addEventListener('click', close);
+    popup.querySelector('.exit-cta').addEventListener('click', close);
+
+    var timer;
+    document.addEventListener('mouseleave', function(e){
+      if(e.clientY < 8 && !sessionStorage.getItem('exit_shown')){
+        clearTimeout(timer);
+        timer = setTimeout(function(){
+          popup.classList.add('show');
+        }, 80);
+      }
+    });
+  });
+})();
+
 // Logo marquee: auto-scroll JS (funziona su tutti i dispositivi, swipe su mobile)
 document.addEventListener("DOMContentLoaded", function () {
   var marquee = document.querySelector('.logo-marquee');
