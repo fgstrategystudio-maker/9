@@ -11,10 +11,11 @@
   if(saved==='granted'){ applyConsent(true);  return; }
   if(saved==='denied'){  applyConsent(false); return; }
   var lang = document.documentElement.getAttribute('lang')||'it';
+  var privacyHref = lang==='en' ? '/en/privacy' : lang==='pt' ? '/pt/privacy' : '/privacy';
   var T = {
-    it:{msg:'Utilizziamo cookie analitici per migliorare la navigazione. Puoi accettare o rifiutare.',  acc:'Accetta',  rej:'Rifiuta'},
-    en:{msg:'We use analytics cookies to improve your experience. You can accept or decline.',           acc:'Accept',   rej:'Decline'},
-    pt:{msg:'Usamos cookies analíticos para melhorar sua experiência. Você pode aceitar ou recusar.',   acc:'Aceitar',  rej:'Recusar'}
+    it:{msg:'Utilizziamo cookie analitici per migliorare la navigazione. <a href="'+privacyHref+'" style="color:inherit;text-decoration:underline">Privacy policy</a>.',  acc:'Accetta',  rej:'Rifiuta'},
+    en:{msg:'We use analytics cookies to improve your experience. <a href="'+privacyHref+'" style="color:inherit;text-decoration:underline">Privacy policy</a>.',           acc:'Accept',   rej:'Decline'},
+    pt:{msg:'Usamos cookies analíticos para melhorar sua experiência. <a href="'+privacyHref+'" style="color:inherit;text-decoration:underline">Política de privacidade</a>.', acc:'Aceitar',  rej:'Recusar'}
   };
   var t = T[lang]||T['it'];
   var b = document.createElement('div');

@@ -525,6 +525,8 @@ h1{font-size:56px;line-height:1.03;letter-spacing:-.04em;margin:0 0 18px;color:v
 .footer-inner{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
 .footer-linkedin{display:inline-flex;align-items:center;gap:6px;color:rgba(255,255,255,.45);font-size:13px;text-decoration:none;transition:color .2s}
 .footer-linkedin:hover{color:var(--gold)}
+.footer-privacy{font-size:13px;color:rgba(255,255,255,.35);text-decoration:none;transition:color .2s}
+.footer-privacy:hover{color:var(--gold)}
 
 /* ── Institutional page ── */
 .three-col{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;align-items:start}
