@@ -32,6 +32,65 @@
   b.querySelector('.cookie-reject').addEventListener('click', function(){ dismiss(false); });
 })();
 
+// ── GA4 event tracking ──
+document.addEventListener('DOMContentLoaded', function(){
+  function gev(name, params){ if(window.gtag) gtag('event', name, params); }
+
+  // CTA button clicks
+  document.querySelectorAll('.btn.primary, .btn.secondary').forEach(function(el){
+    el.addEventListener('click', function(){
+      gev('cta_click', {
+        cta_text: el.textContent.trim(),
+        cta_type: el.classList.contains('primary') ? 'primary' : 'secondary',
+        page_location: location.pathname
+      });
+    });
+  });
+
+  // Form submission (conversione principale)
+  document.querySelectorAll('form').forEach(function(form){
+    form.addEventListener('submit', function(){
+      gev('generate_lead', {
+        form_id: form.id || 'contact_form',
+        page_location: location.pathname
+      });
+    });
+  });
+
+  // Nav service links
+  document.querySelectorAll('.nav-dropdown a').forEach(function(a){
+    a.addEventListener('click', function(){
+      gev('service_nav_click', { service: a.textContent.trim(), page_location: location.pathname });
+    });
+  });
+
+  // Scroll to contact section (high-intent signal)
+  var contactEl = document.querySelector('#contatti, #contact, #contacto');
+  if(contactEl && window.IntersectionObserver){
+    var contacted = false;
+    new IntersectionObserver(function(entries){
+      if(!contacted && entries[0].isIntersecting){
+        contacted = true;
+        gev('view_contact_section', { page_location: location.pathname });
+      }
+    }, {threshold: 0.3}).observe(contactEl);
+  }
+
+  // Blog article read depth (25%, 50%, 75%, 100%)
+  var article = document.querySelector('.container.article');
+  if(article && window.IntersectionObserver){
+    [0.25, 0.5, 0.75, 1].forEach(function(t){
+      var fired = false;
+      new IntersectionObserver(function(entries){
+        if(!fired && entries[0].isIntersecting){
+          fired = true;
+          gev('article_read_depth', { depth: Math.round(t*100)+'%', page_location: location.pathname });
+        }
+      }, {threshold: t}).observe(article);
+    });
+  }
+});
+
 // ── Language switcher: highlight active lang + smart links ──
 (function(){
   var path = window.location.pathname;
