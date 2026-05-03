@@ -1,5 +1,7 @@
 User-agent: *
 Allow: /
 Disallow: /grazie.html
+Disallow: /en/grazie.html
+Disallow: /pt/grazie.html
 
 Sitemap: https://francescogizzi.com/sitemap.xml

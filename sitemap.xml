@@ -1,40 +1,1039 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://francescogizzi.com/</loc><priority>1.0</priority><changefreq>weekly</changefreq></url>
-  <url><loc>https://francescogizzi.com/blog.html</loc><priority>0.8</priority><changefreq>weekly</changefreq></url>
-  <url><loc>https://francescogizzi.com/servizi-marketing.html</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://francescogizzi.com/servizi-data.html</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://francescogizzi.com/servizi-sales.html</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://francescogizzi.com/servizi-strategy.html</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://francescogizzi.com/blog-redazione-articoli-seo-per-aziende-che-vogliono-crescere.html</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://francescogizzi.com/blog-come-scrivere-articoli-seo-che-portano-traffico-qualificato.html</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://francescogizzi.com/blog-servizio-di-redazione-articoli-per-blog-aziendali-b2b.html</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://francescogizzi.com/blog-articoli-seo-per-migliorare-posizionamento-e-autorevolezza.html</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://francescogizzi.com/blog-piano-editoriale-e-redazione-articoli-per-la-crescita-organica.html</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://francescogizzi.com/blog-consulenza-marketing-per-aziende-che-vogliono-crescere-meglio.html</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://francescogizzi.com/blog-strategia-marketing-per-pmi-e-aziende-in-fase-di-crescita.html</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://francescogizzi.com/blog-come-costruire-un-marketing-piu-chiaro-misurabile-e-sostenibile.html</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://francescogizzi.com/blog-audit-marketing-per-capire-cosa-sta-bloccando-la-crescita.html</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://francescogizzi.com/blog-consulente-marketing-per-posizionamento-acquisition-ed-execution.html</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://francescogizzi.com/blog-consulenza-sales-per-migliorare-pipeline-conversione-e-processo-commerciale.html</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://francescogizzi.com/blog-come-strutturare-un-processo-sales-piu-chiaro-e-piu-efficace.html</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://francescogizzi.com/blog-sales-enablement-per-aziende-che-vogliono-crescere-con-piu-ordine.html</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://francescogizzi.com/blog-come-migliorare-vendite-e-conversione-in-aziende-b2b.html</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://francescogizzi.com/blog-business-development-e-sales-strategy-per-la-crescita-aziendale.html</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://francescogizzi.com/blog-consulenza-data-driven-per-kpi-dashboard-e-decisioni-migliori.html</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://francescogizzi.com/blog-come-leggere-i-kpi-giusti-senza-fare-reporting-inutile.html</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://francescogizzi.com/blog-tracking-dashboard-e-reportistica-per-aziende-in-crescita.html</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://francescogizzi.com/blog-kpi-e-dashboard-per-aziende-che-vogliono-decidere-meglio.html</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://francescogizzi.com/blog-dati-e-reporting-per-una-crescita-piu-leggibile-e-sostenibile.html</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://francescogizzi.com/blog-controllo-di-gestione-per-capire-margini-costi-e-priorita.html</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://francescogizzi.com/blog-come-impostare-un-controllo-di-gestione-utile-al-management.html</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://francescogizzi.com/blog-margini-costi-e-sostenibilita-il-valore-del-controllo-di-gestione.html</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://francescogizzi.com/blog-controllo-di-gestione-per-pmi-e-aziende-in-fase-di-crescita.html</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://francescogizzi.com/blog-come-leggere-numeri-e-marginalita-senza-decidere-a-sensazione.html</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://francescogizzi.com/blog-consulenza-strategica-per-aziende-che-vogliono-crescere-con-piu-direzione.html</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://francescogizzi.com/blog-strategy-per-allineare-marketing-sales-dati-e-obiettivi-di-business.html</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://francescogizzi.com/blog-sviluppo-del-business-per-aziende-che-vogliono-aprire-nuove-opportunita.html</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://francescogizzi.com/blog-consulenza-per-sviluppo-del-business-partnership-e-crescita-sostenibile.html</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://francescogizzi.com/blog-come-costruire-una-roadmap-strategica-utile-alla-crescita-aziendale.html</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://francescogizzi.com/blog-perche-marketing-dati-sales-si-rompono.html</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>https://francescogizzi.com/blog-articoli-seo-per-migliorare-posizionamento-e-autorevolezza</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-articoli-seo-per-migliorare-posizionamento-e-autorevolezza"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-articoli-seo-per-migliorare-posizionamento-e-autorevolezza"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-articoli-seo-per-migliorare-posizionamento-e-autorevolezza"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-articoli-seo-per-migliorare-posizionamento-e-autorevolezza"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/blog-audit-marketing-per-capire-cosa-sta-bloccando-la-crescita</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-audit-marketing-per-capire-cosa-sta-bloccando-la-crescita"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-audit-marketing-per-capire-cosa-sta-bloccando-la-crescita"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-audit-marketing-per-capire-cosa-sta-bloccando-la-crescita"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-audit-marketing-per-capire-cosa-sta-bloccando-la-crescita"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/blog-business-development-e-sales-strategy-per-la-crescita-aziendale</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-business-development-e-sales-strategy-per-la-crescita-aziendale"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-business-development-e-sales-strategy-per-la-crescita-aziendale"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-business-development-e-sales-strategy-per-la-crescita-aziendale"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-business-development-e-sales-strategy-per-la-crescita-aziendale"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/blog-come-costruire-un-marketing-piu-chiaro-misurabile-e-sostenibile</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-come-costruire-un-marketing-piu-chiaro-misurabile-e-sostenibile"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-come-costruire-un-marketing-piu-chiaro-misurabile-e-sostenibile"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-come-costruire-un-marketing-piu-chiaro-misurabile-e-sostenibile"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-come-costruire-un-marketing-piu-chiaro-misurabile-e-sostenibile"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/blog-come-costruire-una-roadmap-strategica-utile-alla-crescita-aziendale</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-come-costruire-una-roadmap-strategica-utile-alla-crescita-aziendale"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-come-costruire-una-roadmap-strategica-utile-alla-crescita-aziendale"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-come-costruire-una-roadmap-strategica-utile-alla-crescita-aziendale"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-come-costruire-una-roadmap-strategica-utile-alla-crescita-aziendale"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/blog-come-impostare-un-controllo-di-gestione-utile-al-management</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-come-impostare-un-controllo-di-gestione-utile-al-management"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-come-impostare-un-controllo-di-gestione-utile-al-management"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-come-impostare-un-controllo-di-gestione-utile-al-management"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-come-impostare-un-controllo-di-gestione-utile-al-management"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/blog-come-leggere-i-kpi-giusti-senza-fare-reporting-inutile</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-come-leggere-i-kpi-giusti-senza-fare-reporting-inutile"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-come-leggere-i-kpi-giusti-senza-fare-reporting-inutile"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-come-leggere-i-kpi-giusti-senza-fare-reporting-inutile"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-come-leggere-i-kpi-giusti-senza-fare-reporting-inutile"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/blog-come-leggere-numeri-e-marginalita-senza-decidere-a-sensazione</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-come-leggere-numeri-e-marginalita-senza-decidere-a-sensazione"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-come-leggere-numeri-e-marginalita-senza-decidere-a-sensazione"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-come-leggere-numeri-e-marginalita-senza-decidere-a-sensazione"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-come-leggere-numeri-e-marginalita-senza-decidere-a-sensazione"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/blog-come-migliorare-vendite-e-conversione-in-aziende-b2b</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-come-migliorare-vendite-e-conversione-in-aziende-b2b"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-come-migliorare-vendite-e-conversione-in-aziende-b2b"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-come-migliorare-vendite-e-conversione-in-aziende-b2b"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-come-migliorare-vendite-e-conversione-in-aziende-b2b"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/blog-come-scrivere-articoli-seo-che-portano-traffico-qualificato</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-come-scrivere-articoli-seo-che-portano-traffico-qualificato"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-come-scrivere-articoli-seo-che-portano-traffico-qualificato"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-come-scrivere-articoli-seo-che-portano-traffico-qualificato"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-come-scrivere-articoli-seo-che-portano-traffico-qualificato"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/blog-come-strutturare-un-processo-sales-piu-chiaro-e-piu-efficace</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-come-strutturare-un-processo-sales-piu-chiaro-e-piu-efficace"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-come-strutturare-un-processo-sales-piu-chiaro-e-piu-efficace"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-come-strutturare-un-processo-sales-piu-chiaro-e-piu-efficace"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-come-strutturare-un-processo-sales-piu-chiaro-e-piu-efficace"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/blog-consulente-marketing-per-posizionamento-acquisition-ed-execution</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-consulente-marketing-per-posizionamento-acquisition-ed-execution"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-consulente-marketing-per-posizionamento-acquisition-ed-execution"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-consulente-marketing-per-posizionamento-acquisition-ed-execution"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-consulente-marketing-per-posizionamento-acquisition-ed-execution"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/blog-consulenza-data-driven-per-kpi-dashboard-e-decisioni-migliori</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-consulenza-data-driven-per-kpi-dashboard-e-decisioni-migliori"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-consulenza-data-driven-per-kpi-dashboard-e-decisioni-migliori"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-consulenza-data-driven-per-kpi-dashboard-e-decisioni-migliori"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-consulenza-data-driven-per-kpi-dashboard-e-decisioni-migliori"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/blog-consulenza-marketing-per-aziende-che-vogliono-crescere-meglio</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-consulenza-marketing-per-aziende-che-vogliono-crescere-meglio"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-consulenza-marketing-per-aziende-che-vogliono-crescere-meglio"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-consulenza-marketing-per-aziende-che-vogliono-crescere-meglio"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-consulenza-marketing-per-aziende-che-vogliono-crescere-meglio"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/blog-consulenza-per-sviluppo-del-business-partnership-e-crescita-sostenibile</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-consulenza-per-sviluppo-del-business-partnership-e-crescita-sostenibile"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-consulenza-per-sviluppo-del-business-partnership-e-crescita-sostenibile"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-consulenza-per-sviluppo-del-business-partnership-e-crescita-sostenibile"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-consulenza-per-sviluppo-del-business-partnership-e-crescita-sostenibile"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/blog-consulenza-sales-per-migliorare-pipeline-conversione-e-processo-commerciale</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-consulenza-sales-per-migliorare-pipeline-conversione-e-processo-commerciale"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-consulenza-sales-per-migliorare-pipeline-conversione-e-processo-commerciale"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-consulenza-sales-per-migliorare-pipeline-conversione-e-processo-commerciale"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-consulenza-sales-per-migliorare-pipeline-conversione-e-processo-commerciale"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/blog-consulenza-strategica-per-aziende-che-vogliono-crescere-con-piu-direzione</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-consulenza-strategica-per-aziende-che-vogliono-crescere-con-piu-direzione"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-consulenza-strategica-per-aziende-che-vogliono-crescere-con-piu-direzione"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-consulenza-strategica-per-aziende-che-vogliono-crescere-con-piu-direzione"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-consulenza-strategica-per-aziende-che-vogliono-crescere-con-piu-direzione"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/blog-controllo-di-gestione-per-capire-margini-costi-e-priorita</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-controllo-di-gestione-per-capire-margini-costi-e-priorita"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-controllo-di-gestione-per-capire-margini-costi-e-priorita"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-controllo-di-gestione-per-capire-margini-costi-e-priorita"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-controllo-di-gestione-per-capire-margini-costi-e-priorita"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/blog-controllo-di-gestione-per-pmi-e-aziende-in-fase-di-crescita</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-controllo-di-gestione-per-pmi-e-aziende-in-fase-di-crescita"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-controllo-di-gestione-per-pmi-e-aziende-in-fase-di-crescita"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-controllo-di-gestione-per-pmi-e-aziende-in-fase-di-crescita"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-controllo-di-gestione-per-pmi-e-aziende-in-fase-di-crescita"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/blog-dati-e-reporting-per-una-crescita-piu-leggibile-e-sostenibile</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-dati-e-reporting-per-una-crescita-piu-leggibile-e-sostenibile"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-dati-e-reporting-per-una-crescita-piu-leggibile-e-sostenibile"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-dati-e-reporting-per-una-crescita-piu-leggibile-e-sostenibile"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-dati-e-reporting-per-una-crescita-piu-leggibile-e-sostenibile"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/blog-kpi-e-dashboard-per-aziende-che-vogliono-decidere-meglio</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-kpi-e-dashboard-per-aziende-che-vogliono-decidere-meglio"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-kpi-e-dashboard-per-aziende-che-vogliono-decidere-meglio"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-kpi-e-dashboard-per-aziende-che-vogliono-decidere-meglio"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-kpi-e-dashboard-per-aziende-che-vogliono-decidere-meglio"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/blog-margini-costi-e-sostenibilita-il-valore-del-controllo-di-gestione</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-margini-costi-e-sostenibilita-il-valore-del-controllo-di-gestione"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-margini-costi-e-sostenibilita-il-valore-del-controllo-di-gestione"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-margini-costi-e-sostenibilita-il-valore-del-controllo-di-gestione"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-margini-costi-e-sostenibilita-il-valore-del-controllo-di-gestione"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/blog-piano-editoriale-e-redazione-articoli-per-la-crescita-organica</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-piano-editoriale-e-redazione-articoli-per-la-crescita-organica"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-piano-editoriale-e-redazione-articoli-per-la-crescita-organica"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-piano-editoriale-e-redazione-articoli-per-la-crescita-organica"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-piano-editoriale-e-redazione-articoli-per-la-crescita-organica"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/blog-redazione-articoli-seo-per-aziende-che-vogliono-crescere</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-redazione-articoli-seo-per-aziende-che-vogliono-crescere"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-redazione-articoli-seo-per-aziende-che-vogliono-crescere"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-redazione-articoli-seo-per-aziende-che-vogliono-crescere"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-redazione-articoli-seo-per-aziende-che-vogliono-crescere"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/blog-sales-enablement-per-aziende-che-vogliono-crescere-con-piu-ordine</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-sales-enablement-per-aziende-che-vogliono-crescere-con-piu-ordine"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-sales-enablement-per-aziende-che-vogliono-crescere-con-piu-ordine"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-sales-enablement-per-aziende-che-vogliono-crescere-con-piu-ordine"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-sales-enablement-per-aziende-che-vogliono-crescere-con-piu-ordine"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/blog-servizio-di-redazione-articoli-per-blog-aziendali-b2b</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-servizio-di-redazione-articoli-per-blog-aziendali-b2b"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-servizio-di-redazione-articoli-per-blog-aziendali-b2b"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-servizio-di-redazione-articoli-per-blog-aziendali-b2b"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-servizio-di-redazione-articoli-per-blog-aziendali-b2b"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/blog-strategia-marketing-per-pmi-e-aziende-in-fase-di-crescita</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-strategia-marketing-per-pmi-e-aziende-in-fase-di-crescita"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-strategia-marketing-per-pmi-e-aziende-in-fase-di-crescita"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-strategia-marketing-per-pmi-e-aziende-in-fase-di-crescita"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-strategia-marketing-per-pmi-e-aziende-in-fase-di-crescita"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/blog-strategy-per-allineare-marketing-sales-dati-e-obiettivi-di-business</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-strategy-per-allineare-marketing-sales-dati-e-obiettivi-di-business"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-strategy-per-allineare-marketing-sales-dati-e-obiettivi-di-business"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-strategy-per-allineare-marketing-sales-dati-e-obiettivi-di-business"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-strategy-per-allineare-marketing-sales-dati-e-obiettivi-di-business"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/blog-sviluppo-del-business-per-aziende-che-vogliono-aprire-nuove-opportunita</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-sviluppo-del-business-per-aziende-che-vogliono-aprire-nuove-opportunita"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-sviluppo-del-business-per-aziende-che-vogliono-aprire-nuove-opportunita"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-sviluppo-del-business-per-aziende-che-vogliono-aprire-nuove-opportunita"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-sviluppo-del-business-per-aziende-che-vogliono-aprire-nuove-opportunita"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/blog-tracking-dashboard-e-reportistica-per-aziende-in-crescita</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-tracking-dashboard-e-reportistica-per-aziende-in-crescita"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-tracking-dashboard-e-reportistica-per-aziende-in-crescita"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-tracking-dashboard-e-reportistica-per-aziende-in-crescita"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-tracking-dashboard-e-reportistica-per-aziende-in-crescita"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/blog</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/google643280b504548f64</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/google643280b504548f64"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/google643280b504548f64"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/google643280b504548f64"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/google643280b504548f64"/>
+    <priority>0.6</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/"/>
+    <priority>1.0</priority>
+    <changefreq>weekly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/institutional</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/institutional"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/institutional"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/institutional"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/institutional"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/preview-concept-a</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/preview-concept-a"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/preview-concept-a"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/preview-concept-a"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/preview-concept-a"/>
+    <priority>0.6</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/preview-concept-b</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/preview-concept-b"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/preview-concept-b"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/preview-concept-b"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/preview-concept-b"/>
+    <priority>0.6</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/preview-concept-c</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/preview-concept-c"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/preview-concept-c"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/preview-concept-c"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/preview-concept-c"/>
+    <priority>0.6</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/servizi-data</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/servizi-data"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/servizi-data"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/servizi-data"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/servizi-data"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/servizi-marketing</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/servizi-marketing"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/servizi-marketing"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/servizi-marketing"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/servizi-marketing"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/servizi-sales</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/servizi-sales"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/servizi-sales"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/servizi-sales"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/servizi-sales"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/servizi-strategy</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/servizi-strategy"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/servizi-strategy"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/servizi-strategy"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/servizi-strategy"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/en/blog-articoli-seo-per-migliorare-posizionamento-e-autorevolezza</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-articoli-seo-per-migliorare-posizionamento-e-autorevolezza"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-articoli-seo-per-migliorare-posizionamento-e-autorevolezza"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-articoli-seo-per-migliorare-posizionamento-e-autorevolezza"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-articoli-seo-per-migliorare-posizionamento-e-autorevolezza"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/en/blog-audit-marketing-per-capire-cosa-sta-bloccando-la-crescita</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-audit-marketing-per-capire-cosa-sta-bloccando-la-crescita"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-audit-marketing-per-capire-cosa-sta-bloccando-la-crescita"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-audit-marketing-per-capire-cosa-sta-bloccando-la-crescita"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-audit-marketing-per-capire-cosa-sta-bloccando-la-crescita"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/en/blog-business-development-e-sales-strategy-per-la-crescita-aziendale</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-business-development-e-sales-strategy-per-la-crescita-aziendale"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-business-development-e-sales-strategy-per-la-crescita-aziendale"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-business-development-e-sales-strategy-per-la-crescita-aziendale"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-business-development-e-sales-strategy-per-la-crescita-aziendale"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/en/blog-come-costruire-un-marketing-piu-chiaro-misurabile-e-sostenibile</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-come-costruire-un-marketing-piu-chiaro-misurabile-e-sostenibile"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-come-costruire-un-marketing-piu-chiaro-misurabile-e-sostenibile"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-come-costruire-un-marketing-piu-chiaro-misurabile-e-sostenibile"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-come-costruire-un-marketing-piu-chiaro-misurabile-e-sostenibile"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/en/blog-come-costruire-una-roadmap-strategica-utile-alla-crescita-aziendale</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-come-costruire-una-roadmap-strategica-utile-alla-crescita-aziendale"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-come-costruire-una-roadmap-strategica-utile-alla-crescita-aziendale"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-come-costruire-una-roadmap-strategica-utile-alla-crescita-aziendale"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-come-costruire-una-roadmap-strategica-utile-alla-crescita-aziendale"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/en/blog-come-impostare-un-controllo-di-gestione-utile-al-management</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-come-impostare-un-controllo-di-gestione-utile-al-management"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-come-impostare-un-controllo-di-gestione-utile-al-management"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-come-impostare-un-controllo-di-gestione-utile-al-management"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-come-impostare-un-controllo-di-gestione-utile-al-management"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/en/blog-come-leggere-i-kpi-giusti-senza-fare-reporting-inutile</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-come-leggere-i-kpi-giusti-senza-fare-reporting-inutile"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-come-leggere-i-kpi-giusti-senza-fare-reporting-inutile"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-come-leggere-i-kpi-giusti-senza-fare-reporting-inutile"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-come-leggere-i-kpi-giusti-senza-fare-reporting-inutile"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/en/blog-come-leggere-numeri-e-marginalita-senza-decidere-a-sensazione</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-come-leggere-numeri-e-marginalita-senza-decidere-a-sensazione"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-come-leggere-numeri-e-marginalita-senza-decidere-a-sensazione"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-come-leggere-numeri-e-marginalita-senza-decidere-a-sensazione"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-come-leggere-numeri-e-marginalita-senza-decidere-a-sensazione"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/en/blog-come-migliorare-vendite-e-conversione-in-aziende-b2b</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-come-migliorare-vendite-e-conversione-in-aziende-b2b"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-come-migliorare-vendite-e-conversione-in-aziende-b2b"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-come-migliorare-vendite-e-conversione-in-aziende-b2b"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-come-migliorare-vendite-e-conversione-in-aziende-b2b"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/en/blog-come-scrivere-articoli-seo-che-portano-traffico-qualificato</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-come-scrivere-articoli-seo-che-portano-traffico-qualificato"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-come-scrivere-articoli-seo-che-portano-traffico-qualificato"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-come-scrivere-articoli-seo-che-portano-traffico-qualificato"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-come-scrivere-articoli-seo-che-portano-traffico-qualificato"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/en/blog-come-strutturare-un-processo-sales-piu-chiaro-e-piu-efficace</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-come-strutturare-un-processo-sales-piu-chiaro-e-piu-efficace"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-come-strutturare-un-processo-sales-piu-chiaro-e-piu-efficace"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-come-strutturare-un-processo-sales-piu-chiaro-e-piu-efficace"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-come-strutturare-un-processo-sales-piu-chiaro-e-piu-efficace"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/en/blog-consulente-marketing-per-posizionamento-acquisition-ed-execution</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-consulente-marketing-per-posizionamento-acquisition-ed-execution"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-consulente-marketing-per-posizionamento-acquisition-ed-execution"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-consulente-marketing-per-posizionamento-acquisition-ed-execution"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-consulente-marketing-per-posizionamento-acquisition-ed-execution"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/en/blog-consulenza-data-driven-per-kpi-dashboard-e-decisioni-migliori</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-consulenza-data-driven-per-kpi-dashboard-e-decisioni-migliori"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-consulenza-data-driven-per-kpi-dashboard-e-decisioni-migliori"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-consulenza-data-driven-per-kpi-dashboard-e-decisioni-migliori"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-consulenza-data-driven-per-kpi-dashboard-e-decisioni-migliori"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/en/blog-consulenza-marketing-per-aziende-che-vogliono-crescere-meglio</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-consulenza-marketing-per-aziende-che-vogliono-crescere-meglio"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-consulenza-marketing-per-aziende-che-vogliono-crescere-meglio"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-consulenza-marketing-per-aziende-che-vogliono-crescere-meglio"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-consulenza-marketing-per-aziende-che-vogliono-crescere-meglio"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/en/blog-consulenza-per-sviluppo-del-business-partnership-e-crescita-sostenibile</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-consulenza-per-sviluppo-del-business-partnership-e-crescita-sostenibile"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-consulenza-per-sviluppo-del-business-partnership-e-crescita-sostenibile"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-consulenza-per-sviluppo-del-business-partnership-e-crescita-sostenibile"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-consulenza-per-sviluppo-del-business-partnership-e-crescita-sostenibile"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/en/blog-consulenza-sales-per-migliorare-pipeline-conversione-e-processo-commerciale</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-consulenza-sales-per-migliorare-pipeline-conversione-e-processo-commerciale"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-consulenza-sales-per-migliorare-pipeline-conversione-e-processo-commerciale"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-consulenza-sales-per-migliorare-pipeline-conversione-e-processo-commerciale"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-consulenza-sales-per-migliorare-pipeline-conversione-e-processo-commerciale"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/en/blog-consulenza-strategica-per-aziende-che-vogliono-crescere-con-piu-direzione</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-consulenza-strategica-per-aziende-che-vogliono-crescere-con-piu-direzione"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-consulenza-strategica-per-aziende-che-vogliono-crescere-con-piu-direzione"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-consulenza-strategica-per-aziende-che-vogliono-crescere-con-piu-direzione"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-consulenza-strategica-per-aziende-che-vogliono-crescere-con-piu-direzione"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/en/blog-controllo-di-gestione-per-capire-margini-costi-e-priorita</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-controllo-di-gestione-per-capire-margini-costi-e-priorita"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-controllo-di-gestione-per-capire-margini-costi-e-priorita"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-controllo-di-gestione-per-capire-margini-costi-e-priorita"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-controllo-di-gestione-per-capire-margini-costi-e-priorita"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/en/blog-controllo-di-gestione-per-pmi-e-aziende-in-fase-di-crescita</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-controllo-di-gestione-per-pmi-e-aziende-in-fase-di-crescita"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-controllo-di-gestione-per-pmi-e-aziende-in-fase-di-crescita"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-controllo-di-gestione-per-pmi-e-aziende-in-fase-di-crescita"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-controllo-di-gestione-per-pmi-e-aziende-in-fase-di-crescita"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/en/blog-dati-e-reporting-per-una-crescita-piu-leggibile-e-sostenibile</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-dati-e-reporting-per-una-crescita-piu-leggibile-e-sostenibile"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-dati-e-reporting-per-una-crescita-piu-leggibile-e-sostenibile"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-dati-e-reporting-per-una-crescita-piu-leggibile-e-sostenibile"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-dati-e-reporting-per-una-crescita-piu-leggibile-e-sostenibile"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/en/blog-kpi-e-dashboard-per-aziende-che-vogliono-decidere-meglio</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-kpi-e-dashboard-per-aziende-che-vogliono-decidere-meglio"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-kpi-e-dashboard-per-aziende-che-vogliono-decidere-meglio"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-kpi-e-dashboard-per-aziende-che-vogliono-decidere-meglio"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-kpi-e-dashboard-per-aziende-che-vogliono-decidere-meglio"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/en/blog-margini-costi-e-sostenibilita-il-valore-del-controllo-di-gestione</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-margini-costi-e-sostenibilita-il-valore-del-controllo-di-gestione"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-margini-costi-e-sostenibilita-il-valore-del-controllo-di-gestione"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-margini-costi-e-sostenibilita-il-valore-del-controllo-di-gestione"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-margini-costi-e-sostenibilita-il-valore-del-controllo-di-gestione"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/en/blog-piano-editoriale-e-redazione-articoli-per-la-crescita-organica</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-piano-editoriale-e-redazione-articoli-per-la-crescita-organica"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-piano-editoriale-e-redazione-articoli-per-la-crescita-organica"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-piano-editoriale-e-redazione-articoli-per-la-crescita-organica"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-piano-editoriale-e-redazione-articoli-per-la-crescita-organica"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/en/blog-redazione-articoli-seo-per-aziende-che-vogliono-crescere</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-redazione-articoli-seo-per-aziende-che-vogliono-crescere"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-redazione-articoli-seo-per-aziende-che-vogliono-crescere"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-redazione-articoli-seo-per-aziende-che-vogliono-crescere"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-redazione-articoli-seo-per-aziende-che-vogliono-crescere"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/en/blog-sales-enablement-per-aziende-che-vogliono-crescere-con-piu-ordine</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-sales-enablement-per-aziende-che-vogliono-crescere-con-piu-ordine"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-sales-enablement-per-aziende-che-vogliono-crescere-con-piu-ordine"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-sales-enablement-per-aziende-che-vogliono-crescere-con-piu-ordine"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-sales-enablement-per-aziende-che-vogliono-crescere-con-piu-ordine"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/en/blog-servizio-di-redazione-articoli-per-blog-aziendali-b2b</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-servizio-di-redazione-articoli-per-blog-aziendali-b2b"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-servizio-di-redazione-articoli-per-blog-aziendali-b2b"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-servizio-di-redazione-articoli-per-blog-aziendali-b2b"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-servizio-di-redazione-articoli-per-blog-aziendali-b2b"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/en/blog-strategia-marketing-per-pmi-e-aziende-in-fase-di-crescita</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-strategia-marketing-per-pmi-e-aziende-in-fase-di-crescita"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-strategia-marketing-per-pmi-e-aziende-in-fase-di-crescita"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-strategia-marketing-per-pmi-e-aziende-in-fase-di-crescita"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-strategia-marketing-per-pmi-e-aziende-in-fase-di-crescita"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/en/blog-strategy-per-allineare-marketing-sales-dati-e-obiettivi-di-business</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-strategy-per-allineare-marketing-sales-dati-e-obiettivi-di-business"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-strategy-per-allineare-marketing-sales-dati-e-obiettivi-di-business"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-strategy-per-allineare-marketing-sales-dati-e-obiettivi-di-business"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-strategy-per-allineare-marketing-sales-dati-e-obiettivi-di-business"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/en/blog-sviluppo-del-business-per-aziende-che-vogliono-aprire-nuove-opportunita</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-sviluppo-del-business-per-aziende-che-vogliono-aprire-nuove-opportunita"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-sviluppo-del-business-per-aziende-che-vogliono-aprire-nuove-opportunita"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-sviluppo-del-business-per-aziende-che-vogliono-aprire-nuove-opportunita"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-sviluppo-del-business-per-aziende-che-vogliono-aprire-nuove-opportunita"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/en/blog-tracking-dashboard-e-reportistica-per-aziende-in-crescita</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-tracking-dashboard-e-reportistica-per-aziende-in-crescita"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-tracking-dashboard-e-reportistica-per-aziende-in-crescita"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-tracking-dashboard-e-reportistica-per-aziende-in-crescita"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-tracking-dashboard-e-reportistica-per-aziende-in-crescita"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/en/blog</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/en</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/"/>
+    <priority>1.0</priority>
+    <changefreq>weekly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/en/institutional</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/institutional"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/institutional"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/institutional"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/institutional"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/en/servizi-data</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/servizi-data"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/servizi-data"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/servizi-data"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/servizi-data"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/en/servizi-marketing</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/servizi-marketing"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/servizi-marketing"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/servizi-marketing"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/servizi-marketing"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/en/servizi-sales</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/servizi-sales"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/servizi-sales"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/servizi-sales"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/servizi-sales"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/en/servizi-strategy</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/servizi-strategy"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/servizi-strategy"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/servizi-strategy"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/servizi-strategy"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/pt/blog-articoli-seo-per-migliorare-posizionamento-e-autorevolezza</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-articoli-seo-per-migliorare-posizionamento-e-autorevolezza"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-articoli-seo-per-migliorare-posizionamento-e-autorevolezza"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-articoli-seo-per-migliorare-posizionamento-e-autorevolezza"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-articoli-seo-per-migliorare-posizionamento-e-autorevolezza"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/pt/blog-audit-marketing-per-capire-cosa-sta-bloccando-la-crescita</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-audit-marketing-per-capire-cosa-sta-bloccando-la-crescita"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-audit-marketing-per-capire-cosa-sta-bloccando-la-crescita"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-audit-marketing-per-capire-cosa-sta-bloccando-la-crescita"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-audit-marketing-per-capire-cosa-sta-bloccando-la-crescita"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/pt/blog-business-development-e-sales-strategy-per-la-crescita-aziendale</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-business-development-e-sales-strategy-per-la-crescita-aziendale"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-business-development-e-sales-strategy-per-la-crescita-aziendale"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-business-development-e-sales-strategy-per-la-crescita-aziendale"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-business-development-e-sales-strategy-per-la-crescita-aziendale"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/pt/blog-come-costruire-un-marketing-piu-chiaro-misurabile-e-sostenibile</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-come-costruire-un-marketing-piu-chiaro-misurabile-e-sostenibile"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-come-costruire-un-marketing-piu-chiaro-misurabile-e-sostenibile"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-come-costruire-un-marketing-piu-chiaro-misurabile-e-sostenibile"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-come-costruire-un-marketing-piu-chiaro-misurabile-e-sostenibile"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/pt/blog-come-costruire-una-roadmap-strategica-utile-alla-crescita-aziendale</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-come-costruire-una-roadmap-strategica-utile-alla-crescita-aziendale"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-come-costruire-una-roadmap-strategica-utile-alla-crescita-aziendale"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-come-costruire-una-roadmap-strategica-utile-alla-crescita-aziendale"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-come-costruire-una-roadmap-strategica-utile-alla-crescita-aziendale"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/pt/blog-come-impostare-un-controllo-di-gestione-utile-al-management</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-come-impostare-un-controllo-di-gestione-utile-al-management"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-come-impostare-un-controllo-di-gestione-utile-al-management"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-come-impostare-un-controllo-di-gestione-utile-al-management"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-come-impostare-un-controllo-di-gestione-utile-al-management"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/pt/blog-come-leggere-i-kpi-giusti-senza-fare-reporting-inutile</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-come-leggere-i-kpi-giusti-senza-fare-reporting-inutile"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-come-leggere-i-kpi-giusti-senza-fare-reporting-inutile"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-come-leggere-i-kpi-giusti-senza-fare-reporting-inutile"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-come-leggere-i-kpi-giusti-senza-fare-reporting-inutile"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/pt/blog-come-leggere-numeri-e-marginalita-senza-decidere-a-sensazione</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-come-leggere-numeri-e-marginalita-senza-decidere-a-sensazione"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-come-leggere-numeri-e-marginalita-senza-decidere-a-sensazione"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-come-leggere-numeri-e-marginalita-senza-decidere-a-sensazione"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-come-leggere-numeri-e-marginalita-senza-decidere-a-sensazione"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/pt/blog-come-migliorare-vendite-e-conversione-in-aziende-b2b</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-come-migliorare-vendite-e-conversione-in-aziende-b2b"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-come-migliorare-vendite-e-conversione-in-aziende-b2b"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-come-migliorare-vendite-e-conversione-in-aziende-b2b"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-come-migliorare-vendite-e-conversione-in-aziende-b2b"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/pt/blog-come-scrivere-articoli-seo-che-portano-traffico-qualificato</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-come-scrivere-articoli-seo-che-portano-traffico-qualificato"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-come-scrivere-articoli-seo-che-portano-traffico-qualificato"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-come-scrivere-articoli-seo-che-portano-traffico-qualificato"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-come-scrivere-articoli-seo-che-portano-traffico-qualificato"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/pt/blog-come-strutturare-un-processo-sales-piu-chiaro-e-piu-efficace</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-come-strutturare-un-processo-sales-piu-chiaro-e-piu-efficace"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-come-strutturare-un-processo-sales-piu-chiaro-e-piu-efficace"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-come-strutturare-un-processo-sales-piu-chiaro-e-piu-efficace"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-come-strutturare-un-processo-sales-piu-chiaro-e-piu-efficace"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/pt/blog-consulente-marketing-per-posizionamento-acquisition-ed-execution</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-consulente-marketing-per-posizionamento-acquisition-ed-execution"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-consulente-marketing-per-posizionamento-acquisition-ed-execution"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-consulente-marketing-per-posizionamento-acquisition-ed-execution"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-consulente-marketing-per-posizionamento-acquisition-ed-execution"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/pt/blog-consulenza-data-driven-per-kpi-dashboard-e-decisioni-migliori</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-consulenza-data-driven-per-kpi-dashboard-e-decisioni-migliori"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-consulenza-data-driven-per-kpi-dashboard-e-decisioni-migliori"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-consulenza-data-driven-per-kpi-dashboard-e-decisioni-migliori"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-consulenza-data-driven-per-kpi-dashboard-e-decisioni-migliori"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/pt/blog-consulenza-marketing-per-aziende-che-vogliono-crescere-meglio</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-consulenza-marketing-per-aziende-che-vogliono-crescere-meglio"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-consulenza-marketing-per-aziende-che-vogliono-crescere-meglio"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-consulenza-marketing-per-aziende-che-vogliono-crescere-meglio"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-consulenza-marketing-per-aziende-che-vogliono-crescere-meglio"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/pt/blog-consulenza-per-sviluppo-del-business-partnership-e-crescita-sostenibile</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-consulenza-per-sviluppo-del-business-partnership-e-crescita-sostenibile"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-consulenza-per-sviluppo-del-business-partnership-e-crescita-sostenibile"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-consulenza-per-sviluppo-del-business-partnership-e-crescita-sostenibile"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-consulenza-per-sviluppo-del-business-partnership-e-crescita-sostenibile"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/pt/blog-consulenza-sales-per-migliorare-pipeline-conversione-e-processo-commerciale</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-consulenza-sales-per-migliorare-pipeline-conversione-e-processo-commerciale"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-consulenza-sales-per-migliorare-pipeline-conversione-e-processo-commerciale"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-consulenza-sales-per-migliorare-pipeline-conversione-e-processo-commerciale"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-consulenza-sales-per-migliorare-pipeline-conversione-e-processo-commerciale"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/pt/blog-consulenza-strategica-per-aziende-che-vogliono-crescere-con-piu-direzione</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-consulenza-strategica-per-aziende-che-vogliono-crescere-con-piu-direzione"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-consulenza-strategica-per-aziende-che-vogliono-crescere-con-piu-direzione"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-consulenza-strategica-per-aziende-che-vogliono-crescere-con-piu-direzione"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-consulenza-strategica-per-aziende-che-vogliono-crescere-con-piu-direzione"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/pt/blog-controllo-di-gestione-per-capire-margini-costi-e-priorita</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-controllo-di-gestione-per-capire-margini-costi-e-priorita"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-controllo-di-gestione-per-capire-margini-costi-e-priorita"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-controllo-di-gestione-per-capire-margini-costi-e-priorita"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-controllo-di-gestione-per-capire-margini-costi-e-priorita"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/pt/blog-controllo-di-gestione-per-pmi-e-aziende-in-fase-di-crescita</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-controllo-di-gestione-per-pmi-e-aziende-in-fase-di-crescita"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-controllo-di-gestione-per-pmi-e-aziende-in-fase-di-crescita"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-controllo-di-gestione-per-pmi-e-aziende-in-fase-di-crescita"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-controllo-di-gestione-per-pmi-e-aziende-in-fase-di-crescita"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/pt/blog-dati-e-reporting-per-una-crescita-piu-leggibile-e-sostenibile</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-dati-e-reporting-per-una-crescita-piu-leggibile-e-sostenibile"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-dati-e-reporting-per-una-crescita-piu-leggibile-e-sostenibile"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-dati-e-reporting-per-una-crescita-piu-leggibile-e-sostenibile"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-dati-e-reporting-per-una-crescita-piu-leggibile-e-sostenibile"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/pt/blog-kpi-e-dashboard-per-aziende-che-vogliono-decidere-meglio</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-kpi-e-dashboard-per-aziende-che-vogliono-decidere-meglio"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-kpi-e-dashboard-per-aziende-che-vogliono-decidere-meglio"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-kpi-e-dashboard-per-aziende-che-vogliono-decidere-meglio"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-kpi-e-dashboard-per-aziende-che-vogliono-decidere-meglio"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/pt/blog-margini-costi-e-sostenibilita-il-valore-del-controllo-di-gestione</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-margini-costi-e-sostenibilita-il-valore-del-controllo-di-gestione"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-margini-costi-e-sostenibilita-il-valore-del-controllo-di-gestione"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-margini-costi-e-sostenibilita-il-valore-del-controllo-di-gestione"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-margini-costi-e-sostenibilita-il-valore-del-controllo-di-gestione"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/pt/blog-piano-editoriale-e-redazione-articoli-per-la-crescita-organica</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-piano-editoriale-e-redazione-articoli-per-la-crescita-organica"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-piano-editoriale-e-redazione-articoli-per-la-crescita-organica"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-piano-editoriale-e-redazione-articoli-per-la-crescita-organica"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-piano-editoriale-e-redazione-articoli-per-la-crescita-organica"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/pt/blog-redazione-articoli-seo-per-aziende-che-vogliono-crescere</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-redazione-articoli-seo-per-aziende-che-vogliono-crescere"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-redazione-articoli-seo-per-aziende-che-vogliono-crescere"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-redazione-articoli-seo-per-aziende-che-vogliono-crescere"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-redazione-articoli-seo-per-aziende-che-vogliono-crescere"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/pt/blog-sales-enablement-per-aziende-che-vogliono-crescere-con-piu-ordine</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-sales-enablement-per-aziende-che-vogliono-crescere-con-piu-ordine"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-sales-enablement-per-aziende-che-vogliono-crescere-con-piu-ordine"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-sales-enablement-per-aziende-che-vogliono-crescere-con-piu-ordine"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-sales-enablement-per-aziende-che-vogliono-crescere-con-piu-ordine"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/pt/blog-servizio-di-redazione-articoli-per-blog-aziendali-b2b</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-servizio-di-redazione-articoli-per-blog-aziendali-b2b"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-servizio-di-redazione-articoli-per-blog-aziendali-b2b"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-servizio-di-redazione-articoli-per-blog-aziendali-b2b"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-servizio-di-redazione-articoli-per-blog-aziendali-b2b"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/pt/blog-strategia-marketing-per-pmi-e-aziende-in-fase-di-crescita</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-strategia-marketing-per-pmi-e-aziende-in-fase-di-crescita"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-strategia-marketing-per-pmi-e-aziende-in-fase-di-crescita"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-strategia-marketing-per-pmi-e-aziende-in-fase-di-crescita"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-strategia-marketing-per-pmi-e-aziende-in-fase-di-crescita"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/pt/blog-strategy-per-allineare-marketing-sales-dati-e-obiettivi-di-business</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-strategy-per-allineare-marketing-sales-dati-e-obiettivi-di-business"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-strategy-per-allineare-marketing-sales-dati-e-obiettivi-di-business"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-strategy-per-allineare-marketing-sales-dati-e-obiettivi-di-business"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-strategy-per-allineare-marketing-sales-dati-e-obiettivi-di-business"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/pt/blog-sviluppo-del-business-per-aziende-che-vogliono-aprire-nuove-opportunita</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-sviluppo-del-business-per-aziende-che-vogliono-aprire-nuove-opportunita"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-sviluppo-del-business-per-aziende-che-vogliono-aprire-nuove-opportunita"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-sviluppo-del-business-per-aziende-che-vogliono-aprire-nuove-opportunita"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-sviluppo-del-business-per-aziende-che-vogliono-aprire-nuove-opportunita"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/pt/blog-tracking-dashboard-e-reportistica-per-aziende-in-crescita</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog-tracking-dashboard-e-reportistica-per-aziende-in-crescita"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog-tracking-dashboard-e-reportistica-per-aziende-in-crescita"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog-tracking-dashboard-e-reportistica-per-aziende-in-crescita"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog-tracking-dashboard-e-reportistica-per-aziende-in-crescita"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/pt/blog</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/blog"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/blog"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/blog"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/blog"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/pt</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/"/>
+    <priority>1.0</priority>
+    <changefreq>weekly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/pt/institutional</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/institutional"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/institutional"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/institutional"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/institutional"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/pt/servizi-data</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/servizi-data"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/servizi-data"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/servizi-data"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/servizi-data"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/pt/servizi-marketing</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/servizi-marketing"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/servizi-marketing"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/servizi-marketing"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/servizi-marketing"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/pt/servizi-sales</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/servizi-sales"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/servizi-sales"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/servizi-sales"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/servizi-sales"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/pt/servizi-strategy</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/servizi-strategy"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://francescogizzi.com/en/servizi-strategy"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/servizi-strategy"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/servizi-strategy"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
 </urlset>
