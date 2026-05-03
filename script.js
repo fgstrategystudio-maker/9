@@ -1,3 +1,37 @@
+// ── Cookie consent (GDPR / Consent Mode v2) ──
+(function(){
+  var KEY = 'fg_consent';
+  var saved = localStorage.getItem(KEY);
+  function applyConsent(granted){
+    if(window.gtag) gtag('consent','update',{
+      analytics_storage: granted?'granted':'denied',
+      ad_storage:'denied', ad_user_data:'denied', ad_personalization:'denied'
+    });
+  }
+  if(saved==='granted'){ applyConsent(true);  return; }
+  if(saved==='denied'){  applyConsent(false); return; }
+  var lang = document.documentElement.getAttribute('lang')||'it';
+  var T = {
+    it:{msg:'Utilizziamo cookie analitici per migliorare la navigazione. Puoi accettare o rifiutare.',  acc:'Accetta',  rej:'Rifiuta'},
+    en:{msg:'We use analytics cookies to improve your experience. You can accept or decline.',           acc:'Accept',   rej:'Decline'},
+    pt:{msg:'Usamos cookies analíticos para melhorar sua experiência. Você pode aceitar ou recusar.',   acc:'Aceitar',  rej:'Recusar'}
+  };
+  var t = T[lang]||T['it'];
+  var b = document.createElement('div');
+  b.id = 'cookie-banner';
+  b.innerHTML = '<p>'+t.msg+'</p><div class="cookie-actions"><button class="cookie-btn cookie-reject">'+t.rej+'</button><button class="cookie-btn cookie-accept">'+t.acc+'</button></div>';
+  document.body.appendChild(b);
+  setTimeout(function(){ b.classList.add('show'); }, 700);
+  function dismiss(granted){
+    localStorage.setItem(KEY, granted?'granted':'denied');
+    applyConsent(granted);
+    b.classList.remove('show');
+    setTimeout(function(){ b.remove(); }, 450);
+  }
+  b.querySelector('.cookie-accept').addEventListener('click', function(){ dismiss(true); });
+  b.querySelector('.cookie-reject').addEventListener('click', function(){ dismiss(false); });
+})();
+
 // ── Language switcher: highlight active lang + smart links ──
 (function(){
   var path = window.location.pathname;
