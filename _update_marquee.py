@@ -166,7 +166,7 @@ TEXTS = {
 def build_section(lang, img_prefix=""):
     t = TEXTS[lang]
     inds = INDUSTRIES[lang]
-    ind_tags = "\n        ".join(f'<span class="industry-tag">{i}</span>' for i in inds)
+    ind_tags = "\n      ".join(f'<span class="industry-tag">{i}</span>' for i in inds)
     row1 = track(ROW1, img_prefix)
     row2 = track(ROW2, img_prefix)
     return f"""<section class="section">
@@ -174,7 +174,9 @@ def build_section(lang, img_prefix=""):
     <div class="logo-marquee-header">
       <p class="section-title">{t["section_title"]}</p>
       <h2>{t["h2"]}</h2>
-      <p class="logo-marquee-copy">{t["copy"]}</p>
+      <div class="industry-tags-wrap">
+      {ind_tags}
+      </div>
     </div>
 
     <div class="logo-marquee-grid">
@@ -187,13 +189,6 @@ def build_section(lang, img_prefix=""):
         <div class="logo-track">
 {row2}
         </div>
-      </div>
-    </div>
-
-    <div class="industry-tags-section">
-      <p class="industry-tags-title">{t["industries_title"]}</p>
-      <div class="industry-tags-wrap">
-        {ind_tags}
       </div>
     </div>
 
