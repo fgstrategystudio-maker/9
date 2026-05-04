@@ -466,18 +466,22 @@ document.addEventListener("DOMContentLoaded", function () {
     var rev = marquee.classList.contains('logo-marquee--rev');
     var speed = 1.0;
     var paused = false;
-
-    // La riga inversa parte dalla metà così il loop è simmetrico
-    if (rev) marquee.scrollLeft = marquee.scrollWidth / 2;
+    var ready = false;  // inizializza posizione solo dopo il primo layout
 
     function step() {
-      if (!paused) {
+      var half = marquee.scrollWidth / 2;
+      // Aspetta che il layout sia calcolato (scrollWidth > 0)
+      if (half > 10 && !ready) {
+        if (rev) marquee.scrollLeft = half;
+        ready = true;
+      }
+      if (!paused && ready) {
         if (rev) {
           marquee.scrollLeft -= speed;
-          if (marquee.scrollLeft <= 0) marquee.scrollLeft += marquee.scrollWidth / 2;
+          if (marquee.scrollLeft <= 0) marquee.scrollLeft += half;
         } else {
           marquee.scrollLeft += speed;
-          if (marquee.scrollLeft >= marquee.scrollWidth / 2) marquee.scrollLeft -= marquee.scrollWidth / 2;
+          if (marquee.scrollLeft >= half) marquee.scrollLeft -= half;
         }
       }
       requestAnimationFrame(step);

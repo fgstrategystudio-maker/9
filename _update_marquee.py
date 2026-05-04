@@ -23,7 +23,7 @@ ROW1 = [  # existing
     {"name": "Cyclando",        "domain": "cyclando.com",           "url": "https://cyclando.com/en/"},
 ]
 
-ROW2 = [  # new
+ROW2 = [  # new (Fabio Lenci removed; Homever uses local logo file)
     {"name": "Deply",             "domain": "deply.it",               "url": "https://deply.it/"},
     {"name": "PMI Doctors",       "domain": "pmidoctors.it",          "url": "https://pmidoctors.it/"},
     {"name": "Daplace Group",     "domain": "staydaplace.com",        "url": "https://staydaplace.com/"},
@@ -31,12 +31,11 @@ ROW2 = [  # new
     {"name": "ProntoPro",         "domain": "prontopro.it",           "url": "https://prontopro.it/"},
     {"name": "CTE Roma",          "domain": "cteroma.it",             "url": "https://cteroma.it/"},
     {"name": "Peekaboo",          "domain": "peekaboovision.com",     "url": "https://peekaboovision.com/"},
-    {"name": "Homever",           "domain": None,                     "url": None},
+    {"name": "Homever",           "domain": None,                     "url": None,  "img": "homever-logo.webp"},
     {"name": "Atlantide Video",   "domain": "atlantidevideo.it",      "url": "https://atlantidevideo.it/"},
     {"name": "Grano Trattoria",   "domain": "granotrattoria.com",     "url": "https://granotrattoria.com/"},
     {"name": "Garibaldi dal 1970","domain": "garibaldidal1970.com",   "url": "https://garibaldidal1970.com/"},
     {"name": "Zest Group",        "domain": "zestgroup.vc",           "url": "https://zestgroup.vc/"},
-    {"name": "Fabio Lenci",       "domain": None,                     "url": None},
 ]
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
@@ -48,9 +47,12 @@ def initials(name):
     words = name.split()
     return "".join(w[0] for w in words[:2]).upper()
 
-def chip(co):
+def chip(co, img_prefix=""):
     name = esc(co["name"])
-    if co.get("domain"):
+    if co.get("img"):
+        src = img_prefix + co["img"]
+        img = f'<img src="{src}" alt="{name}" width="48" height="48" loading="lazy" />'
+    elif co.get("domain"):
         img = f'<img src="{GF.format(co["domain"])}" alt="{name}" width="48" height="48" loading="lazy" />'
     else:
         ini = initials(co["name"])
@@ -61,10 +63,23 @@ def chip(co):
         return f'<a class="logo-chip" href="{co["url"]}" target="_blank" rel="noreferrer noopener">{inner}</a>'
     return f'<div class="logo-chip">{inner}</div>'
 
-def track(companies):
-    chips = "\n        ".join(chip(c) for c in companies)
+def track(companies, img_prefix=""):
+    chips = "\n        ".join(chip(c, img_prefix) for c in companies)
     # duplicate for seamless loop
     return f"        {chips}\n        {chips}"
+
+# ── Formation logos HTML ───────────────────────────────────────────────────────
+
+FORMATION_LOGOS = (
+    '<div class="formation-logos">'
+    '<a href="https://zestgroup.vc/" target="_blank" rel="noreferrer noopener" class="formation-logo-chip">'
+    f'<img src="{GF.format("zestgroup.vc")}" alt="Zest Group" width="32" height="32" loading="lazy" />'
+    '<span>Zest Group</span></a>'
+    '<a href="https://startupwiseguys.com/" target="_blank" rel="noreferrer noopener" class="formation-logo-chip">'
+    f'<img src="{GF.format("startupwiseguys.com")}" alt="Startup Wise Guys" width="32" height="32" loading="lazy" />'
+    '<span>Startup Wise Guys</span></a>'
+    '</div>'
+)
 
 # ── Per-language content ───────────────────────────────────────────────────────
 
@@ -102,7 +117,8 @@ TEXTS = {
         "industries_title": "Settori",
         "formation_title": "Ecosistema Startup & Formazione",
         "formation_text": (
-            "Ho collaborato anche con realtà che accelerano il tessuto imprenditoriale: "
+            "Mi sono formato ed ho collaborato con realtà che accelerano il tessuto imprenditoriale "
+            "nazionale ed internazionale come "
             '<a href="https://zestgroup.vc/" target="_blank" rel="noreferrer noopener"><strong>Zest Group</strong></a>, '
             "fondo di venture capital e acceleratore per startup italiane, e "
             '<a href="https://startupwiseguys.com/" target="_blank" rel="noreferrer noopener"><strong>Startup Wise Guys</strong></a>, '
@@ -118,7 +134,8 @@ TEXTS = {
         "industries_title": "Industries",
         "formation_title": "Startup & Training Ecosystem",
         "formation_text": (
-            "I've also worked with organisations that accelerate entrepreneurship: "
+            "I trained and worked with organisations that accelerate national and international "
+            "entrepreneurship like "
             '<a href="https://zestgroup.vc/" target="_blank" rel="noreferrer noopener"><strong>Zest Group</strong></a>, '
             "a venture capital fund and accelerator for Italian startups, and "
             '<a href="https://startupwiseguys.com/" target="_blank" rel="noreferrer noopener"><strong>Startup Wise Guys</strong></a>, '
@@ -134,23 +151,24 @@ TEXTS = {
         "industries_title": "Setores",
         "formation_title": "Ecossistema Startup & Formação",
         "formation_text": (
-            "Também colaborei com organizações que impulsionam o empreendedorismo: "
+            "Me formei e colaborei com organizações que aceleram o empreendedorismo nacional e "
+            "internacional como "
             '<a href="https://zestgroup.vc/" target="_blank" rel="noreferrer noopener"><strong>Zest Group</strong></a>, '
             "fundo de venture capital e aceleradora de startups italianas, e "
             '<a href="https://startupwiseguys.com/" target="_blank" rel="noreferrer noopener"><strong>Startup Wise Guys</strong></a>, '
-            "um dos principais aceleradores europeus B2B e SaaS."
+            "uma das principais aceleradoras europeias B2B e SaaS."
         ),
     },
 }
 
 # ── Section builder ────────────────────────────────────────────────────────────
 
-def build_section(lang):
+def build_section(lang, img_prefix=""):
     t = TEXTS[lang]
     inds = INDUSTRIES[lang]
     ind_tags = "\n        ".join(f'<span class="industry-tag">{i}</span>' for i in inds)
-    row1 = track(ROW1)
-    row2 = track(ROW2)
+    row1 = track(ROW1, img_prefix)
+    row2 = track(ROW2, img_prefix)
     return f"""<section class="section">
   <div class="container">
     <div class="logo-marquee-header">
@@ -182,6 +200,7 @@ def build_section(lang):
     <div class="formation-box">
       <p class="section-title">{t["formation_title"]}</p>
       <p class="formation-text">{t["formation_text"]}</p>
+      {FORMATION_LOGOS}
     </div>
   </div>
 </section>"""
@@ -189,14 +208,14 @@ def build_section(lang):
 # ── Apply to HTML files ────────────────────────────────────────────────────────
 
 FILES = [
-    ("/home/user/9/index.html", "it"),
-    ("/home/user/9/en/index.html", "en"),
-    ("/home/user/9/pt/index.html", "pt"),
+    ("/home/user/9/index.html",    "it", ""),
+    ("/home/user/9/en/index.html", "en", "../"),
+    ("/home/user/9/pt/index.html", "pt", "../"),
 ]
 
 SECTION_START = '<section class="section">\n  <div class="container">\n    <div class="logo-marquee-header">'
 
-for path, lang in FILES:
+for path, lang, img_prefix in FILES:
     with open(path, "r", encoding="utf-8") as f:
         c = f.read()
 
@@ -206,7 +225,7 @@ for path, lang in FILES:
         continue
 
     e = c.find("</section>", s) + len("</section>")
-    new_section = build_section(lang)
+    new_section = build_section(lang, img_prefix)
     c2 = c[:s] + new_section + c[e:]
 
     with open(path, "w", encoding="utf-8") as f:
