@@ -457,44 +457,45 @@ document.addEventListener('DOMContentLoaded', function(){
   });
 })();
 
-// Logo marquee: auto-scroll JS (funziona su tutti i dispositivi, swipe su mobile)
+// Logo marquee: auto-scroll JS — due righe, direzioni opposte
 document.addEventListener("DOMContentLoaded", function () {
-  var marquee = document.querySelector('.logo-marquee');
-  if (!marquee) return;
+  var marquees = document.querySelectorAll('.logo-marquee');
+  if (!marquees.length) return;
 
-  var speed = 1.1; // px per frame (~66px/s a 60fps, simile all'animazione CSS originale)
-  var paused = false;
+  marquees.forEach(function (marquee) {
+    var rev = marquee.classList.contains('logo-marquee--rev');
+    var speed = 1.0;
+    var paused = false;
 
-  function step() {
-    if (!paused) {
-      marquee.scrollLeft += speed;
-      // Loop senza stacco: quando raggiungi la metà (i duplicati), torna all'inizio
-      if (marquee.scrollLeft >= marquee.scrollWidth / 2) {
-        marquee.scrollLeft -= marquee.scrollWidth / 2;
+    // La riga inversa parte dalla metà così il loop è simmetrico
+    if (rev) marquee.scrollLeft = marquee.scrollWidth / 2;
+
+    function step() {
+      if (!paused) {
+        if (rev) {
+          marquee.scrollLeft -= speed;
+          if (marquee.scrollLeft <= 0) marquee.scrollLeft += marquee.scrollWidth / 2;
+        } else {
+          marquee.scrollLeft += speed;
+          if (marquee.scrollLeft >= marquee.scrollWidth / 2) marquee.scrollLeft -= marquee.scrollWidth / 2;
+        }
       }
+      requestAnimationFrame(step);
     }
     requestAnimationFrame(step);
-  }
-  requestAnimationFrame(step);
 
-  // Desktop: pausa su hover
-  marquee.addEventListener('mouseenter', function () { paused = true; });
-  marquee.addEventListener('mouseleave', function () { paused = false; });
-
-  // Mobile: pausa su touch, riprende 1s dopo
-  marquee.addEventListener('touchstart', function () { paused = true; }, { passive: true });
-  marquee.addEventListener('touchend', function () {
-    setTimeout(function () { paused = false; }, 1000);
-  }, { passive: true });
-  // Mantieni il loop anche durante lo scroll manuale
-  marquee.addEventListener('scroll', function () {
-    if (marquee.scrollLeft >= marquee.scrollWidth / 2) {
-      marquee.scrollLeft -= marquee.scrollWidth / 2;
-    }
-    if (marquee.scrollLeft < 0) {
-      marquee.scrollLeft += marquee.scrollWidth / 2;
-    }
-  }, { passive: true });
+    marquee.addEventListener('mouseenter', function () { paused = true; });
+    marquee.addEventListener('mouseleave', function () { paused = false; });
+    marquee.addEventListener('touchstart', function () { paused = true; }, { passive: true });
+    marquee.addEventListener('touchend', function () {
+      setTimeout(function () { paused = false; }, 1000);
+    }, { passive: true });
+    marquee.addEventListener('scroll', function () {
+      var half = marquee.scrollWidth / 2;
+      if (marquee.scrollLeft >= half) marquee.scrollLeft -= half;
+      if (marquee.scrollLeft < 0) marquee.scrollLeft += half;
+    }, { passive: true });
+  });
 });
 
 // ── Hero H1 split-text word reveal ──
