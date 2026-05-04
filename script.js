@@ -464,7 +464,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   marquees.forEach(function (marquee) {
     var rev = marquee.classList.contains('logo-marquee--rev');
-    var speed = 1.0;
+    var speed = parseFloat(marquee.getAttribute('data-speed')) || 1.0;
     var paused = false;
     var ready = false;  // inizializza posizione solo dopo il primo layout
 
