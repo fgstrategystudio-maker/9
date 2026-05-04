@@ -185,7 +185,7 @@ def build_section(lang, img_prefix=""):
       </div>
     </div>
 
-    <div class="logo-marquee logo-marquee--fwd sector-marquee" data-speed="0.45" aria-label="{t["row3_label"]}">
+    <div class="logo-marquee logo-marquee--fwd sector-marquee" data-speed="1" aria-label="{t["row3_label"]}">
       <div class="logo-track sector-track">
 {row3}
       </div>
