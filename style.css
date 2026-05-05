@@ -230,6 +230,7 @@ h1{font-size:56px;line-height:1.03;letter-spacing:-.04em;margin:0 0 18px;color:v
 .project-col p strong{color:var(--blue)}
 
 .logo-marquee-header{max-width:860px;margin-bottom:24px}
+.hero-location{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;letter-spacing:.06em;color:rgba(255,255,255,.4);margin:10px 0 0;text-transform:uppercase}
 .logo-marquee-copy{font-size:17px;color:var(--muted)}
 .logo-marquee-grid{display:flex;flex-direction:column;gap:12px}
 .logo-marquee{overflow-x:auto;overflow-y:hidden;position:relative;scrollbar-width:none;-webkit-overflow-scrolling:touch}

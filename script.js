@@ -408,9 +408,9 @@ document.addEventListener('DOMContentLoaded', function(){
 
   var lang = document.documentElement.getAttribute('lang')||'it';
   var T = {
-    it:{h:'Hai un progetto da sviluppare?', p:'Scrivimi due righe: ti rispondo entro 24 ore.', cta:'Parliamone', dismiss:'No grazie'},
-    en:{h:'Got a project in mind?', p:'Drop me a line — I reply within 24 hours.', cta:"Let's talk", dismiss:'No thanks'},
-    pt:{h:'Tem um projeto em mente?', p:'Me escreva: respondo em 24 horas.', cta:'Vamos conversar', dismiss:'Não, obrigado'}
+    it:{h:'Hai un progetto da sviluppare o migliorare?', p:'Scrivimi: ti rispondo entro 24 ore.', cta:'Parliamone', dismiss:'No grazie'},
+    en:{h:'Got a project to build or improve?', p:'Drop me a line — I reply within 24 hours.', cta:"Let's talk", dismiss:'No thanks'},
+    pt:{h:'Tem um projeto para desenvolver ou melhorar?', p:'Me escreva: respondo em 24 horas.', cta:'Vamos conversar', dismiss:'Não, obrigado'}
   };
   var t = T[lang];
   var base = lang==='en' ? '/en' : lang==='pt' ? '/pt' : '';
