@@ -322,17 +322,35 @@ export default function Dashboard({ commesse, setup, setSetup }) {
       <div className={styles.chartsGrid}>
         <div className={styles.chartCard}>
           <h2 className={styles.sectionTitle}>Stato commesse</h2>
-          <ResponsiveContainer width="100%" height={220}>
-            <PieChart>
-              <Pie data={statoCount} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} innerRadius={45} paddingAngle={3}>
-                {statoCount.map((entry) => (
-                  <Cell key={entry.name} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip contentStyle={{ background: "#111827", border: "1px solid rgba(255,255,255,.12)", borderRadius: "8px", color: "#e2e8f0", fontSize: "13px" }} />
-              <Legend formatter={(value) => <span style={{ color: "#94a3b8", fontSize: "12px" }}>{value}</span>} />
-            </PieChart>
-          </ResponsiveContainer>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", marginTop: "0.5rem" }}>
+            {(() => {
+              const total = statoCount.reduce((s, e) => s + e.value, 0);
+              const active = statoCount.filter((e) => e.value > 0);
+              return active.map((entry) => {
+                const pct = total > 0 ? Math.round((entry.value / total) * 100) : 0;
+                return (
+                  <div key={entry.name}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.3rem" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                        <span style={{ width: 8, height: 8, borderRadius: "50%", background: entry.color, display: "inline-block", flexShrink: 0 }} />
+                        <span style={{ fontSize: "0.85rem", color: "#cbd5e1", fontWeight: 500 }}>{entry.name}</span>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+                        <span style={{ fontSize: "0.85rem", fontWeight: 700, color: entry.color }}>{entry.value}</span>
+                        <span style={{ fontSize: "0.75rem", color: "#475569", minWidth: "2.5rem", textAlign: "right" }}>{pct}%</span>
+                      </div>
+                    </div>
+                    <div style={{ height: 6, borderRadius: 3, background: "rgba(255,255,255,.06)", overflow: "hidden" }}>
+                      <div style={{ height: "100%", width: `${pct}%`, borderRadius: 3, background: entry.color, transition: "width 0.4s ease" }} />
+                    </div>
+                  </div>
+                );
+              });
+            })()}
+            {statoCount.reduce((s, e) => s + e.value, 0) === 0 && (
+              <p style={{ color: "#475569", fontSize: "0.875rem" }}>Nessuna commessa</p>
+            )}
+          </div>
         </div>
 
         <div className={styles.chartCard}>
