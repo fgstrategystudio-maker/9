@@ -429,6 +429,7 @@ document.addEventListener('DOMContentLoaded', function(){
       '<div id="exit-popup-overlay"></div>'+
       '<div id="exit-popup-box">'+
         '<button id="exit-popup-close" aria-label="Chiudi">&times;</button>'+
+        '<p class="exit-popup-eyebrow">Francesco Gizzi</p>'+
         '<h3>'+t.h+'</h3>'+
         '<p>'+t.p+'</p>'+
         '<a href="'+anchor+'" class="exit-cta">'+t.cta+'</a>'+
