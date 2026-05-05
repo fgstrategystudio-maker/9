@@ -2,7 +2,7 @@ import { useState } from "react";
 import {
   PieChart, Pie, Cell,
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend,
-  ReferenceLine,
+  ReferenceLine, ComposedChart, Line, CartesianGrid,
 } from "recharts";
 import {
   formatCurrency,
@@ -259,6 +259,86 @@ export default function Dashboard({ commesse, setup, setSetup }) {
           </BarChart>
         </ResponsiveContainer>
       </div>
+
+      {totaleCostiFissi > 0 && sortedStorico.length > 0 && (() => {
+        const profittoData = sortedStorico.map((r) => {
+          const [m, y] = r.mese.split(" ");
+          const idx = MESI_IT.indexOf(m);
+          const label = idx >= 0 ? `${MESI_SHORT[idx]} '${(y || "").slice(2)}` : r.mese;
+          const profitto = r.netto - totaleCostiFissi;
+          return { mese: label, netto: r.netto, costi: totaleCostiFissi, profitto };
+        });
+        const hasNegative = profittoData.some((d) => d.profitto < 0);
+        return (
+          <div className={styles.profittoCard}>
+            <div className={styles.profittoHeader}>
+              <div>
+                <h2 className={styles.sectionTitle}>Profitto mensile storico</h2>
+                <p className={styles.profittoSub}>Netto incassato − costi fissi {formatCurrency(totaleCostiFissi)}/mese</p>
+              </div>
+              <div className={styles.profittoKpis}>
+                {(() => {
+                  const mesiPos = profittoData.filter((d) => d.profitto >= 0).length;
+                  const mesiNeg = profittoData.filter((d) => d.profitto < 0).length;
+                  const totProfitto = profittoData.reduce((s, d) => s + d.profitto, 0);
+                  return (
+                    <>
+                      <div className={styles.profittoKpi}>
+                        <span className={styles.profittoKpiVal} style={{ color: totProfitto >= 0 ? "#22c55e" : "#ef4444" }}>
+                          {totProfitto >= 0 ? "+" : ""}{formatCurrency(totProfitto)}
+                        </span>
+                        <span className={styles.profittoKpiLabel}>Profitto cumulato</span>
+                      </div>
+                      <div className={styles.profittoKpi}>
+                        <span className={styles.profittoKpiVal} style={{ color: "#22c55e" }}>{mesiPos}</span>
+                        <span className={styles.profittoKpiLabel}>Mesi in positivo</span>
+                      </div>
+                      {mesiNeg > 0 && (
+                        <div className={styles.profittoKpi}>
+                          <span className={styles.profittoKpiVal} style={{ color: "#ef4444" }}>{mesiNeg}</span>
+                          <span className={styles.profittoKpiLabel}>Mesi in negativo</span>
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
+              </div>
+            </div>
+
+            <ResponsiveContainer width="100%" height={220}>
+              <ComposedChart data={profittoData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,.04)" vertical={false} />
+                <XAxis dataKey="mese" tick={{ fill: "#64748b", fontSize: 11 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: "#64748b", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v >= 0 ? "+" : ""}${Math.round(v / 1000 * 10) / 10}k€`} />
+                <Tooltip
+                  contentStyle={{ background: "#111827", border: "1px solid rgba(255,255,255,.12)", borderRadius: "8px", color: "#e2e8f0", fontSize: "13px" }}
+                  labelStyle={{ color: "#94a3b8", marginBottom: "4px" }}
+                  formatter={(v, name) => {
+                    if (name === "Netto") return [formatCurrency(v), "Netto incassato"];
+                    if (name === "Costi") return [formatCurrency(v), "Costi fissi"];
+                    if (name === "Profitto") return [`${v >= 0 ? "+" : ""}${formatCurrency(v)}`, "Profitto"];
+                    return [formatCurrency(v), name];
+                  }}
+                />
+                <ReferenceLine y={0} stroke="rgba(255,255,255,.15)" />
+                <Bar dataKey="profitto" name="Profitto" radius={[4, 4, 0, 0]} maxBarSize={40}>
+                  {profittoData.map((entry, i) => (
+                    <Cell key={i} fill={entry.profitto >= 0 ? "#22c55e" : "#ef4444"} opacity={0.85} />
+                  ))}
+                </Bar>
+                <Line dataKey="netto" name="Netto" stroke="#c8a96e" strokeWidth={2} dot={{ fill: "#c8a96e", r: 3 }} strokeOpacity={0.7} />
+                <Line dataKey="costi" name="Costi" stroke="#ef4444" strokeWidth={1.5} strokeDasharray="5 3" dot={false} strokeOpacity={0.5} />
+              </ComposedChart>
+            </ResponsiveContainer>
+            <div className={styles.profittoLegend}>
+              <span><span style={{ color: "#22c55e" }}>▮</span> Profitto positivo</span>
+              <span><span style={{ color: "#ef4444" }}>▮</span> Profitto negativo</span>
+              <span><span style={{ color: "#c8a96e" }}>—</span> Netto incassato</span>
+              <span><span style={{ color: "#ef4444", opacity: 0.6 }}>- -</span> Soglia costi</span>
+            </div>
+          </div>
+        );
+      })()}
 
       {sortedStorico.length > 0 && (
         <div className={styles.incassatoCard}>
