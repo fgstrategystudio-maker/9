@@ -270,62 +270,6 @@
   margin-bottom: 1rem;
 }
 
-.profittoCard {
-  background: #111827;
-  border: 1px solid rgba(255,255,255,.08);
-  border-radius: 10px;
-  padding: 1.25rem;
-  margin-bottom: 1.5rem;
-}
-
-.profittoHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 1rem;
-  margin-bottom: 1rem;
-  flex-wrap: wrap;
-}
-
-.profittoSub {
-  font-size: 0.78rem;
-  color: #475569;
-  margin-top: 0.25rem;
-}
-
-.profittoKpis {
-  display: flex;
-  gap: 1.5rem;
-  flex-wrap: wrap;
-}
-
-.profittoKpi {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 2px;
-}
-
-.profittoKpiVal {
-  font-size: 1.1rem;
-  font-weight: 700;
-}
-
-.profittoKpiLabel {
-  font-size: 0.72rem;
-  color: #475569;
-  text-align: right;
-}
-
-.profittoLegend {
-  display: flex;
-  gap: 1.25rem;
-  font-size: 0.75rem;
-  color: #64748b;
-  margin-top: 0.75rem;
-  flex-wrap: wrap;
-}
-
 .incassatoCard {
   background: #111827;
   border: 1px solid rgba(255,255,255,.08);
