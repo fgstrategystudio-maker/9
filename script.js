@@ -306,12 +306,6 @@ document.addEventListener("DOMContentLoaded", function () {
   initDots(document.querySelector(".services-grid"), ".service-card");
 });
 
-document.addEventListener("DOMContentLoaded", function () {
-  document.querySelectorAll('form').forEach(function (form) {
-    const nextInput = form.querySelector('input[data-next-target="grazie"]');
-    if (nextInput) nextInput.value = window.location.origin + '/grazie.html';
-  });
-});
 
 // ── Skip-to-content link ──
 document.addEventListener('DOMContentLoaded', function(){
