@@ -237,13 +237,13 @@ h1{font-size:56px;line-height:1.03;letter-spacing:-.04em;margin:0 0 18px;color:v
 .logo-marquee::-webkit-scrollbar{display:none}
 .logo-track{display:flex;gap:12px;width:max-content;padding-bottom:4px}
 .logo-chip{
-  flex:0 0 142px;min-height:108px;padding:14px 10px;border-radius:16px;border:1px solid var(--line);
+  flex:0 0 130px;height:96px;padding:12px 10px;border-radius:16px;border:1px solid var(--line);
   background:linear-gradient(180deg,#ffffff 0%,#f7f9ff 100%);
   box-shadow:0 4px 14px rgba(22,39,74,.04);
-  display:flex;flex-direction:column;align-items:center;text-align:center;gap:7px;text-decoration:none
+  display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;text-decoration:none;overflow:hidden
 }
-.logo-chip img{width:44px;height:44px;object-fit:contain;border-radius:8px;flex-shrink:0}
-.logo-chip .chip-initials{width:44px;height:44px;border-radius:10px;background:rgba(200,169,110,.15);color:var(--gold);font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo-chip img{width:40px;height:40px;object-fit:contain;border-radius:8px;flex-shrink:0}
+.logo-chip .chip-initials{width:40px;height:40px;border-radius:10px;background:rgba(200,169,110,.15);color:var(--gold);font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .logo-chip strong{font-size:12px;line-height:1.3;color:var(--blue);font-weight:700}
 .logo-chip span{font-size:11px;color:var(--muted);word-break:break-word}
 .sector-marquee{margin-top:20px}
@@ -263,10 +263,10 @@ h1{font-size:56px;line-height:1.03;letter-spacing:-.04em;margin:0 0 18px;color:v
 @media (max-width: 980px){
   .header-inner{grid-template-columns:auto 1fr;row-gap:10px}
   .nav{justify-self:center;gap:18px}
-  .logo-chip{flex-basis:130px}
+  .logo-chip{flex-basis:120px}
 }
 @media (max-width: 680px){
-  .logo-chip{flex-basis:118px;min-height:96px}
+  .logo-chip{flex-basis:110px;height:88px}
 }
 
 
