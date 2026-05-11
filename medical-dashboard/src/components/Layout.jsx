@@ -3,42 +3,57 @@ import { NavLink } from 'react-router-dom'
 import { Heart, Home, Activity, Zap, FileText, TrendingUp } from 'lucide-react'
 
 const nav = [
-  { to: '/', icon: Home, label: 'Overview' },
-  { to: '/timeline', icon: Activity, label: 'Timeline episodi' },
-  { to: '/infortuni', icon: Zap, label: 'Infortuni' },
-  { to: '/documenti', icon: FileText, label: 'Documenti' },
-  { to: '/pattern', icon: TrendingUp, label: 'Pattern e Famiglia' },
+  { to: '/', icon: Home, label: 'Overview', color: 'text-sky-300' },
+  { to: '/timeline', icon: Activity, label: 'Timeline episodi', color: 'text-violet-300' },
+  { to: '/infortuni', icon: Zap, label: 'Infortuni', color: 'text-red-300' },
+  { to: '/documenti', icon: FileText, label: 'Documenti', color: 'text-emerald-300' },
+  { to: '/pattern', icon: TrendingUp, label: 'Pattern e Famiglia', color: 'text-amber-300' },
 ]
 
 export default function Layout({ children }) {
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <aside className="w-60 bg-white border-r border-gray-200 flex flex-col fixed top-0 left-0 h-full z-10">
-        <div className="flex items-center gap-2 px-5 py-5 border-b border-gray-100">
-          <Heart className="text-blue-600" size={20} />
-          <span className="font-semibold text-gray-800 text-sm">Cartella Clinica</span>
+    <div className="flex min-h-screen bg-slate-50">
+      <aside className="w-64 flex flex-col fixed top-0 left-0 h-full z-10"
+        style={{ background: 'linear-gradient(160deg, #0f172a 0%, #1e1b4b 60%, #1e3a5f 100%)' }}>
+        <div className="flex items-center gap-3 px-5 py-6">
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-rose-400 to-pink-600 flex items-center justify-center shadow-lg">
+            <Heart size={16} className="text-white" fill="white" />
+          </div>
+          <div>
+            <div className="font-bold text-white text-sm leading-tight">Cartella Clinica</div>
+            <div className="text-slate-400 text-xs">Personal Health Record</div>
+          </div>
         </div>
-        <nav className="flex-1 py-3 px-2">
-          {nav.map(({ to, icon: Icon, label }) => (
+
+        <nav className="flex-1 py-2 px-3">
+          {nav.map(({ to, icon: Icon, label, color }) => (
             <NavLink
               key={to}
               to={to}
               end={to === '/'}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2 rounded-lg text-sm mb-1 transition-colors ${
+                `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm mb-1 transition-all ${
                   isActive
-                    ? 'bg-blue-50 text-blue-700 font-medium'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-800'
+                    ? 'bg-white/15 text-white font-medium shadow-sm backdrop-blur-sm'
+                    : 'text-slate-400 hover:bg-white/8 hover:text-slate-200'
                 }`
               }
             >
-              <Icon size={17} />
-              {label}
+              {({ isActive }) => (
+                <>
+                  <Icon size={17} className={isActive ? 'text-white' : color} />
+                  {label}
+                </>
+              )}
             </NavLink>
           ))}
         </nav>
+
+        <div className="px-4 py-4 border-t border-white/10">
+          <div className="text-xs text-slate-500 text-center">I dati sono salvati nel tuo browser</div>
+        </div>
       </aside>
-      <main className="ml-60 flex-1 p-8 max-w-6xl">{children}</main>
+      <main className="ml-64 flex-1 p-8 max-w-5xl">{children}</main>
     </div>
   )
 }
