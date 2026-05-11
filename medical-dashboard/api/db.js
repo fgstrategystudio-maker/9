@@ -1,9 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
-
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_KEY
-)
+import { kv } from '@vercel/kv'
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
@@ -18,27 +13,26 @@ export default async function handler(req, res) {
     let result
     switch (action) {
       case 'getPin': {
-        const { data } = await supabase.from('profiles').select('pin').eq('id', p.userId).single()
-        result = data?.pin ?? null
+        result = await kv.get(`pin:${p.userId}`) ?? null
         break
       }
       case 'setPin': {
-        await supabase.from('profiles').update({ pin: p.pin }).eq('id', p.userId)
+        await kv.set(`pin:${p.userId}`, p.pin)
         result = true
         break
       }
       case 'loadUserData': {
-        const { data } = await supabase.from('user_data').select('key,data').eq('user_id', p.userId)
-        result = data ?? []
+        const keys = await kv.keys(`data:${p.userId}:*`)
+        if (!keys.length) { result = []; break }
+        const values = await kv.mget(...keys)
+        result = keys.map((k, i) => ({
+          key: k.replace(`data:${p.userId}:`, ''),
+          data: values[i]
+        }))
         break
       }
       case 'syncKey': {
-        await supabase.from('user_data').upsert({
-          user_id: p.userId,
-          key: p.key,
-          data: p.data,
-          updated_at: new Date().toISOString()
-        })
+        await kv.set(`data:${p.userId}:${p.key}`, p.data)
         result = true
         break
       }
