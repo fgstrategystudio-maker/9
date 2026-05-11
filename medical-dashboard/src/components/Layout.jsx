@@ -1,6 +1,6 @@
 import React from 'react'
 import { NavLink } from 'react-router-dom'
-import { Heart, Home, Activity, Zap, FileText, TrendingUp } from 'lucide-react'
+import { Heart, Home, Activity, Zap, FileText, TrendingUp, BarChart2, CalendarClock, BookOpen } from 'lucide-react'
 
 const nav = [
   { to: '/', icon: Home, label: 'Overview', color: 'text-sky-300' },
@@ -8,6 +8,9 @@ const nav = [
   { to: '/infortuni', icon: Zap, label: 'Infortuni', color: 'text-red-300' },
   { to: '/documenti', icon: FileText, label: 'Documenti', color: 'text-emerald-300' },
   { to: '/pattern', icon: TrendingUp, label: 'Pattern e Famiglia', color: 'text-amber-300' },
+  { to: '/misurazioni', icon: BarChart2, label: 'Misurazioni', color: 'text-rose-300' },
+  { to: '/agenda', icon: CalendarClock, label: 'Agenda sanitaria', color: 'text-teal-300' },
+  { to: '/diario', icon: BookOpen, label: 'Diario sintomi', color: 'text-pink-300' },
 ]
 
 export default function Layout({ children }) {

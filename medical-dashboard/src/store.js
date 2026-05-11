@@ -59,3 +59,7 @@ export const updateExam = (id, data) => {
   const next = load('mcd_exams', []).map(x => x.id === id ? { ...x, ...data } : x)
   save('mcd_exams', next)
 }
+
+export const measurementsStore = listStore('mcd_measurements')
+export const remindersStore = listStore('mcd_reminders')
+export const diaryStore = listStore('mcd_diary')

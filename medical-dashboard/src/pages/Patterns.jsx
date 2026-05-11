@@ -5,6 +5,82 @@ import * as store from '../store'
 const input = 'w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
 const btn = 'px-3 py-1.5 rounded-lg text-sm font-medium transition-colors'
 
+const TYPE_COLORS = {
+  malattia: '#60a5fa', infortunio: '#f87171', intervento: '#a78bfa',
+  ricaduta: '#fb923c', evento_positivo: '#34d399',
+}
+
+function BarChart({ data }) {
+  if (!data.length) return null
+  const max = Math.max(...data.map(d => d.value), 1)
+  const W = 480, H = 140, PAD_L = 10, PAD_B = 24, PAD_T = 18
+  const barW = Math.min(36, (W - PAD_L * 2) / data.length - 6)
+  const slot = (W - PAD_L * 2) / data.length
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full">
+      {data.map((d, i) => {
+        const bh = Math.max(2, ((d.value / max) * (H - PAD_B - PAD_T)))
+        const x = PAD_L + i * slot + slot / 2 - barW / 2
+        const y = H - PAD_B - bh
+        return (
+          <g key={d.label}>
+            <rect x={x} y={y} width={barW} height={bh} rx={4}
+              fill="url(#barGrad)" opacity={0.85} />
+            {d.value > 0 && <text x={x + barW / 2} y={y - 4} textAnchor="middle" fontSize={10} fill="#64748b" fontWeight="600">{d.value}</text>}
+            <text x={x + barW / 2} y={H - 6} textAnchor="middle" fontSize={10} fill="#94a3b8">{d.label}</text>
+          </g>
+        )
+      })}
+      <defs>
+        <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#818cf8" />
+          <stop offset="100%" stopColor="#6366f1" />
+        </linearGradient>
+      </defs>
+    </svg>
+  )
+}
+
+function DonutChart({ data }) {
+  const total = data.reduce((s, d) => s + d.value, 0)
+  if (!total) return null
+  const R = 70, CX = 90, CY = 90, STROKE = 22
+  let cumAngle = -Math.PI / 2
+  const slices = data.map(d => {
+    const angle = (d.value / total) * 2 * Math.PI
+    const startAngle = cumAngle
+    cumAngle += angle
+    const x1 = CX + R * Math.cos(startAngle)
+    const y1 = CY + R * Math.sin(startAngle)
+    const x2 = CX + R * Math.cos(cumAngle)
+    const y2 = CY + R * Math.sin(cumAngle)
+    const large = angle > Math.PI ? 1 : 0
+    return { ...d, d: `M ${CX} ${CY} L ${x1} ${y1} A ${R} ${R} 0 ${large} 1 ${x2} ${y2} Z`, pct: Math.round(d.value / total * 100) }
+  })
+  return (
+    <div className="flex items-center gap-6">
+      <svg viewBox="0 0 180 180" width={160} height={160}>
+        {slices.map(s => (
+          <path key={s.label} d={s.d} fill={s.color} opacity={0.85} stroke="white" strokeWidth={2} />
+        ))}
+        <circle cx={CX} cy={CY} r={R - STROKE} fill="white" />
+        <text x={CX} y={CY - 6} textAnchor="middle" fontSize={22} fontWeight="700" fill="#1e293b">{total}</text>
+        <text x={CX} y={CY + 14} textAnchor="middle" fontSize={10} fill="#94a3b8">episodi</text>
+      </svg>
+      <div className="space-y-1.5">
+        {slices.filter(s => s.value > 0).map(s => (
+          <div key={s.label} className="flex items-center gap-2 text-xs">
+            <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: s.color }} />
+            <span className="text-gray-600 capitalize">{s.label}</span>
+            <span className="font-semibold text-gray-800">{s.value}</span>
+            <span className="text-gray-400">({s.pct}%)</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 function Card({ title, children }) {
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-5 mb-5">
@@ -74,9 +150,64 @@ export default function Patterns() {
 
   const recentEpisodes = [...episodes].sort((a, b) => (b.start_date || '').localeCompare(a.start_date || '')).slice(0, 5)
 
+  // Stats for charts
+  const byYear = episodes.reduce((acc, e) => {
+    const y = e.start_date?.slice(0, 4)
+    if (y) acc[y] = (acc[y] || 0) + 1
+    return acc
+  }, {})
+  const years = Object.keys(byYear).sort()
+  const barData = years.map(y => ({ label: y, value: byYear[y] }))
+
+  const donutData = Object.entries(TYPE_COLORS).map(([type, color]) => ({
+    label: type, value: typeGroups[type] || 0, color,
+  })).filter(d => d.value > 0)
+
+  const byMonth = episodes.reduce((acc, e) => {
+    const m = e.start_date?.slice(5, 7)
+    if (m) acc[m] = (acc[m] || 0) + 1
+    return acc
+  }, {})
+  const MONTHS = ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic']
+  const topMonth = Object.entries(byMonth).sort((a, b) => b[1] - a[1])[0]
+  const topType = Object.entries(typeGroups).sort((a, b) => b[1] - a[1])[0]
+  const topArea = Object.entries(areaGroups).sort((a, b) => b[1].length - a[1].length)[0]
+  const avgPerYear = years.length ? Math.round(episodes.length / years.length * 10) / 10 : 0
+
   return (
     <div>
       <h1 className="text-xl font-bold text-gray-800 mb-6">Pattern e Famiglia</h1>
+
+      {/* Stat cards */}
+      {episodes.length > 0 && (
+        <div className="grid grid-cols-4 gap-3 mb-5">
+          {[
+            ['Mese più critico', topMonth ? `${MONTHS[+topMonth[0] - 1]} (${topMonth[1]})` : '—', 'text-rose-600'],
+            ['Media episodi/anno', avgPerYear || '—', 'text-violet-600'],
+            ['Tipo più frequente', topType?.[0] || '—', 'text-blue-600'],
+            ['Zona più colpita', topArea?.[0] || '—', 'text-amber-600'],
+          ].map(([label, val, color]) => (
+            <div key={label} className="bg-white rounded-xl border border-gray-200 p-4">
+              <div className="text-xs text-gray-400 mb-1">{label}</div>
+              <div className={`font-bold text-sm ${color} capitalize`}>{val}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Charts row */}
+      {episodes.length > 0 && (
+        <div className="grid grid-cols-2 gap-5 mb-5">
+          <div className="bg-white rounded-xl border border-gray-200 p-5">
+            <h2 className="font-semibold text-gray-700 text-sm uppercase tracking-wide mb-3">Episodi per anno</h2>
+            {barData.length > 0 ? <BarChart data={barData} /> : <p className="text-sm text-gray-400">Nessun dato.</p>}
+          </div>
+          <div className="bg-white rounded-xl border border-gray-200 p-5">
+            <h2 className="font-semibold text-gray-700 text-sm uppercase tracking-wide mb-3">Distribuzione per tipo</h2>
+            {donutData.length > 0 ? <DonutChart data={donutData} /> : <p className="text-sm text-gray-400">Nessun dato.</p>}
+          </div>
+        </div>
+      )}
 
       {/* Ricorrenze */}
       <Card title="Ricorrenze per zona del corpo">
