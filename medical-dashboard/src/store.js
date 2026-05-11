@@ -1,3 +1,5 @@
+import { syncKey } from './lib/auth'
+
 const genId = () => Date.now().toString(36) + Math.random().toString(36).slice(2)
 
 const load = (key, fallback) => {
@@ -5,6 +7,7 @@ const load = (key, fallback) => {
 }
 const save = (key, value) => {
   localStorage.setItem(key, JSON.stringify(value))
+  syncKey(key, value)
   return value
 }
 
@@ -28,11 +31,9 @@ export const episodes = listStore('mcd_episodes')
 export const exams = listStore('mcd_exams')
 export const family = listStore('mcd_family')
 
-// Lifestyle (single object)
 export const getLifestyle = () => load('mcd_lifestyle', {})
 export const saveLifestyle = (data) => save('mcd_lifestyle', data)
 
-// Episodes helpers
 export const getEpisode = (id) => load('mcd_episodes', []).find(e => e.id === id)
 export const addEpisode = (data) => {
   const list = load('mcd_episodes', [])
@@ -48,7 +49,6 @@ export const deleteEpisode = (id) => {
   save('mcd_episodes', load('mcd_episodes', []).filter(x => x.id !== id))
 }
 
-// Exams helpers (store file as dataURL in localStorage)
 export const addExam = (data) => {
   const list = load('mcd_exams', [])
   const item = { ...data, id: genId(), created_at: new Date().toISOString() }

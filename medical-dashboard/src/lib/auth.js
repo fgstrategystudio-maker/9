@@ -12,18 +12,54 @@ export function clearSession() {
   sessionStorage.removeItem(SESSION_KEY)
 }
 
+async function dbCall(action, params = {}) {
+  const res = await fetch('/api/db', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action, ...params })
+  })
+  if (!res.ok) throw new Error('DB error')
+  const json = await res.json()
+  return json.result
+}
+
+function clearMcdKeys() {
+  const keys = []
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i)
+    if (k?.startsWith('mcd_')) keys.push(k)
+  }
+  keys.forEach(k => localStorage.removeItem(k))
+}
+
 export async function loadUserData(userId) {
-  // dati in localStorage, niente da caricare
+  try {
+    clearMcdKeys()
+    const rows = await dbCall('loadUserData', { userId })
+    if (rows) rows.forEach(row => localStorage.setItem(row.key, JSON.stringify(row.data)))
+  } catch { /* offline — usa localStorage locale */ }
 }
 
 export async function syncKey(key, data) {
-  // sync disabilitato
+  const session = getSession()
+  if (!session) return
+  try {
+    await dbCall('syncKey', { userId: session.userId, key, data })
+  } catch { /* sync silenzioso */ }
 }
 
 export async function getPin(userId) {
-  return localStorage.getItem(`mcd_pin_${userId}`) ?? null
+  try {
+    return await dbCall('getPin', { userId })
+  } catch {
+    return localStorage.getItem(`mcd_pin_${userId}`) ?? null
+  }
 }
 
 export async function setPin(userId, pin) {
-  localStorage.setItem(`mcd_pin_${userId}`, pin)
+  try {
+    await dbCall('setPin', { userId, pin })
+  } catch {
+    localStorage.setItem(`mcd_pin_${userId}`, pin)
+  }
 }
