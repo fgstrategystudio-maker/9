@@ -1,10 +1,11 @@
+import React from 'react'
 import { Routes, Route } from 'react-router-dom'
-import Layout from './components/Layout.jsx'
-import Overview from './pages/Overview.jsx'
-import Timeline from './pages/Timeline.jsx'
-import Injuries from './pages/Injuries.jsx'
-import Documents from './pages/Documents.jsx'
-import Patterns from './pages/Patterns.jsx'
+import Layout from './components/Layout'
+import Overview from './pages/Overview'
+import Timeline from './pages/Timeline'
+import Injuries from './pages/Injuries'
+import Documents from './pages/Documents'
+import Patterns from './pages/Patterns'
 
 export default function App() {
   return (
