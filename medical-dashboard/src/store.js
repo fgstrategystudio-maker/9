@@ -63,3 +63,5 @@ export const updateExam = (id, data) => {
 export const measurementsStore = listStore('mcd_measurements')
 export const remindersStore = listStore('mcd_reminders')
 export const diaryStore = listStore('mcd_diary')
+export const doctorsStore = listStore('mcd_doctors')
+export const screeningStore = listStore('mcd_screening')

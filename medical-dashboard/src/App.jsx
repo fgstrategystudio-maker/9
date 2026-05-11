@@ -9,6 +9,9 @@ import Patterns from './pages/Patterns'
 import Measurements from './pages/Measurements'
 import Agenda from './pages/Agenda'
 import Diary from './pages/Diary'
+import Doctors from './pages/Doctors'
+import Screening from './pages/Screening'
+import Settings from './pages/Settings'
 
 export default function App() {
   return (
@@ -22,6 +25,9 @@ export default function App() {
         <Route path="/misurazioni" element={<Measurements />} />
         <Route path="/agenda" element={<Agenda />} />
         <Route path="/diario" element={<Diary />} />
+        <Route path="/medici" element={<Doctors />} />
+        <Route path="/screening" element={<Screening />} />
+        <Route path="/impostazioni" element={<Settings />} />
       </Routes>
     </Layout>
   )

@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Plus, Trash2, Edit2, Check, Printer } from 'lucide-react'
+import { Plus, Trash2, Edit2, Check, Printer, Sparkles } from 'lucide-react'
 import * as store from '../store'
 
 const input = 'w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
@@ -95,6 +95,81 @@ function Field({ label, children, col2 }) {
     <div className={col2 ? 'col-span-2' : ''}>
       <label className="block text-xs text-gray-500 mb-1">{label}</label>
       {children}
+    </div>
+  )
+}
+
+function AiAnalysis({ episodes, profile, allergyList, condList, medList, familyList, lifestyle, measurements, diary }) {
+  const [analysis, setAnalysis] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [ran, setRan] = useState(false)
+
+  const run = async () => {
+    setLoading(true)
+    setError('')
+    try {
+      const res = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ profile, episodes, allergies: allergyList, conditions: condList, medications: medList, family: familyList, lifestyle, measurements, diary }),
+      })
+      const json = await res.json()
+      if (json.error) { setError(json.error); return }
+      setAnalysis(json.analysis || '')
+      setRan(true)
+    } catch (e) {
+      setError('Errore di rete. Verifica la connessione.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 p-5 mb-5">
+      <div className="flex items-start gap-3 mb-3">
+        <div className="w-9 h-9 rounded-xl bg-violet-100 flex items-center justify-center flex-shrink-0">
+          <Sparkles size={18} className="text-violet-600" />
+        </div>
+        <div>
+          <h2 className="font-semibold text-gray-800 text-sm">🤖 Analisi intelligente della tua storia clinica</h2>
+          <p className="text-xs text-gray-500 mt-0.5">Claude analizza pattern, stagionalità e correlazioni nella tua storia. Non è una diagnosi medica.</p>
+        </div>
+      </div>
+
+      {!analysis && !loading && (
+        <button
+          onClick={run}
+          className="px-4 py-2 bg-violet-600 text-white text-sm font-medium rounded-lg hover:bg-violet-700 transition-colors flex items-center gap-2"
+        >
+          <Sparkles size={15} /> Avvia analisi
+        </button>
+      )}
+
+      {loading && (
+        <div className="flex items-center gap-3 text-sm text-gray-500 py-2">
+          <div className="w-4 h-4 border-2 border-violet-400 border-t-transparent rounded-full animate-spin" />
+          Analisi in corso...
+        </div>
+      )}
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-600">{error}</div>
+      )}
+
+      {analysis && (
+        <div>
+          <div className="bg-violet-50 rounded-xl p-4 text-sm text-gray-700 whitespace-pre-wrap leading-relaxed border border-violet-100">
+            {analysis}
+          </div>
+          <button
+            onClick={run}
+            className="mt-3 px-4 py-2 bg-violet-100 text-violet-700 text-sm font-medium rounded-lg hover:bg-violet-200 transition-colors flex items-center gap-2"
+          >
+            <Sparkles size={14} /> Aggiorna analisi
+          </button>
+        </div>
+      )}
     </div>
   )
 }
@@ -365,6 +440,18 @@ export default function Patterns() {
           <Printer size={14} className="inline mr-1" />Stampa sintesi
         </button>
       </Card>
+
+      <AiAnalysis
+        episodes={episodes}
+        profile={profile}
+        allergyList={allergyList}
+        condList={condList}
+        medList={medList}
+        familyList={familyList}
+        lifestyle={lifestyle}
+        measurements={store.measurementsStore.all()}
+        diary={store.diaryStore.all()}
+      />
     </div>
   )
 }
