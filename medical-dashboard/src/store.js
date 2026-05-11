@@ -1,5 +1,3 @@
-import { syncKey } from './lib/auth'
-
 const genId = () => Date.now().toString(36) + Math.random().toString(36).slice(2)
 
 const load = (key, fallback) => {
@@ -7,7 +5,6 @@ const load = (key, fallback) => {
 }
 const save = (key, value) => {
   localStorage.setItem(key, JSON.stringify(value))
-  syncKey(key, value) // fire-and-forget background sync
   return value
 }
 
