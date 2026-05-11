@@ -1,5 +1,3 @@
-import { supabase } from './supabase'
-
 const SESSION_KEY = 'mcd_session'
 
 export function getSession() {
@@ -14,6 +12,17 @@ export function clearSession() {
   sessionStorage.removeItem(SESSION_KEY)
 }
 
+async function dbCall(action, params = {}) {
+  const res = await fetch('/api/db', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action, ...params })
+  })
+  if (!res.ok) throw new Error('DB error')
+  const json = await res.json()
+  return json.result
+}
+
 function clearMcdKeys() {
   const keys = []
   for (let i = 0; i < localStorage.length; i++) {
@@ -24,26 +33,25 @@ function clearMcdKeys() {
 }
 
 export async function loadUserData(userId) {
-  if (!supabase) return
-  clearMcdKeys()
-  const { data } = await supabase.from('user_data').select('key,data').eq('user_id', userId)
-  if (data) data.forEach(row => localStorage.setItem(row.key, JSON.stringify(row.data)))
+  try {
+    clearMcdKeys()
+    const rows = await dbCall('loadUserData', { userId })
+    if (rows) rows.forEach(row => localStorage.setItem(row.key, JSON.stringify(row.data)))
+  } catch { /* offline — usa localStorage locale */ }
 }
 
 export async function syncKey(key, data) {
-  if (!supabase) return
   const session = getSession()
   if (!session) return
-  supabase.from('user_data').upsert({ user_id: session.userId, key, data, updated_at: new Date().toISOString() }).then(() => {})
+  try {
+    await dbCall('syncKey', { userId: session.userId, key, data })
+  } catch { /* sync silenzioso */ }
 }
 
 export async function getPin(userId) {
-  if (!supabase) return null
-  const { data } = await supabase.from('profiles').select('pin').eq('id', userId).single()
-  return data?.pin ?? null
+  return await dbCall('getPin', { userId })
 }
 
 export async function setPin(userId, pin) {
-  if (!supabase) return
-  await supabase.from('profiles').update({ pin }).eq('id', userId)
+  await dbCall('setPin', { userId, pin })
 }

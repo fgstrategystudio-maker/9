@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
 import { Heart, Delete } from 'lucide-react'
-import { supabase } from '../lib/supabase'
 import { getPin, setPin } from '../lib/auth'
 
 const USERS = [
@@ -183,23 +182,6 @@ export default function LoginScreen({ onLogin }) {
     setIsFirstLogin(false)
   }
 
-  if (!supabase) {
-    return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(160deg, #0f172a 0%, #1e1b4b 60%, #1e3a5f 100%)' }}>
-        <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full mx-4 p-8 text-center">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-rose-400 to-pink-600 flex items-center justify-center shadow-lg mx-auto mb-4">
-            <Heart size={22} className="text-white" fill="white" />
-          </div>
-          <div className="font-bold text-gray-800 text-lg mb-1">Cartella Clinica</div>
-          <div className="text-amber-600 bg-amber-50 border border-amber-200 rounded-xl p-4 mt-4 text-sm">
-            <div className="font-semibold mb-1">Configurazione richiesta</div>
-            <div>Configura <code className="bg-amber-100 px-1 rounded">VITE_SUPABASE_URL</code> e <code className="bg-amber-100 px-1 rounded">VITE_SUPABASE_ANON_KEY</code> su Vercel per abilitare il login multi-utente.</div>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(160deg, #0f172a 0%, #1e1b4b 60%, #1e3a5f 100%)' }}>
       <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full mx-4 overflow-hidden">
@@ -222,10 +204,16 @@ export default function LoginScreen({ onLogin }) {
                   <button
                     key={user.id}
                     onClick={() => handleSelectUser(user)}
-                    className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-transparent hover:border-gray-200 hover:bg-gray-50 transition-all active:scale-95`}
+                    disabled={loading}
+                    className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-transparent hover:border-gray-200 hover:bg-gray-50 transition-all active:scale-95 disabled:opacity-60 disabled:pointer-events-none relative`}
                   >
                     <Avatar user={user} size="lg" />
                     <span className="font-medium text-gray-700 text-sm">{user.name}</span>
+                    {loading && selectedUser?.id === user.id && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-white/70 rounded-xl">
+                        <div className="w-5 h-5 border-2 border-violet-400 border-t-transparent rounded-full animate-spin" />
+                      </div>
+                    )}
                   </button>
                 ))}
               </div>
