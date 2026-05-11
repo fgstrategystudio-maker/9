@@ -1,5 +1,7 @@
 import React, { useState, useRef } from 'react'
-import { Download, Upload, Trash2, Shield, ShieldCheck, ShieldOff, Info, Eye, EyeOff } from 'lucide-react'
+import { Download, Upload, Trash2, Shield, Info, Eye, EyeOff, User, LogOut, KeyRound } from 'lucide-react'
+import { clearSession, getPin, setPin } from '../lib/auth'
+import { getSession } from '../lib/auth'
 
 const btn = 'px-4 py-2 rounded-lg text-sm font-medium transition-colors'
 const input = 'w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
@@ -52,7 +54,7 @@ function getStorageStats() {
   }).filter(s => s.count > 0)
 }
 
-// ---- PIN helpers ----
+// ---- PIN input with show/hide ----
 function PinInput({ label, value, onChange }) {
   const [show, setShow] = useState(false)
   return (
@@ -81,113 +83,97 @@ function PinInput({ label, value, onChange }) {
   )
 }
 
-function PinSection() {
-  const hasPin = !!localStorage.getItem('mcd_pin')
-  const [mode, setMode] = useState(null) // null | 'set' | 'change' | 'remove'
-  const [current, setCurrent] = useState('')
+// ---- Account section (Supabase-based) ----
+function AccountSection({ onLogout }) {
+  const session = getSession()
+  const [changingPin, setChangingPin] = useState(false)
+  const [currentPin, setCurrentPin] = useState('')
   const [newPin, setNewPin] = useState('')
-  const [confirm, setConfirm] = useState('')
+  const [confirmPin, setConfirmPin] = useState('')
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [loading, setLoading] = useState(false)
 
-  const reset = () => { setCurrent(''); setNewPin(''); setConfirm(''); setError(''); setMode(null) }
-
-  const handleSet = () => {
-    if (newPin.length !== 4) { setError('Il PIN deve essere di 4 cifre'); return }
-    if (newPin !== confirm) { setError('I PIN non coincidono'); return }
-    localStorage.setItem('mcd_pin', newPin)
-    window.dispatchEvent(new Event('mcd_pin_changed'))
-    setSuccess('PIN impostato con successo')
-    setTimeout(() => { setSuccess(''); reset() }, 1500)
+  const resetForm = () => {
+    setCurrentPin(''); setNewPin(''); setConfirmPin(''); setError(''); setChangingPin(false)
   }
 
-  const handleChange = () => {
-    const stored = localStorage.getItem('mcd_pin')
-    if (current !== stored) { setError('PIN attuale non corretto'); return }
+  const handleChangePin = async () => {
+    if (currentPin.length !== 4) { setError('Inserisci il PIN attuale (4 cifre)'); return }
     if (newPin.length !== 4) { setError('Il nuovo PIN deve essere di 4 cifre'); return }
-    if (newPin !== confirm) { setError('I nuovi PIN non coincidono'); return }
-    localStorage.setItem('mcd_pin', newPin)
-    sessionStorage.setItem('mcd_unlocked', '1')
-    window.dispatchEvent(new Event('mcd_pin_changed'))
-    setSuccess('PIN aggiornato')
-    setTimeout(() => { setSuccess(''); reset() }, 1500)
+    if (newPin !== confirmPin) { setError('I nuovi PIN non coincidono'); return }
+    setLoading(true)
+    setError('')
+    try {
+      const stored = await getPin(session.userId)
+      if (stored !== currentPin) { setError('PIN attuale non corretto'); setLoading(false); return }
+      await setPin(session.userId, newPin)
+      setSuccess('PIN aggiornato con successo')
+      setTimeout(() => { setSuccess(''); resetForm() }, 2000)
+    } catch {
+      setError('Errore durante l\'aggiornamento del PIN')
+    }
+    setLoading(false)
   }
 
-  const handleRemove = () => {
-    const stored = localStorage.getItem('mcd_pin')
-    if (current !== stored) { setError('PIN non corretto'); return }
-    localStorage.removeItem('mcd_pin')
-    sessionStorage.removeItem('mcd_unlocked')
-    window.dispatchEvent(new Event('mcd_pin_changed'))
-    setSuccess('PIN rimosso')
-    setTimeout(() => { setSuccess(''); reset() }, 1500)
+  const handleLogout = () => {
+    if (window.confirm('Sei sicuro di voler uscire?')) {
+      clearSession()
+      if (onLogout) { onLogout() } else { window.location.reload() }
+    }
   }
+
+  if (!session) return null
 
   return (
-    <div>
-      <div className="flex items-center gap-3 mb-4">
-        <Shield size={18} className="text-violet-500" />
+    <div className="bg-white rounded-xl border border-gray-200 p-6 mb-5">
+      <h2 className="font-semibold text-gray-700 text-sm uppercase tracking-wide mb-5 flex items-center gap-2">
+        <User size={15} className="text-gray-400" /> Account
+      </h2>
+
+      <div className="flex items-center gap-3 mb-5">
+        <div className="w-10 h-10 rounded-full bg-violet-100 flex items-center justify-center text-violet-700 font-bold text-lg">
+          {session.userName?.[0] ?? '?'}
+        </div>
         <div>
-          <div className="font-medium text-gray-800">PIN di sicurezza</div>
-          <div className="text-xs text-gray-500">{hasPin ? 'PIN attivo — i dati sono protetti' : 'Nessun PIN impostato'}</div>
+          <div className="font-semibold text-gray-800">{session.userName}</div>
+          <div className="text-xs text-gray-400">ID: {session.userId}</div>
         </div>
       </div>
 
-      {!mode && (
-        <div className="flex gap-2">
-          {!hasPin && (
-            <button onClick={() => setMode('set')} className={`${btn} bg-violet-600 text-white hover:bg-violet-700 flex items-center gap-1.5`}>
-              <ShieldCheck size={15} /> Imposta PIN
+      <div className="flex flex-wrap gap-2 mb-4">
+        {!changingPin && (
+          <button
+            onClick={() => setChangingPin(true)}
+            className={`${btn} bg-violet-600 text-white hover:bg-violet-700 flex items-center gap-1.5`}
+          >
+            <KeyRound size={15} /> Cambia PIN
+          </button>
+        )}
+        <button
+          onClick={handleLogout}
+          className={`${btn} bg-gray-100 text-gray-700 hover:bg-gray-200 flex items-center gap-1.5`}
+        >
+          <LogOut size={15} /> Esci dall'account
+        </button>
+      </div>
+
+      {changingPin && (
+        <div className="bg-violet-50 rounded-xl p-4 space-y-3">
+          <PinInput label="PIN attuale" value={currentPin} onChange={setCurrentPin} />
+          <PinInput label="Nuovo PIN (4 cifre)" value={newPin} onChange={setNewPin} />
+          <PinInput label="Conferma nuovo PIN" value={confirmPin} onChange={setConfirmPin} />
+          {error && <div className="text-red-500 text-sm">{error}</div>}
+          {success && <div className="text-green-600 text-sm">{success}</div>}
+          <div className="flex gap-2">
+            <button
+              onClick={handleChangePin}
+              disabled={loading}
+              className={`${btn} bg-violet-600 text-white hover:bg-violet-700 disabled:opacity-50`}
+            >
+              {loading ? 'Salvataggio…' : 'Aggiorna PIN'}
             </button>
-          )}
-          {hasPin && (
-            <>
-              <button onClick={() => setMode('change')} className={`${btn} bg-violet-600 text-white hover:bg-violet-700 flex items-center gap-1.5`}>
-                <Shield size={15} /> Cambia PIN
-              </button>
-              <button onClick={() => setMode('remove')} className={`${btn} bg-gray-200 text-gray-700 hover:bg-gray-300 flex items-center gap-1.5`}>
-                <ShieldOff size={15} /> Rimuovi PIN
-              </button>
-            </>
-          )}
-        </div>
-      )}
-
-      {mode === 'set' && (
-        <div className="bg-violet-50 rounded-xl p-4 space-y-3">
-          <PinInput label="Nuovo PIN (4 cifre)" value={newPin} onChange={setNewPin} />
-          <PinInput label="Conferma PIN" value={confirm} onChange={setConfirm} />
-          {error && <div className="text-red-500 text-sm">{error}</div>}
-          {success && <div className="text-green-600 text-sm">{success}</div>}
-          <div className="flex gap-2">
-            <button onClick={handleSet} className={`${btn} bg-violet-600 text-white hover:bg-violet-700`}>Imposta</button>
-            <button onClick={reset} className={`${btn} bg-gray-200 text-gray-700`}>Annulla</button>
-          </div>
-        </div>
-      )}
-
-      {mode === 'change' && (
-        <div className="bg-violet-50 rounded-xl p-4 space-y-3">
-          <PinInput label="PIN attuale" value={current} onChange={setCurrent} />
-          <PinInput label="Nuovo PIN (4 cifre)" value={newPin} onChange={setNewPin} />
-          <PinInput label="Conferma nuovo PIN" value={confirm} onChange={setConfirm} />
-          {error && <div className="text-red-500 text-sm">{error}</div>}
-          {success && <div className="text-green-600 text-sm">{success}</div>}
-          <div className="flex gap-2">
-            <button onClick={handleChange} className={`${btn} bg-violet-600 text-white hover:bg-violet-700`}>Aggiorna PIN</button>
-            <button onClick={reset} className={`${btn} bg-gray-200 text-gray-700`}>Annulla</button>
-          </div>
-        </div>
-      )}
-
-      {mode === 'remove' && (
-        <div className="bg-red-50 rounded-xl p-4 space-y-3">
-          <PinInput label="Inserisci PIN attuale per confermare" value={current} onChange={setCurrent} />
-          {error && <div className="text-red-500 text-sm">{error}</div>}
-          {success && <div className="text-green-600 text-sm">{success}</div>}
-          <div className="flex gap-2">
-            <button onClick={handleRemove} className={`${btn} bg-red-600 text-white hover:bg-red-700`}>Rimuovi PIN</button>
-            <button onClick={reset} className={`${btn} bg-gray-200 text-gray-700`}>Annulla</button>
+            <button onClick={resetForm} className={`${btn} bg-gray-200 text-gray-700`}>Annulla</button>
           </div>
         </div>
       )}
@@ -195,7 +181,7 @@ function PinSection() {
   )
 }
 
-export default function Settings() {
+export default function Settings({ onLogout }) {
   const fileRef = useRef()
   const [importMsg, setImportMsg] = useState('')
   const [deleteConfirm, setDeleteConfirm] = useState('')
@@ -256,6 +242,9 @@ export default function Settings() {
       )}
 
       <h1 className="text-xl font-bold text-gray-800 mb-8">Impostazioni</h1>
+
+      {/* Section 0: Account (Supabase multi-user) */}
+      <AccountSection onLogout={onLogout} />
 
       {/* Section A: Backup */}
       <div className="bg-white rounded-xl border border-gray-200 p-6 mb-5">
@@ -326,20 +315,15 @@ export default function Settings() {
         </div>
       </div>
 
-      {/* Section B: PIN */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6 mb-5">
-        <PinSection />
-      </div>
-
-      {/* Section C: Info */}
+      {/* Section B: Info */}
       <div className="bg-white rounded-xl border border-gray-200 p-6">
         <h2 className="font-semibold text-gray-700 text-sm uppercase tracking-wide mb-4 flex items-center gap-2">
           <Info size={15} className="text-gray-400" /> Informazioni
         </h2>
         <div className="text-sm text-gray-600 space-y-1">
           <div><span className="text-gray-400">Versione app:</span> 1.0.0</div>
-          <div><span className="text-gray-400">Tecnologie:</span> React 18, Vite, Tailwind CSS v3</div>
-          <div><span className="text-gray-400">Archiviazione:</span> localStorage (solo nel tuo browser)</div>
+          <div><span className="text-gray-400">Tecnologie:</span> React 18, Vite, Tailwind CSS v3, Supabase</div>
+          <div><span className="text-gray-400">Archiviazione:</span> localStorage + Supabase cloud sync</div>
           {lastBackup && (
             <div><span className="text-gray-400">Ultimo backup:</span> {new Date(lastBackup).toLocaleString('it-IT')}</div>
           )}

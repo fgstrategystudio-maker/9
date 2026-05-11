@@ -1,6 +1,6 @@
 import React, { useRef } from 'react'
 import { NavLink } from 'react-router-dom'
-import { Heart, Home, Activity, Zap, FileText, TrendingUp, BarChart2, CalendarClock, BookOpen, Stethoscope, ShieldCheck, Settings, Download, Upload } from 'lucide-react'
+import { Heart, Home, Activity, Zap, FileText, TrendingUp, BarChart2, CalendarClock, BookOpen, Stethoscope, ShieldCheck, Settings, Download, Upload, LogOut } from 'lucide-react'
 
 const nav = [
   { to: '/', icon: Home, label: 'Overview', color: 'text-sky-300' },
@@ -15,6 +15,14 @@ const nav = [
   { to: '/screening', icon: ShieldCheck, label: 'Screening', color: 'text-lime-300' },
   { to: '/impostazioni', icon: Settings, label: 'Impostazioni', color: 'text-slate-300' },
 ]
+
+// Colors matching LoginScreen
+const USER_COLORS = {
+  anna:      'from-rose-400 to-pink-600',
+  nando:     'from-blue-400 to-blue-600',
+  francesco: 'from-violet-400 to-violet-600',
+  federica:  'from-emerald-400 to-emerald-600',
+}
 
 function exportData() {
   const data = {}
@@ -38,7 +46,7 @@ function exportData() {
   localStorage.setItem('mcd_last_backup', new Date().toISOString())
 }
 
-export default function Layout({ children }) {
+export default function Layout({ children, session, onLogout }) {
   const importRef = useRef()
 
   const handleImport = (e) => {
@@ -59,11 +67,22 @@ export default function Layout({ children }) {
     e.target.value = ''
   }
 
+  const handleLogout = () => {
+    if (window.confirm('Sei sicuro di voler uscire?')) {
+      onLogout?.()
+    }
+  }
+
+  const userColor = session?.userId ? (USER_COLORS[session.userId] || 'from-slate-400 to-slate-600') : 'from-slate-400 to-slate-600'
+  const userName = session?.userName ?? ''
+
   return (
     <div className="flex min-h-screen bg-slate-50">
       <aside className="w-64 flex flex-col fixed top-0 left-0 h-full z-10"
         style={{ background: 'linear-gradient(160deg, #0f172a 0%, #1e1b4b 60%, #1e3a5f 100%)' }}>
-        <div className="flex items-center gap-3 px-5 py-6">
+
+        {/* App logo */}
+        <div className="flex items-center gap-3 px-5 py-4">
           <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-rose-400 to-pink-600 flex items-center justify-center shadow-lg">
             <Heart size={16} className="text-white" fill="white" />
           </div>
@@ -72,6 +91,23 @@ export default function Layout({ children }) {
             <div className="text-slate-400 text-xs">Personal Health Record</div>
           </div>
         </div>
+
+        {/* User bar */}
+        {session && (
+          <div className="flex items-center gap-2 px-4 pb-3 border-b border-white/10">
+            <div className={`w-7 h-7 rounded-full bg-gradient-to-br ${userColor} flex items-center justify-center text-white text-xs font-bold flex-shrink-0`}>
+              {userName[0] ?? '?'}
+            </div>
+            <span className="text-slate-200 text-sm font-medium flex-1 truncate">{userName}</span>
+            <button
+              onClick={handleLogout}
+              title="Esci"
+              className="text-slate-400 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10"
+            >
+              <LogOut size={15} />
+            </button>
+          </div>
+        )}
 
         <nav className="flex-1 py-2 px-3 overflow-y-auto">
           {nav.map(({ to, icon: Icon, label, color }) => (

@@ -13,9 +13,9 @@ import Doctors from './pages/Doctors'
 import Screening from './pages/Screening'
 import Settings from './pages/Settings'
 
-export default function App() {
+export default function App({ session, onLogout }) {
   return (
-    <Layout>
+    <Layout session={session} onLogout={onLogout}>
       <Routes>
         <Route path="/" element={<Overview />} />
         <Route path="/timeline" element={<Timeline />} />
@@ -27,7 +27,7 @@ export default function App() {
         <Route path="/diario" element={<Diary />} />
         <Route path="/medici" element={<Doctors />} />
         <Route path="/screening" element={<Screening />} />
-        <Route path="/impostazioni" element={<Settings />} />
+        <Route path="/impostazioni" element={<Settings onLogout={onLogout} />} />
       </Routes>
     </Layout>
   )

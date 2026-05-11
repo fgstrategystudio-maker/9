@@ -1,9 +1,15 @@
+import { syncKey } from './lib/auth'
+
 const genId = () => Date.now().toString(36) + Math.random().toString(36).slice(2)
 
 const load = (key, fallback) => {
   try { return JSON.parse(localStorage.getItem(key)) ?? fallback } catch { return fallback }
 }
-const save = (key, value) => { localStorage.setItem(key, JSON.stringify(value)); return value }
+const save = (key, value) => {
+  localStorage.setItem(key, JSON.stringify(value))
+  syncKey(key, value) // fire-and-forget background sync
+  return value
+}
 
 // Profile
 export const getProfile = () => load('mcd_profile', {})
