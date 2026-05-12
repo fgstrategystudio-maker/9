@@ -9,7 +9,7 @@ Three source patterns:
 
 import re, json, os, glob
 
-IT_FILES = sorted(glob.glob("/home/user/9/en/blog-*.html"))
+IT_FILES = sorted(glob.glob("/home/user/9/pt/blog-*.html"))
 IT_FILES = [f for f in IT_FILES if os.path.basename(f) != "blog.html"]
 
 
@@ -120,11 +120,15 @@ def process_file(path):
     with open(path, "r", encoding="utf-8") as f:
         html = f.read()
 
-    faq_marker = "<h2>FAQ</h2>"
-    faq_start = html.find(faq_marker)
-    if faq_start == -1:
+    faq_marker = None
+    for marker in ("<h2>FAQ</h2>", "<h2>Perguntas frequentes</h2>", "<h2>Preguntas frecuentes</h2>"):
+        if marker in html:
+            faq_marker = marker
+            break
+    if not faq_marker:
         print(f"SKIP (no FAQ): {os.path.basename(path)}")
         return
+    faq_start = html.find(faq_marker)
 
     content_start = faq_start + len(faq_marker)
     main_end = html.find("</main>", content_start)
