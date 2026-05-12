@@ -9,7 +9,7 @@ Three source patterns:
 
 import re, json, os, glob
 
-IT_FILES = sorted(glob.glob("/home/user/9/blog-*.html"))
+IT_FILES = sorted(glob.glob("/home/user/9/en/blog-*.html"))
 IT_FILES = [f for f in IT_FILES if os.path.basename(f) != "blog.html"]
 
 
