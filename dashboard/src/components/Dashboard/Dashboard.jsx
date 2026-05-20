@@ -31,15 +31,15 @@ const TIPO_COLOR = {
 const STATO_ORDER = ["In corso","In scadenza","Da chiarire","Sospeso","Concluso","Perso"];
 
 export default function Dashboard({ commesse, setup, setSetup }) {
+  const now = new Date();
+  const anno = now.getFullYear();
+  const meseIdx = now.getMonth();
+
   const attive = commesse.filter(
     (c) => c.stato === "In corso" || c.stato === "In scadenza"
   );
 
-  const lordoMensileAttivo = attive.reduce((sum, c) => {
-    const v = getCommessaLordoMensile(c);
-    return sum + (v || 0);
-  }, 0);
-
+  const lordoMensileAttivo = getLordoPerMese(meseIdx, anno, commesse);
   const nettoMensileAttivo = calcNetto(lordoMensileAttivo, setup.fattoreNetto);
 
   const statoCount = STATO_ORDER.map((s) => ({
@@ -100,10 +100,6 @@ export default function Dashboard({ commesse, setup, setSetup }) {
     : null;
 
   // — Panoramica annuale —
-  const now = new Date();
-  const anno = now.getFullYear();
-  const meseIdx = now.getMonth();
-
   const annualData = MESI_IT.map((nome, i) => {
     const label = `${nome} ${anno}`;
     const recorded = revenueHistory.find(
