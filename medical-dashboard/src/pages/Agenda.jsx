@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react'
-import { Plus, X, Check, Trash2, CalendarClock, AlertTriangle, Clock, CheckCircle2 } from 'lucide-react'
+import { Plus, X, Check, Trash2, CalendarClock, AlertTriangle, Clock, CheckCircle2, Mail, Edit2 } from 'lucide-react'
 import { remindersStore, vaccinations, conditions } from '../store'
 
 const CATEGORIES = ['vaccino', 'controllo', 'farmaco', 'visita', 'esame', 'altro']
@@ -48,9 +48,14 @@ function formatDue(dateStr, done) {
   return `Scaduto ${Math.abs(diff)} giorni fa`
 }
 
-function AddModal({ onClose, onSave }) {
+function ReminderModal({ onClose, onSave, initial }) {
   const today = new Date().toISOString().slice(0, 10)
-  const [form, setForm] = useState({ title: '', due_date: today, category: 'controllo', notes: '' })
+  const isEdit = !!initial
+  const [form, setForm] = useState(
+    initial
+      ? { title: initial.title, due_date: initial.due_date, category: initial.category, notes: initial.notes || '', email: initial.email || '' }
+      : { title: '', due_date: today, category: 'controllo', notes: '', email: '' }
+  )
 
   const handleSave = () => {
     if (!form.title || !form.due_date) return
@@ -62,7 +67,9 @@ function AddModal({ onClose, onSave }) {
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-bold text-gray-800">Aggiungi promemoria</h2>
+          <h2 className="text-lg font-bold text-gray-800">
+            {isEdit ? 'Modifica promemoria' : 'Aggiungi promemoria'}
+          </h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
         </div>
 
@@ -90,6 +97,12 @@ function AddModal({ onClose, onSave }) {
             <textarea className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm resize-none" rows={3}
               value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} />
           </div>
+          <div>
+            <label className="block text-xs text-gray-500 mb-1">Email per notifica</label>
+            <input type="email" className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+              placeholder="Email per notifica"
+              value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
+          </div>
         </div>
 
         <div className="flex gap-2 mt-6">
@@ -101,10 +114,39 @@ function AddModal({ onClose, onSave }) {
   )
 }
 
-function ReminderItem({ item, onToggle, onDelete, isAuto = false }) {
+function ReminderItem({ item, onToggle, onDelete, onEdit, isAuto = false }) {
   const urgency = urgencyOf(item)
   const cfg = URGENCY_CONFIG[urgency]
-  const diff = daysDiff(item.due_date)
+  const [emailSent, setEmailSent] = useState(false)
+  const [sendingEmail, setSendingEmail] = useState(false)
+
+  const handleSendEmail = async () => {
+    if (!item.email) return
+    setSendingEmail(true)
+    try {
+      const res = await fetch('/api/remind', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: item.email,
+          title: item.title,
+          due_date: item.due_date,
+          category: item.category,
+          notes: item.notes || '',
+        }),
+      })
+      const data = await res.json()
+      if (data.ok) {
+        setEmailSent(true)
+      } else {
+        alert(data.error || 'Errore nell\'invio email')
+      }
+    } catch {
+      alert('Errore di rete nell\'invio email')
+    } finally {
+      setSendingEmail(false)
+    }
+  }
 
   return (
     <div className={`flex items-start gap-3 p-3 rounded-lg border-l-4 ${cfg.bg} ${cfg.border} ${item.done ? 'opacity-60' : ''}`}>
@@ -118,6 +160,9 @@ function ReminderItem({ item, onToggle, onDelete, isAuto = false }) {
             {item.category}
           </span>
           {isAuto && <span className="text-xs bg-indigo-100 text-indigo-600 px-2 py-0.5 rounded-full">auto</span>}
+          {emailSent && (
+            <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">✓ Inviata</span>
+          )}
         </div>
         <div className={`text-xs mt-0.5 ${cfg.text}`}>{formatDue(item.due_date, item.done)}</div>
         {item.notes && <div className="text-xs text-gray-500 mt-1 truncate">{item.notes}</div>}
@@ -125,6 +170,23 @@ function ReminderItem({ item, onToggle, onDelete, isAuto = false }) {
       <div className="flex items-center gap-1 flex-shrink-0">
         {!isAuto && (
           <>
+            {item.email && (
+              <button
+                onClick={handleSendEmail}
+                disabled={sendingEmail || emailSent}
+                className={`p-1 rounded transition-colors ${emailSent ? 'text-green-500' : 'text-gray-300 hover:text-blue-500'} disabled:opacity-50`}
+                title="Invia promemoria email"
+              >
+                <Mail size={14} />
+              </button>
+            )}
+            <button
+              onClick={() => onEdit(item)}
+              className="p-1 rounded text-gray-300 hover:text-teal-500 transition-colors"
+              title="Modifica promemoria"
+            >
+              <Edit2 size={14} />
+            </button>
             <button
               onClick={() => onToggle(item.id)}
               className={`p-1 rounded transition-colors ${item.done ? 'text-green-500 hover:text-gray-400' : 'text-gray-300 hover:text-green-500'}`}
@@ -145,6 +207,7 @@ function ReminderItem({ item, onToggle, onDelete, isAuto = false }) {
 export default function Agenda() {
   const [reminders, setReminders] = useState(() => remindersStore.all())
   const [showModal, setShowModal] = useState(false)
+  const [editingItem, setEditingItem] = useState(null)
 
   const today = new Date().toISOString().slice(0, 10)
 
@@ -183,6 +246,15 @@ export default function Agenda() {
 
   const handleSave = (form) => {
     setReminders(remindersStore.add({ ...form, done: false }))
+  }
+
+  const handleEdit = (item) => {
+    setEditingItem(item)
+  }
+
+  const handleEditSave = (form) => {
+    setReminders(remindersStore.update(editingItem.id, form))
+    setEditingItem(null)
   }
 
   const handleToggle = (id) => {
@@ -259,7 +331,7 @@ export default function Agenda() {
                 </h2>
                 <div className="space-y-2">
                   {items.sort((a, b) => a.due_date.localeCompare(b.due_date)).map(item => (
-                    <ReminderItem key={item.id} item={item} onToggle={handleToggle} onDelete={handleDelete} />
+                    <ReminderItem key={item.id} item={item} onToggle={handleToggle} onDelete={handleDelete} onEdit={handleEdit} />
                   ))}
                 </div>
               </div>
@@ -277,13 +349,20 @@ export default function Agenda() {
           <p className="text-xs text-gray-400 mb-3">Derivati da vaccinazioni e patologie attive — sola lettura</p>
           <div className="space-y-2">
             {activeAutoReminders.sort((a, b) => a.due_date.localeCompare(b.due_date)).map(item => (
-              <ReminderItem key={item.id} item={item} onToggle={() => {}} onDelete={() => {}} isAuto />
+              <ReminderItem key={item.id} item={item} onToggle={() => {}} onDelete={() => {}} onEdit={() => {}} isAuto />
             ))}
           </div>
         </div>
       )}
 
-      {showModal && <AddModal onClose={() => setShowModal(false)} onSave={handleSave} />}
+      {showModal && <ReminderModal onClose={() => setShowModal(false)} onSave={handleSave} />}
+      {editingItem && (
+        <ReminderModal
+          onClose={() => setEditingItem(null)}
+          onSave={handleEditSave}
+          initial={editingItem}
+        />
+      )}
     </div>
   )
 }

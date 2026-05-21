@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Plus, Trash2, ChevronDown, ChevronUp, LayoutList, GitBranch } from 'lucide-react'
+import { Plus, Trash2, ChevronDown, ChevronUp, LayoutList, GitBranch, Edit2 } from 'lucide-react'
 import Modal from '../components/Modal'
 import * as store from '../store'
 
@@ -144,6 +144,7 @@ export default function Timeline() {
   const [episodes, setEpisodes] = useState(store.episodes.all)
   const [showModal, setShowModal] = useState(false)
   const [form, setForm] = useState(EMPTY)
+  const [editingId, setEditingId] = useState(null)
   const [expanded, setExpanded] = useState(null)
   const [view, setView] = useState('chart') // 'chart' | 'list'
   const [filterYear, setFilterYear] = useState('tutti')
@@ -168,14 +169,26 @@ export default function Timeline() {
   })
   const setInj = (field, val) => setForm(f => ({ ...f, injury: { ...f.injury, [field]: val } }))
 
+  const openEdit = (ep) => {
+    setEditingId(ep.id)
+    setForm({ ...EMPTY, ...ep, injury: ep.injury || EMPTY.injury })
+    setShowModal(true)
+  }
+
   const save = () => {
     if (!form.start_date || !form.type) return
     const { injury, ...rest } = form
-    const ep = store.addEpisode(rest)
-    if (form.type === 'infortunio') store.updateEpisode(ep.id, { injury })
+    if (editingId) {
+      store.updateEpisode(editingId, rest)
+      if (form.type === 'infortunio') store.updateEpisode(editingId, { injury })
+    } else {
+      const ep = store.addEpisode(rest)
+      if (form.type === 'infortunio') store.updateEpisode(ep.id, { injury })
+    }
     setEpisodes(store.episodes.all())
     setShowModal(false)
     setForm(EMPTY)
+    setEditingId(null)
   }
 
   const del = (id) => {
@@ -203,7 +216,7 @@ export default function Timeline() {
               <LayoutList size={13} />Lista
             </button>
           </div>
-          <button onClick={() => setShowModal(true)} className={`${btn} bg-violet-600 text-white hover:bg-violet-700 shadow-sm`}>
+          <button onClick={() => { setEditingId(null); setForm(EMPTY); setShowModal(true) }} className={`${btn} bg-violet-600 text-white hover:bg-violet-700 shadow-sm`}>
             <Plus size={14} className="inline mr-1" />Nuovo episodio
           </button>
         </div>
@@ -272,6 +285,7 @@ export default function Timeline() {
                         <td className="px-4 py-3"><span className={`text-xs px-2 py-0.5 rounded-full ${OUTCOME_COLOR[e.outcome]}`}>{OUTCOME_LABEL[e.outcome]}</span></td>
                         <td className="px-4 py-3 flex items-center gap-2">
                           {expanded === e.id ? <ChevronUp size={14} className="text-gray-400" /> : <ChevronDown size={14} className="text-gray-400" />}
+                          <button onClick={(ev) => { ev.stopPropagation(); openEdit(e) }} className="text-gray-300 hover:text-violet-500"><Edit2 size={14} /></button>
                           <button onClick={(ev) => { ev.stopPropagation(); del(e.id) }} className="text-gray-300 hover:text-red-500"><Trash2 size={14} /></button>
                         </td>
                       </tr>
@@ -296,7 +310,7 @@ export default function Timeline() {
       )}
 
       {/* Modal */}
-      <Modal isOpen={showModal} onClose={() => { setShowModal(false); setForm(EMPTY) }} title="Nuovo episodio">
+      <Modal isOpen={showModal} onClose={() => { setShowModal(false); setForm(EMPTY); setEditingId(null) }} title={editingId ? 'Modifica episodio' : 'Nuovo episodio'}>
         <div className="grid grid-cols-2 gap-3">
           <Field label="Data inizio *"><input type="date" className={input} value={form.start_date} onChange={e => set('start_date', e.target.value)} /></Field>
           <Field label="Data fine"><input type="date" className={input} value={form.end_date} onChange={e => set('end_date', e.target.value)} /></Field>
@@ -370,8 +384,8 @@ export default function Timeline() {
           )}
         </div>
         <div className="flex gap-2 mt-5">
-          <button onClick={save} className={`${btn} bg-violet-600 text-white hover:bg-violet-700`}>Salva episodio</button>
-          <button onClick={() => { setShowModal(false); setForm(EMPTY) }} className={`${btn} bg-gray-100 text-gray-700`}>Annulla</button>
+          <button onClick={save} className={`${btn} bg-violet-600 text-white hover:bg-violet-700`}>{editingId ? 'Aggiorna episodio' : 'Salva episodio'}</button>
+          <button onClick={() => { setShowModal(false); setForm(EMPTY); setEditingId(null) }} className={`${btn} bg-gray-100 text-gray-700`}>Annulla</button>
         </div>
       </Modal>
     </div>
