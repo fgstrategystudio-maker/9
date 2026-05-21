@@ -428,7 +428,13 @@ function CashSetup({ setup, setSetup }) {
   const [saved, setSaved] = useState(false);
 
   function handleSave() {
-    setSetup(prev => ({ ...prev, cassaIniziale: Number(cassa), crypto: Number(crypto) }));
+    const today = new Date().toLocaleDateString("it-IT");
+    setSetup(prev => ({
+      ...prev,
+      cassaIniziale: Number(cassa),
+      crypto: Number(crypto),
+      cryptoAggiornato: today,
+    }));
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   }
