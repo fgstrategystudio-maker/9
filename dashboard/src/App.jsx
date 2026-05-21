@@ -20,6 +20,7 @@ export default function App() {
   const [commesse, setCommesse] = useLocalStorage("commesse", INITIAL_COMMESSE);
   const [setup, setSetup] = useLocalStorage("setup", INITIAL_SETUP);
   const [view, setView] = useState("dashboard");
+  const [unlocked, setUnlocked] = useState(false);
 
   useEffect(() => {
     setSetup((prev) => {
@@ -38,6 +39,10 @@ export default function App() {
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  if (setup.pin && !unlocked) {
+    return <PinLock onUnlock={() => setUnlocked(true)} correctPin={setup.pin} />;
+  }
 
   return (
     <div className={styles.layout}>
@@ -60,6 +65,72 @@ export default function App() {
           <Setup setup={setup} setSetup={setSetup} />
         )}
       </main>
+    </div>
+  );
+}
+
+function PinLock({ correctPin, onUnlock }) {
+  const [input, setInput] = useState("");
+  const [error, setError] = useState(false);
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    if (input === correctPin) {
+      onUnlock();
+    } else {
+      setError(true);
+      setInput("");
+      setTimeout(() => setError(false), 1800);
+    }
+  }
+
+  return (
+    <div style={{
+      minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
+      background: "#0b1120",
+    }}>
+      <div style={{
+        background: "#111827", border: "1px solid rgba(255,255,255,.1)", borderRadius: 16,
+        padding: "2.5rem 2rem", width: "100%", maxWidth: 340, textAlign: "center",
+      }}>
+        <div style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>🔒</div>
+        <h1 style={{ color: "#e2e8f0", fontSize: "1.25rem", fontWeight: 700, marginBottom: "0.35rem" }}>
+          Dashboard
+        </h1>
+        <p style={{ color: "#64748b", fontSize: "0.85rem", marginBottom: "1.5rem" }}>
+          Inserisci il PIN per accedere
+        </p>
+        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+          <input
+            type="password"
+            inputMode="numeric"
+            autoFocus
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="••••"
+            style={{
+              background: error ? "rgba(239,68,68,.08)" : "rgba(255,255,255,.05)",
+              border: `1px solid ${error ? "#ef4444" : "rgba(255,255,255,.12)"}`,
+              borderRadius: 8, padding: "0.65rem 1rem", color: "#e2e8f0",
+              fontSize: "1.25rem", letterSpacing: "0.3em", textAlign: "center",
+              outline: "none", transition: "border-color .2s",
+            }}
+          />
+          {error && (
+            <p style={{ color: "#ef4444", fontSize: "0.8rem", margin: 0 }}>PIN errato</p>
+          )}
+          <button
+            type="submit"
+            style={{
+              background: "rgba(200,169,110,0.15)", border: "1px solid rgba(200,169,110,0.35)",
+              color: "#c8a96e", borderRadius: 8, padding: "0.65rem", fontSize: "0.9rem",
+              fontWeight: 600, cursor: "pointer",
+            }}
+          >
+            Sblocca
+          </button>
+        </form>
+      </div>
     </div>
   );
 }

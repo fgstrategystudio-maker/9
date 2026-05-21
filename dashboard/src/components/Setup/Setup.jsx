@@ -409,6 +409,14 @@ export default function Setup({ setup, setSetup }) {
         <CashSetup setup={setup} setSetup={setSetup} />
       </section>
 
+      <section className={styles.card} style={{ marginTop: "1rem" }}>
+        <h2 className={styles.sectionTitle}>PIN di accesso</h2>
+        <p style={{ fontSize: "0.8rem", color: "#64748b", marginBottom: "1rem" }}>
+          Se impostato, verrà richiesto ad ogni refresh della pagina.
+        </p>
+        <PinSetup setup={setup} setSetup={setSetup} />
+      </section>
+
       <section className={styles.dangerZone}>
         <h2 className={styles.dangerTitle}>Zona pericolosa</h2>
         <p className={styles.dangerDesc}>
@@ -460,6 +468,82 @@ function CashSetup({ setup, setSetup }) {
         <button onClick={handleSave}
           style={{ background: "rgba(200,169,110,0.15)", border: "1px solid rgba(200,169,110,0.35)", color: "#c8a96e", borderRadius: 6, padding: "0.45rem 1rem", fontSize: "0.82rem", cursor: "pointer" }}>
           Salva
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function PinSetup({ setup, setSetup }) {
+  const [pin, setPin] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [error, setError] = useState("");
+  const [saved, setSaved] = useState(false);
+
+  const inputStyle = {
+    width: "100%", background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.12)",
+    borderRadius: 6, padding: "0.45rem 0.6rem", color: "#e2e8f0", fontSize: "0.875rem",
+    letterSpacing: "0.2em",
+  };
+
+  function handleSave() {
+    if (!pin) {
+      setSetup(prev => ({ ...prev, pin: "" }));
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+      return;
+    }
+    if (pin !== confirm) {
+      setError("I PIN non corrispondono");
+      setTimeout(() => setError(""), 2500);
+      return;
+    }
+    setSetup(prev => ({ ...prev, pin }));
+    setPin("");
+    setConfirm("");
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  }
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", maxWidth: 320 }}>
+      {setup.pin && (
+        <p style={{ fontSize: "0.8rem", color: "#22c55e", margin: 0 }}>✓ PIN attivo</p>
+      )}
+      <div>
+        <label style={{ display: "block", fontSize: "0.78rem", color: "#94a3b8", marginBottom: 4 }}>
+          {setup.pin ? "Nuovo PIN" : "Imposta PIN"} (lascia vuoto per rimuoverlo)
+        </label>
+        <input
+          type="password"
+          inputMode="numeric"
+          style={inputStyle}
+          value={pin}
+          onChange={e => setPin(e.target.value)}
+          placeholder="••••"
+        />
+      </div>
+      {pin && (
+        <div>
+          <label style={{ display: "block", fontSize: "0.78rem", color: "#94a3b8", marginBottom: 4 }}>
+            Conferma PIN
+          </label>
+          <input
+            type="password"
+            inputMode="numeric"
+            style={inputStyle}
+            value={confirm}
+            onChange={e => setConfirm(e.target.value)}
+            placeholder="••••"
+          />
+        </div>
+      )}
+      {error && <p style={{ color: "#ef4444", fontSize: "0.8rem", margin: 0 }}>{error}</p>}
+      <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+        {saved && <span style={{ color: "#22c55e", fontSize: "0.82rem" }}>✓ Salvato</span>}
+        <button onClick={handleSave}
+          style={{ background: "rgba(200,169,110,0.15)", border: "1px solid rgba(200,169,110,0.35)", color: "#c8a96e", borderRadius: 6, padding: "0.45rem 1rem", fontSize: "0.82rem", cursor: "pointer" }}>
+          {pin ? "Salva PIN" : (setup.pin ? "Rimuovi PIN" : "Salva")}
         </button>
       </div>
     </div>
