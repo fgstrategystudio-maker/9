@@ -16,7 +16,14 @@ export const INITIAL_SETUP = {
     { id: 2, nome: "Benzina", importo: 100 },
     { id: 3, nome: "Spesa", importo: 300 },
     { id: 4, nome: "Varie", importo: 100 },
+    { id: 10, nome: "Supporto ai figli", importo: 250, tipo: "annuale", importoAnnuale: 3000 },
+    { id: 11, nome: "Bollo Lancia Y", importo: 13, tipo: "annuale", importoAnnuale: 150 },
+    { id: 12, nome: "Assicurazione Lancia", importo: 35, tipo: "annuale", importoAnnuale: 420 },
+    { id: 13, nome: "Assicurazione sanitaria Allianz", importo: 83, tipo: "annuale", importoAnnuale: 1000 },
+    { id: 14, nome: "Assicurazione infortuni AXA", importo: 17, tipo: "annuale", importoAnnuale: 200 },
   ],
+  cassaIniziale: 17500,
+  crypto: 4000,
 };
 
 export const INITIAL_COMMESSE = [

@@ -290,12 +290,17 @@ export default function Setup({ setup, setSetup }) {
               <span></span>
             </div>
             {costiFissi.map((c) => (
-              <div key={c.id} className={styles.costiRow}>
-                <input
-                  className={styles.storicoInput}
-                  value={c.nome}
-                  onChange={(e) => handleEditCosto(c.id, "nome", e.target.value)}
-                />
+              <div key={c.id} className={styles.costiRow} style={c.tipo === "annuale" ? { borderLeft: "2px solid rgba(245,158,11,0.4)", paddingLeft: "0.5rem" } : {}}>
+                <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
+                  <input
+                    className={styles.storicoInput}
+                    value={c.nome}
+                    onChange={(e) => handleEditCosto(c.id, "nome", e.target.value)}
+                  />
+                  {c.tipo === "annuale" && c.importoAnnuale && (
+                    <span style={{ fontSize: "0.68rem", color: "#92400e", marginTop: 2 }}>annuale · {c.importoAnnuale}€/anno</span>
+                  )}
+                </div>
                 <input
                   className={styles.storicoInput}
                   type="number"
@@ -396,6 +401,14 @@ export default function Setup({ setup, setSetup }) {
         </form>
       </section>
 
+      <section className={styles.card} style={{ marginTop: "1rem" }}>
+        <h2 className={styles.sectionTitle}>Liquidità & Patrimonio</h2>
+        <p style={{ fontSize: "0.8rem", color: "#64748b", marginBottom: "1rem" }}>
+          Usati per il grafico Cash Flow nella Dashboard.
+        </p>
+        <CashSetup setup={setup} setSetup={setSetup} />
+      </section>
+
       <section className={styles.dangerZone}>
         <h2 className={styles.dangerTitle}>Zona pericolosa</h2>
         <p className={styles.dangerDesc}>
@@ -405,6 +418,44 @@ export default function Setup({ setup, setSetup }) {
           Reset completo dati
         </button>
       </section>
+    </div>
+  );
+}
+
+function CashSetup({ setup, setSetup }) {
+  const [cassa, setCassa] = useState(setup.cassaIniziale ?? 0);
+  const [crypto, setCrypto] = useState(setup.crypto ?? 0);
+  const [saved, setSaved] = useState(false);
+
+  function handleSave() {
+    setSetup(prev => ({ ...prev, cassaIniziale: Number(cassa), crypto: Number(crypto) }));
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  }
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+      <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
+        <div style={{ flex: 1, minWidth: 160 }}>
+          <label style={{ display: "block", fontSize: "0.78rem", color: "#94a3b8", marginBottom: 4 }}>Cassa disponibile (€)</label>
+          <input type="number" min="0"
+            style={{ width: "100%", background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.12)", borderRadius: 6, padding: "0.45rem 0.6rem", color: "#e2e8f0", fontSize: "0.875rem" }}
+            value={cassa} onChange={e => setCassa(e.target.value)} />
+        </div>
+        <div style={{ flex: 1, minWidth: 160 }}>
+          <label style={{ display: "block", fontSize: "0.78rem", color: "#94a3b8", marginBottom: 4 }}>Valore crypto (€)</label>
+          <input type="number" min="0"
+            style={{ width: "100%", background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.12)", borderRadius: 6, padding: "0.45rem 0.6rem", color: "#e2e8f0", fontSize: "0.875rem" }}
+            value={crypto} onChange={e => setCrypto(e.target.value)} />
+        </div>
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+        {saved && <span style={{ color: "#22c55e", fontSize: "0.82rem" }}>✓ Salvato</span>}
+        <button onClick={handleSave}
+          style={{ background: "rgba(200,169,110,0.15)", border: "1px solid rgba(200,169,110,0.35)", color: "#c8a96e", borderRadius: 6, padding: "0.45rem 1rem", fontSize: "0.82rem", cursor: "pointer" }}>
+          Salva
+        </button>
+      </div>
     </div>
   );
 }
