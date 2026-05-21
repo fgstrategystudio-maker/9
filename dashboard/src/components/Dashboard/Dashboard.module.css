@@ -1,0 +1,441 @@
+.page {
+  max-width: 1100px;
+}
+
+.header {
+  margin-bottom: 1.75rem;
+}
+
+.title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  line-height: 1.2;
+}
+
+.subtitle {
+  color: #64748b;
+  font-size: 0.9rem;
+  margin-top: 0.25rem;
+}
+
+/* Monthly prompt */
+.monthlyPrompt {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  background: rgba(200,169,110,0.08);
+  border: 1px solid rgba(200,169,110,0.3);
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.promptLeft {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  flex: 1;
+  min-width: 200px;
+}
+
+.promptIcon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.promptTitle {
+  font-size: 0.9rem;
+  color: #e2e8f0;
+  line-height: 1.4;
+}
+
+.promptSub {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  margin-top: 3px;
+}
+
+.promptClients {
+  color: #64748b;
+}
+
+.promptRight {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.promptBtnPrimary {
+  background: #c8a96e;
+  color: #fff;
+  border: none;
+  border-radius: 7px;
+  padding: 0.5rem 1rem;
+  font-size: 0.825rem;
+  font-weight: 700;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+
+.promptBtnPrimary:hover {
+  background: #b8945a;
+}
+
+.promptBtnSecondary {
+  background: transparent;
+  color: #64748b;
+  border: 1px solid #374151;
+  border-radius: 7px;
+  padding: 0.5rem 0.875rem;
+  font-size: 0.825rem;
+  font-weight: 600;
+  transition: color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+
+.promptBtnSecondary:hover {
+  color: #94a3b8;
+  border-color: #6b7280;
+}
+
+.promptForm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 220px;
+}
+
+.promptInputWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.promptLabel {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.promptInput {
+  background: #0a0f1e;
+  border: 1px solid #c8a96e;
+  border-radius: 7px;
+  padding: 0.5rem 0.75rem;
+  color: #e2e8f0;
+  font-size: 0.9rem;
+  outline: none;
+  width: 100%;
+}
+
+.promptNetto {
+  font-size: 0.75rem;
+  color: #22c55e;
+  font-weight: 600;
+}
+
+.promptActions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.alertBanner {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 10px;
+  padding: 0.875rem 1rem;
+  margin-bottom: 1.5rem;
+  color: #fbbf24;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.alertIcon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.alertTag {
+  display: inline-block;
+  background: rgba(245, 158, 11, 0.2);
+  border-radius: 4px;
+  padding: 0 6px;
+  margin: 2px 4px 2px 0;
+  font-weight: 600;
+  color: #fbbf24;
+}
+
+.kpiGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.kpiCard {
+  background: #111827;
+  border: 1px solid rgba(255,255,255,.08);
+  border-top: 3px solid;
+  border-radius: 10px;
+  padding: 1.25rem 1.25rem 1rem;
+}
+
+.kpiValue {
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 0.35rem;
+}
+
+.kpiLabel {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.kpiSub {
+  font-size: 0.75rem;
+  color: #475569;
+  margin-top: 0.25rem;
+}
+
+/* Annual overview */
+.annualCard {
+  background: #111827;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 10px;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.annualHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.annualSub {
+  font-size: 0.75rem;
+  color: #475569;
+  margin-top: 0.35rem;
+}
+
+.annualKpis {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.annualKpi {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.annualKpiVal {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.annualKpiLabel {
+  font-size: 0.72rem;
+  color: #475569;
+  text-align: right;
+}
+
+.annualWarning {
+  font-size: 0.8rem;
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.incassatoCard {
+  background: #111827;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 10px;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.incassatoLayout {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+  margin-top: 0.75rem;
+}
+
+.incassatoGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.25rem 1.5rem;
+  flex: 1;
+}
+
+.incassatoRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.875rem;
+  padding: 0.3rem 0;
+  border-bottom: 1px solid rgba(255,255,255,.05);
+}
+
+.incassatoMese {
+  color: #94a3b8;
+  min-width: 58px;
+  font-weight: 500;
+  font-size: 0.8rem;
+}
+
+.profittoTag {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 5px;
+  border-radius: 3px;
+  white-space: nowrap;
+  margin-left: auto;
+}
+
+.incassatoLordo {
+  color: #e2e8f0;
+  font-size: 0.85rem;
+}
+
+.incassatoNetto {
+  color: #22c55e;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.incassatoYtd {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 150px;
+  flex-shrink: 0;
+  padding-left: 1.5rem;
+  border-left: 1px solid rgba(255,255,255,.08);
+}
+
+.ytdBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ytdVal {
+  font-size: 1.3rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.ytdLabel {
+  font-size: 0.78rem;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.ytdSub {
+  font-size: 0.72rem;
+  color: #475569;
+}
+
+.chartsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.chartCard {
+  background: #111827;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 10px;
+  padding: 1.25rem;
+}
+
+.sectionTitle {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #cbd5e1;
+  margin-bottom: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.scadenzeCard {
+  background: #111827;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 10px;
+  padding: 1.25rem;
+}
+
+.scadenzeList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.scadenzeRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+
+.scadenzeRow:last-child {
+  border-bottom: none;
+}
+
+.scadenzeCliente {
+  font-weight: 600;
+  color: #e2e8f0;
+  font-size: 0.9rem;
+}
+
+.scadenzeServizio {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.scadenzeDays {
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+@media (max-width: 900px) {
+  .chartsGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .kpiGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
