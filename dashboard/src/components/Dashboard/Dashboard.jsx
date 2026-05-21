@@ -25,7 +25,7 @@ const TIPO_COLOR = {
   reale:      "#22c55e",
   stimato:    "#f59e0b",
   proiezione: "#274d91",
-  mancante:   "#1a2540",
+  mancante:   "#334155",
 };
 
 const STATO_ORDER = ["In corso","In scadenza","Da chiarire","Sospeso","Concluso","Perso"];
@@ -93,8 +93,9 @@ export default function Dashboard({ commesse, setup, setSetup }) {
   const cryptoVal        = setup.crypto ?? 0;
   const cryptoAggiornato = setup.cryptoAggiornato ?? null;
 
+  const patrimonioIniziale = cassaIniziale + cryptoVal;
   const cashFlowData = (() => {
-    let balance = cassaIniziale;
+    let balance = patrimonioIniziale;
     return Array.from({ length: 12 }, (_, i) => {
       const d     = new Date(anno, meseIdx + i, 1);
       const mIdx  = d.getMonth();
@@ -147,7 +148,7 @@ export default function Dashboard({ commesse, setup, setSetup }) {
       tipo = "proiezione";
       lordo = getLordoPerMese(i, anno, commesse);
     }
-    return { mese: MESI_SHORT[i], lordo, tipo, netto: calcNetto(lordo, setup.fattoreNetto), costiAttivi: totaleCostiFissi, costiIdeali: totaleCostiIdeali };
+    return { mese: MESI_SHORT[i], lordo, tipo, netto: calcNetto(lordo, setup.fattoreNetto), costiAttivi: totaleCostiFissi, costiDaAttivare: totaleCostiIdeali - totaleCostiFissi };
   });
 
   const totReale = annualData.filter((d) => d.tipo === "reale").reduce((s, d) => s + d.netto, 0);
@@ -231,9 +232,9 @@ export default function Dashboard({ commesse, setup, setSetup }) {
               <span style={{ color: "#22c55e" }}>■</span> Registrato{" "}
               <span style={{ color: "#f59e0b", marginLeft: 8 }}>■</span> Stimato{" "}
               <span style={{ color: "#274d91", marginLeft: 8 }}>■</span> Proiezione{" "}
-              <span style={{ color: "#1a2540", marginLeft: 8 }}>■</span> Mancante{" "}
+              <span style={{ color: "#334155", marginLeft: 8 }}>■</span> Mancante{" "}
               <span style={{ color: "#f97316", marginLeft: 8 }}>■</span> Costi attivi{" "}
-              {costiDaAttivare.length > 0 && <><span style={{ color: "#f59e0b", marginLeft: 8 }}>- -</span> Costi target</>}
+              {costiDaAttivare.length > 0 && <><span style={{ color: "#f59e0b", marginLeft: 8 }}>■</span> Da attivare</>}
             </p>
           </div>
           <div className={styles.annualKpis}>
@@ -267,35 +268,30 @@ export default function Dashboard({ commesse, setup, setSetup }) {
               labelStyle={{ color: "#94a3b8" }}
               formatter={(v, name, props) => {
                 if (name === "costiAttivi") return [formatCurrency(v), "Costi attivi/mese"];
+                if (name === "costiDaAttivare") return [formatCurrency(v), "Costi da attivare"];
                 const t = props.payload?.tipo;
                 const label = t === "reale" ? "Netto reale" : t === "mancante" ? "Non registrato" : t === "stimato" ? "Netto stimato" : "Netto proiez.";
                 return [formatCurrency(v), label];
               }}
             />
-            <Bar dataKey="netto" maxBarSize={22} radius={[4, 4, 0, 0]}>
+            <Bar dataKey="netto" maxBarSize={18} radius={[4, 4, 0, 0]}>
               {annualData.map((entry, i) => {
                 let fill = TIPO_COLOR[entry.tipo];
                 if (totaleCostiFissi > 0 && entry.tipo !== "reale" && entry.tipo !== "mancante" && entry.netto < totaleCostiFissi) fill = "#ef4444";
-                return <Cell key={i} fill={fill} opacity={entry.tipo === "mancante" ? 0.3 : 1} />;
+                return <Cell key={i} fill={fill} opacity={entry.tipo === "mancante" ? 0.45 : 1} />;
               })}
             </Bar>
-            <Bar dataKey="costiAttivi" maxBarSize={22} radius={[4, 4, 0, 0]} fill="#f97316" opacity={0.75} />
+            <Bar dataKey="costiAttivi" maxBarSize={18} radius={[4, 4, 0, 0]} fill="#f97316" opacity={0.8} />
+            {costiDaAttivare.length > 0 && (
+              <Bar dataKey="costiDaAttivare" maxBarSize={18} radius={[4, 4, 0, 0]} fill="#f59e0b" opacity={0.5} />
+            )}
             {totaleCostiFissi > 0 && (
               <ReferenceLine
                 y={totaleCostiFissi}
-                stroke="#ef4444"
+                stroke="#f97316"
                 strokeDasharray="5 3"
                 strokeOpacity={0.5}
-                label={{ value: `costi attivi  ${formatCurrency(totaleCostiFissi)}`, position: "insideTopRight", fill: "#ef4444", fontSize: 10 }}
-              />
-            )}
-            {costiDaAttivare.length > 0 && totaleCostiIdeali > totaleCostiFissi && (
-              <ReferenceLine
-                y={totaleCostiIdeali}
-                stroke="#f59e0b"
-                strokeDasharray="4 4"
-                strokeOpacity={0.45}
-                label={{ value: `target  ${formatCurrency(totaleCostiIdeali)}`, position: "insideTopRight", fill: "#f59e0b", fontSize: 10 }}
+                label={{ value: `costi attivi ${formatCurrency(totaleCostiFissi)}`, position: "insideTopRight", fill: "#f97316", fontSize: 10 }}
               />
             )}
           </BarChart>
@@ -439,34 +435,32 @@ export default function Dashboard({ commesse, setup, setSetup }) {
             <h2 className={styles.sectionTitle} style={{ marginBottom: "0.35rem" }}>Cash Flow — prossimi 12 mesi</h2>
             <div style={{ display: "flex", gap: "1.5rem", flexWrap: "wrap" }}>
               <span style={{ fontSize: "0.82rem", color: "#94a3b8" }}>
-                Cassa attuale: <strong style={{ color: "#e2e8f0" }}>{formatCurrency(cassaIniziale)}</strong>
+                Cassa: <strong style={{ color: "#e2e8f0" }}>{formatCurrency(cassaIniziale)}</strong>
               </span>
               {cryptoVal > 0 && (
                 <span style={{ fontSize: "0.82rem", color: "#94a3b8" }}>
-                  Crypto: <strong style={{ color: "#f59e0b" }}>{formatCurrency(cryptoVal)}</strong>
+                  + Crypto: <strong style={{ color: "#f59e0b" }}>{formatCurrency(cryptoVal)}</strong>
                   {cryptoAggiornato && <span style={{ color: "#475569", fontSize: "0.72rem", marginLeft: 4 }}>al {cryptoAggiornato}</span>}
                 </span>
               )}
               <span style={{ fontSize: "0.82rem", color: "#94a3b8" }}>
-                Costi fissi/mese: <strong style={{ color: "#f43f5e" }}>{formatCurrency(totaleCostiFissi)}</strong>
+                Costi/mese: <strong style={{ color: "#f43f5e" }}>{formatCurrency(totaleCostiFissi)}</strong>
               </span>
             </div>
           </div>
           <div style={{ display: "flex", gap: "1.5rem" }}>
             <div style={{ textAlign: "right" }}>
-              <div style={{ fontSize: "1.3rem", fontWeight: 700, color: cassaFinale >= cassaIniziale ? "#22c55e" : "#ef4444" }}>
+              <div style={{ fontSize: "1.1rem", fontWeight: 600, color: "#94a3b8" }}>
+                {formatCurrency(patrimonioIniziale)}
+              </div>
+              <div style={{ fontSize: "0.72rem", color: "#64748b" }}>Patrimonio oggi</div>
+            </div>
+            <div style={{ textAlign: "right" }}>
+              <div style={{ fontSize: "1.3rem", fontWeight: 700, color: cassaFinale >= patrimonioIniziale ? "#22c55e" : "#ef4444" }}>
                 {formatCurrency(cassaFinale)}
               </div>
-              <div style={{ fontSize: "0.72rem", color: "#64748b" }}>Cassa stimata fra 12 mesi</div>
+              <div style={{ fontSize: "0.72rem", color: "#64748b" }}>Stima fra 12 mesi</div>
             </div>
-            {cryptoVal > 0 && (
-              <div style={{ textAlign: "right" }}>
-                <div style={{ fontSize: "1.3rem", fontWeight: 700, color: "#f59e0b" }}>
-                  {formatCurrency(cassaIniziale + cryptoVal)}
-                </div>
-                <div style={{ fontSize: "0.72rem", color: "#64748b" }}>Cassa + Crypto oggi</div>
-              </div>
-            )}
           </div>
         </div>
 
