@@ -36,6 +36,10 @@ export default async function handler(req, res) {
         result = true
         break
       }
+      case 'ping': {
+        result = 'ok'
+        break
+      }
       default:
         return res.status(400).json({ error: 'Unknown action' })
     }

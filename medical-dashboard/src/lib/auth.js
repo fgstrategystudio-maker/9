@@ -34,8 +34,9 @@ function clearMcdKeys() {
 
 export async function loadUserData(userId) {
   try {
-    clearMcdKeys()
     const rows = await dbCall('loadUserData', { userId })
+    // Clear solo dopo aver ricevuto i dati dal server (offline: mantieni localStorage)
+    clearMcdKeys()
     if (rows) rows.forEach(row => localStorage.setItem(row.key, JSON.stringify(row.data)))
   } catch { /* offline — usa localStorage locale */ }
 }
