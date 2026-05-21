@@ -83,7 +83,11 @@ export default function Dashboard({ commesse, setup, setSetup }) {
   );
 
   const costiFissi = setup.costiFissi || [];
-  const totaleCostiFissi = costiFissi.reduce((s, c) => s + c.importo, 0);
+  // Costi annuali: visibili ma non conteggiati (non stai pagando ora)
+  const costiFissiAttivi  = costiFissi.filter(c => c.tipo !== "annuale");
+  const costiDaAttivare   = costiFissi.filter(c => c.tipo === "annuale");
+  const totaleCostiFissi  = costiFissiAttivi.reduce((s, c) => s + c.importo, 0);
+  const totaleCostiIdeali = costiFissi.reduce((s, c) => s + c.importo, 0);
 
   const cassaIniziale    = setup.cassaIniziale ?? 0;
   const cryptoVal        = setup.crypto ?? 0;
@@ -143,7 +147,7 @@ export default function Dashboard({ commesse, setup, setSetup }) {
       tipo = "proiezione";
       lordo = getLordoPerMese(i, anno, commesse);
     }
-    return { mese: MESI_SHORT[i], lordo, tipo, netto: calcNetto(lordo, setup.fattoreNetto) };
+    return { mese: MESI_SHORT[i], lordo, tipo, netto: calcNetto(lordo, setup.fattoreNetto), costiAttivi: totaleCostiFissi, costiIdeali: totaleCostiIdeali };
   });
 
   const totReale = annualData.filter((d) => d.tipo === "reale").reduce((s, d) => s + d.netto, 0);
@@ -155,7 +159,7 @@ export default function Dashboard({ commesse, setup, setSetup }) {
     <div className={styles.page}>
       <header className={styles.header}>
         <h1 className={styles.title}>Dashboard</h1>
-        <p className={styles.subtitle}>Panoramica commesse e fatturato <span style={{ fontSize: "0.7rem", background: "rgba(200,169,110,0.15)", color: "#c8a96e", border: "1px solid rgba(200,169,110,0.3)", borderRadius: 4, padding: "1px 6px", marginLeft: 8 }}>v2 · cash flow</span></p>
+        <p className={styles.subtitle}>Panoramica commesse e fatturato</p>
       </header>
 
       {inScadenza.length > 0 && (
@@ -194,9 +198,9 @@ export default function Dashboard({ commesse, setup, setSetup }) {
         <KpiCard label="Potenziale upsell" value={formatCurrency(upsellOpportunities)} sub="obiettivo mensile aggregato" accent="#7b9cd4" />
         {totaleCostiFissi > 0 && (
           <KpiCard
-            label="Costi mensili"
+            label="Costi mensili attivi"
             value={formatCurrency(totaleCostiFissi)}
-            sub={`${costiFissi.length} voci · ${meseCorrente.split(" ")[0]}`}
+            sub={`${costiFissiAttivi.length} voci · ${meseCorrente.split(" ")[0]}`}
             accent="#f43f5e"
           />
         )}
@@ -204,23 +208,32 @@ export default function Dashboard({ commesse, setup, setSetup }) {
           <KpiCard
             label="Profitto mensile"
             value={formatCurrency(profittoMensile)}
-            sub={`netto − ${formatCurrency(totaleCostiFissi)} costi fissi`}
+            sub={`netto − ${formatCurrency(totaleCostiFissi)} costi attivi`}
             accent={profittoMensile >= 0 ? "#22c55e" : "#ef4444"}
+          />
+        )}
+        {costiDaAttivare.length > 0 && (
+          <KpiCard
+            label="Costi da attivare"
+            value={formatCurrency(totaleCostiIdeali - totaleCostiFissi)}
+            sub={`${costiDaAttivare.length} voci annuali · non conteggiate`}
+            accent="#f59e0b"
           />
         )}
       </div>
 
-      {/* Panoramica annuale */}
+      {/* Entrate vs Uscite — Panoramica annuale */}
       <div className={styles.annualCard}>
         <div className={styles.annualHeader}>
           <div>
-            <h2 className={styles.sectionTitle}>Panoramica {anno}</h2>
+            <h2 className={styles.sectionTitle}>Entrate vs Uscite — {anno}</h2>
             <p className={styles.annualSub}>
               <span style={{ color: "#22c55e" }}>■</span> Registrato{" "}
               <span style={{ color: "#f59e0b", marginLeft: 8 }}>■</span> Stimato{" "}
               <span style={{ color: "#274d91", marginLeft: 8 }}>■</span> Proiezione{" "}
-              <span style={{ color: "#1a2540", marginLeft: 8 }}>■</span> Mancante
-              {breakEvenLordo && <><span style={{ color: "#ef4444", marginLeft: 8 }}>■</span>{" "}Sotto soglia costi</>}
+              <span style={{ color: "#1a2540", marginLeft: 8 }}>■</span> Mancante{" "}
+              <span style={{ color: "#f97316", marginLeft: 8 }}>■</span> Costi attivi{" "}
+              {costiDaAttivare.length > 0 && <><span style={{ color: "#f59e0b", marginLeft: 8 }}>- -</span> Costi target</>}
             </p>
           </div>
           <div className={styles.annualKpis}>
@@ -245,35 +258,44 @@ export default function Dashboard({ commesse, setup, setSetup }) {
           </div>
         )}
 
-        <ResponsiveContainer width="100%" height={240}>
-          <BarChart data={annualData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+        <ResponsiveContainer width="100%" height={260}>
+          <BarChart data={annualData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }} barCategoryGap="20%" barGap={2}>
             <XAxis dataKey="mese" tick={{ fill: "#64748b", fontSize: 11 }} axisLine={false} tickLine={false} />
             <YAxis tick={{ fill: "#64748b", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k€`} />
             <Tooltip
-              contentStyle={{ background: "#111827", border: "1px solid rgba(255,255,255,.12)", borderRadius: "8px", color: "#e2e8f0", fontSize: "13px" }}
+              contentStyle={{ background: "#111827", border: "1px solid rgba(255,255,255,.12)", borderRadius: "8px", color: "#e2e8f0", fontSize: "12px" }}
               labelStyle={{ color: "#94a3b8" }}
-              itemStyle={{ color: "#e2e8f0" }}
-              formatter={(v, name, props) => [
-                formatCurrency(v),
-                props.payload.tipo === "reale" ? "Netto reale" : props.payload.tipo === "mancante" ? "Non registrato" : props.payload.tipo === "stimato" ? "Netto stimato" : "Netto proiez.",
-              ]}
+              formatter={(v, name, props) => {
+                if (name === "costiAttivi") return [formatCurrency(v), "Costi attivi/mese"];
+                const t = props.payload?.tipo;
+                const label = t === "reale" ? "Netto reale" : t === "mancante" ? "Non registrato" : t === "stimato" ? "Netto stimato" : "Netto proiez.";
+                return [formatCurrency(v), label];
+              }}
             />
-            <Bar dataKey="netto" radius={[4, 4, 0, 0]}>
+            <Bar dataKey="netto" maxBarSize={22} radius={[4, 4, 0, 0]}>
               {annualData.map((entry, i) => {
                 let fill = TIPO_COLOR[entry.tipo];
-                if (totaleCostiFissi > 0 && entry.tipo !== "reale" && entry.tipo !== "mancante" && entry.netto < totaleCostiFissi) {
-                  fill = "#ef4444";
-                }
-                return <Cell key={i} fill={fill} opacity={entry.tipo === "mancante" ? 0.4 : 1} />;
+                if (totaleCostiFissi > 0 && entry.tipo !== "reale" && entry.tipo !== "mancante" && entry.netto < totaleCostiFissi) fill = "#ef4444";
+                return <Cell key={i} fill={fill} opacity={entry.tipo === "mancante" ? 0.3 : 1} />;
               })}
             </Bar>
+            <Bar dataKey="costiAttivi" maxBarSize={22} radius={[4, 4, 0, 0]} fill="#f97316" opacity={0.75} />
             {totaleCostiFissi > 0 && (
               <ReferenceLine
                 y={totaleCostiFissi}
                 stroke="#ef4444"
                 strokeDasharray="5 3"
-                strokeOpacity={0.55}
-                label={{ value: `costi fissi  ${formatCurrency(totaleCostiFissi)}`, position: "insideTopRight", fill: "#ef4444", fontSize: 10 }}
+                strokeOpacity={0.5}
+                label={{ value: `costi attivi  ${formatCurrency(totaleCostiFissi)}`, position: "insideTopRight", fill: "#ef4444", fontSize: 10 }}
+              />
+            )}
+            {costiDaAttivare.length > 0 && totaleCostiIdeali > totaleCostiFissi && (
+              <ReferenceLine
+                y={totaleCostiIdeali}
+                stroke="#f59e0b"
+                strokeDasharray="4 4"
+                strokeOpacity={0.45}
+                label={{ value: `target  ${formatCurrency(totaleCostiIdeali)}`, position: "insideTopRight", fill: "#f59e0b", fontSize: 10 }}
               />
             )}
           </BarChart>
