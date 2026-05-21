@@ -24,7 +24,7 @@ const MESI_SHORT = ["Gen","Feb","Mar","Apr","Mag","Giu","Lug","Ago","Set","Ott",
 const TIPO_COLOR = {
   reale:      "#22c55e",
   stimato:    "#f59e0b",
-  proiezione: "#274d91",
+  proiezione: "#60a5fa",
   mancante:   "#64748b",
 };
 
@@ -231,7 +231,7 @@ export default function Dashboard({ commesse, setup, setSetup }) {
             <p className={styles.annualSub}>
               <span style={{ color: "#22c55e" }}>■</span> Registrato{" "}
               <span style={{ color: "#f59e0b", marginLeft: 8 }}>■</span> Stimato{" "}
-              <span style={{ color: "#274d91", marginLeft: 8 }}>■</span> Proiezione{" "}
+              <span style={{ color: "#60a5fa", marginLeft: 8 }}>■</span> Proiezione{" "}
               <span style={{ color: "#64748b", marginLeft: 8 }}>■</span> Mancante{" "}
               <span style={{ color: "#f97316", marginLeft: 8 }}>■</span> Costi attivi{" "}
               {costiDaAttivare.length > 0 && <><span style={{ color: "#f59e0b", marginLeft: 8 }}>■</span> Da attivare</>}
@@ -243,7 +243,7 @@ export default function Dashboard({ commesse, setup, setSetup }) {
               <span className={styles.annualKpiLabel}>Netto reale</span>
             </div>
             <div className={styles.annualKpi}>
-              <span className={styles.annualKpiVal} style={{ color: "#274d91" }}>{formatCurrency(totProiezione)}</span>
+              <span className={styles.annualKpiVal} style={{ color: "#60a5fa" }}>{formatCurrency(totProiezione)}</span>
               <span className={styles.annualKpiLabel}>Proiezione netto</span>
             </div>
             <div className={styles.annualKpi}>
