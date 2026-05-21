@@ -266,6 +266,7 @@ export default function Dashboard({ commesse, setup, setSetup }) {
             <Tooltip
               contentStyle={{ background: "#111827", border: "1px solid rgba(255,255,255,.12)", borderRadius: "8px", color: "#e2e8f0", fontSize: "12px" }}
               labelStyle={{ color: "#94a3b8" }}
+              itemStyle={{ color: "#e2e8f0" }}
               formatter={(v, name, props) => {
                 if (name === "costiAttivi") return [formatCurrency(v), "Costi attivi/mese"];
                 if (name === "costiDaAttivare") return [formatCurrency(v), "Costi da attivare"];
