@@ -25,7 +25,7 @@ const TIPO_COLOR = {
   reale:      "#22c55e",
   stimato:    "#f59e0b",
   proiezione: "#274d91",
-  mancante:   "#334155",
+  mancante:   "#64748b",
 };
 
 const STATO_ORDER = ["In corso","In scadenza","Da chiarire","Sospeso","Concluso","Perso"];
@@ -232,7 +232,7 @@ export default function Dashboard({ commesse, setup, setSetup }) {
               <span style={{ color: "#22c55e" }}>■</span> Registrato{" "}
               <span style={{ color: "#f59e0b", marginLeft: 8 }}>■</span> Stimato{" "}
               <span style={{ color: "#274d91", marginLeft: 8 }}>■</span> Proiezione{" "}
-              <span style={{ color: "#334155", marginLeft: 8 }}>■</span> Mancante{" "}
+              <span style={{ color: "#64748b", marginLeft: 8 }}>■</span> Mancante{" "}
               <span style={{ color: "#f97316", marginLeft: 8 }}>■</span> Costi attivi{" "}
               {costiDaAttivare.length > 0 && <><span style={{ color: "#f59e0b", marginLeft: 8 }}>■</span> Da attivare</>}
             </p>
@@ -296,6 +296,73 @@ export default function Dashboard({ commesse, setup, setSetup }) {
             )}
           </BarChart>
         </ResponsiveContainer>
+      </div>
+
+      {/* Cash Flow */}
+      <div style={{ background: "rgba(255,255,255,.03)", border: "1px solid rgba(255,255,255,.07)", borderRadius: 12, padding: "1.25rem 1.5rem", marginTop: "1rem" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1rem", flexWrap: "wrap", gap: "0.75rem" }}>
+          <div>
+            <h2 className={styles.sectionTitle} style={{ marginBottom: "0.35rem" }}>Cash Flow — prossimi 12 mesi</h2>
+            <div style={{ display: "flex", gap: "1.5rem", flexWrap: "wrap" }}>
+              <span style={{ fontSize: "0.82rem", color: "#94a3b8" }}>
+                Cassa: <strong style={{ color: "#e2e8f0" }}>{formatCurrency(cassaIniziale)}</strong>
+              </span>
+              {cryptoVal > 0 && (
+                <span style={{ fontSize: "0.82rem", color: "#94a3b8" }}>
+                  + Crypto: <strong style={{ color: "#f59e0b" }}>{formatCurrency(cryptoVal)}</strong>
+                  {cryptoAggiornato && <span style={{ color: "#475569", fontSize: "0.72rem", marginLeft: 4 }}>al {cryptoAggiornato}</span>}
+                </span>
+              )}
+              <span style={{ fontSize: "0.82rem", color: "#94a3b8" }}>
+                Costi/mese: <strong style={{ color: "#f43f5e" }}>{formatCurrency(totaleCostiFissi)}</strong>
+              </span>
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: "1.5rem" }}>
+            <div style={{ textAlign: "right" }}>
+              <div style={{ fontSize: "1.1rem", fontWeight: 600, color: "#94a3b8" }}>
+                {formatCurrency(patrimonioIniziale)}
+              </div>
+              <div style={{ fontSize: "0.72rem", color: "#64748b" }}>Patrimonio oggi</div>
+            </div>
+            <div style={{ textAlign: "right" }}>
+              <div style={{ fontSize: "1.3rem", fontWeight: 700, color: cassaFinale >= patrimonioIniziale ? "#22c55e" : "#ef4444" }}>
+                {formatCurrency(cassaFinale)}
+              </div>
+              <div style={{ fontSize: "0.72rem", color: "#64748b" }}>Stima fra 12 mesi</div>
+            </div>
+          </div>
+        </div>
+
+        <ResponsiveContainer width="100%" height={260}>
+          <ComposedChart data={cashFlowData} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
+            <XAxis dataKey="mese" tick={{ fill: "#64748b", fontSize: 11 }} axisLine={false} tickLine={false} />
+            <YAxis yAxisId="flow" tick={{ fill: "#64748b", fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={v => `${(v/1000).toFixed(0)}k`} width={36} />
+            <YAxis yAxisId="cassa" orientation="right" tick={{ fill: "#38bdf8", fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={v => `${(v/1000).toFixed(0)}k`} width={36} />
+            <Tooltip
+              contentStyle={{ background: "#111827", border: "1px solid rgba(255,255,255,.12)", borderRadius: 8, color: "#e2e8f0", fontSize: 12 }}
+              formatter={(value, name) => {
+                if (name === "Cassa") return [formatCurrency(value), "Cassa accumulata"];
+                if (name === "Entrate") return [formatCurrency(value), "Netto mensile"];
+                if (name === "Costi") return [formatCurrency(value), "Costi fissi"];
+                return [formatCurrency(value), name];
+              }}
+            />
+            <ReferenceLine yAxisId="flow" y={0} stroke="rgba(255,255,255,.12)" />
+            <Bar yAxisId="flow" dataKey="flusso" name="Flusso netto" radius={[4,4,0,0]}>
+              {cashFlowData.map((entry, i) => (
+                <Cell key={i} fill={entry.flusso >= 0 ? "#22c55e" : "#ef4444"} opacity={entry.tipo === "proiezione" ? 0.55 : 0.85} />
+              ))}
+            </Bar>
+            <Line yAxisId="cassa" type="monotone" dataKey="cassa" name="Cassa" stroke="#38bdf8" strokeWidth={2} dot={{ fill: "#38bdf8", r: 3 }} activeDot={{ r: 5 }} />
+          </ComposedChart>
+        </ResponsiveContainer>
+        <div style={{ display: "flex", gap: "1rem", marginTop: "0.5rem", fontSize: "0.72rem", color: "#475569" }}>
+          <span>&#9632; <span style={{ color: "#22c55e" }}>Flusso positivo</span></span>
+          <span>&#9632; <span style={{ color: "#ef4444" }}>Flusso negativo</span></span>
+          <span>&#8212; <span style={{ color: "#38bdf8" }}>Cassa accumulata (asse dx)</span></span>
+          <span style={{ color: "#374151" }}>Barre opache = proiezione</span>
+        </div>
       </div>
 
       {sortedStorico.length > 0 && (
@@ -428,72 +495,6 @@ export default function Dashboard({ commesse, setup, setSetup }) {
         </div>
       )}
 
-      {/* Cash Flow */}
-      <div style={{ background: "rgba(255,255,255,.03)", border: "1px solid rgba(255,255,255,.07)", borderRadius: 12, padding: "1.25rem 1.5rem", marginTop: "1rem" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1rem", flexWrap: "wrap", gap: "0.75rem" }}>
-          <div>
-            <h2 className={styles.sectionTitle} style={{ marginBottom: "0.35rem" }}>Cash Flow — prossimi 12 mesi</h2>
-            <div style={{ display: "flex", gap: "1.5rem", flexWrap: "wrap" }}>
-              <span style={{ fontSize: "0.82rem", color: "#94a3b8" }}>
-                Cassa: <strong style={{ color: "#e2e8f0" }}>{formatCurrency(cassaIniziale)}</strong>
-              </span>
-              {cryptoVal > 0 && (
-                <span style={{ fontSize: "0.82rem", color: "#94a3b8" }}>
-                  + Crypto: <strong style={{ color: "#f59e0b" }}>{formatCurrency(cryptoVal)}</strong>
-                  {cryptoAggiornato && <span style={{ color: "#475569", fontSize: "0.72rem", marginLeft: 4 }}>al {cryptoAggiornato}</span>}
-                </span>
-              )}
-              <span style={{ fontSize: "0.82rem", color: "#94a3b8" }}>
-                Costi/mese: <strong style={{ color: "#f43f5e" }}>{formatCurrency(totaleCostiFissi)}</strong>
-              </span>
-            </div>
-          </div>
-          <div style={{ display: "flex", gap: "1.5rem" }}>
-            <div style={{ textAlign: "right" }}>
-              <div style={{ fontSize: "1.1rem", fontWeight: 600, color: "#94a3b8" }}>
-                {formatCurrency(patrimonioIniziale)}
-              </div>
-              <div style={{ fontSize: "0.72rem", color: "#64748b" }}>Patrimonio oggi</div>
-            </div>
-            <div style={{ textAlign: "right" }}>
-              <div style={{ fontSize: "1.3rem", fontWeight: 700, color: cassaFinale >= patrimonioIniziale ? "#22c55e" : "#ef4444" }}>
-                {formatCurrency(cassaFinale)}
-              </div>
-              <div style={{ fontSize: "0.72rem", color: "#64748b" }}>Stima fra 12 mesi</div>
-            </div>
-          </div>
-        </div>
-
-        <ResponsiveContainer width="100%" height={260}>
-          <ComposedChart data={cashFlowData} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
-            <XAxis dataKey="mese" tick={{ fill: "#64748b", fontSize: 11 }} axisLine={false} tickLine={false} />
-            <YAxis yAxisId="flow" tick={{ fill: "#64748b", fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={v => `${(v/1000).toFixed(0)}k`} width={36} />
-            <YAxis yAxisId="cassa" orientation="right" tick={{ fill: "#38bdf8", fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={v => `${(v/1000).toFixed(0)}k`} width={36} />
-            <Tooltip
-              contentStyle={{ background: "#111827", border: "1px solid rgba(255,255,255,.12)", borderRadius: 8, color: "#e2e8f0", fontSize: 12 }}
-              formatter={(value, name) => {
-                if (name === "Cassa") return [formatCurrency(value), "Cassa accumulata"];
-                if (name === "Entrate") return [formatCurrency(value), "Netto mensile"];
-                if (name === "Costi") return [formatCurrency(value), "Costi fissi"];
-                return [formatCurrency(value), name];
-              }}
-            />
-            <ReferenceLine yAxisId="flow" y={0} stroke="rgba(255,255,255,.12)" />
-            <Bar yAxisId="flow" dataKey="flusso" name="Flusso netto" radius={[4,4,0,0]}>
-              {cashFlowData.map((entry, i) => (
-                <Cell key={i} fill={entry.flusso >= 0 ? "#22c55e" : "#ef4444"} opacity={entry.tipo === "proiezione" ? 0.55 : 0.85} />
-              ))}
-            </Bar>
-            <Line yAxisId="cassa" type="monotone" dataKey="cassa" name="Cassa" stroke="#38bdf8" strokeWidth={2} dot={{ fill: "#38bdf8", r: 3 }} activeDot={{ r: 5 }} />
-          </ComposedChart>
-        </ResponsiveContainer>
-        <div style={{ display: "flex", gap: "1rem", marginTop: "0.5rem", fontSize: "0.72rem", color: "#475569" }}>
-          <span>&#9632; <span style={{ color: "#22c55e" }}>Flusso positivo</span></span>
-          <span>&#9632; <span style={{ color: "#ef4444" }}>Flusso negativo</span></span>
-          <span>&#8212; <span style={{ color: "#38bdf8" }}>Cassa accumulata (asse dx)</span></span>
-          <span style={{ color: "#374151" }}>Barre opache = proiezione</span>
-        </div>
-      </div>
     </div>
   );
 }
