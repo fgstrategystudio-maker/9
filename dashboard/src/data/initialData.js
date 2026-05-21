@@ -23,7 +23,8 @@ export const INITIAL_SETUP = {
     { id: 14, nome: "Assicurazione infortuni AXA", importo: 17, tipo: "annuale", importoAnnuale: 200 },
   ],
   cassaIniziale: 17500,
-  crypto: 4000,
+  crypto: 2000,
+  cryptoAggiornato: "21/05/2026",
 };
 
 export const INITIAL_COMMESSE = [

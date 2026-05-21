@@ -85,8 +85,9 @@ export default function Dashboard({ commesse, setup, setSetup }) {
   const costiFissi = setup.costiFissi || [];
   const totaleCostiFissi = costiFissi.reduce((s, c) => s + c.importo, 0);
 
-  const cassaIniziale = setup.cassaIniziale ?? 0;
-  const cryptoVal     = setup.crypto ?? 0;
+  const cassaIniziale    = setup.cassaIniziale ?? 0;
+  const cryptoVal        = setup.crypto ?? 0;
+  const cryptoAggiornato = setup.cryptoAggiornato ?? null;
 
   const cashFlowData = (() => {
     let balance = cassaIniziale;
@@ -421,6 +422,7 @@ export default function Dashboard({ commesse, setup, setSetup }) {
               {cryptoVal > 0 && (
                 <span style={{ fontSize: "0.82rem", color: "#94a3b8" }}>
                   Crypto: <strong style={{ color: "#f59e0b" }}>{formatCurrency(cryptoVal)}</strong>
+                  {cryptoAggiornato && <span style={{ color: "#475569", fontSize: "0.72rem", marginLeft: 4 }}>al {cryptoAggiornato}</span>}
                 </span>
               )}
               <span style={{ fontSize: "0.82rem", color: "#94a3b8" }}>
