@@ -27,12 +27,13 @@ export default function App() {
       const toAdd = NEW_COSTS.filter((c) => !existingIds.has(c.id));
       const needsCassa = prev.cassaIniziale === undefined || prev.cassaIniziale === null;
       const needsCrypto = prev.crypto === undefined || prev.crypto === null;
-      if (toAdd.length === 0 && !needsCassa && !needsCrypto) return prev;
+      const needsCryptoV2 = !prev._cryptoV2; // forza aggiornamento a 2000€ del 21/05/2026
+      if (toAdd.length === 0 && !needsCassa && !needsCrypto && !needsCryptoV2) return prev;
       return {
         ...prev,
         costiFissi: [...(prev.costiFissi || []), ...toAdd],
         ...(needsCassa ? { cassaIniziale: 17500 } : {}),
-        ...(needsCrypto ? { crypto: 4000 } : {}),
+        ...(needsCrypto || needsCryptoV2 ? { crypto: 2000, cryptoAggiornato: "21/05/2026", _cryptoV2: true } : {}),
       };
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
