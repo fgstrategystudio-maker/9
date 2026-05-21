@@ -155,7 +155,7 @@ export default function Dashboard({ commesse, setup, setSetup }) {
     <div className={styles.page}>
       <header className={styles.header}>
         <h1 className={styles.title}>Dashboard</h1>
-        <p className={styles.subtitle}>Panoramica commesse e fatturato</p>
+        <p className={styles.subtitle}>Panoramica commesse e fatturato <span style={{ fontSize: "0.7rem", background: "rgba(200,169,110,0.15)", color: "#c8a96e", border: "1px solid rgba(200,169,110,0.3)", borderRadius: 4, padding: "1px 6px", marginLeft: 8 }}>v2 · cash flow</span></p>
       </header>
 
       {inScadenza.length > 0 && (
