@@ -65,7 +65,13 @@ function TimelineChart({ episodes, onEditEpisode }) {
   const years = []
   for (let y = maxYear; y >= minYear; y--) years.push(String(y))
 
-  const isPositive = (ep) => ep.is_positive || ep.type === 'evento_positivo'
+  const pillStyle = (ep) => {
+    if (ep.is_positive || ep.type === 'evento_positivo')
+      return { pill: 'bg-emerald-50 text-emerald-800 border-emerald-200', dot: 'bg-emerald-500' }
+    if (ep.type === 'ricaduta')
+      return { pill: 'bg-amber-50 text-amber-800 border-amber-200', dot: 'bg-amber-500' }
+    return { pill: 'bg-red-50 text-red-800 border-red-200', dot: 'bg-red-500' }
+  }
 
   return (
     <div className="bg-white rounded-2xl border border-gray-200 p-6 overflow-hidden">
@@ -95,19 +101,15 @@ function TimelineChart({ episodes, onEditEpisode }) {
               {hasEvents ? (
                 <div className="flex flex-wrap gap-2 pt-0.5">
                   {shown.map((ep) => {
-                    const pos = isPositive(ep)
+                    const s = pillStyle(ep)
                     return (
                       <button
                         key={ep.id}
                         title={[ep.diagnosis, ep.body_area, ep.symptoms].filter(Boolean).join(' • ') + ' — clicca per modificare'}
                         onClick={() => onEditEpisode(ep)}
-                        className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border select-none transition-transform hover:scale-105 hover:shadow-sm ${
-                          pos
-                            ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                            : 'bg-red-50 text-red-800 border-red-200'
-                        }`}
+                        className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border select-none transition-transform hover:scale-105 hover:shadow-sm ${s.pill}`}
                       >
-                        <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${pos ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                        <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${s.dot}`} />
                         {ep.diagnosis || ep.type}
                         {ep.body_area && <span className="opacity-60">· {ep.body_area}</span>}
                         <Edit2 size={10} className="opacity-40 ml-0.5" />
@@ -129,15 +131,18 @@ function TimelineChart({ episodes, onEditEpisode }) {
       </div>
 
       {/* legend */}
-      <div className="flex gap-4 mt-4 pt-4 border-t border-gray-100">
+      <div className="flex flex-wrap gap-4 mt-4 pt-4 border-t border-gray-100">
         <div className="flex items-center gap-1.5 text-xs text-gray-500">
-          <span className="w-2.5 h-2.5 rounded-full bg-red-400" />Negativo / infortunio / malattia
+          <span className="w-2.5 h-2.5 rounded-full bg-red-400" />Malattia / infortunio / intervento
+        </div>
+        <div className="flex items-center gap-1.5 text-xs text-gray-500">
+          <span className="w-2.5 h-2.5 rounded-full bg-amber-400" />Ricaduta
         </div>
         <div className="flex items-center gap-1.5 text-xs text-gray-500">
           <span className="w-2.5 h-2.5 rounded-full bg-emerald-400" />Positivo / guarigione / traguardo
         </div>
         <div className="flex items-center gap-1.5 text-xs text-gray-500">
-          <Edit2 size={10} className="text-gray-400" />Clicca su un episodio per modificarlo
+          <Edit2 size={10} className="text-gray-400" />Clicca per modificare
         </div>
       </div>
     </div>
