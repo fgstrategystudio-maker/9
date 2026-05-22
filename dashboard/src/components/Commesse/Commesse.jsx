@@ -133,15 +133,22 @@ export default function Commesse({ commesse, setCommesse, setup }) {
                   >
                     ● {c.priorita}
                   </span>
-                  {lordo && (
+                  {c.tipo === "Mensile" && lordo && (
+                    <span className={styles.feeBadge}>{formatCurrency(lordo)}/mese</span>
+                  )}
+                  {c.tipo === "Una tantum" && c.lordoProgetto && (
+                    <span className={styles.feeBadge}>{formatCurrency(c.lordoProgetto)} tantum</span>
+                  )}
+                  {c.tipo === "Acconto + saldo" && (c.acconto || c.saldo) && (
                     <span className={styles.feeBadge}>
-                      {formatCurrency(lordo)}/mese
+                      {formatCurrency((c.acconto || 0) + (c.saldo || 0))} tot · {formatCurrency(c.acconto || 0)} acc.
                     </span>
                   )}
-                  {c.lordoProgetto && !lordo && (
-                    <span className={styles.feeBadge}>
-                      {formatCurrency(c.lordoProgetto)} progetto
-                    </span>
+                  {c.tipo === "Saldo fine progetto" && c.lordoProgetto && (
+                    <span className={styles.feeBadge}>{formatCurrency(c.lordoProgetto)} fine prog.</span>
+                  )}
+                  {!c.tipo && lordo && (
+                    <span className={styles.feeBadge}>{formatCurrency(lordo)}/mese</span>
                   )}
                   {days !== null && days >= 0 && (
                     <span
@@ -219,16 +226,29 @@ function CommessaDetail({ commessa: c, setup, onEdit, onDelete }) {
             </span>
           ) : "—"
         } />
-        {lordo && <DetailRow label="Lordo mensile" value={formatCurrency(lordo)} />}
-        {netto && <DetailRow label="Netto mensile" value={<span style={{ color: "#22c55e" }}>{formatCurrency(netto)}</span>} />}
-        {c.lordoProgetto && <DetailRow label="Lordo progetto" value={formatCurrency(c.lordoProgetto)} />}
-        {nettoProgetto && <DetailRow label="Netto progetto" value={<span style={{ color: "#22c55e" }}>{formatCurrency(nettoProgetto)}</span>} />}
-        {c.upsellTarget && (
-          <>
+        {c.tipo === "Mensile" && lordo && <>
+          <DetailRow label="Lordo mensile" value={formatCurrency(lordo)} />
+          {netto && <DetailRow label="Netto mensile" value={<span style={{ color: "#22c55e" }}>{formatCurrency(netto)}</span>} />}
+          {c.upsellTarget && <>
             <DetailRow label="Upsell target lordo" value={<span style={{ color: "#a78bfa" }}>{formatCurrency(c.upsellTarget)}</span>} />
             <DetailRow label="Upsell target netto" value={<span style={{ color: "#a78bfa" }}>{formatCurrency(upsellNetto)}</span>} />
-          </>
-        )}
+          </>}
+        </>}
+        {(c.tipo === "Una tantum" || c.tipo === "Saldo fine progetto") && c.lordoProgetto && <>
+          <DetailRow label="Importo lordo" value={formatCurrency(c.lordoProgetto)} />
+          {nettoProgetto && <DetailRow label="Importo netto" value={<span style={{ color: "#22c55e" }}>{formatCurrency(nettoProgetto)}</span>} />}
+          <DetailRow label="Pagamento" value={c.tipo === "Una tantum" ? "Alla firma / inizio" : "A fine progetto"} />
+        </>}
+        {c.tipo === "Acconto + saldo" && (c.acconto || c.saldo) && <>
+          <DetailRow label="Acconto lordo" value={formatCurrency(c.acconto || 0)} />
+          <DetailRow label="Saldo lordo" value={formatCurrency(c.saldo || 0)} />
+          <DetailRow label="Totale lordo" value={<strong>{formatCurrency((c.acconto || 0) + (c.saldo || 0))}</strong>} />
+          {nettoProgetto && <DetailRow label="Totale netto" value={<span style={{ color: "#22c55e" }}>{formatCurrency(calcNetto((c.acconto || 0) + (c.saldo || 0), setup.fattoreNetto))}</span>} />}
+        </>}
+        {!c.tipo && lordo && <>
+          <DetailRow label="Lordo mensile" value={formatCurrency(lordo)} />
+          {netto && <DetailRow label="Netto mensile" value={<span style={{ color: "#22c55e" }}>{formatCurrency(netto)}</span>} />}
+        </>}
       </div>
 
       {c.note && (

@@ -52,12 +52,19 @@ export function calcNetto(lordo, fattore) {
 }
 
 export function getCommessaLordoMensile(commessa) {
-  if (commessa.lordoMensile) return commessa.lordoMensile;
-  if (commessa.lordoProgetto && commessa.inizio && commessa.fine) {
-    const mesi = monthsBetween(commessa.inizio, commessa.fine);
-    return mesi > 0 ? Math.round(commessa.lordoProgetto / mesi) : commessa.lordoProgetto;
+  if (commessa.tipo === "Mensile" || !commessa.tipo) {
+    return commessa.lordoMensile || null;
   }
-  return null;
+  const totale =
+    commessa.tipo === "Acconto + saldo"
+      ? (commessa.acconto || 0) + (commessa.saldo || 0)
+      : commessa.lordoProgetto || 0;
+  if (!totale) return null;
+  if (commessa.inizio && commessa.fine) {
+    const mesi = monthsBetween(commessa.inizio, commessa.fine);
+    return mesi > 0 ? Math.round(totale / mesi) : totale;
+  }
+  return totale;
 }
 
 const MESI_IT = [
