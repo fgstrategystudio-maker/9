@@ -144,6 +144,25 @@
   margin-bottom: 0.4rem;
 }
 
+.cardContacts {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin-bottom: 0.35rem;
+}
+
+.contactLink {
+  font-size: 0.78rem;
+  color: #64748b;
+  text-decoration: none;
+  transition: color 0.15s;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.contactLink:hover { color: #c8a96e; }
+
 .cardMeta {
   display: flex;
   align-items: center;
@@ -236,7 +255,15 @@
 }
 
 .detailLabel { color: #64748b; flex-shrink: 0; }
-.detailValue { color: #e2e8f0; text-align: right; }
+.detailValue { color: #e2e8f0; text-align: right; word-break: break-word; }
+
+.detailLink {
+  color: #c8a96e;
+  text-decoration: none;
+  transition: opacity 0.15s;
+}
+
+.detailLink:hover { opacity: 0.8; }
 
 .detailNote {
   border-top: 1px solid rgba(255,255,255,.08);

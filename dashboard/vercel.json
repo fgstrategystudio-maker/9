@@ -1,5 +1,5 @@
 {
   "outputDirectory": "dist",
-  "buildCommand": "echo 'using pre-built dist'",
-  "installCommand": "echo 'skip install'"
+  "buildCommand": "npm run build",
+  "installCommand": "npm install"
 }

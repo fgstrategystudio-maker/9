@@ -25,7 +25,8 @@ export default function Network({ network, setNetwork }) {
       !search ||
       c.nome.toLowerCase().includes(search.toLowerCase()) ||
       (c.ruolo || "").toLowerCase().includes(search.toLowerCase()) ||
-      (c.note || "").toLowerCase().includes(search.toLowerCase());
+      (c.note || "").toLowerCase().includes(search.toLowerCase()) ||
+      (c.email || "").toLowerCase().includes(search.toLowerCase());
     const matchCat = filterCat === "Tutti" || c.categoria === filterCat;
     return matchSearch && matchCat;
   });
@@ -73,7 +74,7 @@ export default function Network({ network, setNetwork }) {
       <div className={styles.filters}>
         <input
           className={styles.searchInput}
-          placeholder="Cerca per nome, ruolo o note…"
+          placeholder="Cerca per nome, ruolo, email…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
@@ -113,6 +114,26 @@ export default function Network({ network, setNetwork }) {
                 </span>
               </div>
               {c.ruolo && <div className={styles.cardRuolo}>{c.ruolo}</div>}
+              <div className={styles.cardContacts}>
+                {c.email && (
+                  <a
+                    className={styles.contactLink}
+                    href={`mailto:${c.email}`}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    ✉ {c.email}
+                  </a>
+                )}
+                {c.telefono && (
+                  <a
+                    className={styles.contactLink}
+                    href={`tel:${c.telefono}`}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    ☎ {c.telefono}
+                  </a>
+                )}
+              </div>
               <div className={styles.cardMeta}>
                 {c.ultimoContatto && (
                   <span className={styles.dataBadge}>
@@ -164,6 +185,40 @@ function ContactDetail({ contatto: c, onEdit, onDelete }) {
             {c.categoria}
           </span>
         } />
+        {c.email && (
+          <DetailRow label="Email" value={
+            <a className={styles.detailLink} href={`mailto:${c.email}`}>{c.email}</a>
+          } />
+        )}
+        {c.telefono && (
+          <DetailRow label="Telefono" value={
+            <a className={styles.detailLink} href={`tel:${c.telefono}`}>{c.telefono}</a>
+          } />
+        )}
+        {c.linkedin && (
+          <DetailRow label="LinkedIn" value={
+            <a
+              className={styles.detailLink}
+              href={c.linkedin.startsWith("http") ? c.linkedin : `https://${c.linkedin}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {c.linkedin.replace(/^https?:\/\/(www\.)?linkedin\.com\/in\//, "")}
+            </a>
+          } />
+        )}
+        {c.sito && (
+          <DetailRow label="Sito web" value={
+            <a
+              className={styles.detailLink}
+              href={c.sito.startsWith("http") ? c.sito : `https://${c.sito}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {c.sito.replace(/^https?:\/\//, "")}
+            </a>
+          } />
+        )}
         {c.ultimoContatto && (
           <DetailRow label="Ultimo contatto" value={formatDate(c.ultimoContatto)} />
         )}
@@ -192,8 +247,12 @@ function NetworkModal({ initial, onSave, onClose }) {
   const [form, setForm] = useState({
     id: initial?.id || null,
     nome: initial?.nome || "",
-    categoria: initial?.categoria || "Altro",
+    categoria: initial?.categoria || "Contatto",
     ruolo: initial?.ruolo || "",
+    email: initial?.email || "",
+    telefono: initial?.telefono || "",
+    linkedin: initial?.linkedin || "",
+    sito: initial?.sito || "",
     ultimoContatto: initial?.ultimoContatto || "",
     note: initial?.note || "",
   });
@@ -250,6 +309,50 @@ function NetworkModal({ initial, onSave, onClose }) {
                 value={form.ruolo}
                 onChange={(e) => set("ruolo", e.target.value)}
                 placeholder="es. Commercialista di fiducia"
+              />
+            </div>
+          </div>
+
+          <div className={styles.fieldRow}>
+            <div className={styles.fieldGroup}>
+              <label className={styles.label}>Email</label>
+              <input
+                type="email"
+                className={styles.input}
+                value={form.email}
+                onChange={(e) => set("email", e.target.value)}
+                placeholder="nome@esempio.com"
+              />
+            </div>
+            <div className={styles.fieldGroup}>
+              <label className={styles.label}>Telefono</label>
+              <input
+                type="tel"
+                className={styles.input}
+                value={form.telefono}
+                onChange={(e) => set("telefono", e.target.value)}
+                placeholder="+39 333 000 0000"
+              />
+            </div>
+          </div>
+
+          <div className={styles.fieldRow}>
+            <div className={styles.fieldGroup}>
+              <label className={styles.label}>LinkedIn</label>
+              <input
+                className={styles.input}
+                value={form.linkedin}
+                onChange={(e) => set("linkedin", e.target.value)}
+                placeholder="linkedin.com/in/nomeutente"
+              />
+            </div>
+            <div className={styles.fieldGroup}>
+              <label className={styles.label}>Sito web</label>
+              <input
+                className={styles.input}
+                value={form.sito}
+                onChange={(e) => set("sito", e.target.value)}
+                placeholder="www.esempio.com"
               />
             </div>
           </div>
