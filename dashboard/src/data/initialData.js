@@ -27,6 +27,8 @@ export const INITIAL_SETUP = {
   cryptoAggiornato: "21/05/2026",
 };
 
+export const INITIAL_NETWORK = [];
+
 export const INITIAL_COMMESSE = [
   {
     id: 1,

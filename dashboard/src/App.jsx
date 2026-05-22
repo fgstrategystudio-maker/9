@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { useLocalStorage } from "./hooks/useLocalStorage";
-import { INITIAL_COMMESSE, INITIAL_SETUP } from "./data/initialData";
+import { INITIAL_COMMESSE, INITIAL_SETUP, INITIAL_NETWORK } from "./data/initialData";
 import Sidebar from "./components/Sidebar/Sidebar";
 import Dashboard from "./components/Dashboard/Dashboard";
 import Commesse from "./components/Commesse/Commesse";
 import Fiscale from "./components/Fiscale/Fiscale";
 import Setup from "./components/Setup/Setup";
+import Network from "./components/Network/Network";
 import styles from "./App.module.css";
 
 const NEW_COSTS = [
@@ -19,6 +20,7 @@ const NEW_COSTS = [
 export default function App() {
   const [commesse, setCommesse] = useLocalStorage("commesse", INITIAL_COMMESSE);
   const [setup, setSetup] = useLocalStorage("setup", INITIAL_SETUP);
+  const [network, setNetwork] = useLocalStorage("network", INITIAL_NETWORK);
   const [view, setView] = useState("dashboard");
 
   useEffect(() => {
@@ -58,6 +60,9 @@ export default function App() {
         )}
         {view === "setup" && (
           <Setup setup={setup} setSetup={setSetup} />
+        )}
+        {view === "network" && (
+          <Network network={network} setNetwork={setNetwork} />
         )}
       </main>
     </div>

@@ -4,6 +4,7 @@ const NAV_ITEMS = [
   { id: "dashboard", label: "Dashboard", icon: "◈" },
   { id: "commesse", label: "Commesse", icon: "◻" },
   { id: "fiscale", label: "Fiscale", icon: "◎" },
+  { id: "network", label: "Network", icon: "◉" },
   { id: "setup", label: "Setup", icon: "⚙" },
 ];
 
