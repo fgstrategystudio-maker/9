@@ -27,7 +27,8 @@ function clearMcdKeys() {
   const keys = []
   for (let i = 0; i < localStorage.length; i++) {
     const k = localStorage.key(i)
-    if (k?.startsWith('mcd_')) keys.push(k)
+    // Non toccare mai i PIN salvati localmente
+    if (k?.startsWith('mcd_') && !k.startsWith('mcd_pin_')) keys.push(k)
   }
   keys.forEach(k => localStorage.removeItem(k))
 }
@@ -50,17 +51,18 @@ export async function syncKey(key, data) {
 }
 
 export async function getPin(userId) {
+  // Prova KV, poi localStorage come fallback
   try {
-    return await dbCall('getPin', { userId })
-  } catch {
-    return localStorage.getItem(`mcd_pin_${userId}`) ?? null
-  }
+    const kvPin = await dbCall('getPin', { userId })
+    if (kvPin !== null && kvPin !== undefined) return kvPin
+  } catch { /* ignora errori KV */ }
+  return localStorage.getItem(`mcd_pin_${userId}`) ?? null
 }
 
 export async function setPin(userId, pin) {
+  // Salva sempre in locale come sicurezza, poi anche su KV
+  localStorage.setItem(`mcd_pin_${userId}`, pin)
   try {
     await dbCall('setPin', { userId, pin })
-  } catch {
-    localStorage.setItem(`mcd_pin_${userId}`, pin)
-  }
+  } catch { /* già salvato in localStorage */ }
 }
