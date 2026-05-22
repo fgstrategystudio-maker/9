@@ -88,6 +88,8 @@ export default function Dashboard({ commesse, setup, setSetup }) {
   const cassaIniziale    = setup.cassaIniziale ?? 0;
   const cryptoVal        = setup.crypto ?? 0;
   const cryptoAggiornato = setup.cryptoAggiornato ?? null;
+  const azioni           = setup.azioni || [];
+  const azioniVal        = azioni.reduce((s, a) => s + a.quantita * (a.prezzoAttuale || a.prezzoAcquisto), 0);
 
   const cashFlowData = (() => {
     let balance = cassaIniziale;
@@ -425,6 +427,12 @@ export default function Dashboard({ commesse, setup, setSetup }) {
                   {cryptoAggiornato && <span style={{ color: "#475569", fontSize: "0.72rem", marginLeft: 4 }}>al {cryptoAggiornato}</span>}
                 </span>
               )}
+              {azioniVal > 0 && (
+                <span style={{ fontSize: "0.82rem", color: "#94a3b8" }}>
+                  Azioni: <strong style={{ color: "#a78bfa" }}>{formatCurrency(azioniVal)}</strong>
+                  <span style={{ color: "#475569", fontSize: "0.72rem", marginLeft: 4 }}>{azioni.length} titoli</span>
+                </span>
+              )}
               <span style={{ fontSize: "0.82rem", color: "#94a3b8" }}>
                 Costi fissi/mese: <strong style={{ color: "#f43f5e" }}>{formatCurrency(totaleCostiFissi)}</strong>
               </span>
@@ -437,12 +445,12 @@ export default function Dashboard({ commesse, setup, setSetup }) {
               </div>
               <div style={{ fontSize: "0.72rem", color: "#64748b" }}>Cassa stimata fra 12 mesi</div>
             </div>
-            {cryptoVal > 0 && (
+            {(cryptoVal > 0 || azioniVal > 0) && (
               <div style={{ textAlign: "right" }}>
-                <div style={{ fontSize: "1.3rem", fontWeight: 700, color: "#f59e0b" }}>
-                  {formatCurrency(cassaIniziale + cryptoVal)}
+                <div style={{ fontSize: "1.3rem", fontWeight: 700, color: "#c8a96e" }}>
+                  {formatCurrency(cassaIniziale + cryptoVal + azioniVal)}
                 </div>
-                <div style={{ fontSize: "0.72rem", color: "#64748b" }}>Cassa + Crypto oggi</div>
+                <div style={{ fontSize: "0.72rem", color: "#64748b" }}>Patrimonio totale</div>
               </div>
             )}
           </div>

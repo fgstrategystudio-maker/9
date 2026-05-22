@@ -404,9 +404,12 @@ export default function Setup({ setup, setSetup }) {
       <section className={styles.card} style={{ marginTop: "1rem" }}>
         <h2 className={styles.sectionTitle}>Liquidità & Patrimonio</h2>
         <p style={{ fontSize: "0.8rem", color: "#64748b", marginBottom: "1rem" }}>
-          Usati per il grafico Cash Flow nella Dashboard.
+          Cassa, crypto e azioni — usati nel calcolo del patrimonio totale.
         </p>
         <CashSetup setup={setup} setSetup={setSetup} />
+        <div style={{ borderTop: "1px solid rgba(255,255,255,.08)", marginTop: "1.25rem", paddingTop: "1.25rem" }}>
+          <AzioniSetup setup={setup} setSetup={setSetup} />
+        </div>
       </section>
 
       <section className={styles.dangerZone}>
@@ -461,6 +464,147 @@ function CashSetup({ setup, setSetup }) {
           style={{ background: "rgba(200,169,110,0.15)", border: "1px solid rgba(200,169,110,0.35)", color: "#c8a96e", borderRadius: 6, padding: "0.45rem 1rem", fontSize: "0.82rem", cursor: "pointer" }}>
           Salva
         </button>
+      </div>
+    </div>
+  );
+}
+
+function AzioniSetup({ setup, setSetup }) {
+  const azioni = setup.azioni || [];
+  const [form, setForm] = useState({ nome: "", ticker: "", quantita: "", prezzoAcquisto: "", prezzoAttuale: "", dataAcquisto: "" });
+
+  const totaleInvestito = azioni.reduce((s, a) => s + a.quantita * a.prezzoAcquisto, 0);
+  const totaleAttuale   = azioni.reduce((s, a) => s + a.quantita * (a.prezzoAttuale || a.prezzoAcquisto), 0);
+  const plTotale        = totaleAttuale - totaleInvestito;
+
+  function handleAdd() {
+    if (!form.nome || !form.quantita || !form.prezzoAcquisto) return;
+    const newAzione = {
+      id: Date.now(),
+      nome: form.nome.trim(),
+      ticker: form.ticker.trim().toUpperCase(),
+      quantita: Number(form.quantita),
+      prezzoAcquisto: Number(form.prezzoAcquisto),
+      prezzoAttuale: form.prezzoAttuale ? Number(form.prezzoAttuale) : Number(form.prezzoAcquisto),
+      dataAcquisto: form.dataAcquisto,
+    };
+    setSetup(prev => ({ ...prev, azioni: [...(prev.azioni || []), newAzione] }));
+    setForm({ nome: "", ticker: "", quantita: "", prezzoAcquisto: "", prezzoAttuale: "", dataAcquisto: "" });
+  }
+
+  function handleDelete(id) {
+    setSetup(prev => ({ ...prev, azioni: prev.azioni.filter(a => a.id !== id) }));
+  }
+
+  function handleEdit(id, field, value) {
+    setSetup(prev => ({
+      ...prev,
+      azioni: prev.azioni.map(a => a.id !== id ? a : { ...a, [field]: field === "nome" || field === "ticker" || field === "dataAcquisto" ? value : Number(value) }),
+    }));
+  }
+
+  const inputStyle = { background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.12)", borderRadius: 6, padding: "0.4rem 0.6rem", color: "#e2e8f0", fontSize: "0.82rem", outline: "none", fontFamily: "inherit" };
+
+  return (
+    <div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem", flexWrap: "wrap", gap: "0.5rem" }}>
+        <span style={{ fontSize: "0.875rem", fontWeight: 600, color: "#cbd5e1" }}>Azioni & ETF</span>
+        {azioni.length > 0 && (
+          <div style={{ display: "flex", gap: "1.25rem", fontSize: "0.8rem" }}>
+            <span style={{ color: "#94a3b8" }}>Investito: <strong style={{ color: "#e2e8f0" }}>{formatCurrency(totaleInvestito)}</strong></span>
+            <span style={{ color: "#94a3b8" }}>Attuale: <strong style={{ color: "#e2e8f0" }}>{formatCurrency(totaleAttuale)}</strong></span>
+            <span style={{ color: plTotale >= 0 ? "#22c55e" : "#ef4444", fontWeight: 700 }}>
+              {plTotale >= 0 ? "+" : ""}{formatCurrency(plTotale)}
+            </span>
+          </div>
+        )}
+      </div>
+
+      {azioni.length > 0 && (
+        <div style={{ marginBottom: "0.75rem", overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.82rem" }}>
+            <thead>
+              <tr style={{ color: "#475569", textTransform: "uppercase", fontSize: "0.72rem", letterSpacing: "0.04em" }}>
+                <th style={{ textAlign: "left", padding: "0.4rem 0.5rem 0.4rem 0", borderBottom: "1px solid rgba(255,255,255,.08)" }}>Titolo</th>
+                <th style={{ textAlign: "right", padding: "0.4rem 0.5rem", borderBottom: "1px solid rgba(255,255,255,.08)" }}>Qtà</th>
+                <th style={{ textAlign: "right", padding: "0.4rem 0.5rem", borderBottom: "1px solid rgba(255,255,255,.08)" }}>P. acquisto</th>
+                <th style={{ textAlign: "right", padding: "0.4rem 0.5rem", borderBottom: "1px solid rgba(255,255,255,.08)" }}>P. attuale</th>
+                <th style={{ textAlign: "right", padding: "0.4rem 0.5rem", borderBottom: "1px solid rgba(255,255,255,.08)" }}>Valore</th>
+                <th style={{ textAlign: "right", padding: "0.4rem 0.5rem", borderBottom: "1px solid rgba(255,255,255,.08)" }}>P&L</th>
+                <th style={{ borderBottom: "1px solid rgba(255,255,255,.08)" }}></th>
+              </tr>
+            </thead>
+            <tbody>
+              {azioni.map(a => {
+                const valoreAttuale = a.quantita * (a.prezzoAttuale || a.prezzoAcquisto);
+                const pl = a.quantita * ((a.prezzoAttuale || a.prezzoAcquisto) - a.prezzoAcquisto);
+                const plPct = a.prezzoAcquisto > 0 ? ((a.prezzoAttuale || a.prezzoAcquisto) - a.prezzoAcquisto) / a.prezzoAcquisto * 100 : 0;
+                return (
+                  <tr key={a.id} style={{ borderBottom: "1px solid rgba(255,255,255,.06)" }}>
+                    <td style={{ padding: "0.4rem 0.5rem 0.4rem 0" }}>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                        <input value={a.nome} onChange={e => handleEdit(a.id, "nome", e.target.value)} style={{ ...inputStyle, width: 100 }} />
+                        {a.ticker && <span style={{ fontSize: "0.7rem", color: "#64748b" }}>{a.ticker}</span>}
+                      </div>
+                    </td>
+                    <td style={{ padding: "0.4rem 0.5rem", textAlign: "right" }}>
+                      <input type="number" value={a.quantita} min="0" step="0.001" onChange={e => handleEdit(a.id, "quantita", e.target.value)} style={{ ...inputStyle, width: 60, textAlign: "right" }} />
+                    </td>
+                    <td style={{ padding: "0.4rem 0.5rem", textAlign: "right" }}>
+                      <input type="number" value={a.prezzoAcquisto} min="0" step="0.01" onChange={e => handleEdit(a.id, "prezzoAcquisto", e.target.value)} style={{ ...inputStyle, width: 72, textAlign: "right" }} />
+                    </td>
+                    <td style={{ padding: "0.4rem 0.5rem", textAlign: "right" }}>
+                      <input type="number" value={a.prezzoAttuale} min="0" step="0.01" onChange={e => handleEdit(a.id, "prezzoAttuale", e.target.value)} style={{ ...inputStyle, width: 72, textAlign: "right" }} />
+                    </td>
+                    <td style={{ padding: "0.4rem 0.5rem", textAlign: "right", color: "#e2e8f0", fontWeight: 600 }}>
+                      {formatCurrency(valoreAttuale)}
+                    </td>
+                    <td style={{ padding: "0.4rem 0.5rem", textAlign: "right", color: pl >= 0 ? "#22c55e" : "#ef4444", fontWeight: 600 }}>
+                      {pl >= 0 ? "+" : ""}{formatCurrency(pl)}
+                      <span style={{ fontSize: "0.7rem", display: "block", opacity: 0.8 }}>{plPct >= 0 ? "+" : ""}{plPct.toFixed(1)}%</span>
+                    </td>
+                    <td style={{ padding: "0.4rem 0 0.4rem 0.5rem" }}>
+                      <button onClick={() => handleDelete(a.id)} style={{ background: "none", border: "none", color: "#4b5563", cursor: "pointer", fontSize: "0.75rem", padding: 4, transition: "color .15s" }}
+                        onMouseOver={e => e.target.style.color = "#ef4444"} onMouseOut={e => e.target.style.color = "#4b5563"}>✕</button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 80px 90px 90px 90px 110px auto", gap: "0.4rem", alignItems: "end", flexWrap: "wrap" }}>
+        <div>
+          <div style={{ fontSize: "0.72rem", color: "#64748b", marginBottom: 3 }}>Nome / Ticker</div>
+          <div style={{ display: "flex", gap: "0.3rem" }}>
+            <input placeholder="Es. Apple" value={form.nome} onChange={e => setForm(f => ({ ...f, nome: e.target.value }))} style={{ ...inputStyle, flex: 1 }} />
+            <input placeholder="AAPL" value={form.ticker} onChange={e => setForm(f => ({ ...f, ticker: e.target.value }))} style={{ ...inputStyle, width: 58 }} />
+          </div>
+        </div>
+        <div>
+          <div style={{ fontSize: "0.72rem", color: "#64748b", marginBottom: 3 }}>Qtà</div>
+          <input type="number" placeholder="10" min="0" step="0.001" value={form.quantita} onChange={e => setForm(f => ({ ...f, quantita: e.target.value }))} style={{ ...inputStyle, width: "100%" }} />
+        </div>
+        <div>
+          <div style={{ fontSize: "0.72rem", color: "#64748b", marginBottom: 3 }}>P. acquisto €</div>
+          <input type="number" placeholder="150.00" min="0" step="0.01" value={form.prezzoAcquisto} onChange={e => setForm(f => ({ ...f, prezzoAcquisto: e.target.value }))} style={{ ...inputStyle, width: "100%" }} />
+        </div>
+        <div>
+          <div style={{ fontSize: "0.72rem", color: "#64748b", marginBottom: 3 }}>P. attuale €</div>
+          <input type="number" placeholder="175.00" min="0" step="0.01" value={form.prezzoAttuale} onChange={e => setForm(f => ({ ...f, prezzoAttuale: e.target.value }))} style={{ ...inputStyle, width: "100%" }} />
+        </div>
+        <div>
+          <div style={{ fontSize: "0.72rem", color: "#64748b", marginBottom: 3 }}>Data acquisto</div>
+          <input type="date" value={form.dataAcquisto} onChange={e => setForm(f => ({ ...f, dataAcquisto: e.target.value }))} style={{ ...inputStyle, width: "100%" }} />
+        </div>
+        <div style={{ gridColumn: "span 2" }}>
+          <div style={{ fontSize: "0.72rem", color: "transparent", marginBottom: 3 }}>.</div>
+          <button onClick={handleAdd} style={{ background: "rgba(200,169,110,0.15)", border: "1px solid rgba(200,169,110,0.35)", color: "#c8a96e", borderRadius: 6, padding: "0.4rem 0.875rem", fontSize: "0.82rem", cursor: "pointer", whiteSpace: "nowrap" }}>
+            + Aggiungi
+          </button>
+        </div>
       </div>
     </div>
   );

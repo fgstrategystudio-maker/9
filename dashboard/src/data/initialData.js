@@ -25,6 +25,7 @@ export const INITIAL_SETUP = {
   cassaIniziale: 17500,
   crypto: 2000,
   cryptoAggiornato: "21/05/2026",
+  azioni: [],
 };
 
 export const INITIAL_NETWORK = [];
