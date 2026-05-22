@@ -67,10 +67,16 @@ function TimelineChart({ episodes, onEditEpisode }) {
 
   const pillStyle = (ep) => {
     if (ep.is_positive || ep.type === 'evento_positivo')
-      return { pill: 'bg-emerald-50 text-emerald-800 border-emerald-200', dot: 'bg-emerald-500' }
+      return { pill: 'bg-emerald-50 text-emerald-800 border-emerald-200', dot: 'bg-emerald-500', bar: 'bg-emerald-200' }
     if (ep.type === 'ricaduta')
-      return { pill: 'bg-amber-50 text-amber-800 border-amber-200', dot: 'bg-amber-500' }
-    return { pill: 'bg-red-50 text-red-800 border-red-200', dot: 'bg-red-500' }
+      return { pill: 'bg-amber-50 text-amber-800 border-amber-200', dot: 'bg-amber-500', bar: 'bg-amber-200' }
+    return { pill: 'bg-red-50 text-red-800 border-red-200', dot: 'bg-red-500', bar: 'bg-red-200' }
+  }
+
+  const durationDays = (ep) => {
+    if (!ep.start_date || !ep.end_date) return null
+    const ms = new Date(ep.end_date) - new Date(ep.start_date)
+    return Math.round(ms / 86400000)
   }
 
   return (
@@ -102,17 +108,31 @@ function TimelineChart({ episodes, onEditEpisode }) {
                 <div className="flex flex-wrap gap-2 pt-0.5">
                   {shown.map((ep) => {
                     const s = pillStyle(ep)
+                    const days = durationDays(ep)
                     return (
                       <button
                         key={ep.id}
-                        title={[ep.diagnosis, ep.body_area, ep.symptoms].filter(Boolean).join(' • ') + ' — clicca per modificare'}
+                        title={[ep.diagnosis, ep.body_area, ep.symptoms].filter(Boolean).join(' • ') + (days ? ` — ${days} giorni` : '') + ' — clicca per modificare'}
                         onClick={() => onEditEpisode(ep)}
-                        className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border select-none transition-transform hover:scale-105 hover:shadow-sm ${s.pill}`}
+                        className={`flex flex-col items-start px-3 py-1.5 rounded-xl text-xs font-medium border select-none transition-transform hover:scale-105 hover:shadow-sm ${s.pill}`}
                       >
-                        <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${s.dot}`} />
-                        {ep.diagnosis || ep.type}
-                        {ep.body_area && <span className="opacity-60">· {ep.body_area}</span>}
-                        <Edit2 size={10} className="opacity-40 ml-0.5" />
+                        <div className="flex items-center gap-1.5">
+                          <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${s.dot}`} />
+                          {ep.diagnosis || ep.type}
+                          {ep.body_area && <span className="opacity-60">· {ep.body_area}</span>}
+                          <Edit2 size={10} className="opacity-40 ml-0.5" />
+                        </div>
+                        {days !== null && (
+                          <div className="w-full mt-1.5 flex items-center gap-1.5">
+                            <div className="flex-1 h-1 rounded-full bg-black/10 overflow-hidden">
+                              <div
+                                className={`h-full rounded-full ${s.bar}`}
+                                style={{ width: `${Math.min(100, (days / 180) * 100)}%`, minWidth: '8%' }}
+                              />
+                            </div>
+                            <span className="opacity-60 text-[10px] whitespace-nowrap">{days}gg</span>
+                          </div>
+                        )}
                       </button>
                     )
                   })}
@@ -140,6 +160,9 @@ function TimelineChart({ episodes, onEditEpisode }) {
         </div>
         <div className="flex items-center gap-1.5 text-xs text-gray-500">
           <span className="w-2.5 h-2.5 rounded-full bg-emerald-400" />Positivo / guarigione / traguardo
+        </div>
+        <div className="flex items-center gap-1.5 text-xs text-gray-500">
+          <span className="w-10 h-1 rounded-full bg-red-200 inline-block" />Durata recupero (giorni)
         </div>
         <div className="flex items-center gap-1.5 text-xs text-gray-500">
           <Edit2 size={10} className="text-gray-400" />Clicca per modificare

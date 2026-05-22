@@ -9,7 +9,7 @@ const SPECIALTIES = [
   'Medico di base', 'Cardiologo', 'Ortopedico', 'Fisiatra', 'Fisioterapista',
   'Dermatologo', 'Oculista', 'Dentista', 'Neurologo', 'Gastroenterologo',
   'Endocrinologo', 'Pneumologo', 'Urologo', 'Ginecologo', 'Allergologo',
-  'Psichiatra', 'Nutrizionista', 'Altro',
+  'Psichiatra', 'Psicologo', 'Otorinolaringoiatra', 'Nutrizionista', 'Altro',
 ]
 
 const SPECIALTY_COLORS = {
