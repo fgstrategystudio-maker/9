@@ -1,12 +1,13 @@
 import React, { useRef } from 'react'
 import { NavLink } from 'react-router-dom'
-import { Heart, Home, Activity, Zap, FileText, TrendingUp, BarChart2, CalendarClock, BookOpen, Stethoscope, ShieldCheck, Settings, Download, Upload, LogOut } from 'lucide-react'
+import { Heart, Home, Activity, Zap, FileText, TrendingUp, BarChart2, CalendarClock, BookOpen, Stethoscope, ShieldCheck, Settings, Download, Upload, LogOut, AlertCircle } from 'lucide-react'
 
 const nav = [
   { to: '/', icon: Home, label: 'Overview', color: 'text-sky-300' },
   { to: '/timeline', icon: Activity, label: 'Timeline episodi', color: 'text-violet-300' },
   { to: '/infortuni', icon: Zap, label: 'Infortuni', color: 'text-red-300' },
   { to: '/documenti', icon: FileText, label: 'Documenti', color: 'text-emerald-300' },
+  { to: '/watchlist', icon: AlertCircle, label: 'Sintomi da monitorare', color: 'text-yellow-300' },
   { to: '/pattern', icon: TrendingUp, label: 'Pattern e Famiglia', color: 'text-amber-300' },
   { to: '/misurazioni', icon: BarChart2, label: 'Misurazioni', color: 'text-rose-300' },
   { to: '/agenda', icon: CalendarClock, label: 'Agenda sanitaria', color: 'text-teal-300' },

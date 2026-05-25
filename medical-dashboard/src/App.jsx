@@ -12,6 +12,7 @@ import Diary from './pages/Diary'
 import Doctors from './pages/Doctors'
 import Screening from './pages/Screening'
 import Settings from './pages/Settings'
+import Watchlist from './pages/Watchlist'
 
 export default function App({ session, onLogout }) {
   return (
@@ -26,6 +27,7 @@ export default function App({ session, onLogout }) {
         <Route path="/agenda" element={<Agenda />} />
         <Route path="/diario" element={<Diary />} />
         <Route path="/medici" element={<Doctors />} />
+        <Route path="/watchlist" element={<Watchlist />} />
         <Route path="/screening" element={<Screening />} />
         <Route path="/impostazioni" element={<Settings onLogout={onLogout} />} />
       </Routes>
