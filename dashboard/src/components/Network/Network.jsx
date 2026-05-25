@@ -1,9 +1,10 @@
 import { useState } from "react";
 import styles from "./Network.module.css";
 
-const CATEGORIE = ["Commercialista", "Ex Socio", "Partner", "Consulente", "Fornitore", "Contatto", "Altro"];
+const CATEGORIE = ["Cliente", "Commercialista", "Ex Socio", "Partner", "Consulente", "Fornitore", "Contatto", "Altro"];
 
 const CATEGORIA_COLORS = {
+  "Cliente":        "#22d3ee",
   "Commercialista": "#60a5fa",
   "Ex Socio":       "#a78bfa",
   "Partner":        "#34d399",
@@ -11,6 +12,19 @@ const CATEGORIA_COLORS = {
   "Fornitore":      "#fb923c",
   "Contatto":       "#94a3b8",
   "Altro":          "#64748b",
+};
+
+const EMPTY_FORM = {
+  id: null,
+  nome: "",
+  categoria: "Contatto",
+  azienda: "",
+  ruolo: "",
+  email: "",
+  telefono: "",
+  linkedin: "",
+  ultimoContatto: "",
+  note: "",
 };
 
 export default function Network({ network, setNetwork }) {
@@ -24,7 +38,9 @@ export default function Network({ network, setNetwork }) {
     const matchSearch =
       !search ||
       c.nome.toLowerCase().includes(search.toLowerCase()) ||
+      (c.azienda || "").toLowerCase().includes(search.toLowerCase()) ||
       (c.ruolo || "").toLowerCase().includes(search.toLowerCase()) ||
+      (c.email || "").toLowerCase().includes(search.toLowerCase()) ||
       (c.note || "").toLowerCase().includes(search.toLowerCase());
     const matchCat = filterCat === "Tutti" || c.categoria === filterCat;
     return matchSearch && matchCat;
@@ -58,6 +74,11 @@ export default function Network({ network, setNetwork }) {
     setModalOpen(false);
   }
 
+  const countsByCat = CATEGORIE.reduce((acc, cat) => {
+    acc[cat] = network.filter((c) => c.categoria === cat).length;
+    return acc;
+  }, {});
+
   return (
     <div className={styles.page}>
       <header className={styles.header}>
@@ -70,10 +91,27 @@ export default function Network({ network, setNetwork }) {
         </button>
       </header>
 
+      {network.length > 0 && (
+        <div className={styles.stats}>
+          {CATEGORIE.filter((cat) => countsByCat[cat] > 0).map((cat) => (
+            <button
+              key={cat}
+              className={`${styles.statChip} ${filterCat === cat ? styles.statChipActive : ""}`}
+              style={{ "--chip-color": CATEGORIA_COLORS[cat] }}
+              onClick={() => setFilterCat(filterCat === cat ? "Tutti" : cat)}
+            >
+              <span className={styles.statDot} style={{ background: CATEGORIA_COLORS[cat] }} />
+              {cat}
+              <span className={styles.statCount}>{countsByCat[cat]}</span>
+            </button>
+          ))}
+        </div>
+      )}
+
       <div className={styles.filters}>
         <input
           className={styles.searchInput}
-          placeholder="Cerca per nome, ruolo o note…"
+          placeholder="Cerca per nome, azienda, ruolo, email…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
@@ -101,7 +139,14 @@ export default function Network({ network, setNetwork }) {
               onClick={() => setSelectedId(selectedId === c.id ? null : c.id)}
             >
               <div className={styles.cardTop}>
-                <div className={styles.cardNome}>{c.nome}</div>
+                <div>
+                  <div className={styles.cardNome}>{c.nome}</div>
+                  {(c.azienda || c.ruolo) && (
+                    <div className={styles.cardSub}>
+                      {[c.ruolo, c.azienda].filter(Boolean).join(" · ")}
+                    </div>
+                  )}
+                </div>
                 <span
                   className={styles.catBadge}
                   style={{
@@ -112,11 +157,13 @@ export default function Network({ network, setNetwork }) {
                   {c.categoria}
                 </span>
               </div>
-              {c.ruolo && <div className={styles.cardRuolo}>{c.ruolo}</div>}
               <div className={styles.cardMeta}>
+                {c.email && <span className={styles.metaIcon}>✉</span>}
+                {c.telefono && <span className={styles.metaIcon}>📞</span>}
+                {c.linkedin && <span className={styles.metaIcon}>in</span>}
                 {c.ultimoContatto && (
                   <span className={styles.dataBadge}>
-                    Ultimo contatto: {formatDate(c.ultimoContatto)}
+                    {formatDate(c.ultimoContatto)}
                   </span>
                 )}
               </div>
@@ -150,7 +197,11 @@ function ContactDetail({ contatto: c, onEdit, onDelete }) {
       <div className={styles.detailHeader}>
         <div>
           <h2 className={styles.detailNome}>{c.nome}</h2>
-          {c.ruolo && <p className={styles.detailRuolo}>{c.ruolo}</p>}
+          {(c.ruolo || c.azienda) && (
+            <p className={styles.detailRuolo}>
+              {[c.ruolo, c.azienda].filter(Boolean).join(" · ")}
+            </p>
+          )}
         </div>
         <div className={styles.detailActions}>
           <button className={styles.editBtn} onClick={onEdit}>Modifica</button>
@@ -164,6 +215,28 @@ function ContactDetail({ contatto: c, onEdit, onDelete }) {
             {c.categoria}
           </span>
         } />
+        {c.email && (
+          <DetailRow label="Email" value={
+            <a href={`mailto:${c.email}`} className={styles.contactLink}>{c.email}</a>
+          } />
+        )}
+        {c.telefono && (
+          <DetailRow label="Telefono" value={
+            <a href={`tel:${c.telefono}`} className={styles.contactLink}>{c.telefono}</a>
+          } />
+        )}
+        {c.linkedin && (
+          <DetailRow label="LinkedIn" value={
+            <a
+              href={c.linkedin.startsWith("http") ? c.linkedin : `https://linkedin.com/in/${c.linkedin}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={styles.contactLink}
+            >
+              {c.linkedin.replace(/^https?:\/\/(www\.)?linkedin\.com\/in\//, "")}
+            </a>
+          } />
+        )}
         {c.ultimoContatto && (
           <DetailRow label="Ultimo contatto" value={formatDate(c.ultimoContatto)} />
         )}
@@ -190,12 +263,8 @@ function DetailRow({ label, value }) {
 
 function NetworkModal({ initial, onSave, onClose }) {
   const [form, setForm] = useState({
-    id: initial?.id || null,
-    nome: initial?.nome || "",
-    categoria: initial?.categoria || "Altro",
-    ruolo: initial?.ruolo || "",
-    ultimoContatto: initial?.ultimoContatto || "",
-    note: initial?.note || "",
+    ...EMPTY_FORM,
+    ...(initial || {}),
   });
 
   function set(field, value) {
@@ -219,18 +288,17 @@ function NetworkModal({ initial, onSave, onClose }) {
         </div>
 
         <form className={styles.modalForm} onSubmit={handleSubmit}>
-          <div className={styles.fieldGroup}>
-            <label className={styles.label}>Nome *</label>
-            <input
-              className={styles.input}
-              value={form.nome}
-              onChange={(e) => set("nome", e.target.value)}
-              placeholder="Nome e cognome"
-              required
-            />
-          </div>
-
           <div className={styles.fieldRow}>
+            <div className={styles.fieldGroup}>
+              <label className={styles.label}>Nome *</label>
+              <input
+                className={styles.input}
+                value={form.nome}
+                onChange={(e) => set("nome", e.target.value)}
+                placeholder="Nome e cognome"
+                required
+              />
+            </div>
             <div className={styles.fieldGroup}>
               <label className={styles.label}>Categoria</label>
               <select
@@ -243,25 +311,71 @@ function NetworkModal({ initial, onSave, onClose }) {
                 ))}
               </select>
             </div>
+          </div>
+
+          <div className={styles.fieldRow}>
+            <div className={styles.fieldGroup}>
+              <label className={styles.label}>Azienda</label>
+              <input
+                className={styles.input}
+                value={form.azienda}
+                onChange={(e) => set("azienda", e.target.value)}
+                placeholder="Nome azienda o studio"
+              />
+            </div>
             <div className={styles.fieldGroup}>
               <label className={styles.label}>Ruolo / Descrizione</label>
               <input
                 className={styles.input}
                 value={form.ruolo}
                 onChange={(e) => set("ruolo", e.target.value)}
-                placeholder="es. Commercialista di fiducia"
+                placeholder="es. CEO, Commercialista"
               />
             </div>
           </div>
 
-          <div className={styles.fieldGroup}>
-            <label className={styles.label}>Ultimo contatto</label>
-            <input
-              type="date"
-              className={styles.input}
-              value={form.ultimoContatto}
-              onChange={(e) => set("ultimoContatto", e.target.value)}
-            />
+          <div className={styles.fieldRow}>
+            <div className={styles.fieldGroup}>
+              <label className={styles.label}>Email</label>
+              <input
+                type="email"
+                className={styles.input}
+                value={form.email}
+                onChange={(e) => set("email", e.target.value)}
+                placeholder="email@esempio.it"
+              />
+            </div>
+            <div className={styles.fieldGroup}>
+              <label className={styles.label}>Telefono</label>
+              <input
+                type="tel"
+                className={styles.input}
+                value={form.telefono}
+                onChange={(e) => set("telefono", e.target.value)}
+                placeholder="+39 333 000 0000"
+              />
+            </div>
+          </div>
+
+          <div className={styles.fieldRow}>
+            <div className={styles.fieldGroup}>
+              <label className={styles.label}>LinkedIn</label>
+              <input
+                className={styles.input}
+                value={form.linkedin}
+                onChange={(e) => set("linkedin", e.target.value)}
+                placeholder="URL o username"
+              />
+            </div>
+            <div className={styles.fieldGroup}>
+              <label className={styles.label}>Ultimo contatto</label>
+              <input
+                type="date"
+                className={styles.input}
+                value={form.ultimoContatto}
+                onChange={(e) => set("ultimoContatto", e.target.value)}
+              />
+            </div>
           </div>
 
           <div className={styles.fieldGroup}>
@@ -270,7 +384,7 @@ function NetworkModal({ initial, onSave, onClose }) {
               className={`${styles.input} ${styles.textarea}`}
               value={form.note}
               onChange={(e) => set("note", e.target.value)}
-              placeholder="Annotazioni, contesto, come vi siete conosciuti…"
+              placeholder="Contesto, come vi siete conosciuti, opportunità future…"
               rows={4}
             />
           </div>
