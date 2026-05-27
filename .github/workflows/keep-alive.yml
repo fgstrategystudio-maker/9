@@ -15,8 +15,12 @@ jobs:
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://freelance-dashboard-j1ay.vercel.app/)
           echo "Freelance Dashboard → HTTP $STATUS"
 
-      # Aggiungi qui le altre dashboard quando hai gli URL:
-      # - name: Ping Dashboard Mamma e Papa
-      #   run: |
-      #     STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://URL-DASHBOARD-MAMMA-PAPA.vercel.app/)
-      #     echo "Dashboard Mamma e Papa → HTTP $STATUS"
+      - name: Ping Medical Dashboard
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://medical-dashboard-nvcc.vercel.app/)
+          echo "Medical Dashboard → HTTP $STATUS"
+
+      - name: Ping Famiglia Dashboard
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://famiglia-dashboard.vercel.app/)
+          echo "Famiglia Dashboard → HTTP $STATUS"
