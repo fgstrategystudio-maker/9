@@ -32,3 +32,11 @@ jobs:
             -H "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh1a2xpeXJ1d3Z3bGt1YmNsZ2ZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzMDA5MDksImV4cCI6MjA5NDg3NjkwOX0.GUC5GLBLP94D_vXrZN0_TES6ptAeDCme4fo4uwYtl_k" \
             -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh1a2xpeXJ1d3Z3bGt1YmNsZ2ZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzMDA5MDksImV4cCI6MjA5NDg3NjkwOX0.GUC5GLBLP94D_vXrZN0_TES6ptAeDCme4fo4uwYtl_k")
           echo "Supabase Mamma e Papa → HTTP $STATUS"
+
+      - name: Ping Supabase — Dashboard
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            "https://ehmfwkmtbfmdxcddfyzd.supabase.co/rest/v1/" \
+            -H "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVobWZ3a210YmZtZHhjZGRmeXpkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1MTYyNDcsImV4cCI6MjA5NDA5MjI0N30._ZedUvJLTjeC-_8gzP3jEs4aLLp9ydiVfpnvVY-lY6o" \
+            -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVobWZ3a210YmZtZHhjZGRmeXpkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1MTYyNDcsImV4cCI6MjA5NDA5MjI0N30._ZedUvJLTjeC-_8gzP3jEs4aLLp9ydiVfpnvVY-lY6o")
+          echo "Supabase Dashboard → HTTP $STATUS"
