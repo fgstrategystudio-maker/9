@@ -11,32 +11,39 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Ping Freelance Dashboard
+        continue-on-error: true
         run: |
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://freelance-dashboard-j1ay.vercel.app/)
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 https://freelance-dashboard-j1ay.vercel.app/ || echo "ERRORE")
           echo "Freelance Dashboard → HTTP $STATUS"
 
       - name: Ping Medical Dashboard
+        continue-on-error: true
         run: |
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://medical-dashboard-nvcc.vercel.app/)
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 https://medical-dashboard-nvcc.vercel.app/ || echo "ERRORE")
           echo "Medical Dashboard → HTTP $STATUS"
 
       - name: Ping Famiglia Dashboard
+        continue-on-error: true
         run: |
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://famiglia-dashboard.vercel.app/)
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 https://famiglia-dashboard.vercel.app/ || echo "ERRORE")
           echo "Famiglia Dashboard → HTTP $STATUS"
 
       - name: Ping Supabase — Dashboard Mamma e Papa
+        continue-on-error: true
         run: |
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 \
             "https://hukliyruwvwlkubclgfr.supabase.co/rest/v1/" \
             -H "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh1a2xpeXJ1d3Z3bGt1YmNsZ2ZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzMDA5MDksImV4cCI6MjA5NDg3NjkwOX0.GUC5GLBLP94D_vXrZN0_TES6ptAeDCme4fo4uwYtl_k" \
-            -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh1a2xpeXJ1d3Z3bGt1YmNsZ2ZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzMDA5MDksImV4cCI6MjA5NDg3NjkwOX0.GUC5GLBLP94D_vXrZN0_TES6ptAeDCme4fo4uwYtl_k")
+            -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh1a2xpeXJ1d3Z3bGt1YmNsZ2ZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzMDA5MDksImV4cCI6MjA5NDg3NjkwOX0.GUC5GLBLP94D_vXrZN0_TES6ptAeDCme4fo4uwYtl_k" \
+            || echo "ERRORE")
           echo "Supabase Mamma e Papa → HTTP $STATUS"
 
       - name: Ping Supabase — Dashboard
+        continue-on-error: true
         run: |
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 \
             "https://ehmfwkmtbfmdxcddfyzd.supabase.co/rest/v1/" \
             -H "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVobWZ3a210YmZtZHhjZGRmeXpkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1MTYyNDcsImV4cCI6MjA5NDA5MjI0N30._ZedUvJLTjeC-_8gzP3jEs4aLLp9ydiVfpnvVY-lY6o" \
-            -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVobWZ3a210YmZtZHhjZGRmeXpkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1MTYyNDcsImV4cCI6MjA5NDA5MjI0N30._ZedUvJLTjeC-_8gzP3jEs4aLLp9ydiVfpnvVY-lY6o")
+            -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVobWZ3a210YmZtZHhjZGRmeXpkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1MTYyNDcsImV4cCI6MjA5NDA5MjI0N30._ZedUvJLTjeC-_8gzP3jEs4aLLp9ydiVfpnvVY-lY6o" \
+            || echo "ERRORE")
           echo "Supabase Dashboard → HTTP $STATUS"
