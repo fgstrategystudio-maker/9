@@ -266,7 +266,7 @@ h1{font-size:56px;line-height:1.03;letter-spacing:-.04em;margin:0 0 18px;color:v
   .logo-chip{flex-basis:120px}
 }
 @media (max-width: 680px){
-  .logo-chip{flex-basis:110px;height:108px}
+  .logo-chip{flex-basis:110px;min-height:108px}
 }
 
 
