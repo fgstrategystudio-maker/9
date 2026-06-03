@@ -1,0 +1,34 @@
+name: Weekly Freelance Backup
+
+on:
+  schedule:
+    - cron: "0 7 * * 0"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Export freelance data da Supabase
+        run: |
+          mkdir -p backups
+          DATA=$(curl -s --max-time 30 \
+            "https://ehmfwkmtbfmdxcddfyzd.supabase.co/rest/v1/freelance_kv?select=key,value" \
+            -H "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVobWZ3a210YmZtZHhjZGRmeXpkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1MTYyNDcsImV4cCI6MjA5NDA5MjI0N30._ZedUvJLTjeC-_8gzP3jEs4aLLp9ydiVfpnvVY-lY6o" \
+            -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVobWZ3a210YmZtZHhjZGRmeXpkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1MTYyNDcsImV4cCI6MjA5NDA5MjI0N30._ZedUvJLTjeC-_8gzP3jEs4aLLp9ydiVfpnvVY-lY6o")
+          echo "$DATA" > "backups/freelance-$(date +%Y-%m-%d).json"
+          COUNT=$(echo "$DATA" | python3 -c "import sys,json; print(len(json.load(sys.stdin)))" 2>/dev/null || echo "errore parsing")
+          echo "Backup freelance: $COUNT record salvati"
+          ls -t backups/freelance-*.json 2>/dev/null | tail -n +13 | xargs rm -f 2>/dev/null || true
+
+      - name: Commit and push
+        run: |
+          git config user.email "github-actions@github.com"
+          git config user.name "GitHub Actions"
+          git add backups/
+          git diff --staged --quiet && echo "Nessuna modifica" || (git commit -m "backup: freelance $(date +%Y-%m-%d)" && git push)
