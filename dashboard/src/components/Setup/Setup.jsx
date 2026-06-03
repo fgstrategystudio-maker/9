@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { formatCurrency } from "../../utils/helpers";
 import styles from "./Setup.module.css";
+import { exportData } from "../../lib/backup";
+import { syncToSupabase } from "../../lib/supabase";
 
 export default function Setup({ setup, setSetup }) {
   const [form, setForm] = useState({
@@ -409,6 +411,8 @@ export default function Setup({ setup, setSetup }) {
         <CashSetup setup={setup} setSetup={setSetup} />
       </section>
 
+      <BackupSection />
+
       <section className={styles.dangerZone}>
         <h2 className={styles.dangerTitle}>Zona pericolosa</h2>
         <p className={styles.dangerDesc}>
@@ -420,6 +424,61 @@ export default function Setup({ setup, setSetup }) {
       </section>
     </div>
   );
+}
+
+function BackupSection() {
+  const fileRef = useRef(null)
+  const [importMsg, setImportMsg] = useState("")
+
+  function handleImport(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      try {
+        const json = JSON.parse(ev.target.result)
+        const data = json.data || json
+        const KEYS = ["commesse", "setup", "network"]
+        KEYS.forEach(k => {
+          if (data[k] !== undefined) {
+            localStorage.setItem(k, JSON.stringify(data[k]))
+            syncToSupabase(k, data[k])
+          }
+        })
+        setImportMsg("Backup importato. La pagina si ricaricherà...")
+        setTimeout(() => window.location.reload(), 1500)
+      } catch {
+        setImportMsg("File non valido.")
+      }
+    }
+    reader.readAsText(file)
+    e.target.value = ""
+  }
+
+  return (
+    <section className={styles.card} style={{ marginTop: "1rem" }}>
+      <h2 className={styles.sectionTitle}>Backup & Ripristino</h2>
+      <p style={{ fontSize: "0.8rem", color: "#64748b", marginBottom: "1rem" }}>
+        Esporta i tuoi dati in un file JSON o importa un backup precedente.
+      </p>
+      <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", alignItems: "center" }}>
+        <button
+          onClick={exportData}
+          style={{ background: "rgba(200,169,110,0.15)", border: "1px solid rgba(200,169,110,0.35)", color: "#c8a96e", borderRadius: 6, padding: "0.5rem 1.1rem", fontSize: "0.85rem", cursor: "pointer" }}
+        >
+          Scarica backup
+        </button>
+        <button
+          onClick={() => fileRef.current?.click()}
+          style={{ background: "rgba(148,163,184,0.1)", border: "1px solid rgba(148,163,184,0.25)", color: "#94a3b8", borderRadius: 6, padding: "0.5rem 1.1rem", fontSize: "0.85rem", cursor: "pointer" }}
+        >
+          Importa backup
+        </button>
+        <input ref={fileRef} type="file" accept=".json" style={{ display: "none" }} onChange={handleImport} />
+        {importMsg && <span style={{ fontSize: "0.82rem", color: importMsg.includes("valido") ? "#f87171" : "#22c55e" }}>{importMsg}</span>}
+      </div>
+    </section>
+  )
 }
 
 function CashSetup({ setup, setSetup }) {
