@@ -7,6 +7,7 @@ import Commesse from "./components/Commesse/Commesse";
 import Fiscale from "./components/Fiscale/Fiscale";
 import Setup from "./components/Setup/Setup";
 import Network from "./components/Network/Network";
+import PinGate from "./components/PinGate/PinGate";
 import styles from "./App.module.css";
 
 const NEW_COSTS = [
@@ -18,6 +19,7 @@ const NEW_COSTS = [
 ];
 
 export default function App() {
+  const [unlocked, setUnlocked] = useState(false);
   const [commesse, setCommesse] = useLocalStorage("commesse", INITIAL_COMMESSE);
   const [setup, setSetup] = useLocalStorage("setup", INITIAL_SETUP);
   const [network, setNetwork] = useLocalStorage("network", INITIAL_NETWORK);
@@ -29,7 +31,7 @@ export default function App() {
       const toAdd = NEW_COSTS.filter((c) => !existingIds.has(c.id));
       const needsCassa = prev.cassaIniziale === undefined || prev.cassaIniziale === null;
       const needsCrypto = prev.crypto === undefined || prev.crypto === null;
-      const needsCryptoV2 = !prev._cryptoV2; // forza aggiornamento a 2000€ del 21/05/2026
+      const needsCryptoV2 = !prev._cryptoV2;
       if (toAdd.length === 0 && !needsCassa && !needsCrypto && !needsCryptoV2) return prev;
       return {
         ...prev,
@@ -40,6 +42,8 @@ export default function App() {
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  if (!unlocked) return <PinGate onUnlock={() => setUnlocked(true)} />;
 
   return (
     <div className={styles.layout}>

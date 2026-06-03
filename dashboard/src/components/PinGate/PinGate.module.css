@@ -1,0 +1,125 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: #0a0f1e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.card {
+  background: #111827;
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 20px;
+  padding: 2.5rem 2rem;
+  width: 100%;
+  max-width: 320px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.logo {
+  font-size: 2rem;
+  color: #c8a96e;
+  margin-bottom: 0.5rem;
+}
+
+.title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  text-align: center;
+}
+
+.subtitle {
+  font-size: 0.825rem;
+  color: #64748b;
+  margin-bottom: 0.75rem;
+}
+
+.dots {
+  display: flex;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid #374151;
+  background: transparent;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.dotFilled {
+  background: #c8a96e;
+  border-color: #c8a96e;
+}
+
+.hint {
+  font-size: 0.78rem;
+  color: #ef4444;
+  margin-bottom: 0.25rem;
+}
+
+.keypad {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  width: 100%;
+}
+
+.keyRow {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.key {
+  width: 72px;
+  height: 56px;
+  border-radius: 12px;
+  background: #1e293b;
+  border: 1px solid rgba(255,255,255,.08);
+  color: #e2e8f0;
+  font-size: 1.2rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.12s, transform 0.08s;
+}
+
+.key:hover:not(:disabled) {
+  background: #273449;
+}
+
+.key:active:not(:disabled) {
+  transform: scale(0.93);
+}
+
+.keyEmpty {
+  background: transparent;
+  border-color: transparent;
+  cursor: default;
+}
+
+.keyDel {
+  font-size: 1rem;
+  color: #94a3b8;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%       { transform: translateX(-8px); }
+  40%       { transform: translateX(8px); }
+  60%       { transform: translateX(-5px); }
+  80%       { transform: translateX(5px); }
+}
+
+.shake {
+  animation: shake 0.4s ease;
+}
