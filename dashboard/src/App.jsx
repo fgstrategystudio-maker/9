@@ -27,7 +27,6 @@ const STORICO_2026 = [
   { mese: "Marzo 2026",    lordo: 1750, netto: 1138 },
   { mese: "Aprile 2026",   lordo: 2020, netto: 1313 },
   { mese: "Maggio 2026",   lordo: 2140, netto: 1391 },
-  { mese: "Giugno 2026",   lordo: 2040, netto: 1326 },
 ];
 
 export default function App() {
@@ -47,11 +46,15 @@ export default function App() {
       const needsCryptoV2 = !prev._cryptoV2;
       const existingMesi = new Set((prev.incassatoStorico || []).map((r) => r.mese.toLowerCase()));
       const storicoToAdd = STORICO_2026.filter((r) => !existingMesi.has(r.mese.toLowerCase()));
-      if (toAdd.length === 0 && !needsCassa && !needsCrypto && !needsCryptoV2 && storicoToAdd.length === 0) return prev;
+      const storicoSenzaGiugno = (prev.incassatoStorico || []).filter(
+        (r) => r.mese.toLowerCase() !== "giugno 2026"
+      );
+      const giugnoRimosso = storicoSenzaGiugno.length !== (prev.incassatoStorico || []).length;
+      if (toAdd.length === 0 && !needsCassa && !needsCrypto && !needsCryptoV2 && storicoToAdd.length === 0 && !giugnoRimosso) return prev;
       return {
         ...prev,
         costiFissi: [...(prev.costiFissi || []), ...toAdd],
-        incassatoStorico: [...(prev.incassatoStorico || []), ...storicoToAdd],
+        incassatoStorico: [...storicoSenzaGiugno, ...storicoToAdd],
         ...(needsCassa ? { cassaIniziale: 17500 } : {}),
         ...(needsCrypto || needsCryptoV2 ? { crypto: 2000, cryptoAggiornato: "21/05/2026", _cryptoV2: true } : {}),
       };
