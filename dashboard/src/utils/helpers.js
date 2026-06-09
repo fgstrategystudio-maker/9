@@ -87,20 +87,26 @@ export function getLordoPerMese(monthIdx, year, commesse) {
   const monthEnd = new Date(year, monthIdx + 1, 0, 23, 59, 59);
   return commesse
     .filter((c) => {
+      const end = c.fine ? parseLocalDate(c.fine) : null;
+      if (c.stato === "Concluso") {
+        const hasLordo = c.lordoMensile || c.lordoProgetto;
+        return hasLordo && end && end >= monthStart && end <= monthEnd;
+      }
+      if (c.stato !== "In corso" && c.stato !== "In scadenza") return false;
       const lordo = getCommessaLordoMensile(c);
       if (!lordo) return false;
       const start = c.inizio ? parseLocalDate(c.inizio) : null;
-      const end = c.fine ? parseLocalDate(c.fine) : null;
-      if (c.stato === "Concluso") {
-        // includi solo se la commessa finisce in questo mese
-        return end && end >= monthStart && end <= monthEnd;
-      }
-      if (c.stato !== "In corso" && c.stato !== "In scadenza") return false;
       if (end && end < monthStart) return false;
       if (start && start > monthEnd) return false;
       return true;
     })
-    .reduce((sum, c) => sum + (getCommessaLordoMensile(c) || 0), 0);
+    .reduce((sum, c) => {
+      if (c.stato === "Concluso") {
+        // per commesse concluse usa il totale progetto (pagato in quell'unico mese)
+        return sum + (c.lordoProgetto || c.lordoMensile || 0);
+      }
+      return sum + (getCommessaLordoMensile(c) || 0);
+    }, 0);
 }
 
 export function monthsBetween(startStr, endStr) {
