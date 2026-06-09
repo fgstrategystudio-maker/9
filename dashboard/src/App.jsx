@@ -74,7 +74,12 @@ export default function App() {
     if (rows && rows.length > 0) {
       rows.forEach(({ key, value }) => {
         if (key === "commesse") setCommesse(value);
-        else if (key === "setup") setSetup(value);
+        else if (key === "setup") setSetup((prev) => ({
+          ...value,
+          incassatoStorico: (value.incassatoStorico || []).filter(
+            (r) => r.mese.toLowerCase() !== "giugno 2026"
+          ),
+        }));
         else if (key === "network") setNetwork(value);
       });
     }
