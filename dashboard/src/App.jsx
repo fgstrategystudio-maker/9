@@ -20,6 +20,16 @@ const NEW_COSTS = [
   { id: 14, nome: "Assicurazione infortuni AXA", importo: 17, tipo: "annuale", importoAnnuale: 200 },
 ];
 
+// lordo per mese, netto calcolato al 65%
+const STORICO_2026 = [
+  { mese: "Gennaio 2026",  lordo: 1750, netto: 1138 },
+  { mese: "Febbraio 2026", lordo: 1750, netto: 1138 },
+  { mese: "Marzo 2026",    lordo: 1750, netto: 1138 },
+  { mese: "Aprile 2026",   lordo: 2020, netto: 1313 },
+  { mese: "Maggio 2026",   lordo: 2140, netto: 1391 },
+  { mese: "Giugno 2026",   lordo: 2040, netto: 1326 },
+];
+
 export default function App() {
   const [unlocked, setUnlocked] = useState(false);
   const [backupBanner, setBackupBanner] = useState(false);
@@ -35,10 +45,13 @@ export default function App() {
       const needsCassa = prev.cassaIniziale === undefined || prev.cassaIniziale === null;
       const needsCrypto = prev.crypto === undefined || prev.crypto === null;
       const needsCryptoV2 = !prev._cryptoV2;
-      if (toAdd.length === 0 && !needsCassa && !needsCrypto && !needsCryptoV2) return prev;
+      const existingMesi = new Set((prev.incassatoStorico || []).map((r) => r.mese.toLowerCase()));
+      const storicoToAdd = STORICO_2026.filter((r) => !existingMesi.has(r.mese.toLowerCase()));
+      if (toAdd.length === 0 && !needsCassa && !needsCrypto && !needsCryptoV2 && storicoToAdd.length === 0) return prev;
       return {
         ...prev,
         costiFissi: [...(prev.costiFissi || []), ...toAdd],
+        incassatoStorico: [...(prev.incassatoStorico || []), ...storicoToAdd],
         ...(needsCassa ? { cassaIniziale: 17500 } : {}),
         ...(needsCrypto || needsCryptoV2 ? { crypto: 2000, cryptoAggiornato: "21/05/2026", _cryptoV2: true } : {}),
       };
