@@ -140,7 +140,10 @@ export default function Setup({ setup, setSetup }) {
   const totLordo = storico.reduce((s, r) => s + r.lordo, 0);
   const totNetto = storico.reduce((s, r) => s + r.netto, 0);
   const costiFissi = setup.costiFissi || [];
-  const totaleCostiFissi = costiFissi.reduce((s, c) => s + c.importo, 0);
+  const costiFissiMensili = costiFissi.filter((c) => c.tipo !== "annuale");
+  const costiAnnuali = costiFissi.filter((c) => c.tipo === "annuale");
+  const totaleCostiFissi = costiFissiMensili.reduce((s, c) => s + c.importo, 0);
+  const totaleCostiAnnuali = costiAnnuali.reduce((s, c) => s + (c.importoAnnuale || c.importo * 12), 0);
 
   return (
     <div className={styles.page}>
@@ -275,7 +278,7 @@ export default function Setup({ setup, setSetup }) {
       <section className={styles.card} style={{ marginTop: "1rem" }}>
         <div className={styles.historicoHeader}>
           <h2 className={styles.sectionTitle}>Costi fissi mensili</h2>
-          {costiFissi.length > 0 && (
+          {costiFissiMensili.length > 0 && (
             <div className={styles.totals}>
               <span className={styles.totalItem}>
                 Totale: <strong>{formatCurrency(totaleCostiFissi)}</strong>/mese
@@ -284,24 +287,21 @@ export default function Setup({ setup, setSetup }) {
           )}
         </div>
 
-        {costiFissi.length > 0 && (
+        {costiFissiMensili.length > 0 && (
           <div className={styles.storicoTable}>
             <div className={styles.costiHead}>
               <span>Voce</span>
               <span>€/mese</span>
               <span></span>
             </div>
-            {costiFissi.map((c) => (
-              <div key={c.id} className={styles.costiRow} style={c.tipo === "annuale" ? { borderLeft: "2px solid rgba(245,158,11,0.4)", paddingLeft: "0.5rem" } : {}}>
+            {costiFissiMensili.map((c) => (
+              <div key={c.id} className={styles.costiRow}>
                 <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
                   <input
                     className={styles.storicoInput}
                     value={c.nome}
                     onChange={(e) => handleEditCosto(c.id, "nome", e.target.value)}
                   />
-                  {c.tipo === "annuale" && c.importoAnnuale && (
-                    <span style={{ fontSize: "0.68rem", color: "#92400e", marginTop: 2 }}>annuale · {c.importoAnnuale}€/anno</span>
-                  )}
                 </div>
                 <input
                   className={styles.storicoInput}
@@ -314,6 +314,50 @@ export default function Setup({ setup, setSetup }) {
               </div>
             ))}
           </div>
+        )}
+
+        {costiAnnuali.length > 0 && (
+          <>
+            <div className={styles.historicoHeader} style={{ marginTop: "1.5rem" }}>
+              <h3 style={{ fontSize: "0.9rem", color: "#f59e0b", fontWeight: 600, margin: 0 }}>
+                Spese annuali (promemoria — non nel conteggio mensile)
+              </h3>
+              <div className={styles.totals}>
+                <span className={styles.totalItem} style={{ color: "#f59e0b" }}>
+                  Totale: <strong>{totaleCostiAnnuali}€</strong>/anno
+                </span>
+              </div>
+            </div>
+            <div className={styles.storicoTable} style={{ marginTop: "0.5rem" }}>
+              <div className={styles.costiHead}>
+                <span>Voce</span>
+                <span>€/anno</span>
+                <span></span>
+              </div>
+              {costiAnnuali.map((c) => (
+                <div key={c.id} className={styles.costiRow} style={{ borderLeft: "2px solid rgba(245,158,11,0.4)", paddingLeft: "0.5rem" }}>
+                  <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
+                    <input
+                      className={styles.storicoInput}
+                      value={c.nome}
+                      onChange={(e) => handleEditCosto(c.id, "nome", e.target.value)}
+                    />
+                    <span style={{ fontSize: "0.68rem", color: "#92400e", marginTop: 2 }}>
+                      {c.importo}€/mese equivalente
+                    </span>
+                  </div>
+                  <input
+                    className={styles.storicoInput}
+                    type="number"
+                    value={c.importoAnnuale || c.importo * 12}
+                    min="0"
+                    onChange={(e) => handleEditCosto(c.id, "importoAnnuale", e.target.value)}
+                  />
+                  <button className={styles.removeBtn} onClick={() => handleDeleteCosto(c.id)}>✕</button>
+                </div>
+              ))}
+            </div>
+          </>
         )}
 
         <div className={styles.addCostoRow}>

@@ -83,7 +83,8 @@ export default function Dashboard({ commesse, setup, setSetup }) {
   );
 
   const costiFissi = setup.costiFissi || [];
-  const totaleCostiFissi = costiFissi.reduce((s, c) => s + c.importo, 0);
+  const costiFissiMensili = costiFissi.filter((c) => c.tipo !== "annuale");
+  const totaleCostiFissi = costiFissiMensili.reduce((s, c) => s + c.importo, 0);
 
   const cassaIniziale    = setup.cassaIniziale ?? 0;
   const cryptoVal        = setup.crypto ?? 0;
