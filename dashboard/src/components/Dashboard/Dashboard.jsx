@@ -84,7 +84,10 @@ export default function Dashboard({ commesse, setup, setSetup }) {
 
   const costiFissi = setup.costiFissi || [];
   const costiFissiMensili = costiFissi.filter((c) => c.tipo !== "annuale");
+  const costiAnnuali = costiFissi.filter((c) => c.tipo === "annuale");
   const totaleCostiFissi = costiFissiMensili.reduce((s, c) => s + c.importo, 0);
+  const totaleCostiAnnuali = costiAnnuali.reduce((s, c) => s + (c.importoAnnuale || c.importo * 12), 0);
+  const totaleCostiAnnualiMensile = Math.round(totaleCostiAnnuali / 12);
 
   const cassaIniziale    = setup.cassaIniziale ?? 0;
   const cryptoVal        = setup.crypto ?? 0;
@@ -210,6 +213,44 @@ export default function Dashboard({ commesse, setup, setSetup }) {
           />
         )}
       </div>
+
+      {costiAnnuali.length > 0 && (
+        <div style={{
+          background: "rgba(245,158,11,0.06)",
+          border: "1px solid rgba(245,158,11,0.25)",
+          borderRadius: "0.75rem",
+          padding: "1rem 1.25rem",
+          marginBottom: "1.5rem",
+          display: "flex",
+          flexWrap: "wrap",
+          gap: "1rem",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}>
+          <div>
+            <div style={{ fontSize: "0.72rem", color: "#f59e0b", fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: "0.25rem" }}>
+              Spese annuali — non le stai pagando ora
+            </div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem 1rem" }}>
+              {costiAnnuali.map((c) => (
+                <span key={c.id} style={{ fontSize: "0.78rem", color: "#94a3b8" }}>
+                  {c.nome} <span style={{ color: "#f59e0b" }}>{c.importoAnnuale || c.importo * 12}€/anno</span>
+                </span>
+              ))}
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: "2rem", textAlign: "right" }}>
+            <div>
+              <div style={{ fontSize: "1.4rem", fontWeight: 700, color: "#f59e0b" }}>{totaleCostiAnnuali.toLocaleString("it-IT")} €</div>
+              <div style={{ fontSize: "0.72rem", color: "#64748b" }}>annui totali</div>
+            </div>
+            <div>
+              <div style={{ fontSize: "1.4rem", fontWeight: 700, color: "#f59e0b" }}>{totaleCostiAnnualiMensile.toLocaleString("it-IT")} €</div>
+              <div style={{ fontSize: "0.72rem", color: "#64748b" }}>equivalente mensile</div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Panoramica annuale */}
       <div className={styles.annualCard}>
