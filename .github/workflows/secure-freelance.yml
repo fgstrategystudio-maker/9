@@ -1,0 +1,58 @@
+name: Secure freelance dashboard
+
+on:
+  workflow_dispatch:
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel@latest
+
+      - name: Find Vercel projects
+        id: projects
+        run: |
+          curl -sf "https://api.vercel.com/v9/projects?limit=50" \
+            -H "Authorization: Bearer $VERCEL_TOKEN" > /tmp/projects.json
+          python3 - <<'EOF' >> $GITHUB_OUTPUT
+          import json
+          projects = json.load(open('/tmp/projects.json'))['projects']
+          freelance = next(p for p in projects if 'freelance' in p['name'])
+          medical   = next(p for p in projects if p['name'] == 'medical-dashboard-nvcc')
+          print(f"freelance={freelance['name']}")
+          print(f"medical={medical['name']}")
+          EOF
+
+      - name: Pull Supabase env vars from medical project
+        run: |
+          mkdir /tmp/med && cd /tmp/med
+          vercel link --yes --project ${{ steps.projects.outputs.medical }} --token=$VERCEL_TOKEN
+          vercel env pull --yes --environment=production /tmp/med/.env --token=$VERCEL_TOKEN
+          grep -E '^SUPABASE_(URL|SERVICE_KEY)=' /tmp/med/.env > /tmp/supa.env
+          [ -s /tmp/supa.env ] || { echo "::error::SUPABASE env vars non trovate nel progetto medical"; exit 1; }
+
+      - name: Set env vars on freelance project
+        working-directory: dashboard
+        run: |
+          vercel link --yes --project ${{ steps.projects.outputs.freelance }} --token=$VERCEL_TOKEN
+          while IFS='=' read -r name value; do
+            value="${value%\"}"; value="${value#\"}"
+            vercel env rm "$name" production --yes --token=$VERCEL_TOKEN 2>/dev/null || true
+            printf '%s' "$value" | vercel env add "$name" production --token=$VERCEL_TOKEN
+          done < /tmp/supa.env
+
+      - name: Deploy freelance to production
+        working-directory: dashboard
+        run: |
+          vercel pull --yes --environment=production --token=$VERCEL_TOKEN
+          vercel build --prod --token=$VERCEL_TOKEN
+          vercel deploy --prebuilt --prod --token=$VERCEL_TOKEN
