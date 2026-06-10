@@ -2,7 +2,7 @@ name: Keep Alive — GitHub Actions auto-commit
 
 on:
   schedule:
-    - cron: - cron: "0 8 1,11,21 * *"
+    - cron: "0 8 1,11,21 * *"
   workflow_dispatch:
 
 jobs:
