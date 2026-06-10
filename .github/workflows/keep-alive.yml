@@ -30,24 +30,22 @@ jobs:
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 https://famiglia-dashboard.vercel.app/ || echo "ERRORE")
           echo "Famiglia Dashboard → HTTP $STATUS"
 
-      - name: Query Supabase — Dashboard Mamma e Papa
+# L'accesso anon alle tabelle è revocato (RLS forzata): il keep-alive
+      # interroga l'endpoint REST root, che risponde 200 e conta come attività.
+      - name: Ping Supabase — Famiglia
         continue-on-error: true
         run: |
           FAMIGLIA_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh1a2xpeXJ1d3Z3bGt1YmNsZ2ZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzMDA5MDksImV4cCI6MjA5NDg3NjkwOX0.GUC5GLBLP94D_vXrZN0_TES6ptAeDCme4fo4uwYtl_k"
-          BODY=$(curl -s --max-time 15 \
-            "https://hukliyruwvwlkubclgfr.supabase.co/rest/v1/famiglia_kv?select=key&limit=1" \
-            -H "apikey: $FAMIGLIA_KEY" \
-            -H "Authorization: Bearer $FAMIGLIA_KEY" \
-            || echo "ERRORE")
-          echo "Supabase Mamma e Papa → $BODY"
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 \
+            "https://hukliyruwvwlkubclgfr.supabase.co/rest/v1/" \
+            -H "apikey: $FAMIGLIA_KEY" || echo "ERRORE")
+          echo "Supabase Famiglia → HTTP $STATUS"
 
-      - name: Query Supabase — Freelance Dashboard
+      - name: Ping Supabase — Freelance/Medical
         continue-on-error: true
         run: |
           FREELANCE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVobWZ3a210YmZtZHhjZGRmeXpkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1MTYyNDcsImV4cCI6MjA5NDA5MjI0N30._ZedUvJLTjeC-_8gzP3jEs4aLLp9ydiVfpnvVY-lY6o"
-          BODY=$(curl -s --max-time 15 \
-            "https://ehmfwkmtbfmdxcddfyzd.supabase.co/rest/v1/freelance_kv?select=key&limit=1" \
-            -H "apikey: $FREELANCE_KEY" \
-            -H "Authorization: Bearer $FREELANCE_KEY" \
-            || echo "ERRORE")
-          echo "Supabase Freelance → $BODY"
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 \
+            "https://ehmfwkmtbfmdxcddfyzd.supabase.co/rest/v1/" \
+            -H "apikey: $FREELANCE_KEY" || echo "ERRORE")
+          echo "Supabase Freelance/Medical → HTTP $STATUS"
