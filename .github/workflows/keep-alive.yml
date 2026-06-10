@@ -2,9 +2,11 @@ name: Keep Alive — Ping Dashboard Vercel + Supabase
 
 on:
   schedule:
-    # Ogni giorno alle 9:00 ora italiana (07:00 UTC in estate, 08:00 in inverno)
+    # Sistema 1A: ogni giorno alle 09:00 ora italiana (07:00 UTC)
     - cron: "0 7 * * *"
-  workflow_dispatch: # permette di eseguirlo manualmente dal sito GitHub
+    # Sistema 1B: ogni giorno alle 21:00 ora italiana (19:00 UTC) — secondo giro
+    - cron: "0 19 * * *"
+  workflow_dispatch:
 
 jobs:
   ping:
@@ -28,22 +30,24 @@ jobs:
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 https://famiglia-dashboard.vercel.app/ || echo "ERRORE")
           echo "Famiglia Dashboard → HTTP $STATUS"
 
-      - name: Ping Supabase — Dashboard Mamma e Papa
+      - name: Query Supabase — Dashboard Mamma e Papa
         continue-on-error: true
         run: |
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 \
-            "https://hukliyruwvwlkubclgfr.supabase.co/rest/v1/" \
-            -H "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh1a2xpeXJ1d3Z3bGt1YmNsZ2ZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzMDA5MDksImV4cCI6MjA5NDg3NjkwOX0.GUC5GLBLP94D_vXrZN0_TES6ptAeDCme4fo4uwYtl_k" \
-            -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh1a2xpeXJ1d3Z3bGt1YmNsZ2ZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzMDA5MDksImV4cCI6MjA5NDg3NjkwOX0.GUC5GLBLP94D_vXrZN0_TES6ptAeDCme4fo4uwYtl_k" \
+          FAMIGLIA_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh1a2xpeXJ1d3Z3bGt1YmNsZ2ZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzMDA5MDksImV4cCI6MjA5NDg3NjkwOX0.GUC5GLBLP94D_vXrZN0_TES6ptAeDCme4fo4uwYtl_k"
+          BODY=$(curl -s --max-time 15 \
+            "https://hukliyruwvwlkubclgfr.supabase.co/rest/v1/famiglia_kv?select=key&limit=1" \
+            -H "apikey: $FAMIGLIA_KEY" \
+            -H "Authorization: Bearer $FAMIGLIA_KEY" \
             || echo "ERRORE")
-          echo "Supabase Mamma e Papa → HTTP $STATUS"
+          echo "Supabase Mamma e Papa → $BODY"
 
-      - name: Ping Supabase — Dashboard
+      - name: Query Supabase — Freelance Dashboard
         continue-on-error: true
         run: |
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 \
-            "https://ehmfwkmtbfmdxcddfyzd.supabase.co/rest/v1/" \
-            -H "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVobWZ3a210YmZtZHhjZGRmeXpkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1MTYyNDcsImV4cCI6MjA5NDA5MjI0N30._ZedUvJLTjeC-_8gzP3jEs4aLLp9ydiVfpnvVY-lY6o" \
-            -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVobWZ3a210YmZtZHhjZGRmeXpkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1MTYyNDcsImV4cCI6MjA5NDA5MjI0N30._ZedUvJLTjeC-_8gzP3jEs4aLLp9ydiVfpnvVY-lY6o" \
+          FREELANCE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVobWZ3a210YmZtZHhjZGRmeXpkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1MTYyNDcsImV4cCI6MjA5NDA5MjI0N30._ZedUvJLTjeC-_8gzP3jEs4aLLp9ydiVfpnvVY-lY6o"
+          BODY=$(curl -s --max-time 15 \
+            "https://ehmfwkmtbfmdxcddfyzd.supabase.co/rest/v1/freelance_kv?select=key&limit=1" \
+            -H "apikey: $FREELANCE_KEY" \
+            -H "Authorization: Bearer $FREELANCE_KEY" \
             || echo "ERRORE")
-          echo "Supabase Dashboard → HTTP $STATUS"
+          echo "Supabase Freelance → $BODY"
