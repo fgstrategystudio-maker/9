@@ -5,6 +5,19 @@ const PIN_LENGTH = 4;
 // Hash SHA-256 del PIN 4770
 const DEFAULT_HASH = "3f7e05acc03b0893efd9bbb4990cd9d20b1451ab549633510c427f96c40e7143";
 
+const MAX_ATTEMPTS = 10;
+const LOCK_MINUTES = 5;
+const FAILS_KEY = "freelance_pin_fails";
+
+function getFails() {
+  try { return JSON.parse(localStorage.getItem(FAILS_KEY)) || { count: 0, lockedUntil: 0 }; }
+  catch { return { count: 0, lockedUntil: 0 }; }
+}
+function lockedMinutes() {
+  const f = getFails();
+  return f.lockedUntil > Date.now() ? Math.ceil((f.lockedUntil - Date.now()) / 60000) : 0;
+}
+
 const KEYS = [
   ["1","2","3"],
   ["4","5","6"],
@@ -19,9 +32,9 @@ async function hashPin(pin) {
 }
 
 export default function PinGate({ onUnlock }) {
-  const [input, setInput]     = useState("");
-  const [shake, setShake]     = useState(false);
-  const [wrongCount, setWrongCount] = useState(0);
+  const [input, setInput]   = useState("");
+  const [shake, setShake]   = useState(false);
+  const [message, setMessage] = useState("");
 
   const triggerShake = () => {
     setShake(true);
@@ -31,19 +44,30 @@ export default function PinGate({ onUnlock }) {
   const handleKey = useCallback(async (key) => {
     if (key === "⌫") { setInput(p => p.slice(0, -1)); return; }
     if (key === "") return;
+    const lockMin = lockedMinutes();
+    if (lockMin) {
+      setMessage(`Troppi tentativi. Riprova tra ${lockMin} min`);
+      return;
+    }
     const next = input + key;
     setInput(next);
     if (next.length < PIN_LENGTH) return;
-    try {
-      const hashed = await hashPin(next);
-      if (hashed === DEFAULT_HASH) {
-        onUnlock();
-      } else {
-        setWrongCount(c => c + 1);
-        triggerShake();
-      }
-    } catch {
+    let hashed = null;
+    try { hashed = await hashPin(next); } catch { /* crypto non disponibile */ }
+    if (hashed === DEFAULT_HASH) {
+      localStorage.removeItem(FAILS_KEY);
       onUnlock();
+    } else {
+      const f = getFails();
+      const count = f.count + 1;
+      if (count >= MAX_ATTEMPTS) {
+        localStorage.setItem(FAILS_KEY, JSON.stringify({ count: 0, lockedUntil: Date.now() + LOCK_MINUTES * 60000 }));
+        setMessage(`Troppi tentativi. Bloccato per ${LOCK_MINUTES} min`);
+      } else {
+        localStorage.setItem(FAILS_KEY, JSON.stringify({ count, lockedUntil: 0 }));
+        setMessage(`PIN errato (${MAX_ATTEMPTS - count} tentativi rimasti)`);
+      }
+      triggerShake();
     }
   }, [input, onUnlock]);
 
@@ -69,8 +93,8 @@ export default function PinGate({ onUnlock }) {
           ))}
         </div>
 
-        {wrongCount >= 3 && (
-          <p className={styles.hint}>PIN errato. Riprova.</p>
+        {message && (
+          <p className={styles.hint}>{message}</p>
         )}
 
         <div className={styles.keypad}>
