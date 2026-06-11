@@ -1,33 +1,57 @@
+import { useState } from "react";
+import Icon from "../Icon";
 import styles from "./Sidebar.module.css";
 
 const NAV_ITEMS = [
-  { id: "dashboard", label: "Dashboard", icon: "◈" },
-  { id: "commesse", label: "Commesse", icon: "◻" },
-  { id: "fiscale", label: "Fiscale", icon: "◎" },
-  { id: "network", label: "Network", icon: "◉" },
-  { id: "setup", label: "Setup", icon: "⚙" },
+  { id: "dashboard", label: "Dashboard", icon: "grid" },
+  { id: "commesse", label: "Commesse", icon: "folder" },
+  { id: "fiscale", label: "Fiscale", icon: "receipt" },
+  { id: "network", label: "Network", icon: "network" },
+  { id: "setup", label: "Setup", icon: "sliders" },
 ];
 
 export default function Sidebar({ view, onNavigate }) {
+  const [open, setOpen] = useState(false);
+
   return (
-    <nav className={styles.sidebar}>
-      <div className={styles.brand}>
-        <span className={styles.brandIcon}>◆</span>
-        <span className={styles.brandName}>Freelance<br />Dashboard</span>
-      </div>
-      <ul className={styles.nav}>
-        {NAV_ITEMS.map((item) => (
-          <li key={item.id}>
+    <>
+      <button className={styles.menuBtn} onClick={() => setOpen((v) => !v)} aria-label="Menu">
+        <Icon name="menu" size={20} />
+      </button>
+      {open && <div className={styles.scrim} onClick={() => setOpen(false)} />}
+      <nav className={`${styles.rail} ${open ? styles.open : ""}`}>
+        <div className={styles.brand}>
+          <div className={styles.mark}>
+            <Icon name="layers" size={18} />
+          </div>
+          <h1 className={styles.brandName}>
+            Freelance<br />
+            <span>Dashboard</span>
+          </h1>
+        </div>
+        <div className={styles.nav}>
+          <div className={styles.navSec}>Workspace</div>
+          {NAV_ITEMS.map((item) => (
             <button
-              className={`${styles.navBtn} ${view === item.id ? styles.active : ""}`}
-              onClick={() => onNavigate(item.id)}
+              key={item.id}
+              className={`${styles.navItem} ${view === item.id ? styles.active : ""}`}
+              onClick={() => { onNavigate(item.id); setOpen(false); }}
             >
-              <span className={styles.navIcon}>{item.icon}</span>
-              <span>{item.label}</span>
+              <Icon name={item.icon} size={18} />
+              {item.label}
             </button>
-          </li>
-        ))}
-      </ul>
-    </nav>
+          ))}
+        </div>
+        <div className={styles.foot}>
+          <div className={styles.user}>
+            <div className={styles.ava}>FG</div>
+            <div>
+              <div className={styles.userName}>Francesco</div>
+              <div className={styles.userRole}>Freelance · SEO &amp; Ads</div>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </>
   );
 }

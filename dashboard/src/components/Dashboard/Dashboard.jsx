@@ -1,7 +1,6 @@
 import { useState } from "react";
 import {
-  PieChart, Pie, Cell,
-  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend,
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
   ReferenceLine, ComposedChart, Line,
 } from "recharts";
 import {
@@ -13,6 +12,7 @@ import {
   getMeseCorrente,
   getLordoPerMese,
 } from "../../utils/helpers";
+import Icon from "../Icon";
 import styles from "./Dashboard.module.css";
 
 const MESI_IT = [
@@ -21,14 +21,37 @@ const MESI_IT = [
 ];
 const MESI_SHORT = ["Gen","Feb","Mar","Apr","Mag","Giu","Lug","Ago","Set","Ott","Nov","Dic"];
 
+// Palette grafici — design system Crema & Terracotta
+const C = {
+  pos: "#5E7E5A",
+  warn: "#B5862F",
+  info: "#5B7088",
+  danger: "#AE4A3A",
+  hair: "#E4DAC6",
+  ink2: "#6E6456",
+  ink3: "#9A8F7E",
+};
+
 const TIPO_COLOR = {
-  reale:      "#22c55e",
-  stimato:    "#f59e0b",
-  proiezione: "#274d91",
-  mancante:   "#1a2540",
+  reale: C.pos,
+  stimato: C.warn,
+  proiezione: C.info,
+  mancante: C.hair,
+};
+
+const TOOLTIP_STYLE = {
+  background: "#221D18",
+  border: "1px solid #392F26",
+  borderRadius: 9,
+  color: "#E9E0D0",
+  fontSize: 12,
+  boxShadow: "0 2px 4px rgba(60,44,28,.05), 0 18px 40px -16px rgba(60,44,28,.20)",
 };
 
 const STATO_ORDER = ["In corso","In scadenza","Da chiarire","Sospeso","Concluso","Perso"];
+
+const nf = new Intl.NumberFormat("it-IT");
+const fmtN = (n) => nf.format(Math.round(n ?? 0));
 
 export default function Dashboard({ commesse, setup, setSetup }) {
   const now = new Date();
@@ -47,6 +70,7 @@ export default function Dashboard({ commesse, setup, setSetup }) {
     value: commesse.filter((c) => c.stato === s).length,
     color: getStatoColor(s),
   })).filter((s) => s.value > 0);
+  const statoTotal = statoCount.reduce((s, e) => s + e.value, 0);
 
   const upsellOpportunities = commesse
     .filter((c) => c.upsellTarget)
@@ -63,7 +87,7 @@ export default function Dashboard({ commesse, setup, setSetup }) {
   const barData = commesse
     .filter((c) => getCommessaLordoMensile(c))
     .map((c) => ({
-      nome: c.cliente.length > 14 ? c.cliente.slice(0, 14) + "…" : c.cliente,
+      nome: c.cliente.length > 12 ? c.cliente.slice(0, 11) + "…" : c.cliente,
       Lordo: getCommessaLordoMensile(c),
       Netto: calcNetto(getCommessaLordoMensile(c), setup.fattoreNetto),
     }));
@@ -155,23 +179,52 @@ export default function Dashboard({ commesse, setup, setSetup }) {
   const totAnno = totReale + totProiezione;
   const mesiMancanti = annualData.filter((d) => d.tipo === "mancante").length;
 
+  const kpis = [
+    { label: "Lordo mensile attivo", value: fmtN(lordoMensileAttivo), cur: "€", sub: "commesse in corso + in scadenza", tone: "accent", icon: "card" },
+    { label: "Netto mensile attivo", value: fmtN(nettoMensileAttivo), cur: "€", sub: `fattore ${(setup.fattoreNetto * 100).toFixed(0)}%`, tone: "pos", icon: "trend" },
+    { label: "Commesse attive", value: attive.length, sub: `su ${commesse.length} totali`, tone: "ink", icon: "folder" },
+    { label: "Potenziale upsell", value: fmtN(upsellOpportunities), cur: "€", sub: "obiettivo mensile aggregato", tone: "info", icon: "spark" },
+    ...(totaleCostiFissi > 0 ? [
+      { label: "Costi mensili", value: fmtN(totaleCostiFissi), cur: "€", sub: `${costiFissi.length} voci · ${meseCorrente.split(" ")[0]}`, tone: "danger", icon: "coin" },
+      { label: "Profitto mensile", value: fmtN(profittoMensile), cur: "€", sub: `netto − ${fmtN(totaleCostiFissi)} € costi fissi`, tone: profittoMensile >= 0 ? "pos" : "danger", icon: "wallet" },
+    ] : []),
+    ...(costiAnnuali.length > 0 ? [
+      { label: "Spese annuali", value: fmtN(totaleCostiAnnuali), cur: "€", sub: "promemoria · non le stai pagando ora", tone: "warn", icon: "calendar" },
+      { label: "Equivalente mensile spese ann.", value: fmtN(totaleCostiAnnualiMensile), cur: "€", sub: "se le spalmassi ogni mese", tone: "warn", icon: "divide" },
+    ] : []),
+  ];
+
   return (
-    <div className={styles.page}>
-      <header className={styles.header}>
-        <h1 className={styles.title}>Dashboard</h1>
-        <p className={styles.subtitle}>Panoramica commesse e fatturato <span style={{ fontSize: "0.7rem", background: "rgba(200,169,110,0.15)", color: "#c8a96e", border: "1px solid rgba(200,169,110,0.3)", borderRadius: 4, padding: "1px 6px", marginLeft: 8 }}>v2 · cash flow</span></p>
+    <div className="view-enter grid" style={{ gap: "var(--gap)" }}>
+      <header className="topbar" style={{ marginBottom: 0 }}>
+        <div>
+          <div className="page-eyebrow">
+            Panoramica generale
+            <span className="badge"><span className="badge-dot"></span>v2 · cash flow</span>
+          </div>
+          <h1 className="page-title">Dashboard</h1>
+          <p className="page-sub">Panoramica commesse, incassato e cash flow — anno fiscale {anno}.</p>
+        </div>
       </header>
 
       {inScadenza.length > 0 && (
-        <div className={styles.alertBanner}>
-          <span className={styles.alertIcon}>⚠</span>
-          <div>
-            <strong>Scadenze entro {setup.alertScadenzaGiorni} giorni:</strong>{" "}
-            {inScadenza.map((c) => (
-              <span key={c.id} className={styles.alertTag}>
-                {c.cliente} ({daysUntil(c.fine)}gg)
-              </span>
-            ))}
+        <div className="notice warn reveal">
+          <div
+            className="notice-ico"
+            style={{ background: "var(--panel)", color: "var(--warn)", border: "1px solid color-mix(in oklab, var(--warn) 30%, var(--hair))" }}
+          >
+            <Icon name="alert" size={18} />
+          </div>
+          <div className="chip-row">
+            <span className="lab" style={{ marginRight: 4 }}>Scadenze entro {setup.alertScadenzaGiorni} giorni</span>
+            {inScadenza.map((c) => {
+              const days = daysUntil(c.fine);
+              return (
+                <span key={c.id} className={"deadline-chip" + (days <= 7 ? " urgent" : "")}>
+                  {c.cliente} <b>{days}gg</b>
+                </span>
+              );
+            })}
           </div>
         </div>
       )}
@@ -191,311 +244,305 @@ export default function Dashboard({ commesse, setup, setSetup }) {
         />
       )}
 
-      <div className={styles.kpiGrid}>
-        <KpiCard label="Lordo mensile attivo" value={formatCurrency(lordoMensileAttivo)} sub="commesse In corso + In scadenza" accent="#c8a96e" />
-        <KpiCard label="Netto mensile attivo" value={formatCurrency(nettoMensileAttivo)} sub={`fattore ${(setup.fattoreNetto * 100).toFixed(0)}%`} accent="#22c55e" />
-        <KpiCard label="Commesse attive" value={attive.length} sub={`su ${commesse.length} totali`} accent="#f59e0b" />
-        <KpiCard label="Potenziale upsell" value={formatCurrency(upsellOpportunities)} sub="obiettivo mensile aggregato" accent="#7b9cd4" />
-        {totaleCostiFissi > 0 && (
-          <KpiCard
-            label="Costi mensili"
-            value={formatCurrency(totaleCostiFissi)}
-            sub={`${costiFissi.length} voci · ${meseCorrente.split(" ")[0]}`}
-            accent="#f43f5e"
-          />
-        )}
-        {totaleCostiFissi > 0 && (
-          <KpiCard
-            label="Profitto mensile"
-            value={formatCurrency(profittoMensile)}
-            sub={`netto − ${formatCurrency(totaleCostiFissi)} costi fissi`}
-            accent={profittoMensile >= 0 ? "#22c55e" : "#ef4444"}
-          />
-        )}
-        {costiAnnuali.length > 0 && (
-          <KpiCard
-            label="Spese annuali (promemoria)"
-            value={`${totaleCostiAnnuali.toLocaleString("it-IT")} €`}
-            sub="non le stai pagando ora"
-            accent="#f59e0b"
-          />
-        )}
-        {costiAnnuali.length > 0 && (
-          <KpiCard
-            label="Equivalente mensile spese ann."
-            value={`${totaleCostiAnnualiMensile.toLocaleString("it-IT")} €`}
-            sub="se le spalmassi ogni mese"
-            accent="#f59e0b"
-          />
-        )}
+      <div className="grid kpi-grid">
+        {kpis.map((k) => <KpiCard key={k.label} {...k} />)}
       </div>
-      <div className={styles.annualCard}>
-        <div className={styles.annualHeader}>
-          <div>
-            <h2 className={styles.sectionTitle}>Panoramica {anno}</h2>
-            <p className={styles.annualSub}>
-              <span style={{ color: "#22c55e" }}>■</span> Registrato{" "}
-              <span style={{ color: "#f59e0b", marginLeft: 8 }}>■</span> Stimato{" "}
-              <span style={{ color: "#274d91", marginLeft: 8 }}>■</span> Proiezione{" "}
-              <span style={{ color: "#1a2540", marginLeft: 8 }}>■</span> Mancante
-              {breakEvenLordo && <><span style={{ color: "#ef4444", marginLeft: 8 }}>■</span>{" "}Sotto soglia costi</>}
-            </p>
-          </div>
-          <div className={styles.annualKpis}>
-            <div className={styles.annualKpi}>
-              <span className={styles.annualKpiVal} style={{ color: "#22c55e" }}>{formatCurrency(totReale)}</span>
-              <span className={styles.annualKpiLabel}>Netto reale</span>
+
+      {/* Panoramica annuale */}
+      <section className="panel">
+        <div className="panel-head">
+          <div className="panel-title"><Icon name="bars" size={15} />Panoramica {anno}</div>
+          <div className="stat-strip">
+            <div className="si">
+              <div className="v" style={{ color: "var(--pos-ink)" }}>{formatCurrency(totReale)}</div>
+              <div className="l">Netto reale</div>
             </div>
-            <div className={styles.annualKpi}>
-              <span className={styles.annualKpiVal} style={{ color: "#274d91" }}>{formatCurrency(totProiezione)}</span>
-              <span className={styles.annualKpiLabel}>Proiezione netto</span>
+            <div className="si">
+              <div className="v" style={{ color: "var(--info)" }}>{formatCurrency(totProiezione)}</div>
+              <div className="l">Proiezione netto</div>
             </div>
-            <div className={styles.annualKpi}>
-              <span className={styles.annualKpiVal} style={{ color: "#e2e8f0" }}>{formatCurrency(totAnno)}</span>
-              <span className={styles.annualKpiLabel}>Totale netto anno</span>
+            <div className="si">
+              <div className="v" style={{ color: "var(--ink)" }}>{formatCurrency(totAnno)}</div>
+              <div className="l">Totale netto anno</div>
             </div>
           </div>
         </div>
-
-        {mesiMancanti > 0 && (
-          <div className={styles.annualWarning}>
-            ⚠ {mesiMancanti} {mesiMancanti === 1 ? "mese passato non registrato" : "mesi passati non registrati"} — il totale anno è sottostimato. Aggiornali in Setup → Storico.
+        <div className="panel-pad" style={{ paddingTop: 0 }}>
+          <div className="legend" style={{ marginBottom: 10 }}>
+            <span className="li"><span className="sw" style={{ background: C.pos }}></span>Registrato</span>
+            <span className="li"><span className="sw" style={{ background: C.warn }}></span>Stimato</span>
+            <span className="li"><span className="sw" style={{ background: C.info }}></span>Proiezione</span>
+            {breakEvenLordo && <span className="li"><span className="sw" style={{ background: C.danger }}></span>Sotto soglia costi</span>}
+            <span className="li"><span className="sw" style={{ background: C.hair }}></span>Mancante</span>
           </div>
-        )}
 
-        <ResponsiveContainer width="100%" height={240}>
-          <BarChart data={annualData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-            <XAxis dataKey="mese" tick={{ fill: "#64748b", fontSize: 11 }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fill: "#64748b", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k€`} />
-            <Tooltip
-              contentStyle={{ background: "#111827", border: "1px solid rgba(255,255,255,.12)", borderRadius: "8px", color: "#e2e8f0", fontSize: "13px" }}
-              labelStyle={{ color: "#94a3b8" }}
-              itemStyle={{ color: "#e2e8f0" }}
-              formatter={(v, name, props) => [
-                formatCurrency(v),
-                props.payload.tipo === "reale" ? "Netto reale" : props.payload.tipo === "mancante" ? "Non registrato" : props.payload.tipo === "stimato" ? "Netto stimato" : "Netto proiez.",
-              ]}
-            />
-            <Bar dataKey="netto" radius={[4, 4, 0, 0]}>
-              {annualData.map((entry, i) => {
-                let fill = TIPO_COLOR[entry.tipo];
-                if (totaleCostiFissi > 0 && entry.tipo !== "reale" && entry.tipo !== "mancante" && entry.netto < totaleCostiFissi) {
-                  fill = "#ef4444";
-                }
-                return <Cell key={i} fill={fill} opacity={entry.tipo === "mancante" ? 0.4 : 1} />;
-              })}
-            </Bar>
-            {totaleCostiFissi > 0 && (
-              <ReferenceLine
-                y={totaleCostiFissi}
-                stroke="#ef4444"
-                strokeDasharray="5 3"
-                strokeOpacity={0.55}
-                label={{ value: `costi fissi  ${formatCurrency(totaleCostiFissi)}`, position: "insideTopRight", fill: "#ef4444", fontSize: 10 }}
+          {mesiMancanti > 0 && (
+            <div className={styles.annualWarning}>
+              <Icon name="alert" size={14} />
+              {mesiMancanti} {mesiMancanti === 1 ? "mese passato non registrato" : "mesi passati non registrati"} — il totale anno è sottostimato. Aggiornali in Setup → Storico.
+            </div>
+          )}
+
+          <ResponsiveContainer width="100%" height={280}>
+            <BarChart data={annualData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+              <XAxis dataKey="mese" tick={{ fill: C.ink2, fontSize: 11.5, fontWeight: 600 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: C.ink3, fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k€`} width={42} />
+              <Tooltip
+                cursor={{ fill: "rgba(60,44,28,.05)" }}
+                contentStyle={TOOLTIP_STYLE}
+                labelStyle={{ color: "#A39684", fontWeight: 700 }}
+                itemStyle={{ color: "#E9E0D0" }}
+                formatter={(v, name, props) => [
+                  formatCurrency(v),
+                  props.payload.tipo === "reale" ? "Netto reale" : props.payload.tipo === "mancante" ? "Non registrato" : props.payload.tipo === "stimato" ? "Netto stimato" : "Netto proiez.",
+                ]}
               />
-            )}
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
+              <Bar dataKey="netto" radius={[4, 4, 0, 0]} maxBarSize={46}>
+                {annualData.map((entry, i) => {
+                  let fill = TIPO_COLOR[entry.tipo];
+                  if (totaleCostiFissi > 0 && entry.tipo !== "reale" && entry.tipo !== "mancante" && entry.netto < totaleCostiFissi) {
+                    fill = C.danger;
+                  }
+                  return <Cell key={i} fill={fill} opacity={entry.tipo === "mancante" ? 0.5 : 1} />;
+                })}
+              </Bar>
+              {totaleCostiFissi > 0 && (
+                <ReferenceLine
+                  y={totaleCostiFissi}
+                  stroke={C.danger}
+                  strokeDasharray="5 5"
+                  strokeOpacity={0.8}
+                  label={{ value: `costi fissi ${fmtN(totaleCostiFissi)} €`, position: "insideTopRight", fill: C.danger, fontSize: 11, fontWeight: 600 }}
+                />
+              )}
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </section>
 
+      {/* Incassato storico */}
       {sortedStorico.length > 0 && (
-        <div className={styles.incassatoCard}>
-          <h2 className={styles.sectionTitle}>Incassato storico</h2>
-          <div className={styles.incassatoLayout}>
-            <div className={styles.incassatoGrid}>
-              {sortedStorico.map((r, i) => {
-                const meseShort = (() => {
-                  const [m, y] = r.mese.split(" ");
-                  const idx = MESI_IT.indexOf(m);
-                  return idx >= 0 ? `${MESI_SHORT[idx]} '${(y || "").slice(2)}` : r.mese;
-                })();
-                const profR = totaleCostiFissi > 0 ? r.netto - totaleCostiFissi : null;
-                return (
-                  <div key={i} className={styles.incassatoRow}>
-                    <span className={styles.incassatoMese}>{meseShort}</span>
-                    <span className={styles.incassatoLordo}>{formatCurrency(r.lordo)}</span>
-                    <span className={styles.incassatoNetto}>{formatCurrency(r.netto)}</span>
-                    {profR !== null && (
-                      <span
-                        className={styles.profittoTag}
-                        style={{
-                          color: profR >= 0 ? "#22c55e" : "#ef4444",
-                          background: profR >= 0 ? "rgba(34,197,94,0.08)" : "rgba(239,68,68,0.08)",
-                        }}
-                      >
-                        {profR >= 0 ? "+" : ""}{formatCurrency(profR)}
+        <section className="panel">
+          <div className="panel-head">
+            <div className="panel-title"><Icon name="history" size={15} />Incassato storico</div>
+            <span className="panel-note">{sortedStorico.length} mesi · valori lordi e netti</span>
+          </div>
+          <div className={styles.storicoLayout}>
+            <div className="hist">
+              {(() => {
+                const half = Math.ceil(sortedStorico.length / 2);
+                const cols = [sortedStorico.slice(0, half), sortedStorico.slice(half)];
+                const renderRow = (r, i) => {
+                  const meseShort = (() => {
+                    const [m, y] = r.mese.split(" ");
+                    const idx = MESI_IT.indexOf(m);
+                    return idx >= 0 ? `${MESI_SHORT[idx]} '${(y || "").slice(2)}` : r.mese;
+                  })();
+                  const profR = totaleCostiFissi > 0 ? r.netto - totaleCostiFissi : null;
+                  return (
+                    <div key={i} className="hrow">
+                      <span className="mo">{meseShort}</span>
+                      <span className="amts num">
+                        <span className="g">{fmtN(r.lordo)} €</span>
+                        <span className="n">{fmtN(r.netto)} €</span>
                       </span>
-                    )}
-                  </div>
+                      {profR !== null && (
+                        <span className={"delta num" + (profR < 0 ? " neg" : "")}>
+                          {profR >= 0 ? "+" : ""}{fmtN(profR)} €
+                        </span>
+                      )}
+                    </div>
+                  );
+                };
+                return (
+                  <>
+                    <div>{cols[0].map(renderRow)}</div>
+                    <div>{cols[1].map(renderRow)}</div>
+                  </>
                 );
-              })}
+              })()}
             </div>
             {storicoSenzaMeseCorrente.length > 0 && (
-              <div className={styles.incassatoYtd}>
-                <div className={styles.ytdBlock}>
-                  <span className={styles.ytdVal} style={{ color: "#38bdf8" }}>{formatCurrency(ytdLordo)}</span>
-                  <span className={styles.ytdLabel}>Lordo incassato YTD</span>
-                  <span className={styles.ytdSub}>{storicoSenzaMeseCorrente.length} mesi · escluso {meseCorrente.split(" ")[0]}</span>
+              <div className="ytd-rail">
+                <div className="ytd-item">
+                  <div className="v t-info num">{fmtN(ytdLordo)} €</div>
+                  <div className="l">Lordo incassato YTD</div>
+                  <div className="s">{storicoSenzaMeseCorrente.length} mesi · escluso {meseCorrente.split(" ")[0]}</div>
                 </div>
-                <div className={styles.ytdBlock}>
-                  <span className={styles.ytdVal} style={{ color: "#34d399" }}>{formatCurrency(ytdNetto)}</span>
-                  <span className={styles.ytdLabel}>Netto incassato YTD</span>
-                  <span className={styles.ytdSub}>fattore {(setup.fattoreNetto * 100).toFixed(0)}%</span>
+                <div className="ytd-item">
+                  <div className="v t-pos num">{fmtN(ytdNetto)} €</div>
+                  <div className="l">Netto incassato YTD</div>
+                  <div className="s">fattore {(setup.fattoreNetto * 100).toFixed(0)}%</div>
                 </div>
                 {ytdProfitto !== null && (
-                  <div className={styles.ytdBlock}>
-                    <span className={styles.ytdVal} style={{ color: ytdProfitto >= 0 ? "#22c55e" : "#ef4444" }}>
-                      {ytdProfitto >= 0 ? "+" : ""}{formatCurrency(ytdProfitto)}
-                    </span>
-                    <span className={styles.ytdLabel}>Profitto YTD</span>
-                    <span className={styles.ytdSub}>netto − {formatCurrency(totaleCostiFissi)}/mese</span>
+                  <div className="ytd-item">
+                    <div className={"v num " + (ytdProfitto >= 0 ? "t-pos" : "t-danger")}>
+                      {ytdProfitto >= 0 ? "+" : ""}{fmtN(ytdProfitto)} €
+                    </div>
+                    <div className="l">Profitto YTD</div>
+                    <div className="s">netto − {fmtN(totaleCostiFissi)} €/mese</div>
                   </div>
                 )}
               </div>
             )}
           </div>
-        </div>
+        </section>
       )}
 
-      <div className={styles.chartsGrid}>
-        <div className={styles.chartCard}>
-          <h2 className={styles.sectionTitle}>Stato commesse</h2>
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", marginTop: "0.5rem" }}>
-            {(() => {
-              const total = statoCount.reduce((s, e) => s + e.value, 0);
-              const active = statoCount.filter((e) => e.value > 0);
-              return active.map((entry) => {
-                const pct = total > 0 ? Math.round((entry.value / total) * 100) : 0;
-                return (
-                  <div key={entry.name}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.3rem" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                        <span style={{ width: 8, height: 8, borderRadius: "50%", background: entry.color, display: "inline-block", flexShrink: 0 }} />
-                        <span style={{ fontSize: "0.85rem", color: "#cbd5e1", fontWeight: 500 }}>{entry.name}</span>
-                      </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
-                        <span style={{ fontSize: "0.85rem", fontWeight: 700, color: entry.color }}>{entry.value}</span>
-                        <span style={{ fontSize: "0.75rem", color: "#475569", minWidth: "2.5rem", textAlign: "right" }}>{pct}%</span>
-                      </div>
-                    </div>
-                    <div style={{ height: 6, borderRadius: 3, background: "rgba(255,255,255,.06)", overflow: "hidden" }}>
-                      <div style={{ height: "100%", width: `${pct}%`, borderRadius: 3, background: entry.color, transition: "width 0.4s ease" }} />
-                    </div>
+      {/* Stato commesse + Fee per cliente */}
+      <div className="grid cols-2-asym">
+        <section className="panel">
+          <div className="panel-head">
+            <div className="panel-title"><Icon name="pie" size={15} />Stato commesse</div>
+            <span className="panel-note">{statoTotal} commesse totali</span>
+          </div>
+          <div className="row-list" style={{ paddingBottom: 8 }}>
+            {statoCount.map((entry) => {
+              const pct = statoTotal > 0 ? Math.round((entry.value / statoTotal) * 100) : 0;
+              return (
+                <div className="statbar-row" key={entry.name}>
+                  <div className="statbar-top">
+                    <span className="statbar-lab">
+                      <span className="d" style={{ background: entry.color }}></span>
+                      {entry.name}
+                    </span>
+                    <span className="statbar-val"><b>{entry.value}</b>{pct}%</span>
                   </div>
-                );
-              });
-            })()}
-            {statoCount.reduce((s, e) => s + e.value, 0) === 0 && (
-              <p style={{ color: "#475569", fontSize: "0.875rem" }}>Nessuna commessa</p>
+                  <div className="statbar-track">
+                    <div className="statbar-fill" style={{ width: pct + "%", background: entry.color }}></div>
+                  </div>
+                </div>
+              );
+            })}
+            {statoTotal === 0 && (
+              <p style={{ color: "var(--ink-3)", fontSize: 13.5, padding: "14px var(--card-pad)" }}>Nessuna commessa</p>
             )}
           </div>
-        </div>
+        </section>
 
-        <div className={styles.chartCard}>
-          <h2 className={styles.sectionTitle}>Fee mensile per cliente</h2>
-          <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={barData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-              <XAxis dataKey="nome" tick={{ fill: "#64748b", fontSize: 11 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: "#64748b", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v}€`} />
-              <Tooltip contentStyle={{ background: "#111827", border: "1px solid rgba(255,255,255,.12)", borderRadius: "8px", color: "#e2e8f0", fontSize: "13px" }} formatter={(v) => formatCurrency(v)} />
-              <Legend formatter={(value) => <span style={{ color: "#94a3b8", fontSize: "12px" }}>{value}</span>} />
-              <Bar dataKey="Lordo" fill="#c8a96e" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="Netto" fill="#22c55e" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+        <section className="panel">
+          <div className="panel-head">
+            <div className="panel-title"><Icon name="bars" size={15} />Fee mensile per cliente</div>
+            <div className="legend">
+              <span className="li"><span className="sw" style={{ background: "var(--accent)" }}></span>Lordo</span>
+              <span className="li"><span className="sw" style={{ background: C.pos }}></span>Netto</span>
+            </div>
+          </div>
+          <div className="panel-pad" style={{ paddingTop: 4 }}>
+            <ResponsiveContainer width="100%" height={230}>
+              <BarChart data={barData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }} barGap={4}>
+                <XAxis dataKey="nome" tick={{ fill: C.ink2, fontSize: 11, fontWeight: 600 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: C.ink3, fontSize: 10.5 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v}€`} width={42} />
+                <Tooltip cursor={{ fill: "rgba(60,44,28,.05)" }} contentStyle={TOOLTIP_STYLE} labelStyle={{ color: "#A39684", fontWeight: 700 }} itemStyle={{ color: "#E9E0D0" }} formatter={(v) => formatCurrency(v)} />
+                <Bar dataKey="Lordo" fill="#B5654A" radius={[3.5, 3.5, 0, 0]} maxBarSize={20} />
+                <Bar dataKey="Netto" fill={C.pos} radius={[3.5, 3.5, 0, 0]} maxBarSize={20} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </section>
       </div>
 
+      {/* Commesse in scadenza */}
       {inScadenza.length > 0 && (
-        <div className={styles.scadenzeCard}>
-          <h2 className={styles.sectionTitle}>Commesse in scadenza</h2>
-          <div className={styles.scadenzeList}>
+        <section className="panel">
+          <div className="panel-head">
+            <div className="panel-title"><Icon name="clock" size={15} />Commesse in scadenza</div>
+            <span className="panel-note">ordinate per urgenza · finestra {setup.alertScadenzaGiorni} giorni</span>
+          </div>
+          <div className="row-list">
             {inScadenza.map((c) => {
               const days = daysUntil(c.fine);
+              const col = days <= 7 ? "var(--danger)" : days <= 21 ? "var(--warn)" : "var(--pos)";
+              const maxDays = setup.alertScadenzaGiorni || 60;
               return (
-                <div key={c.id} className={styles.scadenzeRow}>
+                <div key={c.id} className="lrow dl-row">
                   <div>
-                    <div className={styles.scadenzeCliente}>{c.cliente}</div>
-                    <div className={styles.scadenzeServizio}>{c.servizio}</div>
+                    <div className="nm">{c.cliente}</div>
+                    <div className="meta">{c.servizio}</div>
+                    <div className="dl-bar">
+                      <i style={{ width: (100 - Math.min(100, (days / maxDays) * 100)) + "%", background: col }}></i>
+                    </div>
                   </div>
-                  <div className={styles.scadenzeDays} style={{ color: days <= 14 ? "#ef4444" : days <= 30 ? "#f59e0b" : "#94a3b8" }}>
-                    {days === 0 ? "Oggi" : `${days} giorni`}
+                  <div style={{ textAlign: "right" }}>
+                    <span className="dl-days num" style={{ color: col }}>{days === 0 ? "Oggi" : days}</span>
+                    {days > 0 && <span style={{ fontSize: 12.5, color: "var(--ink-3)", marginLeft: 4 }}>giorni</span>}
                   </div>
                 </div>
               );
             })}
           </div>
-        </div>
+        </section>
       )}
 
       {/* Cash Flow */}
-      <div style={{ background: "rgba(255,255,255,.03)", border: "1px solid rgba(255,255,255,.07)", borderRadius: 12, padding: "1.25rem 1.5rem", marginTop: "1rem" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1rem", flexWrap: "wrap", gap: "0.75rem" }}>
-          <div>
-            <h2 className={styles.sectionTitle} style={{ marginBottom: "0.35rem" }}>Cash Flow — prossimi 12 mesi</h2>
-            <div style={{ display: "flex", gap: "1.5rem", flexWrap: "wrap" }}>
-              <span style={{ fontSize: "0.82rem", color: "#94a3b8" }}>
-                Cassa attuale: <strong style={{ color: "#e2e8f0" }}>{formatCurrency(cassaIniziale)}</strong>
-              </span>
-              {cryptoVal > 0 && (
-                <span style={{ fontSize: "0.82rem", color: "#94a3b8" }}>
-                  Crypto: <strong style={{ color: "#f59e0b" }}>{formatCurrency(cryptoVal)}</strong>
-                  {cryptoAggiornato && <span style={{ color: "#475569", fontSize: "0.72rem", marginLeft: 4 }}>al {cryptoAggiornato}</span>}
-                </span>
-              )}
-              <span style={{ fontSize: "0.82rem", color: "#94a3b8" }}>
-                Costi fissi/mese: <strong style={{ color: "#f43f5e" }}>{formatCurrency(totaleCostiFissi)}</strong>
-              </span>
-            </div>
-          </div>
-          <div style={{ display: "flex", gap: "1.5rem" }}>
-            <div style={{ textAlign: "right" }}>
-              <div style={{ fontSize: "1.3rem", fontWeight: 700, color: cassaFinale >= cassaIniziale ? "#22c55e" : "#ef4444" }}>
-                {formatCurrency(cassaFinale)}
-              </div>
-              <div style={{ fontSize: "0.72rem", color: "#64748b" }}>Cassa stimata fra 12 mesi</div>
+      <section className="panel">
+        <div className="panel-head">
+          <div className="panel-title"><Icon name="flow" size={15} />Cash flow — prossimi 12 mesi</div>
+          <div className="stat-strip">
+            <div className="si">
+              <div className="v num" style={{ color: cassaFinale >= cassaIniziale ? "var(--pos-ink)" : "var(--danger)" }}>{formatCurrency(cassaFinale)}</div>
+              <div className="l">Cassa fra 12 mesi</div>
             </div>
             {cryptoVal > 0 && (
-              <div style={{ textAlign: "right" }}>
-                <div style={{ fontSize: "1.3rem", fontWeight: 700, color: "#f59e0b" }}>
-                  {formatCurrency(cassaIniziale + cryptoVal)}
-                </div>
-                <div style={{ fontSize: "0.72rem", color: "#64748b" }}>Cassa + Crypto oggi</div>
+              <div className="si">
+                <div className="v num" style={{ color: "var(--accent-ink)" }}>{formatCurrency(cassaIniziale + cryptoVal)}</div>
+                <div className="l">Cassa + Crypto oggi</div>
               </div>
             )}
           </div>
         </div>
-
-        <ResponsiveContainer width="100%" height={260}>
-          <ComposedChart data={cashFlowData} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
-            <XAxis dataKey="mese" tick={{ fill: "#64748b", fontSize: 11 }} axisLine={false} tickLine={false} />
-            <YAxis yAxisId="flow" tick={{ fill: "#64748b", fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={v => `${(v/1000).toFixed(0)}k`} width={36} />
-            <YAxis yAxisId="cassa" orientation="right" tick={{ fill: "#38bdf8", fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={v => `${(v/1000).toFixed(0)}k`} width={36} />
-            <Tooltip
-              contentStyle={{ background: "#111827", border: "1px solid rgba(255,255,255,.12)", borderRadius: 8, color: "#e2e8f0", fontSize: 12 }}
-              formatter={(value, name) => {
-                if (name === "Cassa") return [formatCurrency(value), "Cassa accumulata"];
-                if (name === "Entrate") return [formatCurrency(value), "Netto mensile"];
-                if (name === "Costi") return [formatCurrency(value), "Costi fissi"];
-                return [formatCurrency(value), name];
-              }}
-            />
-            <ReferenceLine yAxisId="flow" y={0} stroke="rgba(255,255,255,.12)" />
-            <Bar yAxisId="flow" dataKey="flusso" name="Flusso netto" radius={[4,4,0,0]}>
-              {cashFlowData.map((entry, i) => (
-                <Cell key={i} fill={entry.flusso >= 0 ? "#22c55e" : "#ef4444"} opacity={entry.tipo === "proiezione" ? 0.55 : 0.85} />
-              ))}
-            </Bar>
-            <Line yAxisId="cassa" type="monotone" dataKey="cassa" name="Cassa" stroke="#38bdf8" strokeWidth={2} dot={{ fill: "#38bdf8", r: 3 }} activeDot={{ r: 5 }} />
-          </ComposedChart>
-        </ResponsiveContainer>
-        <div style={{ display: "flex", gap: "1rem", marginTop: "0.5rem", fontSize: "0.72rem", color: "#475569" }}>
-          <span>&#9632; <span style={{ color: "#22c55e" }}>Flusso positivo</span></span>
-          <span>&#9632; <span style={{ color: "#ef4444" }}>Flusso negativo</span></span>
-          <span>&#8212; <span style={{ color: "#38bdf8" }}>Cassa accumulata (asse dx)</span></span>
-          <span style={{ color: "#374151" }}>Barre opache = proiezione</span>
+        <div className="panel-pad" style={{ paddingTop: 0 }}>
+          <div style={{ display: "flex", gap: 24, flexWrap: "wrap", marginBottom: 6, fontSize: 13, color: "var(--ink-2)" }}>
+            <span>Cassa attuale: <b className="num" style={{ color: "var(--ink)" }}>{formatCurrency(cassaIniziale)}</b></span>
+            {cryptoVal > 0 && (
+              <span>
+                Crypto: <b className="num" style={{ color: "var(--accent-ink)" }}>{formatCurrency(cryptoVal)}</b>
+                {cryptoAggiornato && <span style={{ color: "var(--ink-3)" }}> al {cryptoAggiornato}</span>}
+              </span>
+            )}
+            <span>Costi fissi/mese: <b className="num" style={{ color: "var(--danger)" }}>{formatCurrency(totaleCostiFissi)}</b></span>
+          </div>
+          <div className="legend" style={{ marginBottom: 8 }}>
+            <span className="li"><span className="sw" style={{ background: C.pos }}></span>Flusso positivo</span>
+            <span className="li"><span className="sw" style={{ background: C.danger }}></span>Flusso negativo</span>
+            <span className="li"><span className="sw line" style={{ background: C.info }}></span>Cassa accumulata</span>
+            <span className="li"><span className="sw" style={{ background: C.hair }}></span>Barre chiare = proiezione</span>
+          </div>
+          <ResponsiveContainer width="100%" height={280}>
+            <ComposedChart data={cashFlowData} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
+              <XAxis dataKey="mese" tick={{ fill: C.ink2, fontSize: 11, fontWeight: 600 }} axisLine={false} tickLine={false} />
+              <YAxis yAxisId="flow" tick={{ fill: C.ink3, fontSize: 10.5 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} width={38} />
+              <YAxis yAxisId="cassa" orientation="right" tick={{ fill: C.info, fontSize: 10.5 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} width={38} />
+              <Tooltip
+                cursor={{ fill: "rgba(60,44,28,.05)" }}
+                contentStyle={TOOLTIP_STYLE}
+                labelStyle={{ color: "#A39684", fontWeight: 700 }}
+                itemStyle={{ color: "#E9E0D0" }}
+                formatter={(value, name) => {
+                  if (name === "Cassa") return [formatCurrency(value), "Cassa accumulata"];
+                  return [formatCurrency(value), name];
+                }}
+              />
+              <ReferenceLine yAxisId="flow" y={0} stroke="#E4DAC6" strokeWidth={1.4} />
+              <Bar yAxisId="flow" dataKey="flusso" name="Flusso netto" radius={[3, 3, 0, 0]} maxBarSize={40}>
+                {cashFlowData.map((entry, i) => (
+                  <Cell key={i} fill={entry.flusso >= 0 ? C.pos : C.danger} opacity={entry.tipo === "proiezione" ? 0.62 : 1} />
+                ))}
+              </Bar>
+              <Line
+                yAxisId="cassa"
+                type="monotone"
+                dataKey="cassa"
+                name="Cassa"
+                stroke={C.info}
+                strokeWidth={2.4}
+                dot={{ fill: "#FBF8F2", stroke: C.info, strokeWidth: 2, r: 3.4 }}
+                activeDot={{ r: 5 }}
+              />
+            </ComposedChart>
+          </ResponsiveContainer>
         </div>
-      </div>
+      </section>
     </div>
   );
 }
@@ -511,63 +558,71 @@ function MonthlyPrompt({ mese, stimaLordo, fattoreNetto, commesseAttive, onAdd }
   }
 
   return (
-    <div className={styles.monthlyPrompt}>
-      <div className={styles.promptLeft}>
-        <span className={styles.promptIcon}>📅</span>
+    <div className="notice reveal" style={{ justifyContent: "space-between" }}>
+      <div className="register">
+        <div className="cal"><Icon name="calendar" size={20} /></div>
         <div>
-          <div className={styles.promptTitle}>
-            <strong>{mese}</strong> non è ancora nello storico
+          <div style={{ fontSize: 14.5, fontWeight: 600, color: "var(--ink)" }}>
+            <b style={{ fontFamily: "var(--font-serif)", fontWeight: 600 }}>{mese}</b> non è ancora nello storico
           </div>
-          <div className={styles.promptSub}>
-            Stimato da commesse attive:{" "}
-            <strong>{new Intl.NumberFormat("it-IT", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(stimaLordo)}</strong>
+          <div style={{ fontSize: 13, color: "var(--ink-3)", marginTop: 3 }}>
+            Stimato da commesse attive: <b className="num" style={{ color: "var(--accent-ink)" }}>{formatCurrency(stimaLordo)}</b>
             {commesseAttive.length > 0 && (
-              <span className={styles.promptClients}> ({commesseAttive.map((c) => c.cliente).join(", ")})</span>
+              <span> ({commesseAttive.map((c) => c.cliente).join(", ")})</span>
             )}
           </div>
         </div>
       </div>
 
-      <div className={styles.promptRight}>
-        {!open ? (
-          <button className={styles.promptBtnPrimary} onClick={() => setOpen(true)}>
-            Registra incassato
-          </button>
-        ) : (
-          <div className={styles.promptForm}>
-            <div className={styles.promptInputWrap}>
-              <label className={styles.promptLabel}>Lordo incassato (€)</label>
-              <input
-                type="number"
-                className={styles.promptInput}
-                value={lordo}
-                onChange={(e) => setLordo(e.target.value)}
-                min="0"
-                autoFocus
-              />
-              {lordo > 0 && (
-                <span className={styles.promptNetto}>
-                  Netto: {new Intl.NumberFormat("it-IT", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(Math.round(Number(lordo) * fattoreNetto))}
-                </span>
-              )}
-            </div>
-            <div className={styles.promptActions}>
-              <button className={styles.promptBtnSecondary} onClick={() => setOpen(false)}>Annulla</button>
-              <button className={styles.promptBtnPrimary} onClick={handleAdd}>Aggiungi</button>
-            </div>
+      {!open ? (
+        <button className="btn btn-primary" onClick={() => setOpen(true)}>
+          <Icon name="plus" size={16} /> Registra incassato
+        </button>
+      ) : (
+        <div style={{ display: "flex", alignItems: "flex-end", gap: 10, flexWrap: "wrap" }}>
+          <div>
+            <label className="field-label">Lordo incassato (€)</label>
+            <input
+              type="number"
+              className="input num"
+              style={{ width: 150 }}
+              value={lordo}
+              onChange={(e) => setLordo(e.target.value)}
+              min="0"
+              autoFocus
+            />
+            {lordo > 0 && (
+              <span className="field-note">
+                Netto: {formatCurrency(Math.round(Number(lordo) * fattoreNetto))}
+              </span>
+            )}
           </div>
-        )}
-      </div>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button className="btn btn-ghost" onClick={() => setOpen(false)}>Annulla</button>
+            <button className="btn btn-primary" onClick={handleAdd}>Aggiungi</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-function KpiCard({ label, value, sub, accent }) {
+const TONE_ICO = { accent: "ico-accent", pos: "ico-pos", warn: "ico-warn", danger: "ico-danger", info: "ico-info", ink: "" };
+const TONE_TXT = { accent: "t-accent", pos: "t-pos", warn: "t-warn", danger: "t-danger", info: "t-info", ink: "t-ink" };
+const TONE_BAR = { accent: "bar-accent", pos: "bar-pos", warn: "bar-warn", danger: "bar-danger", info: "bar-info", ink: "bar-ink" };
+
+function KpiCard({ label, value, cur, sub, tone, icon }) {
   return (
-    <div className={styles.kpiCard} style={{ borderTopColor: accent }}>
-      <div className={styles.kpiValue} style={{ color: accent }}>{value}</div>
-      <div className={styles.kpiLabel}>{label}</div>
-      {sub && <div className={styles.kpiSub}>{sub}</div>}
+    <div className="kpi reveal">
+      <span className={"kpi-accent-bar " + TONE_BAR[tone]}></span>
+      <div className="kpi-top">
+        <span className="kpi-label">{label}</span>
+        <span className={"kpi-ico " + TONE_ICO[tone]}><Icon name={icon} size={15} /></span>
+      </div>
+      <div className={"kpi-val num " + TONE_TXT[tone]}>
+        {value}{cur && <span className="cur">{cur}</span>}
+      </div>
+      {sub && <div className="kpi-sub">{sub}</div>}
     </div>
   );
 }

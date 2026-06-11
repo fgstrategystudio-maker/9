@@ -1,24 +1,25 @@
 .layout {
   display: flex;
   min-height: 100vh;
-  background: #0a0f1e;
-  color: #e2e8f0;
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--canvas);
+  color: var(--ink);
 }
 
 .main {
   flex: 1;
-  padding: 2rem;
-  overflow-y: auto;
   min-width: 0;
+  max-height: 100vh;
+  overflow-y: auto;
 }
 
-@media (max-width: 768px) {
-  .layout {
-    flex-direction: column;
-  }
+.mainInner {
+  padding: var(--pad) clamp(24px, 3.2vw, 52px) 70px;
+  max-width: 1320px;
+  margin: 0 auto;
+}
 
-  .main {
-    padding: 1rem;
+@media (max-width: 860px) {
+  .mainInner {
+    padding-top: 64px;
   }
 }

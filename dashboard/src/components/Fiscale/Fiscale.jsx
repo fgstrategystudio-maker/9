@@ -1,10 +1,16 @@
-import { formatCurrency, daysUntil } from "../../utils/helpers";
+import { daysUntil } from "../../utils/helpers";
+import Icon from "../Icon";
 import styles from "./Fiscale.module.css";
 
 const MESI_IT = {
   gennaio: 0, febbraio: 1, marzo: 2, aprile: 3, maggio: 4, giugno: 5,
   luglio: 6, agosto: 7, settembre: 8, ottobre: 9, novembre: 10, dicembre: 11,
 };
+
+const SOGLIA_FORFETTARIO = 85000;
+
+const nf = new Intl.NumberFormat("it-IT");
+const fmtN = (n) => nf.format(Math.round(n ?? 0));
 
 function parseMese(meseStr) {
   if (!meseStr) return null;
@@ -57,6 +63,8 @@ export default function Fiscale({ setup }) {
   const totTieni = totalLordo - totDaMettere;
   const percAccantonamento = totalLordo > 0 ? Math.round((totDaMettere / totalLordo) * 100) : 0;
 
+  const pctSoglia = Math.min(100, Math.round((totalLordo / SOGLIA_FORFETTARIO) * 100));
+
   // Raggruppa per trimestre per scadenze IVA
   const quarterMap = {};
   storico.forEach((r) => {
@@ -80,145 +88,163 @@ export default function Fiscale({ setup }) {
     .sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
 
   return (
-    <div className={styles.page}>
-      <header className={styles.header}>
-        <h1 className={styles.title}>Fiscale</h1>
-        <p className={styles.subtitle}>
-          Regime {regime} · Accantonamento consigliato {percAccantonamento}% del lordo
-        </p>
+    <div className="view-enter grid" style={{ gap: "var(--gap)" }}>
+      <header className="topbar" style={{ marginBottom: 0 }}>
+        <div>
+          <div className="page-eyebrow">Tasse &amp; contributi</div>
+          <h1 className="page-title">Fiscale</h1>
+          <p className="page-sub">
+            Soglia forfettario, accantonamenti e prossime scadenze fiscali — regime {regime} · accantonamento consigliato {percAccantonamento}% del lordo.
+          </p>
+        </div>
       </header>
 
       {storico.length === 0 && (
-        <div className={styles.empty}>
-          Aggiungi gli incassi nella sezione Setup → Storico incassato per attivare i calcoli.
+        <div className="notice">
+          <div className="notice-ico ico-warn"><Icon name="alert" size={18} /></div>
+          <span className="lab">Aggiungi gli incassi nella sezione Setup → Storico incassato per attivare i calcoli.</span>
         </div>
       )}
 
       {storico.length > 0 && (
         <>
-          {/* Salvadanaio */}
-          <section className={styles.salvadanaio}>
-            <h2 className={styles.sectionTitle}>Salvadanaio fiscale</h2>
-            <p className={styles.salvadanaioBasis}>
-              Calcolato su <strong>{formatCurrency(totalLordo)}</strong> lordo incassato
-            </p>
-            <div className={styles.breakdownGrid}>
-              {aliquotaIVA > 0 && (
-                <BreakdownCard
-                  label="IVA da versare"
-                  rate={aliquotaIVA}
-                  amount={totIVA}
-                  color="#f59e0b"
-                  note="Non è tua — va restituita all'erario"
-                />
-              )}
-              <BreakdownCard
-                label="IRPEF stimata"
-                rate={aliquotaIRPEF}
-                amount={totIRPEF}
-                color="#6366f1"
-                note={regime === "forfettario" ? "Imposta sostitutiva 15%" : "Aliquota marginale"}
-              />
-              <BreakdownCard
-                label="Contributi INPS"
-                rate={aliquotaINPS}
-                amount={totINPS}
-                color="#8b5cf6"
-                note="Gestione separata"
-              />
-              {bufferExtra > 0 && (
-                <BreakdownCard
-                  label="Buffer extra"
-                  rate={bufferExtra}
-                  amount={totBuffer}
-                  color="#64748b"
-                  note="Riserva di sicurezza"
-                />
-              )}
-            </div>
-
-            <div className={styles.totalBar}>
-              <div className={styles.totalItem}>
-                <span className={styles.totalLabel}>Da accantonare</span>
-                <span className={styles.totalAmount} style={{ color: "#ef4444" }}>
-                  {formatCurrency(totDaMettere)}
-                </span>
-                <span className={styles.totalPercent}>{percAccantonamento}% del lordo</span>
+          <div className="grid cols-2-asym">
+            {/* Soglia regime forfettario */}
+            <section className="panel">
+              <div className="panel-head">
+                <div className="panel-title"><Icon name="shield" size={15} />Soglia regime forfettario</div>
+                <span className="panel-note" style={{ textTransform: "capitalize" }}>{regime} {aliquotaIRPEF}%</span>
               </div>
-              <div className={styles.totalDivider} />
-              <div className={styles.totalItem}>
-                <span className={styles.totalLabel}>Puoi spendere</span>
-                <span className={styles.totalAmount} style={{ color: "#22c55e" }}>
-                  {formatCurrency(totTieni)}
-                </span>
-                <span className={styles.totalPercent}>{100 - percAccantonamento}% del lordo</span>
-              </div>
-            </div>
-          </section>
-
-          {/* Dettaglio mensile */}
-          <section className={styles.card}>
-            <h2 className={styles.sectionTitle}>Dettaglio per incasso</h2>
-            <div className={styles.tableHead}>
-              <span>Mese</span>
-              <span>Lordo</span>
-              {aliquotaIVA > 0 && <span>IVA</span>}
-              <span>IRPEF</span>
-              <span>INPS</span>
-              <span>Accantona</span>
-              <span>Tieni</span>
-            </div>
-            {storico.map((r, i) => {
-              const iva = Math.round(r.lordo * ivaRate);
-              const irpef = Math.round(r.lordo * irpefRate);
-              const inps = Math.round(r.lordo * inpsRate);
-              const buf = Math.round(r.lordo * bufferRate);
-              const accantona = iva + irpef + inps + buf;
-              const tieni = r.lordo - accantona;
-              return (
-                <div key={i} className={styles.tableRow}>
-                  <span className={styles.meseCell}>{r.mese}</span>
-                  <span>{formatCurrency(r.lordo)}</span>
-                  {aliquotaIVA > 0 && <span style={{ color: "#f59e0b" }}>{formatCurrency(iva)}</span>}
-                  <span style={{ color: "#818cf8" }}>{formatCurrency(irpef)}</span>
-                  <span style={{ color: "#a78bfa" }}>{formatCurrency(inps)}</span>
-                  <span style={{ color: "#ef4444", fontWeight: 700 }}>{formatCurrency(accantona)}</span>
-                  <span style={{ color: "#22c55e", fontWeight: 700 }}>{formatCurrency(tieni)}</span>
+              <div className="panel-pad" style={{ paddingTop: 4 }}>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 10, flexWrap: "wrap" }}>
+                  <span className="num" style={{ fontFamily: "var(--font-serif)", fontSize: 40, fontWeight: 500, letterSpacing: "-.02em" }}>
+                    {fmtN(totalLordo)} €
+                  </span>
+                  <span style={{ color: "var(--ink-3)", fontSize: 15 }}>/ {fmtN(SOGLIA_FORFETTARIO)} €</span>
                 </div>
-              );
-            })}
+                <div style={{ fontSize: 13, color: "var(--ink-2)", marginTop: 6 }}>
+                  Fatturato YTD · <b style={{ color: "var(--accent-ink)" }}>{pctSoglia}%</b> della soglia annua
+                </div>
+                <div className="statbar-track" style={{ height: 10, marginTop: 16 }}>
+                  <div
+                    className="statbar-fill"
+                    style={{ width: pctSoglia + "%", background: "linear-gradient(90deg, var(--pos), var(--accent))" }}
+                  ></div>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11.5, color: "var(--ink-3)", marginTop: 8 }}>
+                  <span>0 €</span>
+                  <span>{fmtN(SOGLIA_FORFETTARIO)} €</span>
+                </div>
+              </div>
+            </section>
+
+            {/* Accantonato */}
+            <section className="panel">
+              <div className="panel-head">
+                <div className="panel-title"><Icon name="coin" size={15} />Accantonamento</div>
+                <span className="panel-note">calcolato su {fmtN(totalLordo)} € lordo incassato</span>
+              </div>
+              <div className="panel-pad" style={{ paddingTop: 4, display: "grid", gap: 14 }}>
+                <div className="mini" style={{ padding: 16, boxShadow: "none", background: "var(--panel-2)" }}>
+                  <div className="l">Da accantonare (stima)</div>
+                  <div className="v t-warn num" style={{ fontSize: 26 }}>{fmtN(totDaMettere)} €</div>
+                  <div className="s">
+                    imposta sostitutiva {aliquotaIRPEF}% + contributi INPS {aliquotaINPS}%{bufferExtra > 0 ? ` + buffer ${bufferExtra}%` : ""}{aliquotaIVA > 0 ? ` + IVA ${aliquotaIVA}%` : ""}
+                  </div>
+                </div>
+                <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+                  <div style={{ flex: 1, minWidth: 110 }}>
+                    <div style={{ fontSize: 12, color: "var(--ink-2)", fontWeight: 600 }}>Imposta sostitutiva</div>
+                    <div className="num" style={{ fontFamily: "var(--font-serif)", fontSize: 24, color: "var(--info)" }}>{fmtN(totIRPEF)} €</div>
+                  </div>
+                  <div style={{ flex: 1, minWidth: 110 }}>
+                    <div style={{ fontSize: 12, color: "var(--ink-2)", fontWeight: 600 }}>Contributi INPS</div>
+                    <div className="num" style={{ fontFamily: "var(--font-serif)", fontSize: 24, color: "var(--danger)" }}>{fmtN(totINPS)} €</div>
+                  </div>
+                  <div style={{ flex: 1, minWidth: 110 }}>
+                    <div style={{ fontSize: 12, color: "var(--ink-2)", fontWeight: 600 }}>Puoi spendere</div>
+                    <div className="num" style={{ fontFamily: "var(--font-serif)", fontSize: 24, color: "var(--pos-ink)" }}>{fmtN(totTieni)} €</div>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          {/* Dettaglio per incasso */}
+          <section className="panel">
+            <div className="panel-head">
+              <div className="panel-title"><Icon name="receipt" size={15} />Dettaglio per incasso</div>
+              <span className="panel-note">accantonamento {percAccantonamento}% del lordo</span>
+            </div>
+            <div className={styles.tableWrap}>
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Mese</th>
+                    <th className="r">Lordo</th>
+                    {aliquotaIVA > 0 && <th className="r">IVA</th>}
+                    <th className="r">Imposta</th>
+                    <th className="r">INPS</th>
+                    <th className="r">Accantona</th>
+                    <th className="r">Tieni</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {storico.map((r, i) => {
+                    const iva = Math.round(r.lordo * ivaRate);
+                    const irpef = Math.round(r.lordo * irpefRate);
+                    const inps = Math.round(r.lordo * inpsRate);
+                    const buf = Math.round(r.lordo * bufferRate);
+                    const accantona = iva + irpef + inps + buf;
+                    const tieni = r.lordo - accantona;
+                    return (
+                      <tr key={i} style={{ cursor: "default" }}>
+                        <td style={{ fontWeight: 600, color: "var(--ink)" }}>{r.mese}</td>
+                        <td className="r num">{fmtN(r.lordo)} €</td>
+                        {aliquotaIVA > 0 && <td className="r num t-warn">{fmtN(iva)} €</td>}
+                        <td className="r num t-info">{fmtN(irpef)} €</td>
+                        <td className="r num" style={{ color: "var(--accent-ink)" }}>{fmtN(inps)} €</td>
+                        <td className="r num t-danger" style={{ fontWeight: 700 }}>{fmtN(accantona)} €</td>
+                        <td className="r num t-pos" style={{ fontWeight: 700 }}>{fmtN(tieni)} €</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </section>
 
           {/* Scadenze IVA */}
           {aliquotaIVA > 0 && scadenzeIVA.length > 0 && (
-            <section className={styles.card}>
-              <h2 className={styles.sectionTitle}>Scadenze IVA trimestrali</h2>
-              <div className={styles.scadenzeList}>
+            <section className="panel">
+              <div className="panel-head">
+                <div className="panel-title"><Icon name="calendar" size={15} />Prossime scadenze fiscali</div>
+              </div>
+              <div className="row-list">
                 {scadenzeIVA.map((s) => {
                   const isPast = s.days !== null && s.days < 0;
-                  const isUrgent = s.days !== null && s.days >= 0 && s.days <= 30;
-                  const isWarning = s.days !== null && s.days > 30 && s.days <= 60;
-                  const urgColor = isPast ? "#6b7280" : isUrgent ? "#ef4444" : isWarning ? "#f59e0b" : "#22c55e";
                   return (
-                    <div key={`${s.year}-${s.quarter}`} className={styles.scadenzaRow}>
+                    <div
+                      key={`${s.year}-${s.quarter}`}
+                      className="lrow"
+                      style={{ gridTemplateColumns: "auto 1fr auto auto", gap: 16, cursor: "default" }}
+                    >
+                      <span className="kpi-ico ico-warn" style={{ width: 36, height: 36 }}><Icon name="clock" size={16} /></span>
                       <div>
-                        <div className={styles.scadenzaLabel}>{s.label} — {s.year}</div>
-                        <div className={styles.scadenzaDate}>
-                          Scadenza: {new Date(s.deadline).toLocaleDateString("it-IT", { day: "2-digit", month: "long", year: "numeric" })}
+                        <div className="nm">IVA {s.label} — {s.year}</div>
+                        <div className="meta">
+                          {new Date(s.deadline).toLocaleDateString("it-IT", { day: "2-digit", month: "long", year: "numeric" })}
                         </div>
                       </div>
-                      <div className={styles.scadenzaRight}>
-                        <span className={styles.scadenzaIVA} style={{ color: "#f59e0b" }}>
-                          {formatCurrency(s.iva)}
-                        </span>
-                        <span className={styles.scadenzaDays} style={{ color: urgColor }}>
-                          {isPast
-                            ? `scaduta ${Math.abs(s.days)}gg fa`
-                            : s.days === 0
-                            ? "Oggi!"
-                            : `tra ${s.days} giorni`}
-                        </span>
-                      </div>
+                      <span
+                        className={"deadline-chip" + (s.days !== null && s.days >= 0 && s.days <= 7 ? " urgent" : "")}
+                        style={{ justifySelf: "end" }}
+                      >
+                        <b>{isPast ? `scaduta ${Math.abs(s.days)}gg fa` : s.days === 0 ? "Oggi" : `${s.days}gg`}</b>
+                      </span>
+                      <span className="num" style={{ fontFamily: "var(--font-serif)", fontSize: 20, color: "var(--warn)", minWidth: 90, textAlign: "right" }}>
+                        {fmtN(s.iva)} €
+                      </span>
                     </div>
                   );
                 })}
@@ -228,24 +254,16 @@ export default function Fiscale({ setup }) {
 
           {/* Nota regime forfettario */}
           {regime === "forfettario" && aliquotaIVA === 0 && (
-            <div className={styles.infoBox}>
-              <strong>Regime forfettario:</strong> esente IVA — non addebiti né versi IVA.
-              L&apos;imposta sostitutiva IRPEF al {aliquotaIRPEF}% si paga in acconto (novembre) e saldo (giugno) dell&apos;anno successivo.
+            <div className="notice">
+              <div className="notice-ico ico-info"><Icon name="shield" size={18} /></div>
+              <span style={{ fontSize: 13.5, color: "var(--ink-2)" }}>
+                <b style={{ color: "var(--ink)" }}>Regime forfettario:</b> esente IVA — non addebiti né versi IVA.
+                L&apos;imposta sostitutiva al {aliquotaIRPEF}% si paga in acconto (novembre) e saldo (giugno) dell&apos;anno successivo.
+              </span>
             </div>
           )}
         </>
       )}
-    </div>
-  );
-}
-
-function BreakdownCard({ label, rate, amount, color, note }) {
-  return (
-    <div className={styles.breakdownCard} style={{ borderTopColor: color }}>
-      <div className={styles.breakdownRate} style={{ color }}>{rate}%</div>
-      <div className={styles.breakdownLabel}>{label}</div>
-      <div className={styles.breakdownAmount} style={{ color }}>{formatCurrency(amount)}</div>
-      <div className={styles.breakdownNote}>{note}</div>
     </div>
   );
 }

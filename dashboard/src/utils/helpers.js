@@ -25,25 +25,58 @@ export function daysUntil(dateStr) {
   return Math.round((target - today) / (1000 * 60 * 60 * 24));
 }
 
+// Toni del design system (Crema & Terracotta)
 export function getStatoColor(stato) {
   const map = {
-    "In corso": "#22c55e",
-    "In scadenza": "#f59e0b",
-    "Da chiarire": "#8b5cf6",
-    Sospeso: "#6b7280",
-    Concluso: "#3b82f6",
-    Perso: "#ef4444",
+    "In corso": "#5E7E5A",      // pos
+    "In scadenza": "#B5862F",   // warn
+    "Da chiarire": "#B5654A",   // accent
+    Sospeso: "#9A8F7E",         // ink-3
+    Concluso: "#5B7088",        // info
+    Perso: "#AE4A3A",           // danger
   };
-  return map[stato] || "#6b7280";
+  return map[stato] || "#9A8F7E";
+}
+
+// Tono pill (classi globali .pill.s-*)
+export function getStatoTone(stato) {
+  const map = {
+    "In corso": "pos",
+    "In scadenza": "warn",
+    "Da chiarire": "accent",
+    Sospeso: "ink",
+    Concluso: "info",
+    Perso: "danger",
+  };
+  return map[stato] || "ink";
 }
 
 export function getPrioritaColor(priorita) {
   const map = {
-    Alta: "#ef4444",
-    Media: "#f59e0b",
-    Bassa: "#22c55e",
+    Alta: "#AE4A3A",
+    Media: "#B5862F",
+    Bassa: "#5E7E5A",
   };
-  return map[priorita] || "#6b7280";
+  return map[priorita] || "#9A8F7E";
+}
+
+// Tinte piatte per avatar a iniziali (da palette design)
+const AVATAR_COLORS = ["#B5654A", "#5E7E5A", "#B5862F", "#5B7088", "#8a6b52", "#8A5A8A"];
+
+export function getAvatarColor(name) {
+  let h = 0;
+  for (let i = 0; i < (name || "").length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
+  return AVATAR_COLORS[h % AVATAR_COLORS.length];
+}
+
+export function getInitials(name) {
+  return (name || "")
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase();
 }
 
 export function calcNetto(lordo, fattore) {

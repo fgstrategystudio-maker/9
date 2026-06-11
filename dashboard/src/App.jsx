@@ -91,32 +91,15 @@ export default function App() {
     <div className={styles.layout}>
       <Sidebar view={view} onNavigate={setView} />
       <main className={styles.main}>
+        <div className={styles.mainInner}>
         {backupBanner && (
-          <div style={{
-            background: "rgba(245,158,11,0.12)",
-            border: "1px solid rgba(245,158,11,0.35)",
-            borderRadius: 8,
-            padding: "0.7rem 1rem",
-            marginBottom: "1.25rem",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: "0.5rem",
-          }}>
-            <span style={{ color: "#fbbf24", fontSize: "0.875rem" }}>
-              Backup non recente — scarica una copia dei tuoi dati
-            </span>
-            <div style={{ display: "flex", gap: "0.5rem" }}>
-              <button
-                onClick={() => { exportData(); setBackupBanner(false); }}
-                style={{ background: "rgba(245,158,11,0.2)", border: "1px solid rgba(245,158,11,0.4)", color: "#fbbf24", borderRadius: 6, padding: "0.35rem 0.75rem", fontSize: "0.8rem", cursor: "pointer" }}
-              >
+          <div className="notice warn" style={{ marginBottom: "var(--gap)", justifyContent: "space-between" }}>
+            <span className="lab">Backup non recente — scarica una copia dei tuoi dati</span>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button className="btn btn-ghost" onClick={() => { exportData(); setBackupBanner(false); }}>
                 Scarica ora
               </button>
-              <button
-                onClick={() => setBackupBanner(false)}
-                style={{ background: "transparent", border: "none", color: "#94a3b8", fontSize: "1.1rem", cursor: "pointer", padding: "0 0.25rem" }}
-              >
+              <button className="btn btn-quiet" onClick={() => setBackupBanner(false)}>
                 ✕
               </button>
             </div>
@@ -141,6 +124,7 @@ export default function App() {
         {view === "network" && (
           <Network network={network} setNetwork={setNetwork} />
         )}
+        </div>
       </main>
     </div>
   );

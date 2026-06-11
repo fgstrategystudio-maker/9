@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import Icon from "../Icon";
 import styles from "./PinGate.module.css";
 
 const PIN_LENGTH = 4;
@@ -83,7 +84,7 @@ export default function PinGate({ onUnlock }) {
   return (
     <div className={styles.overlay}>
       <div className={styles.card}>
-        <div className={styles.logo}>◆</div>
+        <div className={styles.logo}><Icon name="layers" size={20} /></div>
         <h1 className={styles.title}>Freelance Dashboard</h1>
         <p className={styles.subtitle}>Inserisci il PIN per accedere</p>
 

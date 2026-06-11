@@ -3,16 +3,22 @@ import {
   formatCurrency,
   formatDate,
   daysUntil,
-  getStatoColor,
+  getStatoTone,
   getPrioritaColor,
   calcNetto,
   getCommessaLordoMensile,
+  getAvatarColor,
+  getInitials,
 } from "../../utils/helpers";
 import CommessaModal from "../CommessaModal/CommessaModal";
+import Icon from "../Icon";
 import styles from "./Commesse.module.css";
 
 const STATI = ["In corso", "In scadenza", "Da chiarire", "Sospeso", "Concluso", "Perso"];
 const PRIORITA = ["Alta", "Media", "Bassa"];
+
+const nf = new Intl.NumberFormat("it-IT");
+const fmtN = (n) => nf.format(Math.round(n ?? 0));
 
 export default function Commesse({ commesse, setCommesse, setup }) {
   const [search, setSearch] = useState("");
@@ -33,6 +39,12 @@ export default function Commesse({ commesse, setCommesse, setup }) {
   });
 
   const selected = commesse.find((c) => c.id === selectedId);
+
+  const attive = commesse.filter((c) => c.stato === "In corso" || c.stato === "In scadenza");
+  const daChiarire = commesse.filter((c) => c.stato === "Da chiarire").length;
+  const concluse = commesse.filter((c) => c.stato === "Concluso").length;
+  const feeAggregato = attive.reduce((s, c) => s + (getCommessaLordoMensile(c) || 0), 0);
+  const nettoAggregato = calcNetto(feeAggregato, setup.fattoreNetto);
 
   function handleNew() {
     setEditData(null);
@@ -62,26 +74,49 @@ export default function Commesse({ commesse, setCommesse, setup }) {
   }
 
   return (
-    <div className={styles.page}>
-      <header className={styles.header}>
+    <div className="view-enter grid" style={{ gap: "var(--gap)" }}>
+      <header className="topbar" style={{ marginBottom: 0 }}>
         <div>
-          <h1 className={styles.title}>Commesse</h1>
-          <p className={styles.subtitle}>{commesse.length} totali · {commesse.filter(c => c.stato === "In corso").length} in corso</p>
+          <div className="page-eyebrow">Portfolio</div>
+          <h1 className="page-title">Commesse</h1>
+          <p className="page-sub">Tutte le commesse attive, da chiarire e concluse con fee e scadenze.</p>
         </div>
-        <button className={styles.addBtn} onClick={handleNew}>
-          + Nuova commessa
-        </button>
+        <div className="topbar-actions">
+          <button className="btn btn-primary" onClick={handleNew}>
+            <Icon name="plus" size={16} /> Nuova commessa
+          </button>
+        </div>
       </header>
+
+      <div className="mini-grid">
+        <div className="mini">
+          <div className="l">Commesse totali</div>
+          <div className="v">{commesse.length}</div>
+          <div className="s">{attive.length} attive · {daChiarire} da chiarire · {concluse} concluse</div>
+        </div>
+        <div className="mini">
+          <div className="l">Fee lordo aggregato</div>
+          <div className="v t-accent num">{fmtN(feeAggregato)} €</div>
+          <div className="s">somma mensile ricorrente</div>
+        </div>
+        <div className="mini">
+          <div className="l">Netto stimato</div>
+          <div className="v t-pos num">{fmtN(nettoAggregato)} €</div>
+          <div className="s">fattore {(setup.fattoreNetto * 100).toFixed(0)}%</div>
+        </div>
+      </div>
 
       <div className={styles.filters}>
         <input
-          className={styles.searchInput}
+          className="input"
+          style={{ flex: 1, minWidth: 200 }}
           placeholder="Cerca cliente o servizio…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
         <select
-          className={styles.filterSelect}
+          className="select"
+          style={{ width: "auto" }}
           value={filterStato}
           onChange={(e) => setFilterStato(e.target.value)}
         >
@@ -91,7 +126,8 @@ export default function Commesse({ commesse, setCommesse, setup }) {
           ))}
         </select>
         <select
-          className={styles.filterSelect}
+          className="select"
+          style={{ width: "auto" }}
           value={filterPriorita}
           onChange={(e) => setFilterPriorita(e.target.value)}
         >
@@ -102,70 +138,87 @@ export default function Commesse({ commesse, setCommesse, setup }) {
         </select>
       </div>
 
-      <div className={styles.layout}>
-        <div className={styles.list}>
-          {filtered.length === 0 && (
-            <div className={styles.empty}>Nessuna commessa trovata.</div>
-          )}
-          {filtered.map((c) => {
-            const days = c.fine ? daysUntil(c.fine) : null;
-            const lordo = getCommessaLordoMensile(c);
-            return (
-              <div
-                key={c.id}
-                className={`${styles.card} ${selectedId === c.id ? styles.cardActive : ""}`}
-                onClick={() => setSelectedId(selectedId === c.id ? null : c.id)}
-              >
-                <div className={styles.cardTop}>
-                  <div className={styles.cardCliente}>{c.cliente}</div>
-                  <span
-                    className={styles.badge}
-                    style={{ background: getStatoColor(c.stato) + "22", color: getStatoColor(c.stato) }}
-                  >
-                    {c.stato}
-                  </span>
-                </div>
-                <div className={styles.cardServizio}>{c.servizio}</div>
-                <div className={styles.cardMeta}>
-                  <span
-                    className={styles.prioritaBadge}
-                    style={{ color: getPrioritaColor(c.priorita) }}
-                  >
-                    ● {c.priorita}
-                  </span>
-                  {lordo && (
-                    <span className={styles.feeBadge}>
-                      {formatCurrency(lordo)}/mese
-                    </span>
-                  )}
-                  {c.lordoProgetto && !lordo && (
-                    <span className={styles.feeBadge}>
-                      {formatCurrency(c.lordoProgetto)} progetto
-                    </span>
-                  )}
-                  {days !== null && days >= 0 && (
-                    <span
-                      className={styles.daysBadge}
-                      style={{ color: days <= 14 ? "#ef4444" : days <= 30 ? "#f59e0b" : "#94a3b8" }}
-                    >
-                      ⏱ {days}gg
-                    </span>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+      <section className="panel">
+        <div className="panel-head">
+          <div className="panel-title"><Icon name="folder" size={15} />Tutte le commesse</div>
+          <span className="panel-note">{filtered.length} {filtered.length === 1 ? "risultato" : "risultati"}</span>
         </div>
-
-        {selected && (
-          <CommessaDetail
-            commessa={selected}
-            setup={setup}
-            onEdit={() => handleEdit(selected)}
-            onDelete={() => handleDelete(selected.id)}
-          />
+        {filtered.length === 0 ? (
+          <p style={{ color: "var(--ink-3)", fontSize: 13.5, padding: "14px var(--card-pad) 22px" }}>
+            Nessuna commessa trovata.
+          </p>
+        ) : (
+          <div className={styles.tableWrap}>
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Commessa</th>
+                  <th>Tipo</th>
+                  <th>Stato</th>
+                  <th className="r">Fee lordo</th>
+                  <th className="r">Netto</th>
+                  <th className="r">Scadenza</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((c) => {
+                  const days = c.fine ? daysUntil(c.fine) : null;
+                  const lordo = getCommessaLordoMensile(c);
+                  const netto = calcNetto(lordo, setup.fattoreNetto);
+                  const scadColor =
+                    days === null ? "var(--ink-3)"
+                    : days <= 7 ? "var(--danger)"
+                    : days <= 21 ? "var(--warn)"
+                    : "var(--ink-2)";
+                  return (
+                    <tr
+                      key={c.id}
+                      className={selectedId === c.id ? styles.rowActive : ""}
+                      onClick={() => setSelectedId(selectedId === c.id ? null : c.id)}
+                    >
+                      <td>
+                        <div className="client-cell">
+                          <span className="client-ava" style={{ background: getAvatarColor(c.cliente) }}>
+                            {getInitials(c.cliente)}
+                          </span>
+                          <div>
+                            <div style={{ fontWeight: 600, color: "var(--ink)", whiteSpace: "nowrap" }}>{c.cliente}</div>
+                            <div style={{ fontSize: 12, color: "var(--ink-3)" }}>{c.servizio}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td style={{ color: "var(--ink-2)" }}>{c.tipo || "—"}</td>
+                      <td>
+                        <span className={"pill s-" + getStatoTone(c.stato)}>
+                          <span className="d"></span>{c.stato}
+                        </span>
+                      </td>
+                      <td className="r num" style={{ fontWeight: 600 }}>
+                        {lordo ? `${fmtN(lordo)} €` : c.lordoProgetto ? `${fmtN(c.lordoProgetto)} €` : "—"}
+                      </td>
+                      <td className="r num t-pos" style={{ fontWeight: 600 }}>
+                        {netto ? `${fmtN(netto)} €` : c.lordoProgetto ? `${fmtN(calcNetto(c.lordoProgetto, setup.fattoreNetto))} €` : "—"}
+                      </td>
+                      <td className="r num" style={{ color: scadColor, fontWeight: 600 }}>
+                        {days !== null ? `${days} gg` : "—"}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
-      </div>
+      </section>
+
+      {selected && (
+        <CommessaDetail
+          commessa={selected}
+          setup={setup}
+          onEdit={() => handleEdit(selected)}
+          onDelete={() => handleDelete(selected.id)}
+        />
+      )}
 
       {modalOpen && (
         <CommessaModal
@@ -186,21 +239,28 @@ function CommessaDetail({ commessa: c, setup, onEdit, onDelete }) {
   const days = c.fine ? daysUntil(c.fine) : null;
 
   return (
-    <div className={styles.detail}>
-      <div className={styles.detailHeader}>
-        <div>
-          <h2 className={styles.detailCliente}>{c.cliente}</h2>
-          <p className={styles.detailServizio}>{c.servizio}</p>
+    <section className="panel reveal">
+      <div className="panel-head">
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <span className="client-ava" style={{ background: getAvatarColor(c.cliente), width: 40, height: 40, borderRadius: 11, fontSize: 16 }}>
+            {getInitials(c.cliente)}
+          </span>
+          <div>
+            <div style={{ fontFamily: "var(--font-serif)", fontSize: 22, fontWeight: 500, letterSpacing: "-.02em", color: "var(--ink)" }}>
+              {c.cliente}
+            </div>
+            <div style={{ fontSize: 12.5, color: "var(--ink-3)" }}>{c.servizio}</div>
+          </div>
         </div>
-        <div className={styles.detailActions}>
-          <button className={styles.editBtn} onClick={onEdit}>Modifica</button>
-          <button className={styles.deleteBtn} onClick={onDelete}>Elimina</button>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button className="btn btn-ghost" onClick={onEdit}><Icon name="edit" size={15} /> Modifica</button>
+          <button className="btn btn-danger" onClick={onDelete}><Icon name="trash" size={15} /> Elimina</button>
         </div>
       </div>
 
       <div className={styles.detailGrid}>
         <DetailRow label="Stato" value={
-          <span style={{ color: getStatoColor(c.stato), fontWeight: 600 }}>{c.stato}</span>
+          <span className={"pill s-" + getStatoTone(c.stato)}><span className="d"></span>{c.stato}</span>
         } />
         <DetailRow label="Priorità" value={
           <span style={{ color: getPrioritaColor(c.priorita), fontWeight: 600 }}>{c.priorita}</span>
@@ -212,21 +272,21 @@ function CommessaDetail({ commessa: c, setup, onEdit, onDelete }) {
             <span>
               {formatDate(c.fine)}
               {days !== null && (
-                <span style={{ color: days <= 14 ? "#ef4444" : days <= 30 ? "#f59e0b" : "#94a3b8", marginLeft: "8px", fontSize: "0.8rem" }}>
+                <span style={{ color: days <= 7 ? "var(--danger)" : days <= 21 ? "var(--warn)" : "var(--ink-3)", marginLeft: 8, fontSize: "0.8rem" }}>
                   ({days >= 0 ? `tra ${days} giorni` : `scaduta ${Math.abs(days)} giorni fa`})
                 </span>
               )}
             </span>
           ) : "—"
         } />
-        {lordo && <DetailRow label="Lordo mensile" value={formatCurrency(lordo)} />}
-        {netto && <DetailRow label="Netto mensile" value={<span style={{ color: "#22c55e" }}>{formatCurrency(netto)}</span>} />}
-        {c.lordoProgetto && <DetailRow label="Lordo progetto" value={formatCurrency(c.lordoProgetto)} />}
-        {nettoProgetto && <DetailRow label="Netto progetto" value={<span style={{ color: "#22c55e" }}>{formatCurrency(nettoProgetto)}</span>} />}
+        {lordo && <DetailRow label="Lordo mensile" value={<span className="num">{formatCurrency(lordo)}</span>} />}
+        {netto && <DetailRow label="Netto mensile" value={<span className="num t-pos">{formatCurrency(netto)}</span>} />}
+        {c.lordoProgetto && <DetailRow label="Lordo progetto" value={<span className="num">{formatCurrency(c.lordoProgetto)}</span>} />}
+        {nettoProgetto && <DetailRow label="Netto progetto" value={<span className="num t-pos">{formatCurrency(nettoProgetto)}</span>} />}
         {c.upsellTarget && (
           <>
-            <DetailRow label="Upsell target lordo" value={<span style={{ color: "#a78bfa" }}>{formatCurrency(c.upsellTarget)}</span>} />
-            <DetailRow label="Upsell target netto" value={<span style={{ color: "#a78bfa" }}>{formatCurrency(upsellNetto)}</span>} />
+            <DetailRow label="Upsell target lordo" value={<span className="num t-info">{formatCurrency(c.upsellTarget)}</span>} />
+            <DetailRow label="Upsell target netto" value={<span className="num t-info">{formatCurrency(upsellNetto)}</span>} />
           </>
         )}
       </div>
@@ -237,7 +297,7 @@ function CommessaDetail({ commessa: c, setup, onEdit, onDelete }) {
           <p className={styles.noteText}>{c.note}</p>
         </div>
       )}
-    </div>
+    </section>
   );
 }
 

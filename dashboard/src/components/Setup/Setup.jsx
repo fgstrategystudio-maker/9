@@ -1,8 +1,12 @@
 import { useState, useRef } from "react";
 import { formatCurrency } from "../../utils/helpers";
+import Icon from "../Icon";
 import styles from "./Setup.module.css";
 import { exportData } from "../../lib/backup";
 import { syncToSupabase } from "../../lib/supabase";
+
+const nf = new Intl.NumberFormat("it-IT");
+const fmtN = (n) => nf.format(Math.round(n ?? 0));
 
 export default function Setup({ setup, setSetup }) {
   const [form, setForm] = useState({
@@ -146,120 +150,129 @@ export default function Setup({ setup, setSetup }) {
   const totaleCostiAnnuali = costiAnnuali.reduce((s, c) => s + (c.importoAnnuale || c.importo * 12), 0);
 
   return (
-    <div className={styles.page}>
-      <header className={styles.header}>
-        <h1 className={styles.title}>Setup</h1>
-        <p className={styles.subtitle}>Configurazione parametri e storico incassato</p>
+    <div className="view-enter grid" style={{ gap: "var(--gap)" }}>
+      <header className="topbar" style={{ marginBottom: 0 }}>
+        <div>
+          <div className="page-eyebrow">Configurazione</div>
+          <h1 className="page-title">Setup</h1>
+          <p className="page-sub">Parametri di calcolo, patrimonio, storico ed export dei dati.</p>
+        </div>
       </header>
 
-      <div className={styles.grid}>
-        <section className={styles.card}>
-          <h2 className={styles.sectionTitle}>Parametri generali</h2>
-          <form className={styles.form} onSubmit={handleSaveSetup}>
-            <Field label="Fattore netto (%)">
+      <div className="grid cols-2" style={{ alignItems: "start" }}>
+        <section className="panel">
+          <div className="panel-head">
+            <div className="panel-title"><Icon name="sliders" size={15} />Parametri di calcolo</div>
+          </div>
+          <form className={styles.formPad} onSubmit={handleSaveSetup}>
+            <div>
+              <label className="field-label">Fattore netto (%)</label>
               <input
                 type="number"
-                className={styles.input}
+                className="input num"
                 value={form.fattoreNetto}
                 onChange={(e) => setForm((f) => ({ ...f, fattoreNetto: e.target.value }))}
                 min="1"
                 max="100"
                 step="1"
               />
-              <span className={styles.inputNote}>
-                {form.fattoreNetto}% del lordo = netto stimato
-              </span>
-            </Field>
-            <Field label={`Alert scadenze (giorni)`}>
+              <span className="field-note">{form.fattoreNetto}% del lordo = netto stimato</span>
+            </div>
+            <div>
+              <label className="field-label">Alert scadenze (giorni)</label>
               <input
                 type="number"
-                className={styles.input}
+                className="input num"
                 value={form.alertScadenzaGiorni}
                 onChange={(e) => setForm((f) => ({ ...f, alertScadenzaGiorni: e.target.value }))}
                 min="1"
                 max="365"
               />
-              <span className={styles.inputNote}>
+              <span className="field-note">
                 Alert quando la fine commessa è entro {form.alertScadenzaGiorni} giorni
               </span>
-            </Field>
+            </div>
             <div className={styles.formFooter}>
-              {saved && <span className={styles.savedMsg}>✓ Salvato</span>}
-              <button type="submit" className={styles.saveBtn}>Salva parametri</button>
+              {saved && <span className={styles.savedMsg}><Icon name="check" size={14} /> Salvato</span>}
+              <button type="submit" className="btn btn-primary">Salva parametri</button>
             </div>
           </form>
         </section>
 
-        <section className={styles.card}>
-          <h2 className={styles.sectionTitle}>Aggiungi incassato</h2>
-          <form className={styles.form} onSubmit={handleAddIncassato}>
-            <Field label="Mese (es. Aprile 2026)">
+        <section className="panel">
+          <div className="panel-head">
+            <div className="panel-title"><Icon name="plus" size={15} />Aggiungi incassato</div>
+          </div>
+          <form className={styles.formPad} onSubmit={handleAddIncassato}>
+            <div>
+              <label className="field-label">Mese (es. Aprile 2026)</label>
               <input
-                className={styles.input}
+                className="input"
                 value={newMese}
                 onChange={(e) => setNewMese(e.target.value)}
                 placeholder="Aprile 2026"
               />
-            </Field>
-            <Field label="Lordo incassato (€)">
+            </div>
+            <div>
+              <label className="field-label">Lordo incassato (€)</label>
               <input
                 type="number"
-                className={styles.input}
+                className="input num"
                 value={newLordo}
                 onChange={(e) => setNewLordo(e.target.value)}
                 placeholder="es. 4200"
                 min="0"
               />
               {newLordo && (
-                <span className={styles.inputNote}>
+                <span className="field-note">
                   Netto stimato: {formatCurrency(Math.round(Number(newLordo) * setup.fattoreNetto))}
                 </span>
               )}
-            </Field>
+            </div>
             <div className={styles.formFooter}>
-              <button type="submit" className={styles.saveBtn}>Aggiungi</button>
+              <button type="submit" className="btn btn-primary">Aggiungi</button>
             </div>
           </form>
         </section>
       </div>
 
-      <section className={styles.card} style={{ marginTop: "1rem" }}>
-        <div className={styles.historicoHeader}>
-          <h2 className={styles.sectionTitle}>Storico incassato</h2>
+      <section className="panel">
+        <div className="panel-head">
+          <div className="panel-title"><Icon name="history" size={15} />Storico incassato</div>
           {storico.length > 0 && (
-            <div className={styles.totals}>
-              <span className={styles.totalItem}>Totale lordo: <strong>{formatCurrency(totLordo)}</strong></span>
-              <span className={styles.totalItem} style={{ color: "#22c55e" }}>Totale netto: <strong>{formatCurrency(totNetto)}</strong></span>
-            </div>
+            <span className="panel-note">
+              Totale lordo <b className="num" style={{ color: "var(--ink)" }}>{fmtN(totLordo)} €</b>
+              {" · "}netto <b className="num" style={{ color: "var(--pos-ink)" }}>{fmtN(totNetto)} €</b>
+            </span>
           )}
         </div>
 
         {storico.length === 0 ? (
-          <p className={styles.empty}>Nessun dato ancora registrato.</p>
+          <p className={styles.emptyText}>Nessun dato ancora registrato.</p>
         ) : (
-          <div className={styles.storicoTable}>
-            <div className={styles.storicoHead}>
+          <div className={styles.editTable}>
+            <div className={styles.editHead4}>
               <span>Mese</span>
               <span>Lordo</span>
               <span>Netto</span>
               <span></span>
             </div>
             {storico.map((row, i) => (
-              <div key={i} className={styles.storicoRow}>
+              <div key={i} className={styles.editRow4}>
                 <input
-                  className={styles.storicoInput}
+                  className="input"
                   value={row.mese}
                   onChange={(e) => handleEditIncassato(i, "mese", e.target.value)}
                   placeholder="es. Maggio 2026"
                 />
                 <input
-                  className={styles.storicoInput}
+                  className="input num"
                   type="number"
                   value={row.lordo}
                   min="0"
                   onChange={(e) => handleEditIncassato(i, "lordo", e.target.value)}
                 />
-                <span style={{ color: "#22c55e", fontWeight: 600, fontSize: "0.875rem" }}>
+                <span className="num" style={{ color: "var(--pos-ink)", fontWeight: 600, fontSize: 14 }}>
                   {formatCurrency(row.netto)}
                 </span>
                 <button
@@ -275,36 +288,32 @@ export default function Setup({ setup, setSetup }) {
         )}
       </section>
 
-      <section className={styles.card} style={{ marginTop: "1rem" }}>
-        <div className={styles.historicoHeader}>
-          <h2 className={styles.sectionTitle}>Costi fissi mensili</h2>
+      <section className="panel">
+        <div className="panel-head">
+          <div className="panel-title"><Icon name="coin" size={15} />Costi fissi mensili</div>
           {costiFissiMensili.length > 0 && (
-            <div className={styles.totals}>
-              <span className={styles.totalItem}>
-                Totale: <strong>{formatCurrency(totaleCostiFissi)}</strong>/mese
-              </span>
-            </div>
+            <span className="panel-note">
+              Totale <b className="num" style={{ color: "var(--danger)" }}>{fmtN(totaleCostiFissi)} €</b>/mese
+            </span>
           )}
         </div>
 
         {costiFissiMensili.length > 0 && (
-          <div className={styles.storicoTable}>
-            <div className={styles.costiHead}>
+          <div className={styles.editTable}>
+            <div className={styles.editHead3}>
               <span>Voce</span>
               <span>€/mese</span>
               <span></span>
             </div>
             {costiFissiMensili.map((c) => (
-              <div key={c.id} className={styles.costiRow}>
-                <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
-                  <input
-                    className={styles.storicoInput}
-                    value={c.nome}
-                    onChange={(e) => handleEditCosto(c.id, "nome", e.target.value)}
-                  />
-                </div>
+              <div key={c.id} className={styles.editRow3}>
                 <input
-                  className={styles.storicoInput}
+                  className="input"
+                  value={c.nome}
+                  onChange={(e) => handleEditCosto(c.id, "nome", e.target.value)}
+                />
+                <input
+                  className="input num"
                   type="number"
                   value={c.importo}
                   min="0"
@@ -318,36 +327,32 @@ export default function Setup({ setup, setSetup }) {
 
         {costiAnnuali.length > 0 && (
           <>
-            <div className={styles.historicoHeader} style={{ marginTop: "1.5rem" }}>
-              <h3 style={{ fontSize: "0.9rem", color: "#f59e0b", fontWeight: 600, margin: 0 }}>
-                Spese annuali (promemoria — non nel conteggio mensile)
-              </h3>
-              <div className={styles.totals}>
-                <span className={styles.totalItem} style={{ color: "#f59e0b" }}>
-                  Totale: <strong>{totaleCostiAnnuali}€</strong>/anno
-                </span>
+            <div className="panel-head" style={{ paddingTop: 8 }}>
+              <div className="panel-title" style={{ color: "var(--warn)" }}>
+                <Icon name="calendar" size={15} />Spese annuali (promemoria)
               </div>
+              <span className="panel-note">
+                Totale <b className="num" style={{ color: "var(--warn)" }}>{fmtN(totaleCostiAnnuali)} €</b>/anno · non nel conteggio mensile
+              </span>
             </div>
-            <div className={styles.storicoTable} style={{ marginTop: "0.5rem" }}>
-              <div className={styles.costiHead}>
+            <div className={styles.editTable}>
+              <div className={styles.editHead3}>
                 <span>Voce</span>
                 <span>€/anno</span>
                 <span></span>
               </div>
               {costiAnnuali.map((c) => (
-                <div key={c.id} className={styles.costiRow} style={{ borderLeft: "2px solid rgba(245,158,11,0.4)", paddingLeft: "0.5rem" }}>
-                  <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
+                <div key={c.id} className={`${styles.editRow3} ${styles.annualRow}`}>
+                  <div style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
                     <input
-                      className={styles.storicoInput}
+                      className="input"
                       value={c.nome}
                       onChange={(e) => handleEditCosto(c.id, "nome", e.target.value)}
                     />
-                    <span style={{ fontSize: "0.68rem", color: "#92400e", marginTop: 2 }}>
-                      {c.importo}€/mese equivalente
-                    </span>
+                    <span className="field-note">{fmtN(c.importo)} €/mese equivalente</span>
                   </div>
                   <input
-                    className={styles.storicoInput}
+                    className="input num"
                     type="number"
                     value={c.importoAnnuale || c.importo * 12}
                     min="0"
@@ -360,111 +365,130 @@ export default function Setup({ setup, setSetup }) {
           </>
         )}
 
-        <div className={styles.addCostoRow}>
+        <div className={styles.addRow}>
           <input
-            className={styles.addCostoInput}
+            className="input"
             placeholder="Nome voce (es. Affitto)"
             value={newCostoNome}
             onChange={(e) => setNewCostoNome(e.target.value)}
             style={{ flex: 1 }}
           />
           <input
-            className={styles.addCostoInput}
+            className="input num"
             type="number"
             placeholder="€/mese"
             value={newCostoImporto}
             onChange={(e) => setNewCostoImporto(e.target.value)}
             min="0"
-            style={{ width: 90 }}
+            style={{ width: 110 }}
           />
-          <button className={styles.addCostoBtn} onClick={handleAddCosto}>+ Aggiungi</button>
+          <button className="btn btn-ghost" onClick={handleAddCosto}>
+            <Icon name="plus" size={15} /> Aggiungi
+          </button>
         </div>
       </section>
 
-      <section className={styles.card} style={{ marginTop: "1rem" }}>
-        <h2 className={styles.sectionTitle}>Configurazione fiscale</h2>
-        <form className={styles.form} onSubmit={handleSaveFiscale}>
-          <Field label="Regime fiscale">
+      <section className="panel">
+        <div className="panel-head">
+          <div className="panel-title"><Icon name="receipt" size={15} />Configurazione fiscale</div>
+        </div>
+        <form className={styles.formPad} onSubmit={handleSaveFiscale}>
+          <div>
+            <label className="field-label">Regime fiscale</label>
             <select
-              className={styles.input}
+              className="select"
               value={fiscaleForm.regime}
               onChange={(e) => setFf("regime", e.target.value)}
             >
               <option value="forfettario">Forfettario</option>
               <option value="ordinario">Ordinario</option>
             </select>
-          </Field>
+          </div>
           <div className={styles.fiscaleGrid}>
-            <Field label="IVA (%)">
+            <div>
+              <label className="field-label">IVA (%)</label>
               <input
                 type="number"
-                className={styles.input}
+                className="input num"
                 value={fiscaleForm.aliquotaIVA}
                 onChange={(e) => setFiscaleForm((f) => ({ ...f, aliquotaIVA: e.target.value }))}
                 min="0" max="30" step="1"
               />
-              <span className={styles.inputNote}>
+              <span className="field-note">
                 {fiscaleForm.regime === "forfettario" ? "0% — esente IVA" : "Di norma 22%"}
               </span>
-            </Field>
-            <Field label="IRPEF / imp. sostitutiva (%)">
+            </div>
+            <div>
+              <label className="field-label">IRPEF / imp. sostitutiva (%)</label>
               <input
                 type="number"
-                className={styles.input}
+                className="input num"
                 value={fiscaleForm.aliquotaIRPEF}
                 onChange={(e) => setFiscaleForm((f) => ({ ...f, aliquotaIRPEF: e.target.value }))}
                 min="0" max="50" step="0.5"
               />
-              <span className={styles.inputNote}>
+              <span className="field-note">
                 {fiscaleForm.regime === "forfettario" ? "15% forfettario (5% start-up)" : "Aliquota marginale stimata"}
               </span>
-            </Field>
-            <Field label="Contributi INPS (%)">
+            </div>
+            <div>
+              <label className="field-label">Contributi INPS (%)</label>
               <input
                 type="number"
-                className={styles.input}
+                className="input num"
                 value={fiscaleForm.aliquotaINPS}
                 onChange={(e) => setFiscaleForm((f) => ({ ...f, aliquotaINPS: e.target.value }))}
                 min="0" max="40" step="0.01"
               />
-              <span className={styles.inputNote}>26.23% gestione separata</span>
-            </Field>
-            <Field label="Buffer extra (%)">
+              <span className="field-note">26.23% gestione separata</span>
+            </div>
+            <div>
+              <label className="field-label">Buffer extra (%)</label>
               <input
                 type="number"
-                className={styles.input}
+                className="input num"
                 value={fiscaleForm.bufferExtra}
                 onChange={(e) => setFiscaleForm((f) => ({ ...f, bufferExtra: e.target.value }))}
                 min="0" max="20" step="1"
               />
-              <span className={styles.inputNote}>Riserva aggiuntiva per imprevisti</span>
-            </Field>
+              <span className="field-note">Riserva aggiuntiva per imprevisti</span>
+            </div>
           </div>
           <div className={styles.formFooter}>
-            {fiscaleSaved && <span className={styles.savedMsg}>✓ Salvato</span>}
-            <button type="submit" className={styles.saveBtn}>Salva configurazione fiscale</button>
+            {fiscaleSaved && <span className={styles.savedMsg}><Icon name="check" size={14} /> Salvato</span>}
+            <button type="submit" className="btn btn-primary">Salva configurazione fiscale</button>
           </div>
         </form>
       </section>
 
-      <section className={styles.card} style={{ marginTop: "1rem" }}>
-        <h2 className={styles.sectionTitle}>Liquidità & Patrimonio</h2>
-        <p style={{ fontSize: "0.8rem", color: "#64748b", marginBottom: "1rem" }}>
-          Usati per il grafico Cash Flow nella Dashboard.
-        </p>
-        <CashSetup setup={setup} setSetup={setSetup} />
-      </section>
+      <div className="grid cols-2" style={{ alignItems: "start" }}>
+        <section className="panel">
+          <div className="panel-head">
+            <div className="panel-title"><Icon name="wallet" size={15} />Patrimonio</div>
+            <span className="panel-note">usato per il grafico Cash Flow in Dashboard</span>
+          </div>
+          <CashSetup setup={setup} setSetup={setSetup} />
+        </section>
 
-      <BackupSection />
+        <BackupSection />
+      </div>
 
-      <section className={styles.dangerZone}>
-        <h2 className={styles.dangerTitle}>Zona pericolosa</h2>
-        <p className={styles.dangerDesc}>
-          Resetta tutti i dati salvati (commesse, setup, storico) e ricarica i dati iniziali.
-        </p>
-        <button className={styles.resetBtn} onClick={handleResetAll}>
-          Reset completo dati
-        </button>
+      <section className={`panel ${styles.dangerZone}`}>
+        <div className="panel-head">
+          <div className="panel-title" style={{ color: "var(--danger)" }}>
+            <Icon name="alert" size={15} />Zona pericolosa
+          </div>
+        </div>
+        <div className={styles.formPad} style={{ paddingTop: 0 }}>
+          <p style={{ fontSize: 13, color: "var(--ink-2)" }}>
+            Resetta tutti i dati salvati (commesse, setup, storico) e ricarica i dati iniziali.
+          </p>
+          <div>
+            <button className="btn btn-danger" onClick={handleResetAll}>
+              Reset completo dati
+            </button>
+          </div>
+        </div>
       </section>
     </div>
   );
@@ -500,26 +524,32 @@ function BackupSection() {
   }
 
   return (
-    <section className={styles.card} style={{ marginTop: "1rem" }}>
-      <h2 className={styles.sectionTitle}>Backup & Ripristino</h2>
-      <p style={{ fontSize: "0.8rem", color: "#64748b", marginBottom: "1rem" }}>
-        Esporta i tuoi dati in un file JSON o importa un backup precedente.
-      </p>
-      <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", alignItems: "center" }}>
-        <button
-          onClick={exportData}
-          style={{ background: "rgba(200,169,110,0.15)", border: "1px solid rgba(200,169,110,0.35)", color: "#c8a96e", borderRadius: 6, padding: "0.5rem 1.1rem", fontSize: "0.85rem", cursor: "pointer" }}
-        >
-          Scarica backup
-        </button>
-        <button
-          onClick={() => fileRef.current?.click()}
-          style={{ background: "rgba(148,163,184,0.1)", border: "1px solid rgba(148,163,184,0.25)", color: "#94a3b8", borderRadius: 6, padding: "0.5rem 1.1rem", fontSize: "0.85rem", cursor: "pointer" }}
-        >
-          Importa backup
-        </button>
-        <input ref={fileRef} type="file" accept=".json" style={{ display: "none" }} onChange={handleImport} />
-        {importMsg && <span style={{ fontSize: "0.82rem", color: importMsg.includes("valido") ? "#f87171" : "#22c55e" }}>{importMsg}</span>}
+    <section className="panel">
+      <div className="panel-head">
+        <div className="panel-title"><Icon name="download" size={15} />Backup &amp; Ripristino</div>
+      </div>
+      <div className={styles.formPad} style={{ paddingTop: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          <span className="kpi-ico ico-accent" style={{ width: 40, height: 40 }}><Icon name="download" size={18} /></span>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontWeight: 600, color: "var(--ink)" }}>Esporta dati</div>
+            <div style={{ fontSize: 12.5, color: "var(--ink-3)" }}>scarica un backup completo in JSON</div>
+          </div>
+        </div>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+          <button className="btn btn-ghost" onClick={exportData}>
+            <Icon name="download" size={15} /> Scarica backup
+          </button>
+          <button className="btn btn-ghost" onClick={() => fileRef.current?.click()}>
+            <Icon name="upload" size={15} /> Importa backup
+          </button>
+          <input ref={fileRef} type="file" accept=".json" style={{ display: "none" }} onChange={handleImport} />
+          {importMsg && (
+            <span style={{ fontSize: 12.5, color: importMsg.includes("valido") ? "var(--danger)" : "var(--pos-ink)" }}>
+              {importMsg}
+            </span>
+          )}
+        </div>
       </div>
     </section>
   )
@@ -543,37 +573,22 @@ function CashSetup({ setup, setSetup }) {
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-      <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
+    <div className={styles.formPad} style={{ paddingTop: 0 }}>
+      <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
         <div style={{ flex: 1, minWidth: 160 }}>
-          <label style={{ display: "block", fontSize: "0.78rem", color: "#94a3b8", marginBottom: 4 }}>Cassa disponibile (€)</label>
-          <input type="number" min="0"
-            style={{ width: "100%", background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.12)", borderRadius: 6, padding: "0.45rem 0.6rem", color: "#e2e8f0", fontSize: "0.875rem" }}
-            value={cassa} onChange={e => setCassa(e.target.value)} />
+          <label className="field-label">Cassa disponibile (€)</label>
+          <input type="number" min="0" className="input num" value={cassa} onChange={e => setCassa(e.target.value)} />
         </div>
         <div style={{ flex: 1, minWidth: 160 }}>
-          <label style={{ display: "block", fontSize: "0.78rem", color: "#94a3b8", marginBottom: 4 }}>Valore crypto (€)</label>
-          <input type="number" min="0"
-            style={{ width: "100%", background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.12)", borderRadius: 6, padding: "0.45rem 0.6rem", color: "#e2e8f0", fontSize: "0.875rem" }}
-            value={crypto} onChange={e => setCrypto(e.target.value)} />
+          <label className="field-label">Valore crypto (€)</label>
+          <input type="number" min="0" className="input num" value={crypto} onChange={e => setCrypto(e.target.value)} />
+          {setup.cryptoAggiornato && <span className="field-note">aggiornato {setup.cryptoAggiornato}</span>}
         </div>
       </div>
-      <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-        {saved && <span style={{ color: "#22c55e", fontSize: "0.82rem" }}>✓ Salvato</span>}
-        <button onClick={handleSave}
-          style={{ background: "rgba(200,169,110,0.15)", border: "1px solid rgba(200,169,110,0.35)", color: "#c8a96e", borderRadius: 6, padding: "0.45rem 1rem", fontSize: "0.82rem", cursor: "pointer" }}>
-          Salva
-        </button>
+      <div className={styles.formFooter}>
+        {saved && <span className={styles.savedMsg}><Icon name="check" size={14} /> Salvato</span>}
+        <button className="btn btn-primary" onClick={handleSave}>Salva</button>
       </div>
-    </div>
-  );
-}
-
-function Field({ label, children }) {
-  return (
-    <div className={styles.field}>
-      <label className={styles.label}>{label}</label>
-      {children}
     </div>
   );
 }
