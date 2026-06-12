@@ -65,13 +65,13 @@ export default function CommessaModal({ initial, onSave, onClose }) {
 
         <form className={styles.form} onSubmit={handleSubmit}>
           <div className={styles.row}>
-            <Field label="Cliente *">
+            <Field label="Cliente / Progetto *">
               <input
                 required
                 className={styles.input}
                 value={form.cliente}
                 onChange={(e) => set("cliente", e.target.value)}
-                placeholder="Nome cliente"
+                placeholder="Nome cliente o del progetto"
               />
             </Field>
             <Field label="Priorità">
@@ -81,12 +81,12 @@ export default function CommessaModal({ initial, onSave, onClose }) {
             </Field>
           </div>
 
-          <Field label="Servizio">
+          <Field label="Servizio / Descrizione">
             <input
               className={styles.input}
               value={form.servizio}
               onChange={(e) => set("servizio", e.target.value)}
-              placeholder="Descrizione del servizio"
+              placeholder="Descrizione del servizio o del progetto"
             />
           </Field>
 
