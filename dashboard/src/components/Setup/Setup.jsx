@@ -12,6 +12,7 @@ export default function Setup({ setup, setSetup }) {
   const [form, setForm] = useState({
     fattoreNetto: (setup.fattoreNetto * 100).toFixed(0),
     alertScadenzaGiorni: setup.alertScadenzaGiorni,
+    oreMeseDisponibili: setup.oreMeseDisponibili ?? 160,
   });
   const [saved, setSaved] = useState(false);
 
@@ -64,6 +65,7 @@ export default function Setup({ setup, setSetup }) {
       ...prev,
       fattoreNetto: Number(form.fattoreNetto) / 100,
       alertScadenzaGiorni: Number(form.alertScadenzaGiorni),
+      oreMeseDisponibili: Number(form.oreMeseDisponibili) || 160,
     }));
     setSaved(true);
     setTimeout(() => setSaved(false), 2500);
@@ -190,6 +192,20 @@ export default function Setup({ setup, setSetup }) {
               />
               <span className="field-note">
                 Alert quando la fine commessa è entro {form.alertScadenzaGiorni} giorni
+              </span>
+            </div>
+            <div>
+              <label className="field-label">Ore disponibili al mese</label>
+              <input
+                type="number"
+                className="input num"
+                value={form.oreMeseDisponibili}
+                onChange={(e) => setForm((f) => ({ ...f, oreMeseDisponibili: e.target.value }))}
+                min="1"
+                max="744"
+              />
+              <span className="field-note">
+                Capacità mensile usata per calcolare la saturazione in Dashboard
               </span>
             </div>
             <div className={styles.formFooter}>

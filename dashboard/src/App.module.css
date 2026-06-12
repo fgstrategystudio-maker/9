@@ -10,6 +10,7 @@
   min-width: 0;
   max-height: 100vh;
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .mainInner {
@@ -20,6 +21,6 @@
 
 @media (max-width: 860px) {
   .mainInner {
-    padding-top: 64px;
+    padding-top: 74px;
   }
 }

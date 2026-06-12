@@ -7,6 +7,7 @@ import {
   getPrioritaColor,
   calcNetto,
   getCommessaLordoMensile,
+  getRicavoOrario,
   getAvatarColor,
   getInitials,
 } from "../../utils/helpers";
@@ -157,6 +158,8 @@ export default function Commesse({ commesse, setCommesse, setup }) {
                   <th>Stato</th>
                   <th className="r">Fee lordo</th>
                   <th className="r">Netto</th>
+                  <th className="r">Ore/mese</th>
+                  <th className="r">€/h</th>
                   <th className="r">Scadenza</th>
                 </tr>
               </thead>
@@ -165,6 +168,7 @@ export default function Commesse({ commesse, setCommesse, setup }) {
                   const days = c.fine ? daysUntil(c.fine) : null;
                   const lordo = getCommessaLordoMensile(c);
                   const netto = calcNetto(lordo, setup.fattoreNetto);
+                  const orario = getRicavoOrario(c, setup.fattoreNetto);
                   const scadColor =
                     days === null ? "var(--ink-3)"
                     : days <= 7 ? "var(--danger)"
@@ -193,13 +197,19 @@ export default function Commesse({ commesse, setCommesse, setup }) {
                           <span className="d"></span>{c.stato}
                         </span>
                       </td>
-                      <td className="r num" style={{ fontWeight: 600 }}>
+                      <td className="r num" style={{ fontWeight: 600, whiteSpace: "nowrap" }}>
                         {lordo ? `${fmtN(lordo)} €` : c.lordoProgetto ? `${fmtN(c.lordoProgetto)} €` : "—"}
                       </td>
-                      <td className="r num t-pos" style={{ fontWeight: 600 }}>
+                      <td className="r num t-pos" style={{ fontWeight: 600, whiteSpace: "nowrap" }}>
                         {netto ? `${fmtN(netto)} €` : c.lordoProgetto ? `${fmtN(calcNetto(c.lordoProgetto, setup.fattoreNetto))} €` : "—"}
                       </td>
-                      <td className="r num" style={{ color: scadColor, fontWeight: 600 }}>
+                      <td className="r num" style={{ color: "var(--ink-2)", whiteSpace: "nowrap" }}>
+                        {c.oreMensili ? `${c.oreMensili} h` : "—"}
+                      </td>
+                      <td className="r num t-info" style={{ fontWeight: 600, whiteSpace: "nowrap" }}>
+                        {orario ? `${fmtN(orario.lordoOra)} €` : "—"}
+                      </td>
+                      <td className="r num" style={{ color: scadColor, fontWeight: 600, whiteSpace: "nowrap" }}>
                         {days !== null ? `${days} gg` : "—"}
                       </td>
                     </tr>
@@ -236,6 +246,7 @@ function CommessaDetail({ commessa: c, setup, onEdit, onDelete }) {
   const netto = calcNetto(lordo, setup.fattoreNetto);
   const nettoProgetto = calcNetto(c.lordoProgetto, setup.fattoreNetto);
   const upsellNetto = calcNetto(c.upsellTarget, setup.fattoreNetto);
+  const orario = getRicavoOrario(c, setup.fattoreNetto);
   const days = c.fine ? daysUntil(c.fine) : null;
 
   return (
@@ -281,6 +292,9 @@ function CommessaDetail({ commessa: c, setup, onEdit, onDelete }) {
         } />
         {lordo && <DetailRow label="Lordo mensile" value={<span className="num">{formatCurrency(lordo)}</span>} />}
         {netto && <DetailRow label="Netto mensile" value={<span className="num t-pos">{formatCurrency(netto)}</span>} />}
+        {c.oreMensili && <DetailRow label="Ore dedicate/mese" value={<span className="num">{c.oreMensili} h</span>} />}
+        {orario && <DetailRow label="Ricavo orario lordo" value={<span className="num t-info">{fmtN(orario.lordoOra)} €/h</span>} />}
+        {orario && <DetailRow label="Ricavo orario netto" value={<span className="num t-pos">{fmtN(orario.nettoOra)} €/h</span>} />}
         {c.lordoProgetto && <DetailRow label="Lordo progetto" value={<span className="num">{formatCurrency(c.lordoProgetto)}</span>} />}
         {nettoProgetto && <DetailRow label="Netto progetto" value={<span className="num t-pos">{formatCurrency(nettoProgetto)}</span>} />}
         {c.upsellTarget && (

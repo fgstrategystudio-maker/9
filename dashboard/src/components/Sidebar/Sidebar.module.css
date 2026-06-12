@@ -152,20 +152,52 @@
   color: var(--rail-ink-2);
 }
 
-.menuBtn {
+.mobileBar {
   display: none;
   position: fixed;
-  top: 14px;
-  left: 14px;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 56px;
   z-index: 70;
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
   background: var(--rail);
   color: var(--rail-ink);
+  border-bottom: 1px solid var(--rail-hair);
+  align-items: center;
+  gap: 12px;
+  padding: 0 14px;
+}
+
+.menuBtn {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: var(--rail-2);
+  color: var(--rail-ink);
   border: 1px solid var(--rail-hair);
+  display: grid;
   place-items: center;
-  box-shadow: var(--sh);
+  flex: none;
+}
+
+.mobileMark {
+  width: 26px;
+  height: 26px;
+  flex: none;
+  border-radius: 7px;
+  background: linear-gradient(150deg, var(--rail-active), color-mix(in oklab, var(--rail-active) 60%, #000));
+  display: grid;
+  place-items: center;
+  color: #fff;
+}
+
+.mobileBrand {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--rail-ink);
+  white-space: nowrap;
 }
 
 .scrim {
@@ -173,8 +205,8 @@
 }
 
 @media (max-width: 860px) {
-  .menuBtn {
-    display: grid;
+  .mobileBar {
+    display: flex;
   }
 
   .scrim {
@@ -187,11 +219,17 @@
 
   .rail {
     position: fixed;
+    top: 56px;
+    height: calc(100vh - 56px);
     left: -260px;
     transition: left .3s var(--ease);
   }
 
   .rail.open {
     left: 0;
+  }
+
+  .brand {
+    display: none;
   }
 }

@@ -46,7 +46,12 @@ export default function Fiscale({ setup }) {
     bufferExtra = 5,
   } = fiscale;
 
-  const storico = setup.incassatoStorico || [];
+  const storico = [...(setup.incassatoStorico || [])].sort((a, b) => {
+    const pa = parseMese(a.mese);
+    const pb = parseMese(b.mese);
+    if (!pa || !pb) return 0;
+    return pa.year - pb.year || pa.month - pb.month;
+  });
 
   const totalLordo = storico.reduce((s, r) => s + r.lordo, 0);
 

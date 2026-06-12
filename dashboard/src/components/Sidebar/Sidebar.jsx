@@ -15,9 +15,15 @@ export default function Sidebar({ view, onNavigate }) {
 
   return (
     <>
-      <button className={styles.menuBtn} onClick={() => setOpen((v) => !v)} aria-label="Menu">
-        <Icon name="menu" size={20} />
-      </button>
+      <div className={styles.mobileBar}>
+        <button className={styles.menuBtn} onClick={() => setOpen((v) => !v)} aria-label="Menu">
+          <Icon name={open ? "x" : "menu"} size={20} />
+        </button>
+        <div className={styles.mobileMark}>
+          <Icon name="layers" size={15} />
+        </div>
+        <span className={styles.mobileBrand}>Freelance Dashboard</span>
+      </div>
       {open && <div className={styles.scrim} onClick={() => setOpen(false)} />}
       <nav className={`${styles.rail} ${open ? styles.open : ""}`}>
         <div className={styles.brand}>

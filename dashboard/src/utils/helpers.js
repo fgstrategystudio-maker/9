@@ -93,6 +93,17 @@ export function getCommessaLordoMensile(commessa) {
   return null;
 }
 
+// Ricavo orario da fee mensile (o mensilizzata per i progetti) e ore stimate
+export function getRicavoOrario(commessa, fattoreNetto) {
+  const lordo = getCommessaLordoMensile(commessa);
+  const ore = Number(commessa.oreMensili);
+  if (!lordo || !ore || ore <= 0) return null;
+  return {
+    lordoOra: Math.round(lordo / ore),
+    nettoOra: Math.round((lordo * fattoreNetto) / ore),
+  };
+}
+
 const MESI_IT = [
   "Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno",
   "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre",

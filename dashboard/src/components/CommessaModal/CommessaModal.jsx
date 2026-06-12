@@ -14,6 +14,7 @@ const EMPTY = {
   stato: "In corso",
   lordoMensile: "",
   lordoProgetto: "",
+  oreMensili: "",
   upsellTarget: "",
   priorita: "Media",
   note: "",
@@ -26,6 +27,7 @@ export default function CommessaModal({ initial, onSave, onClose }) {
       ...initial,
       lordoMensile: initial.lordoMensile ?? "",
       lordoProgetto: initial.lordoProgetto ?? "",
+      oreMensili: initial.oreMensili ?? "",
       upsellTarget: initial.upsellTarget ?? "",
       inizio: initial.inizio ?? "",
       fine: initial.fine ?? "",
@@ -44,6 +46,7 @@ export default function CommessaModal({ initial, onSave, onClose }) {
       id: initial?.id ?? null,
       lordoMensile: form.lordoMensile !== "" ? Number(form.lordoMensile) : null,
       lordoProgetto: form.lordoProgetto !== "" ? Number(form.lordoProgetto) : null,
+      oreMensili: form.oreMensili !== "" ? Number(form.oreMensili) : null,
       upsellTarget: form.upsellTarget !== "" ? Number(form.upsellTarget) : null,
       inizio: form.inizio || null,
       fine: form.fine || null,
@@ -128,6 +131,33 @@ export default function CommessaModal({ initial, onSave, onClose }) {
                 onChange={(e) => set("lordoProgetto", e.target.value)}
                 placeholder="es. 3500"
                 min="0"
+              />
+            </Field>
+          </div>
+
+          <div className={styles.row}>
+            <Field label="Ore dedicate al mese (stima)">
+              <input
+                type="number"
+                className={styles.input}
+                value={form.oreMensili}
+                onChange={(e) => set("oreMensili", e.target.value)}
+                placeholder="es. 20"
+                min="0"
+                step="0.5"
+              />
+            </Field>
+            <Field label="Ricavo orario stimato">
+              <input
+                className={styles.input}
+                value={(() => {
+                  const ore = Number(form.oreMensili);
+                  const lordoMese = form.lordoMensile !== "" ? Number(form.lordoMensile) : null;
+                  if (!ore || ore <= 0 || !lordoMese) return "—";
+                  return `${Math.round(lordoMese / ore)} €/h lordo`;
+                })()}
+                disabled
+                readOnly
               />
             </Field>
           </div>

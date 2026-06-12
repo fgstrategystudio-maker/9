@@ -9,6 +9,7 @@ import {
   getStatoColor,
   calcNetto,
   getCommessaLordoMensile,
+  getRicavoOrario,
   getMeseCorrente,
   getLordoPerMese,
 } from "../../utils/helpers";
@@ -53,6 +54,16 @@ const STATO_ORDER = ["In corso","In scadenza","Da chiarire","Sospeso","Concluso"
 const nf = new Intl.NumberFormat("it-IT");
 const fmtN = (n) => nf.format(Math.round(n ?? 0));
 
+// Formattazione assi in migliaia senza tick duplicati (es. 0,5k invece di due "0k")
+const kfmt = (v) => {
+  const a = Math.abs(v);
+  if (a >= 1000) {
+    const k = v / 1000;
+    return (Number.isInteger(k) ? k : k.toFixed(1).replace(".", ",")) + "k";
+  }
+  return String(Math.round(v));
+};
+
 export default function Dashboard({ commesse, setup, setSetup }) {
   const now = new Date();
   const anno = now.getFullYear();
@@ -83,6 +94,25 @@ export default function Dashboard({ commesse, setup, setSetup }) {
       return days !== null && days >= 0 && days <= setup.alertScadenzaGiorni;
     })
     .sort((a, b) => daysUntil(a.fine) - daysUntil(b.fine));
+
+  // — Tempo del mese / saturazione —
+  const oreDisponibili = setup.oreMeseDisponibili ?? 160;
+  const tempoData = attive
+    .filter((c) => Number(c.oreMensili) > 0)
+    .map((c) => {
+      const orario = getRicavoOrario(c, setup.fattoreNetto);
+      return {
+        nome: c.cliente.length > 14 ? c.cliente.slice(0, 13) + "…" : c.cliente,
+        ore: Number(c.oreMensili),
+        tipo: c.tipo === "Progetto" ? "Progetto" : "Commessa",
+        lordoOra: orario ? orario.lordoOra : null,
+      };
+    })
+    .sort((a, b) => b.ore - a.ore);
+  const oreTotali = tempoData.reduce((s, d) => s + d.ore, 0);
+  const saturazione = oreDisponibili > 0 ? Math.round((oreTotali / oreDisponibili) * 100) : 0;
+  const satColor = saturazione <= 60 ? C.pos : saturazione <= 85 ? C.warn : C.danger;
+  const attiveSenzaOre = attive.filter((c) => !(Number(c.oreMensili) > 0)).length;
 
   const barData = commesse
     .filter((c) => getCommessaLordoMensile(c))
@@ -248,6 +278,74 @@ export default function Dashboard({ commesse, setup, setSetup }) {
         {kpis.map((k) => <KpiCard key={k.label} {...k} />)}
       </div>
 
+      {/* Tempo del mese / saturazione */}
+      <section className="panel">
+        <div className="panel-head">
+          <div className="panel-title"><Icon name="clock" size={15} />Tempo del mese — {meseCorrente}</div>
+          <div className="stat-strip">
+            <div className="si">
+              <div className="v num" style={{ color: "var(--ink)" }}>{oreTotali} h</div>
+              <div className="l">Ore impegnate</div>
+            </div>
+            <div className="si">
+              <div className="v num" style={{ color: satColor }}>{saturazione}%</div>
+              <div className="l">Saturazione su {oreDisponibili} h</div>
+            </div>
+          </div>
+        </div>
+        <div className="panel-pad" style={{ paddingTop: 0 }}>
+          <div className="statbar-track" style={{ height: 10 }}>
+            <div
+              className="statbar-fill"
+              style={{ width: Math.min(100, saturazione) + "%", background: satColor }}
+            ></div>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11.5, color: "var(--ink-3)", marginTop: 6, marginBottom: 14 }}>
+            <span>0 h</span>
+            <span>{oreDisponibili} h disponibili</span>
+          </div>
+
+          {tempoData.length > 0 ? (
+            <>
+              <div className="legend" style={{ marginBottom: 4 }}>
+                <span className="li"><span className="sw" style={{ background: "var(--accent)" }}></span>Commesse</span>
+                <span className="li"><span className="sw" style={{ background: C.info }}></span>Progetti</span>
+              </div>
+              <ResponsiveContainer width="100%" height={Math.max(120, tempoData.length * 46 + 36)}>
+                <BarChart data={tempoData} layout="vertical" margin={{ top: 8, right: 24, left: 0, bottom: 0 }}>
+                  <XAxis type="number" tick={{ fill: C.ink3, fontSize: 10.5 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v}h`} />
+                  <YAxis type="category" dataKey="nome" width={112} tick={{ fill: C.ink2, fontSize: 11.5, fontWeight: 600 }} axisLine={false} tickLine={false} />
+                  <Tooltip
+                    cursor={{ fill: "rgba(60,44,28,.05)" }}
+                    contentStyle={TOOLTIP_STYLE}
+                    labelStyle={{ color: "#A39684", fontWeight: 700 }}
+                    itemStyle={{ color: "#E9E0D0" }}
+                    formatter={(v, name, props) => [
+                      `${v} h/mese${props.payload.lordoOra ? ` · ${fmtN(props.payload.lordoOra)} €/h lordo` : ""}`,
+                      props.payload.tipo,
+                    ]}
+                  />
+                  <Bar dataKey="ore" radius={[0, 4, 4, 0]} maxBarSize={18}>
+                    {tempoData.map((d, i) => (
+                      <Cell key={i} fill={d.tipo === "Progetto" ? C.info : "#B5654A"} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </>
+          ) : (
+            <p style={{ color: "var(--ink-3)", fontSize: 13 }}>
+              Nessuna ora registrata: aggiungi le «Ore dedicate al mese» alle tue commesse per vedere lo spaccato del tempo.
+            </p>
+          )}
+          {attiveSenzaOre > 0 && tempoData.length > 0 && (
+            <p style={{ color: "var(--ink-3)", fontSize: 12, marginTop: 6 }}>
+              {attiveSenzaOre} {attiveSenzaOre === 1 ? "commessa attiva è senza" : "commesse attive sono senza"} stima ore — il totale potrebbe essere sottostimato.
+            </p>
+          )}
+        </div>
+      </section>
+
       {/* Panoramica annuale */}
       <section className="panel">
         <div className="panel-head">
@@ -286,7 +384,7 @@ export default function Dashboard({ commesse, setup, setSetup }) {
           <ResponsiveContainer width="100%" height={280}>
             <BarChart data={annualData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
               <XAxis dataKey="mese" tick={{ fill: C.ink2, fontSize: 11.5, fontWeight: 600 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: C.ink3, fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k€`} width={42} />
+              <YAxis tick={{ fill: C.ink3, fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${kfmt(v)}€`} width={46} />
               <Tooltip
                 cursor={{ fill: "rgba(60,44,28,.05)" }}
                 contentStyle={TOOLTIP_STYLE}
@@ -432,7 +530,7 @@ export default function Dashboard({ commesse, setup, setSetup }) {
             <ResponsiveContainer width="100%" height={230}>
               <BarChart data={barData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }} barGap={4}>
                 <XAxis dataKey="nome" tick={{ fill: C.ink2, fontSize: 11, fontWeight: 600 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fill: C.ink3, fontSize: 10.5 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v}€`} width={42} />
+                <YAxis tick={{ fill: C.ink3, fontSize: 10.5 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${kfmt(v)}€`} width={46} />
                 <Tooltip cursor={{ fill: "rgba(60,44,28,.05)" }} contentStyle={TOOLTIP_STYLE} labelStyle={{ color: "#A39684", fontWeight: 700 }} itemStyle={{ color: "#E9E0D0" }} formatter={(v) => formatCurrency(v)} />
                 <Bar dataKey="Lordo" fill="#B5654A" radius={[3.5, 3.5, 0, 0]} maxBarSize={20} />
                 <Bar dataKey="Netto" fill={C.pos} radius={[3.5, 3.5, 0, 0]} maxBarSize={20} />
@@ -511,8 +609,8 @@ export default function Dashboard({ commesse, setup, setSetup }) {
           <ResponsiveContainer width="100%" height={280}>
             <ComposedChart data={cashFlowData} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
               <XAxis dataKey="mese" tick={{ fill: C.ink2, fontSize: 11, fontWeight: 600 }} axisLine={false} tickLine={false} />
-              <YAxis yAxisId="flow" tick={{ fill: C.ink3, fontSize: 10.5 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} width={38} />
-              <YAxis yAxisId="cassa" orientation="right" tick={{ fill: C.info, fontSize: 10.5 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} width={38} />
+              <YAxis yAxisId="flow" tick={{ fill: C.ink3, fontSize: 10.5 }} axisLine={false} tickLine={false} tickFormatter={kfmt} width={44} />
+              <YAxis yAxisId="cassa" orientation="right" tick={{ fill: C.info, fontSize: 10.5 }} axisLine={false} tickLine={false} tickFormatter={kfmt} width={44} />
               <Tooltip
                 cursor={{ fill: "rgba(60,44,28,.05)" }}
                 contentStyle={TOOLTIP_STYLE}
@@ -558,7 +656,7 @@ function MonthlyPrompt({ mese, stimaLordo, fattoreNetto, commesseAttive, onAdd }
   }
 
   return (
-    <div className="notice reveal" style={{ justifyContent: "space-between" }}>
+    <div className="notice reveal register-notice" style={{ justifyContent: "space-between" }}>
       <div className="register">
         <div className="cal"><Icon name="calendar" size={20} /></div>
         <div>

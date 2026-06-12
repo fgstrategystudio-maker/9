@@ -245,6 +245,7 @@ button { cursor: pointer; font-family: inherit; }
 
 /* section grid */
 .grid { display: grid; gap: var(--gap); }
+.grid > *, .mini-grid > * { min-width: 0; }
 .kpi-grid { grid-template-columns: repeat(4, 1fr); }
 .cols-2 { grid-template-columns: 1fr 1fr; }
 .cols-2-asym { grid-template-columns: 1.05fr .95fr; }
@@ -357,6 +358,14 @@ button { cursor: pointer; font-family: inherit; }
   flex: none;
 }
 .register .cal svg { width: 20px; height: 20px; }
+
+@media (max-width: 680px) {
+  .notice.register-notice { flex-direction: column; align-items: stretch; }
+  .notice.register-notice .btn { width: 100%; justify-content: center; }
+  .topbar { flex-direction: column; align-items: stretch; }
+  .stat-strip { gap: 18px; }
+  .stat-strip .si { text-align: left; }
+}
 
 /* ===================== TABLES / LISTS ===================== */
 .row-list { display: flex; flex-direction: column; }
