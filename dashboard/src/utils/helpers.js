@@ -60,8 +60,24 @@ export function getPrioritaColor(priorita) {
   return map[priorita] || "#9A8F7E";
 }
 
-// Tinte piatte per avatar a iniziali (da palette design)
-const AVATAR_COLORS = ["#B5654A", "#5E7E5A", "#B5862F", "#5B7088", "#8a6b52", "#8A5A8A"];
+// Tinte piatte per avatar a iniziali (palette design, ordinate per massimo contrasto tra adiacenti)
+export const AVATAR_COLORS = [
+  "#B5654A", // terracotta
+  "#5E7E5A", // salvia
+  "#5B7088", // blu polvere
+  "#B5862F", // ocra/oro
+  "#8A5A8A", // prugna
+  "#46897A", // verde acqua
+  "#8a6b52", // taupe/caffè
+  "#4C6948", // salvia scuro
+  "#97503A", // terracotta scuro
+  "#6E6456", // taupe scuro
+];
+
+// Colore stabile per indice: commesse adiacenti hanno sempre colori diversi
+export function getAvatarColorByIndex(i) {
+  return AVATAR_COLORS[((i % AVATAR_COLORS.length) + AVATAR_COLORS.length) % AVATAR_COLORS.length];
+}
 
 export function getAvatarColor(name) {
   let h = 0;

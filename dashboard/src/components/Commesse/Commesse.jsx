@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   formatCurrency,
   formatDate,
@@ -8,7 +8,7 @@ import {
   calcNetto,
   getCommessaLordoMensile,
   getRicavoOrario,
-  getAvatarColor,
+  getAvatarColorByIndex,
   getInitials,
 } from "../../utils/helpers";
 import CommessaModal from "../CommessaModal/CommessaModal";
@@ -28,6 +28,14 @@ export default function Commesse({ commesse, setCommesse, setup }) {
   const [selectedId, setSelectedId] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [editData, setEditData] = useState(null);
+
+  // Colore stabile per commessa (per posizione nella lista completa): ognuna distinta,
+  // coerente tra tabella e dettaglio anche quando si filtra
+  const colorById = useMemo(() => {
+    const m = {};
+    commesse.forEach((c, i) => { m[c.id] = getAvatarColorByIndex(i); });
+    return m;
+  }, [commesse]);
 
   const filtered = commesse.filter((c) => {
     const matchSearch =
@@ -182,7 +190,7 @@ export default function Commesse({ commesse, setCommesse, setup }) {
                     >
                       <td>
                         <div className="client-cell">
-                          <span className="client-ava" style={{ background: getAvatarColor(c.cliente) }}>
+                          <span className="client-ava" style={{ background: colorById[c.id] }}>
                             {getInitials(c.cliente)}
                           </span>
                           <div>
@@ -224,6 +232,7 @@ export default function Commesse({ commesse, setCommesse, setup }) {
       {selected && (
         <CommessaDetail
           commessa={selected}
+          color={colorById[selected.id]}
           setup={setup}
           onEdit={() => handleEdit(selected)}
           onDelete={() => handleDelete(selected.id)}
@@ -241,7 +250,7 @@ export default function Commesse({ commesse, setCommesse, setup }) {
   );
 }
 
-function CommessaDetail({ commessa: c, setup, onEdit, onDelete }) {
+function CommessaDetail({ commessa: c, color, setup, onEdit, onDelete }) {
   const lordo = getCommessaLordoMensile(c);
   const netto = calcNetto(lordo, setup.fattoreNetto);
   const nettoProgetto = calcNetto(c.lordoProgetto, setup.fattoreNetto);
@@ -253,7 +262,7 @@ function CommessaDetail({ commessa: c, setup, onEdit, onDelete }) {
     <section className="panel reveal">
       <div className="panel-head">
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <span className="client-ava" style={{ background: getAvatarColor(c.cliente), width: 40, height: 40, borderRadius: 11, fontSize: 16 }}>
+          <span className="client-ava" style={{ background: color, width: 40, height: 40, borderRadius: 11, fontSize: 16 }}>
             {getInitials(c.cliente)}
           </span>
           <div>
