@@ -121,13 +121,13 @@ export default function Fiscale({ setup }) {
                 <span className="panel-note" style={{ textTransform: "capitalize" }}>{regime} {aliquotaIRPEF}%</span>
               </div>
               <div className="panel-pad" style={{ paddingTop: 4 }}>
-                <div style={{ display: "flex", alignItems: "baseline", gap: 10, flexWrap: "wrap" }}>
+                <div style={{ display: "flex", alignItems: "baseline", justifyContent: "center", gap: 10, flexWrap: "wrap" }}>
                   <span className="num" style={{ fontFamily: "var(--font-serif)", fontSize: 40, fontWeight: 500, letterSpacing: "-.02em" }}>
                     {fmtN(totalLordo)} €
                   </span>
                   <span style={{ color: "var(--ink-3)", fontSize: 15 }}>/ {fmtN(SOGLIA_FORFETTARIO)} €</span>
                 </div>
-                <div style={{ fontSize: 13, color: "var(--ink-2)", marginTop: 6 }}>
+                <div style={{ fontSize: 13, color: "var(--ink-2)", marginTop: 6, textAlign: "center" }}>
                   Fatturato YTD · <b style={{ color: "var(--accent-ink)" }}>{pctSoglia}%</b> della soglia annua
                 </div>
                 <div className="statbar-track" style={{ height: 10, marginTop: 16 }}>
@@ -157,7 +157,7 @@ export default function Fiscale({ setup }) {
                     imposta sostitutiva {aliquotaIRPEF}% + contributi INPS {aliquotaINPS}%{bufferExtra > 0 ? ` + buffer ${bufferExtra}%` : ""}{aliquotaIVA > 0 ? ` + IVA ${aliquotaIVA}%` : ""}
                   </div>
                 </div>
-                <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+                <div style={{ display: "flex", gap: 12, flexWrap: "wrap", textAlign: "center" }}>
                   <div style={{ flex: 1, minWidth: 110 }}>
                     <div style={{ fontSize: 12, color: "var(--ink-2)", fontWeight: 600 }}>Imposta sostitutiva</div>
                     <div className="num" style={{ fontFamily: "var(--font-serif)", fontSize: 24, color: "var(--info)" }}>{fmtN(totIRPEF)} €</div>
