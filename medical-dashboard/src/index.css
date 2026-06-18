@@ -1,0 +1,43 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Vitae brand base ─────────────────────────────────────────── */
+@layer base {
+  body {
+    background: #F4F1EA;            /* avorio caldo */
+    color: #1B2A3D;                 /* vitae ink */
+    font-family: 'Schibsted Grotesk', system-ui, sans-serif;
+  }
+  /* Titoli di pagina: tono editoriale serif (firma Vitae) */
+  main h1 {
+    font-family: 'Spectral', Georgia, serif;
+    font-weight: 600;
+    font-size: 2rem;
+    line-height: 1.1;
+    color: #15314A;
+    letter-spacing: -0.01em;
+  }
+}
+
+@media print {
+  .no-print { display: none !important; }
+  .print-only { display: block !important; }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  15% { transform: translateX(-6px); }
+  30% { transform: translateX(6px); }
+  45% { transform: translateX(-5px); }
+  60% { transform: translateX(5px); }
+  75% { transform: translateX(-3px); }
+  90% { transform: translateX(3px); }
+}
+.animate-shake { animation: shake 0.55s ease-in-out; }
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in { animation: fade-in 0.25s ease-out; }
