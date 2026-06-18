@@ -1,6 +1,99 @@
 import React, { useState } from 'react'
-import { Plus, Trash2, Edit2, Check, X } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { Plus, Trash2, Edit2, Check, X, Heart, Pill, AlertTriangle, Activity, FileText, ShieldCheck, CalendarClock } from 'lucide-react'
 import * as store from '../store'
+
+// ─── Body map (mappa corporea) ──────────────────────────────────────────────
+const CAT = { neg: '#CC5340', ric: '#E0883B', int: '#3E86C8', mon: '#C8A24A', scr: '#1FA8A0', pos: '#2E9E6B' }
+const TAGCAT = { INF: 'neg', MAL: 'neg', RIC: 'ric', INT: 'int', DA: 'mon', SCR: 'scr', POS: 'pos' }
+const PRIO = ['neg', 'ric', 'int', 'mon', 'scr', 'pos']
+const primaryCat = (tags) => { const cats = tags.map(t => TAGCAT[t]).filter(Boolean); for (const p of PRIO) if (cats.includes(p)) return p; return 'int' }
+
+// [nome, tag, conteggio, x%, y%] — dati reali (13 aree)
+const AREAS = [
+  ['Testa / Cervello', ['SCR', 'DA'], 3, 50, 30],
+  ['Occhi', ['INT', 'SCR'], 2, 47, 33.5],
+  ['Naso', ['INT'], 1, 50, 36],
+  ['Orecchio sinistro', ['INF', 'DA'], 4, 54.5, 33.5],
+  ['Collo / Schiena', ['INF'], 1, 50, 39.5],
+  ['Torace / Costole sx', ['INF'], 1, 57, 45],
+  ['Polso / Scafoide sx', ['INF'], 1, 87, 40],
+  ['Pelle / Nei', ['SCR'], 1, 15, 40],
+  ['Addome', ['MAL'], 1, 50, 51],
+  ['Zona inguinale', ['SCR'], 1, 50, 59],
+  ['Coscia destra', ['INF', 'RIC'], 2, 44, 67],
+  ['Polpaccio', ['INF'], 1, 47, 78],
+  ['Caviglia destra', ['INF', 'RIC'], 3, 46, 86],
+]
+const LEGEND = [['#CC5340', 'Negativo'], ['#E0883B', 'Ricaduta'], ['#3E86C8', 'Intervento'], ['#C8A24A', 'Da monitorare'], ['#1FA8A0', 'Screening'], ['#2E9E6B', 'Positivo / guarigione']]
+
+function Silhouette() {
+  return (
+    <svg className="silh" viewBox="0 0 200 260" preserveAspectRatio="xMidYMid meet" fill="none"
+      strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="100" cy="124" r="92" stroke="var(--vitae-hair)" />
+      <rect x="16" y="46" width="168" height="168" rx="4" stroke="var(--vitae-hair)" />
+      <g stroke="var(--vitae-hair-cool)">
+        <circle cx="100" cy="64" r="15" />
+        <path d="M86 98 Q100 90 114 98" />
+        <path d="M100 79 V152" />
+        <path d="M100 96 L42 108 M100 96 L158 108" />
+        <path d="M100 152 L76 212 M100 152 L124 212" />
+      </g>
+    </svg>
+  )
+}
+
+function BodyMap() {
+  return (
+    <section className="vt-block">
+      <div className="vt-card">
+        <div className="vt-card-h"><span className="lab">Mappa corporea</span></div>
+        <div className="bodymap">
+          <div className="bm-figure">
+            <Silhouette />
+            {AREAS.map(([nm, tags, cnt, x, y]) => {
+              const col = CAT[primaryCat(tags)]
+              return (
+                <div className="bm-marker" key={nm} style={{ left: `${x}%`, top: `${y}%` }}>
+                  <span className="bm-lab">{nm}</span>
+                  <span className="bm-dot" style={{ background: col }}>{cnt}</span>
+                </div>
+              )
+            })}
+          </div>
+          <div>
+            <div className="legend">
+              {LEGEND.map(([c, l]) => (
+                <span className="lg" key={l}><span className="dot" style={{ background: c }} />{l}</span>
+              ))}
+            </div>
+            <div className="areas-h">Aree con eventi ({AREAS.length})</div>
+            <div className="areas">
+              {AREAS.map(([nm, tags, cnt]) => {
+                const col = CAT[primaryCat(tags)]
+                return (
+                  <div className="area" key={nm} style={{ borderLeftColor: col }}>
+                    <span className="nm">{nm}</span>
+                    <span className="tags">{tags.map(t => <span className="tag" key={t}>{t}</span>)}</span>
+                    <span className="cnt" style={{ background: col }}>{cnt}</span>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+const QUICK = [
+  { to: '/timeline', icon: Activity, title: 'Timeline', sub: 'Episodi medici', bg: 'var(--vitae-tint-blue)', fg: 'var(--vitae-primary)' },
+  { to: '/documenti', icon: FileText, title: 'Documenti', sub: 'Referti & ricette', bg: 'var(--vitae-success-bg)', fg: 'var(--vitae-success)' },
+  { to: '/screening', icon: ShieldCheck, title: 'Screening', sub: 'Prevenzione', bg: 'var(--vitae-tint-gold)', fg: 'var(--vitae-gold)' },
+  { to: '/agenda', icon: CalendarClock, title: 'Agenda', sub: 'Visite & promemoria', bg: 'var(--vitae-tint-blue)', fg: 'var(--vitae-navy)' },
+]
 
 const SEVERITY = ['lieve', 'moderata', 'grave']
 const CONDITION_STATUS = ['active', 'risolto', 'monitorato']
@@ -305,9 +398,44 @@ export default function Overview() {
   const updateCond = (id, data) => setCondList(store.conditions.update(id, data))
   const updateVacc = (id, data) => setVaccList(store.vaccinations.update(id, data))
 
+  const firstName = (profile.name || '').trim().split(' ')[0] || ''
+  const activeCond = condList.filter(c => c.status === 'active').length
+
   return (
     <div>
-      <h1 className="text-xl font-bold text-gray-800 mb-6">Overview personale</h1>
+      <div className="vt-top">
+        <div>
+          <div className="eyebrow">Panoramica</div>
+          <h1>Dashboard</h1>
+        </div>
+      </div>
+
+      {/* HERO */}
+      <div className="hero">
+        <div className="h-eye">La tua salute</div>
+        <div className="h-name">Ciao{firstName ? `, ${firstName}` : ''}</div>
+        <div className="chips">
+          <span className="h-chip"><Heart size={15} />{activeCond} {activeCond === 1 ? 'patologia attiva' : 'patologie attive'}</span>
+          <span className="h-chip"><Pill size={15} />{medList.length} {medList.length === 1 ? 'farmaco' : 'farmaci'}</span>
+          <span className="h-chip"><AlertTriangle size={15} />{allergyList.length} {allergyList.length === 1 ? 'allergia' : 'allergie'}</span>
+        </div>
+      </div>
+
+      {/* QUICK ACTIONS */}
+      <div className="quick">
+        {QUICK.map(({ to, icon: Icon, title, sub, bg, fg }) => (
+          <Link className="qa" to={to} key={to}>
+            <span className="qa-ic" style={{ background: bg, color: fg }}><Icon size={21} /></span>
+            <div className="qa-t">{title}</div>
+            <div className="qa-s">{sub}</div>
+          </Link>
+        ))}
+      </div>
+
+      {/* BODY MAP */}
+      <BodyMap />
+
+      <div className="vt-block" />
 
       {/* Profilo */}
       <Card title="Profilo sanitario">
