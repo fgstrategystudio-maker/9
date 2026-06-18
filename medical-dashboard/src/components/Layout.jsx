@@ -104,6 +104,8 @@ export default function Layout({ children, session, onLogout }) {
         const json = JSON.parse(ev.target.result)
         if (!json.version) { alert('File non valido'); return }
         Object.entries(json.data || {}).forEach(([k, v]) => {
+          // Non sovrascrivere il PIN impostato su questo dispositivo
+          if (k.startsWith('mcd_pin_')) return
           localStorage.setItem(k, JSON.stringify(v))
         })
         window.location.reload()
