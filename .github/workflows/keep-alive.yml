@@ -1,51 +1,110 @@
-name: Keep Alive — Ping Dashboard Vercel + Supabase
+name: Keep Alive — Supabase + Dashboard
+
+# OBIETTIVO: impedire che i progetti Supabase free vadano in pausa (7 giorni di
+# inattività) e accorgersene SUBITO se il keep-alive smette di funzionare.
+#
+# Principi di robustezza (perché prima falliva in silenzio):
+#  1. Cadenza fitta: ogni 6 ore. Anche se GitHub salta/ritarda qualche run
+#     (lo scheduler è "best-effort"), il gap tra due ping riusciti resta molto
+#     sotto i 7 giorni.
+#  2. Verifica reale: ogni ping controlla il codice HTTP. Se il progetto non
+#     risponde (DNS/timeout/000 oppure 5xx = in pausa) il job FALLISCE.
+#  3. Niente errori nascosti: il vecchio `continue-on-error` rendeva il workflow
+#     sempre verde. Ora un ping fallito = run rosso.
+#  4. Allarme: se un ping critico fallisce, apre/aggiorna una issue su GitHub,
+#     così ricevi una mail PRIMA che il progetto vada in pausa.
 
 on:
   schedule:
-    # Sistema 1A: ogni giorno alle 09:00 ora italiana (07:00 UTC)
-    - cron: "0 7 * * *"
-    # Sistema 1B: ogni giorno alle 21:00 ora italiana (19:00 UTC) — secondo giro
-    - cron: "0 19 * * *"
+    # Ogni 6 ore. Minuto :17 per evitare il picco dell'ora tonda (quando GitHub
+    # ritarda di più i cron). => 4 ping/giorno.
+    - cron: "17 */6 * * *"
   workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: keep-alive
+  cancel-in-progress: false
 
 jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
-      - name: Ping Freelance Dashboard
-        continue-on-error: true
+      - name: Ping Supabase (verificato)
+        id: supabase
         run: |
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 https://freelance-dashboard-j1ay.vercel.app/ || echo "ERRORE")
-          echo "Freelance Dashboard → HTTP $STATUS"
+          set -uo pipefail
+          fail=0
 
-      - name: Ping Medical Dashboard
-        continue-on-error: true
-        run: |
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 https://medical-dashboard-nvcc.vercel.app/ || echo "ERRORE")
-          echo "Medical Dashboard → HTTP $STATUS"
-
-      - name: Ping Famiglia Dashboard
-        continue-on-error: true
-        run: |
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 https://famiglia-dashboard.vercel.app/ || echo "ERRORE")
-          echo "Famiglia Dashboard → HTTP $STATUS"
-
-# L'accesso anon alle tabelle è revocato (RLS forzata): il keep-alive
-      # interroga l'endpoint REST root, che risponde 200 e conta come attività.
-      - name: Ping Supabase — Famiglia
-        continue-on-error: true
-        run: |
+          # Chiavi anon (pubbliche per definizione: finiscono nel bundle client).
           FAMIGLIA_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh1a2xpeXJ1d3Z3bGt1YmNsZ2ZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzMDA5MDksImV4cCI6MjA5NDg3NjkwOX0.GUC5GLBLP94D_vXrZN0_TES6ptAeDCme4fo4uwYtl_k"
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 \
-            "https://hukliyruwvwlkubclgfr.supabase.co/rest/v1/" \
-            -H "apikey: $FAMIGLIA_KEY" || echo "ERRORE")
-          echo "Supabase Famiglia → HTTP $STATUS"
-
-      - name: Ping Supabase — Freelance/Medical
-        continue-on-error: true
-        run: |
           FREELANCE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVobWZ3a210YmZtZHhjZGRmeXpkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1MTYyNDcsImV4cCI6MjA5NDA5MjI0N30._ZedUvJLTjeC-_8gzP3jEs4aLLp9ydiVfpnvVY-lY6o"
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 \
-            "https://ehmfwkmtbfmdxcddfyzd.supabase.co/rest/v1/" \
-            -H "apikey: $FREELANCE_KEY" || echo "ERRORE")
-          echo "Supabase Freelance/Medical → HTTP $STATUS"
+
+          # Pinga l'endpoint REST root: forza l'introspezione dello schema in
+          # PostgREST = una query reale sul DB => conta come attività e tiene
+          # vivo il progetto anche con RLS chiusa per anon.
+          ping_supabase() {
+            local name="$1" host="$2" key="$3" code
+            # --retry assorbe i singoli errori transienti di rete.
+            code=$(curl -s -o /dev/null -w "%{http_code}" \
+              --retry 4 --retry-delay 5 --retry-all-errors --max-time 25 \
+              "https://${host}.supabase.co/rest/v1/" \
+              -H "apikey: ${key}" -H "Authorization: Bearer ${key}")
+            echo "Supabase ${name} (${host}) → HTTP ${code}"
+            # 2xx/401/404 = gateway+DB hanno risposto => progetto VIVO.
+            # 000 (curl non ha raggiunto il server) o 5xx/503 = in pausa o rotto.
+            case "${code}" in
+              2*|401|404) return 0 ;;
+              *) echo "::error::Supabase ${name} non risponde (HTTP ${code})"; return 1 ;;
+            esac
+          }
+
+          # Famiglia è il progetto critico (quello che continuava a spegnersi).
+          ping_supabase "Famiglia"          "hukliyruwvwlkubclgfr" "$FAMIGLIA_KEY"  || fail=1
+          ping_supabase "Freelance/Medical" "ehmfwkmtbfmdxcddfyzd" "$FREELANCE_KEY" || fail=1
+
+          exit "$fail"
+
+      - name: Ping dashboard Vercel (best-effort, non blocca)
+        if: always()
+        run: |
+          for app in \
+            "https://famiglia-dashboard.vercel.app/" \
+            "https://freelance-dashboard-j1ay.vercel.app/" \
+            "https://medical-dashboard-nvcc.vercel.app/"; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 "$app" || echo "000")
+            echo "$app → HTTP $code"
+          done
+
+      - name: Allarme se un ping è fallito
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const run = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const body = [
+              `⚠️ Il **keep-alive** ha rilevato un progetto Supabase che non risponde.`,
+              ``,
+              `Quando: ${new Date().toISOString()}`,
+              `Log del run: ${run}`,
+              ``,
+              `Possibili cause: progetto andato in pausa, chiave anon scaduta, o Supabase down.`,
+              `Azione: apri la dashboard Supabase, riattiva il progetto se in pausa e controlla i log qui sopra.`,
+            ].join('\n');
+            const { owner, repo } = context.repo;
+            const existing = await github.rest.issues.listForRepo({
+              owner, repo, state: 'open', labels: 'keep-alive',
+            });
+            if (existing.data.length) {
+              await github.rest.issues.createComment({
+                owner, repo, issue_number: existing.data[0].number, body,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner, repo, title: '⚠️ Keep-alive Supabase FALLITO', body,
+                labels: ['keep-alive'],
+              });
+            }
