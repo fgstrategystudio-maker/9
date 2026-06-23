@@ -9,7 +9,7 @@ import Setup from "./components/Setup/Setup";
 import Network from "./components/Network/Network";
 import PinGate from "./components/PinGate/PinGate";
 import styles from "./App.module.css";
-import { loadFromSupabase } from "./lib/supabase";
+import { loadFromSupabase, enableSync } from "./lib/supabase";
 import { daysSinceLastBackup, exportData } from "./lib/backup";
 
 const NEW_COSTS = [
@@ -29,38 +29,68 @@ const STORICO_2026 = [
   { mese: "Maggio 2026",   lordo: 2140, netto: 1391 },
 ];
 
+// Migrazione idempotente dei dati "setup": applica i seed/correzioni una volta
+// sola. Funzione pura, così la possiamo applicare sia ai dati locali sia a
+// quelli appena caricati dal cloud.
+function migrateSetup(prev) {
+  const existingIds = new Set((prev.costiFissi || []).map((c) => c.id));
+  const toAdd = NEW_COSTS.filter((c) => !existingIds.has(c.id));
+  const needsCassa = prev.cassaIniziale === undefined || prev.cassaIniziale === null;
+  const needsCrypto = prev.crypto === undefined || prev.crypto === null;
+  const needsCryptoV2 = !prev._cryptoV2;
+  const existingMesi = new Set((prev.incassatoStorico || []).map((r) => r.mese.toLowerCase()));
+  const storicoToAdd = STORICO_2026.filter((r) => !existingMesi.has(r.mese.toLowerCase()));
+  const storicoSenzaGiugno = (prev.incassatoStorico || []).filter(
+    (r) => r.mese.toLowerCase() !== "giugno 2026"
+  );
+  const giugnoRimosso = storicoSenzaGiugno.length !== (prev.incassatoStorico || []).length;
+  if (toAdd.length === 0 && !needsCassa && !needsCrypto && !needsCryptoV2 && storicoToAdd.length === 0 && !giugnoRimosso) return prev;
+  return {
+    ...prev,
+    costiFissi: [...(prev.costiFissi || []), ...toAdd],
+    incassatoStorico: [...storicoSenzaGiugno, ...storicoToAdd],
+    ...(needsCassa ? { cassaIniziale: 17500 } : {}),
+    ...(needsCrypto || needsCryptoV2 ? { crypto: 2000, cryptoAggiornato: "21/05/2026", _cryptoV2: true } : {}),
+  };
+}
+
 export default function App() {
   const [unlocked, setUnlocked] = useState(false);
   const [backupBanner, setBackupBanner] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const [commesse, setCommesse] = useLocalStorage("commesse", INITIAL_COMMESSE);
   const [setup, setSetup] = useLocalStorage("setup", INITIAL_SETUP);
   const [network, setNetwork] = useLocalStorage("network", INITIAL_NETWORK);
   const [view, setView] = useState("dashboard");
 
   useEffect(() => {
-    setSetup((prev) => {
-      const existingIds = new Set((prev.costiFissi || []).map((c) => c.id));
-      const toAdd = NEW_COSTS.filter((c) => !existingIds.has(c.id));
-      const needsCassa = prev.cassaIniziale === undefined || prev.cassaIniziale === null;
-      const needsCrypto = prev.crypto === undefined || prev.crypto === null;
-      const needsCryptoV2 = !prev._cryptoV2;
-      const existingMesi = new Set((prev.incassatoStorico || []).map((r) => r.mese.toLowerCase()));
-      const storicoToAdd = STORICO_2026.filter((r) => !existingMesi.has(r.mese.toLowerCase()));
-      const storicoSenzaGiugno = (prev.incassatoStorico || []).filter(
-        (r) => r.mese.toLowerCase() !== "giugno 2026"
-      );
-      const giugnoRimosso = storicoSenzaGiugno.length !== (prev.incassatoStorico || []).length;
-      if (toAdd.length === 0 && !needsCassa && !needsCrypto && !needsCryptoV2 && storicoToAdd.length === 0 && !giugnoRimosso) return prev;
-      return {
-        ...prev,
-        costiFissi: [...(prev.costiFissi || []), ...toAdd],
-        incassatoStorico: [...storicoSenzaGiugno, ...storicoToAdd],
-        ...(needsCassa ? { cassaIniziale: 17500 } : {}),
-        ...(needsCrypto || needsCryptoV2 ? { crypto: 2000, cryptoAggiornato: "21/05/2026", _cryptoV2: true } : {}),
-      };
-    });
+    setSetup((prev) => migrateSetup(prev));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Carica lo stato dal cloud (fonte di verità) e abilita il sync SOLO dopo
+  // un caricamento riuscito. Se il caricamento fallisce non abilitiamo il sync
+  // (per non sovrascrivere il cloud con i dati locali vecchi) e segnaliamo l'errore.
+  const loadCloud = async () => {
+    setLoadError(false);
+    const rows = await loadFromSupabase();
+    if (rows === null) {
+      setLoadError(true);
+      return;
+    }
+    rows.forEach(({ key, value }) => {
+      if (key === "commesse") setCommesse(value);
+      else if (key === "setup") setSetup(migrateSetup(value));
+      else if (key === "network") setNetwork(value);
+    });
+    enableSync();
+    // Cloud vuoto (primo avvio): semina con lo stato locale già migrato.
+    if (rows.length === 0) {
+      setCommesse(commesse);
+      setSetup((prev) => migrateSetup(prev));
+      setNetwork(network);
+    }
+  };
 
   const handleUnlock = async () => {
     const days = daysSinceLastBackup();
@@ -70,19 +100,7 @@ export default function App() {
       setBackupBanner(true);
     }
     setUnlocked(true);
-    const rows = await loadFromSupabase();
-    if (rows && rows.length > 0) {
-      rows.forEach(({ key, value }) => {
-        if (key === "commesse") setCommesse(value);
-        else if (key === "setup") setSetup((prev) => ({
-          ...value,
-          incassatoStorico: (value.incassatoStorico || []).filter(
-            (r) => r.mese.toLowerCase() !== "giugno 2026"
-          ),
-        }));
-        else if (key === "network") setNetwork(value);
-      });
-    }
+    await loadCloud();
   };
 
   if (!unlocked) return <PinGate onUnlock={handleUnlock} />;
@@ -92,6 +110,12 @@ export default function App() {
       <Sidebar view={view} onNavigate={setView} />
       <main className={styles.main}>
         <div className={styles.mainInner}>
+        {loadError && (
+          <div className="notice warn" style={{ marginBottom: "var(--gap)", justifyContent: "space-between" }}>
+            <span className="lab">Impossibile caricare i dati dal cloud — stai vedendo una copia locale che potrebbe non essere aggiornata. Non modificare nulla finché non ricarichi.</span>
+            <button className="btn btn-ghost" onClick={loadCloud}>Riprova</button>
+          </div>
+        )}
         {backupBanner && (
           <div className="notice warn" style={{ marginBottom: "var(--gap)", justifyContent: "space-between" }}>
             <span className="lab">Backup non recente — scarica una copia dei tuoi dati</span>
