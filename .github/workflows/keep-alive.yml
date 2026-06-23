@@ -54,12 +54,14 @@ jobs:
               "https://${host}.supabase.co/rest/v1/" \
               -H "apikey: ${key}" -H "Authorization: Bearer ${key}")
             echo "Supabase ${name} (${host}) → HTTP ${code}"
-            # 2xx/401/404 = gateway+DB hanno risposto => progetto VIVO.
-            # 000 (curl non ha raggiunto il server) o 5xx/503 = in pausa o rotto.
-            case "${code}" in
-              2*|401|404) return 0 ;;
-              *) echo "::error::Supabase ${name} non risponde (HTTP ${code})"; return 1 ;;
-            esac
+            # SOLO 200 = PostgREST ha eseguito la query (introspezione schema sul
+            # DB) => attività realmente registrata. 401 (chiave rifiutata), 5xx
+            # (pausa) o 000 (rete) NON tengono vivo il progetto: vanno in errore.
+            if [ "${code}" = "200" ]; then
+              return 0
+            fi
+            echo "::error::Supabase ${name}: atteso 200, ricevuto ${code} — il keep-alive NON sta registrando attività."
+            return 1
           }
 
           # Famiglia è il progetto critico (quello che continuava a spegnersi).
