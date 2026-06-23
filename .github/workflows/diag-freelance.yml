@@ -1,4 +1,5 @@
 name: Diag freelance cloud (temporaneo)
+# run 2 — dopo configurazione env vars su Vercel
 
 # Workflow diagnostico TEMPORANEO: verifica se l'endpoint /api/db della dashboard
 # freelance raggiunge davvero Supabase e quali chiavi contiene il cloud.
