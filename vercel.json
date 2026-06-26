@@ -4,5 +4,10 @@
   "rewrites": [
     { "source": "/en", "destination": "/en/index.html" },
     { "source": "/pt", "destination": "/pt/index.html" }
+  ],
+  "redirects": [
+    { "source": "/blog-consulente-marketing-per-posizionamento-acquisition-ed-execution", "destination": "/consulente-marketing-pmi", "permanent": true },
+    { "source": "/blog-consulenza-marketing-per-aziende-che-vogliono-crescere-meglio", "destination": "/servizi-marketing", "permanent": true },
+    { "source": "/blog-strategia-marketing-per-pmi-e-aziende-in-fase-di-crescita", "destination": "/consulente-marketing-pmi", "permanent": true }
   ]
 }
