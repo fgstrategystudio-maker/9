@@ -52,6 +52,26 @@
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://francescogizzi.com/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Audit iniziale marketing, sales e dati",
+      "item": "https://francescogizzi.com/audit-iniziale"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
   "@type": "FAQPage",
   "mainEntity": [
     {
@@ -112,23 +132,22 @@
   </div>
 </main>
 <section id="contatti" class="section section-soft"><div class="container"><div class="lead-form-wrap card">
-  <div class="lead-form-copy">
+    <div class="lead-form-copy">
     <p class="section-title">Richiedi un contatto</p>
     <p class="contact-box-main">Se vuoi far crescere la tua azienda con più coerenza tra marketing, dati, sales e direzione strategica, scrivimi.</p>
     <p class="contact-box-sub">Partiamo da un audit iniziale, definiamo le priorità e costruiamo un piano operativo per capire dove intervenire davvero.</p>
   </div>
-  <form class="lead-form" action="https://formsubmit.co/fgstrategystudio@gmail.com" method="POST">
-    <input type="hidden" name="_cc" value="francesco.gizzi91@gmail.com" />
-    <input type="hidden" name="_captcha" value="false" />
-    <input type="hidden" name="_subject" value="Nuova lead dal blog Francesco Gizzi" />
-    <input type="hidden" name="_template" value="table" />
-    <input type="hidden" name="_next" value="" data-next-target="grazie" />
-    <div class="form-grid">
+  <form class="lead-form" action="https://api.web3forms.com/submit" method="POST">
+    <input type="hidden" name="access_key" value="5432da80-1229-4940-8bcd-cafbb17b98d1" />
+    <input type="hidden" name="subject" value="Nuova lead dal sito Francesco Gizzi" />
+    <input type="hidden" name="redirect" value="https://francescogizzi.com/grazie" />
+    <input type="checkbox" name="botcheck" style="display:none" />
+<div class="form-grid">
       <label><span>Nome</span><input type="text" name="Nome" required /></label>
       <label><span>Cognome</span><input type="text" name="Cognome" required /></label>
       <label><span>Nome azienda</span><input type="text" name="Azienda" required /></label>
       <label><span>Città</span><input type="text" name="Città" required /></label>
-      <label class="full"><span>Servizio richiesto</span><select name="Servizio richiesto" required><option value="" disabled selected>Seleziona un servizio</option><option value="Audit iniziale">Audit iniziale</option><option value="Marketing">Marketing</option><option value="Data">Data</option><option value="Sales">Sales</option><option value="Strategy">Strategy</option><option value="Institutional">Institutional</option><option value="Redazione articoli SEO">Redazione articoli SEO</option><option value="Controllo di gestione">Controllo di gestione</option></select></label>
+      <label class="full"><span>Servizio richiesto</span><select name="Servizio richiesto" required><option value="" disabled selected>Seleziona un servizio</option><option value="Audit iniziale">Audit iniziale</option><option value="Marketing">Marketing</option><option value="Data">Data</option><option value="Sales">Sales</option><option value="Strategy">Strategy</option><option value="Institutional">Institutional</option></select></label>
       <label><span>Email</span><input type="email" name="Email" required /></label>
       <label><span>Telefono</span><input type="tel" name="Telefono" /></label>
       <label class="full"><span>Messaggio</span><input type="text" name="Messaggio" placeholder="Raccontami in breve di cosa hai bisogno" /></label>
