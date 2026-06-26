@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400" width="640" height="400" role="img" aria-label="Piano editoriale e redazione articoli per la crescita organica">
+<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f7f5ef"/><stop offset="1" stop-color="#efece3"/></linearGradient></defs>
+<rect width="640" height="400" fill="url(#bg)"/>
+<rect x="14" y="14" width="612" height="372" fill="none" stroke="#ddd6c8" stroke-width="1.5" rx="10"/>
+<text x="48" y="78" font-family="Arial,Helvetica,sans-serif" font-size="17" font-weight="700" letter-spacing="4" fill="#c8a96e">REDAZIONE ARTICOLI SEO</text>
+<line x1="48" y1="96" x2="180" y2="96" stroke="#c8a96e" stroke-width="2"/>
+<text x="48" y="150" font-family="Georgia,'Times New Roman',serif" font-size="38" fill="#16181c"><tspan x="48" dy="0">Piano editoriale e</tspan><tspan x="48" dy="46">redazione articoli per</tspan><tspan x="48" dy="46">la crescita organica</tspan></text>
+<g transform="translate(450,235)" stroke="#c8a96e" fill="none" stroke-width="3" stroke-linecap="round"><rect x="0" y="0" width="95" height="120" rx="6"/><path d="M16 28 H79 M16 50 H79 M16 72 H60" stroke-width="2.5"/><circle cx="100" cy="110" r="20"/><path d="M115 125 L135 145"/></g>
+<text x="48" y="360" font-family="Arial,Helvetica,sans-serif" font-size="15" letter-spacing="1" fill="#56606a">francescogizzi.com</text>
+</svg>

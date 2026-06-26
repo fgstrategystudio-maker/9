@@ -76,3 +76,7 @@ a[href]:hover{opacity:.86}
 .sector-track{display:flex;gap:9px;width:max-content;animation:brand-scroll 24s linear infinite}
 .sector-marquee:hover .sector-track{animation-play-state:paused}
 .sector-chip{border:1px solid var(--line-strong);border-radius:999px;padding:8px 16px;font:400 13px 'Hanken Grotesk',sans-serif;color:var(--muted);white-space:nowrap;flex:0 0 auto}
+
+/* === Cover articoli === */
+.article-cover{width:100%;aspect-ratio:16/10;object-fit:cover;border:1px solid var(--line);border-radius:14px;margin-bottom:30px;display:block}
+.home-card-cover{width:100%;aspect-ratio:16/10;object-fit:cover;border:1px solid var(--line);border-radius:10px;margin-bottom:16px;display:block}
