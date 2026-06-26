@@ -1086,4 +1086,32 @@
     <priority>0.8</priority>
     <changefreq>monthly</changefreq>
   </url>
+  <url>
+    <loc>https://francescogizzi.com/chi-sono</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/chi-sono"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/chi-sono"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/servizi</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/servizi"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/servizi"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/progetti</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/progetti"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/progetti"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/contatti</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="https://francescogizzi.com/contatti"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/contatti"/>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
 </urlset>
