@@ -658,3 +658,11 @@ html{-webkit-overflow-scrolling:touch}
 .nav-dd-head{font-weight:700;color:var(--blue);font-size:12px;text-transform:uppercase;letter-spacing:.04em;margin-top:8px}
 .nav-dropdown a.nav-dd-sub{padding-left:24px;font-size:13.5px;color:var(--muted)}
 .nav-dropdown a.nav-dd-sub:hover{color:var(--blue)}
+
+/* --- Fix: bottone Audit oro + menu mobile scrollabile --- */
+.nav-dd-cta{background:var(--gold);color:#1c2840 !important}
+.nav-dd-cta:hover{background:var(--gold);color:#1c2840 !important;opacity:.92}
+@media (max-width:680px){
+  .nav.is-open{max-height:calc(100vh - 96px);max-height:calc(100dvh - 96px);overflow-y:auto;-webkit-overflow-scrolling:touch}
+  .nav-dropdown{max-height:none;overflow:visible}
+}
