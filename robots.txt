@@ -3,5 +3,6 @@ Allow: /
 Disallow: /grazie.html
 Disallow: /en/grazie.html
 Disallow: /pt/grazie.html
+Disallow: /es/
 
 Sitemap: https://francescogizzi.com/sitemap.xml

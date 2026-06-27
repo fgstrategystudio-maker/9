@@ -78,3 +78,8 @@ a[href]:hover{opacity:.86}
 /* === Cover articoli === */
 .article-cover{width:100%;aspect-ratio:16/10;object-fit:cover;border:1px solid var(--line);border-radius:14px;margin-bottom:30px;display:block}
 .home-card-cover{width:100%;aspect-ratio:16/10;object-fit:cover;border:1px solid var(--line);border-radius:10px;margin-bottom:16px;display:block}
+
+/* === Blog filtri categoria === */
+.blog-chip{border:1px solid var(--line-strong);background:transparent;border-radius:999px;padding:8px 16px;font:400 13px 'Hanken Grotesk',sans-serif;color:var(--muted);cursor:pointer;transition:border-color .15s,color .15s,background .15s;}
+.blog-chip:hover{border-color:var(--gold);color:var(--ink);}
+.blog-chip.active{background:var(--ink);color:var(--paper);border-color:var(--ink);font-weight:500;}
