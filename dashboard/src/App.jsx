@@ -126,7 +126,7 @@ export default function App() {
           </div>
         )}
         {view === "dashboard" && (
-          <Dashboard commesse={commesse} setup={setup} setSetup={setSetup} />
+          <Dashboard commesse={commesse} setCommesse={setCommesse} setup={setup} setSetup={setSetup} />
         )}
         {view === "commesse" && (
           <Commesse

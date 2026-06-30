@@ -64,7 +64,7 @@ const kfmt = (v) => {
   return String(Math.round(v));
 };
 
-export default function Dashboard({ commesse, setup, setSetup }) {
+export default function Dashboard({ commesse, setCommesse, setup, setSetup }) {
   const now = new Date();
   const anno = now.getFullYear();
   const meseIdx = now.getMonth();
@@ -87,13 +87,26 @@ export default function Dashboard({ commesse, setup, setSetup }) {
     .filter((c) => c.upsellTarget)
     .reduce((sum, c) => sum + c.upsellTarget, 0);
 
-  const inScadenza = commesse
+  // Commesse attive con scadenza entro la finestra: in arrivo (giorni > 0) e
+  // scadute (giorni <= 0, oggi o passate). Le scadute NON spariscono da sole:
+  // restano finche non confermi tu la chiusura.
+  const conScadenza = commesse
     .filter((c) => {
+      if (c.stato !== "In corso" && c.stato !== "In scadenza") return false;
       if (!c.fine) return false;
       const days = daysUntil(c.fine);
-      return days !== null && days >= 0 && days <= setup.alertScadenzaGiorni;
+      return days !== null && days <= setup.alertScadenzaGiorni;
     })
     .sort((a, b) => daysUntil(a.fine) - daysUntil(b.fine));
+  const scadute = conScadenza.filter((c) => daysUntil(c.fine) <= 0);
+  const inScadenza = conScadenza.filter((c) => daysUntil(c.fine) > 0);
+
+  function handleConfermaScaduta(c) {
+    const giorni = daysUntil(c.fine);
+    const quando = giorni === 0 ? "scade oggi" : `scaduta da ${Math.abs(giorni)} giorni`;
+    if (!confirm(`Confermi che «${c.cliente}» (${quando}) è conclusa? Verrà archiviata come Conclusa e tolta dalle scadenze.`)) return;
+    setCommesse((prev) => prev.map((x) => (x.id === c.id ? { ...x, stato: "Concluso" } : x)));
+  }
 
   // — Tempo del mese / saturazione —
   const oreDisponibili = setup.oreMeseDisponibili ?? 160;
@@ -171,14 +184,13 @@ export default function Dashboard({ commesse, setup, setSetup }) {
     ? Math.round(totaleCostiFissi / setup.fattoreNetto)
     : null;
 
-  // YTD escluso mese corrente
-  const storicoSenzaMeseCorrente = sortedStorico.filter(
-    (r) => r.mese.toLowerCase() !== meseCorrente.toLowerCase()
-  );
-  const ytdLordo = storicoSenzaMeseCorrente.reduce((s, r) => s + r.lordo, 0);
-  const ytdNetto = storicoSenzaMeseCorrente.reduce((s, r) => s + r.netto, 0);
+  // YTD su tutti i mesi effettivamente registrati nello storico (incluso il mese
+  // corrente se gia incassato): cosi il totale coincide sempre con la somma delle righe.
+  const ytdLordo = sortedStorico.reduce((s, r) => s + r.lordo, 0);
+  const ytdNetto = sortedStorico.reduce((s, r) => s + r.netto, 0);
+  const ytdMesi = sortedStorico.length;
   const ytdProfitto = totaleCostiFissi > 0
-    ? ytdNetto - totaleCostiFissi * storicoSenzaMeseCorrente.length
+    ? ytdNetto - totaleCostiFissi * ytdMesi
     : null;
 
   // — Panoramica annuale —
@@ -237,7 +249,7 @@ export default function Dashboard({ commesse, setup, setSetup }) {
         </div>
       </header>
 
-      {inScadenza.length > 0 && (
+      {(inScadenza.length > 0 || scadute.length > 0) && (
         <div className="notice warn reveal">
           <div
             className="notice-ico"
@@ -247,6 +259,11 @@ export default function Dashboard({ commesse, setup, setSetup }) {
           </div>
           <div className="chip-row">
             <span className="lab" style={{ marginRight: 4 }}>Scadenze entro {setup.alertScadenzaGiorni} giorni</span>
+            {scadute.map((c) => (
+              <span key={c.id} className="deadline-chip urgent">
+                {c.cliente} <b>scaduta</b>
+              </span>
+            ))}
             {inScadenza.map((c) => {
               const days = daysUntil(c.fine);
               return (
@@ -460,17 +477,17 @@ export default function Dashboard({ commesse, setup, setSetup }) {
                 );
               })()}
             </div>
-            {storicoSenzaMeseCorrente.length > 0 && (
+            {ytdMesi > 0 && (
               <div className="ytd-rail">
                 <div className="ytd-item">
                   <div className="v t-info num">{fmtN(ytdLordo)} €</div>
                   <div className="l">Lordo incassato YTD</div>
-                  <div className="s">{storicoSenzaMeseCorrente.length} mesi · escluso {meseCorrente.split(" ")[0]}</div>
+                  <div className="s">{ytdMesi} {ytdMesi === 1 ? "mese registrato" : "mesi registrati"}</div>
                 </div>
                 <div className="ytd-item">
                   <div className="v t-pos num">{fmtN(ytdNetto)} €</div>
                   <div className="l">Netto incassato YTD</div>
-                  <div className="s">fattore {(setup.fattoreNetto * 100).toFixed(0)}%</div>
+                  <div className="s">somma dei netti registrati</div>
                 </div>
                 {ytdProfitto !== null && (
                   <div className="ytd-item">
@@ -478,7 +495,7 @@ export default function Dashboard({ commesse, setup, setSetup }) {
                       {ytdProfitto >= 0 ? "+" : ""}{fmtN(ytdProfitto)} €
                     </div>
                     <div className="l">Profitto YTD</div>
-                    <div className="s">netto − {fmtN(totaleCostiFissi)} €/mese</div>
+                    <div className="s">netto − {fmtN(totaleCostiFissi)} €/mese × {ytdMesi}</div>
                   </div>
                 )}
               </div>
@@ -539,6 +556,37 @@ export default function Dashboard({ commesse, setup, setSetup }) {
           </div>
         </section>
       </div>
+
+      {/* Scadute — da confermare */}
+      {scadute.length > 0 && (
+        <section className="panel" style={{ borderColor: "color-mix(in oklab, var(--danger) 30%, var(--hair))" }}>
+          <div className="panel-head">
+            <div className="panel-title" style={{ color: "var(--danger)" }}>
+              <Icon name="alert" size={15} />Scadute — da confermare
+            </div>
+            <span className="panel-note">confermi tu la chiusura · poi vengono archiviate</span>
+          </div>
+          <div className="row-list">
+            {scadute.map((c) => {
+              const days = daysUntil(c.fine);
+              return (
+                <div key={c.id} className="lrow" style={{ gridTemplateColumns: "1fr auto auto", gap: 14 }}>
+                  <div>
+                    <div className="nm">{c.cliente}</div>
+                    <div className="meta">{c.servizio}</div>
+                  </div>
+                  <span className="deadline-chip urgent" style={{ justifySelf: "end" }}>
+                    <b>{days === 0 ? "scade oggi" : `scaduta ${Math.abs(days)}gg fa`}</b>
+                  </span>
+                  <button className="btn btn-primary" onClick={() => handleConfermaScaduta(c)}>
+                    <Icon name="check" size={16} /> Conferma chiusura
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       {/* Commesse in scadenza */}
       {inScadenza.length > 0 && (
