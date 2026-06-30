@@ -40,15 +40,11 @@ function migrateSetup(prev) {
   const needsCryptoV2 = !prev._cryptoV2;
   const existingMesi = new Set((prev.incassatoStorico || []).map((r) => r.mese.toLowerCase()));
   const storicoToAdd = STORICO_2026.filter((r) => !existingMesi.has(r.mese.toLowerCase()));
-  const storicoSenzaGiugno = (prev.incassatoStorico || []).filter(
-    (r) => r.mese.toLowerCase() !== "giugno 2026"
-  );
-  const giugnoRimosso = storicoSenzaGiugno.length !== (prev.incassatoStorico || []).length;
-  if (toAdd.length === 0 && !needsCassa && !needsCrypto && !needsCryptoV2 && storicoToAdd.length === 0 && !giugnoRimosso) return prev;
+  if (toAdd.length === 0 && !needsCassa && !needsCrypto && !needsCryptoV2 && storicoToAdd.length === 0) return prev;
   return {
     ...prev,
     costiFissi: [...(prev.costiFissi || []), ...toAdd],
-    incassatoStorico: [...storicoSenzaGiugno, ...storicoToAdd],
+    incassatoStorico: [...(prev.incassatoStorico || []), ...storicoToAdd],
     ...(needsCassa ? { cassaIniziale: 17500 } : {}),
     ...(needsCrypto || needsCryptoV2 ? { crypto: 2000, cryptoAggiornato: "21/05/2026", _cryptoV2: true } : {}),
   };
