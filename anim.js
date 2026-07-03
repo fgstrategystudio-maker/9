@@ -1,8 +1,10 @@
 (function(){
   var RM = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var IO = 'IntersectionObserver' in window;
   var header = document.querySelector('body > header');
+  var innerH = window.innerHeight;
 
-  // barra di avanzamento
+  // ---- barra di avanzamento + header sticky shadow ----
   var bar = document.createElement('div'); bar.className='scroll-progress'; document.body.appendChild(bar);
   function onScroll(){
     if(header) header.classList.toggle('scrolled', window.scrollY > 8);
@@ -11,25 +13,46 @@
   }
   window.addEventListener('scroll', onScroll, {passive:true}); onScroll();
 
-  // reveal on scroll (solo elementi sotto la piega, nessun flash)
-  if(!RM && 'IntersectionObserver' in window){
+  // ---- reveal on scroll con stagger delle card ----
+  if(!RM && IO){
     var io = new IntersectionObserver(function(es){
-      es.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('reveal-in'); io.unobserve(e.target); } });
-    }, {threshold:0.1, rootMargin:'0px 0px -6% 0px'});
-    document.querySelectorAll('section').forEach(function(s){
-      if(s.getBoundingClientRect().top > window.innerHeight * 0.88){ s.classList.add('reveal-init'); io.observe(s); }
+      es.forEach(function(e){
+        if(!e.isIntersecting) return;
+        var items = e.target.__items || [e.target];
+        items.forEach(function(el,i){
+          var d = Math.min(i,8) * 55;
+          el.style.transitionDelay = d + 'ms';
+          el.classList.add('reveal-in');
+          setTimeout(function(){ el.style.transitionDelay=''; }, 900 + d);
+        });
+        io.unobserve(e.target);
+      });
+    }, {threshold:0.08, rootMargin:'0px 0px -6% 0px'});
+
+    document.querySelectorAll('section').forEach(function(sec){
+      // cerca una griglia di card (2-12 figli) da far entrare in sequenza
+      var grid = null;
+      sec.querySelectorAll('[style*="grid-template-columns"]').forEach(function(g){
+        if(!grid && g.children.length >= 2 && g.children.length <= 12) grid = g;
+      });
+      var target = grid || sec;
+      if(target.getBoundingClientRect().top <= innerH * 0.9) return; // sopra la piega: niente hide
+      var items = grid ? [].slice.call(grid.children) : [sec];
+      items.forEach(function(el){ el.classList.add('reveal-init'); });
+      target.__items = items;
+      io.observe(target);
     });
   }
 
-  // hover lift su card e chip
+  // ---- hover lift su card e chip ----
   try{
     document.querySelectorAll('.card, #blog-grid > a, .brand-chip, .sector-chip, a[style*="border-top:1px solid var(--line-strong)"], main a[style*="border:1px solid var(--line-strong)"]').forEach(function(e){ e.classList.add('lift'); });
   }catch(e){}
 
-  // contatori animati (statistiche home)
-  if(!RM){
+  // ---- contatori animati (statistiche home) ----
+  if(!RM && IO){
     var stats = document.querySelector('.home-stats');
-    if(stats && 'IntersectionObserver' in window){
+    if(stats){
       var so = new IntersectionObserver(function(es){
         es.forEach(function(e){ if(e.isIntersecting){ runCounters(); so.disconnect(); } });
       }, {threshold:0.4});
@@ -46,7 +69,7 @@
     });
   }
 
-  // menu hamburger mobile
+  // ---- menu hamburger mobile (senza slide al load) ----
   if(header){
     header.classList.add('site-header');
     var inner = header.firstElementChild, nav = header.querySelector('nav');
@@ -63,6 +86,10 @@
       bd.addEventListener('click', function(){ set(false); });
       nav.querySelectorAll('a').forEach(function(a){ a.addEventListener('click', function(){ set(false); }); });
       document.documentElement.classList.add('js-nav');
+      // abilita la transizione del pannello solo DOPO il primo posizionamento: niente slide iniziale
+      requestAnimationFrame(function(){ requestAnimationFrame(function(){
+        document.documentElement.classList.add('nav-ready');
+      }); });
     }
   }
 })();
