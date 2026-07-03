@@ -140,3 +140,24 @@ body > header.scrolled{box-shadow:0 1px 0 var(--line),0 12px 30px -24px rgba(20,
   .site-header nav a:not([style*="border:1px"]):hover::after{ width:100%; }
   .site-header nav a:hover{ opacity:1; }
 }
+
+/* === Effetti avanzati (aggiungi tutto) === */
+@media (prefers-reduced-motion: no-preference){
+  body{animation:pageIn .45s ease}
+  @keyframes pageIn{from{opacity:0}to{opacity:1}}
+  body.page-out{opacity:0;transition:opacity .17s ease}
+  .word{display:inline-block;will-change:transform,opacity}
+  .fx-bg{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:-1}
+  .fx-blob{position:absolute;border-radius:50%;filter:blur(72px)}
+  .fx-blob.b1{top:-6%;left:-4%;width:44vw;max-width:520px;height:44vw;max-height:520px;background:radial-gradient(circle,rgba(216,184,106,.5),transparent 70%);animation:drift1 36s ease-in-out infinite}
+  .fx-blob.b2{bottom:-8%;right:-6%;width:40vw;max-width:460px;height:40vw;max-height:460px;background:radial-gradient(circle,rgba(232,212,152,.42),transparent 70%);animation:drift2 46s ease-in-out infinite}
+  @keyframes drift1{0%,100%{transform:translate(-8%,-6%) scale(1)}50%{transform:translate(16%,12%) scale(1.08)}}
+  @keyframes drift2{0%,100%{transform:translate(8%,10%) scale(1)}50%{transform:translate(-10%,-8%) scale(1.1)}}
+  .cursor-glow{position:fixed;top:0;left:0;width:520px;height:520px;margin:-260px 0 0 -260px;border-radius:50%;background:radial-gradient(circle,rgba(216,184,106,.10),transparent 62%);pointer-events:none;z-index:1;opacity:0;transition:opacity .35s ease;will-change:transform}
+  .cursor-glow.on{opacity:1}
+  .tilt{transition:transform .2s cubic-bezier(.22,1,.36,1),box-shadow .28s ease}
+  a[style*="var(--cta)"],a[style*="background:var(--gold)"]{position:relative;overflow:hidden}
+  a[style*="var(--cta)"]::after,a[style*="background:var(--gold)"]::after{content:"";position:absolute;top:0;left:-70%;width:46%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.42),transparent);transform:skewX(-18deg);pointer-events:none}
+  a[style*="var(--cta)"]:hover::after,a[style*="background:var(--gold)"]:hover::after{animation:shine .75s ease}
+  @keyframes shine{from{left:-70%}to{left:170%}}
+}
