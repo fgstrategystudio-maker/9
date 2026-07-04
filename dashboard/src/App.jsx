@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { useLocalStorage } from "./hooks/useLocalStorage";
-import { INITIAL_COMMESSE, INITIAL_SETUP, INITIAL_NETWORK } from "./data/initialData";
+import { INITIAL_COMMESSE, INITIAL_SETUP, INITIAL_NETWORK, INITIAL_REDDITI_ANNUALI } from "./data/initialData";
 import Sidebar from "./components/Sidebar/Sidebar";
 import Dashboard from "./components/Dashboard/Dashboard";
 import Commesse from "./components/Commesse/Commesse";
 import Fiscale from "./components/Fiscale/Fiscale";
 import Setup from "./components/Setup/Setup";
+import Storico from "./components/Storico/Storico";
 import Network from "./components/Network/Network";
 import PinGate from "./components/PinGate/PinGate";
 import styles from "./App.module.css";
@@ -40,13 +41,15 @@ function migrateSetup(prev) {
   const needsCryptoV2 = !prev._cryptoV2;
   const existingMesi = new Set((prev.incassatoStorico || []).map((r) => r.mese.toLowerCase()));
   const storicoToAdd = STORICO_2026.filter((r) => !existingMesi.has(r.mese.toLowerCase()));
-  if (toAdd.length === 0 && !needsCassa && !needsCrypto && !needsCryptoV2 && storicoToAdd.length === 0) return prev;
+  const needsRedditi = !Array.isArray(prev.redditiAnnuali) || prev.redditiAnnuali.length === 0;
+  if (toAdd.length === 0 && !needsCassa && !needsCrypto && !needsCryptoV2 && storicoToAdd.length === 0 && !needsRedditi) return prev;
   return {
     ...prev,
     costiFissi: [...(prev.costiFissi || []), ...toAdd],
     incassatoStorico: [...(prev.incassatoStorico || []), ...storicoToAdd],
     ...(needsCassa ? { cassaIniziale: 17500 } : {}),
     ...(needsCrypto || needsCryptoV2 ? { crypto: 2000, cryptoAggiornato: "21/05/2026", _cryptoV2: true } : {}),
+    ...(needsRedditi ? { redditiAnnuali: INITIAL_REDDITI_ANNUALI } : {}),
   };
 }
 
@@ -140,6 +143,9 @@ export default function App() {
         )}
         {view === "setup" && (
           <Setup setup={setup} setSetup={setSetup} />
+        )}
+        {view === "storico" && (
+          <Storico setup={setup} setSetup={setSetup} />
         )}
         {view === "network" && (
           <Network network={network} setNetwork={setNetwork} />

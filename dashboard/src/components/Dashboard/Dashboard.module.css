@@ -22,3 +22,46 @@
   padding: 8px 12px;
   margin-bottom: 12px;
 }
+
+/* KPI cliccabile */
+.kpiClickable { cursor: pointer; }
+.kpiClickable:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.kpiHint {
+  position: absolute;
+  right: var(--card-pad);
+  bottom: 14px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-3);
+  opacity: 0;
+  transition: opacity .2s var(--ease);
+}
+.kpiClickable:hover .kpiHint,
+.kpiClickable:focus-visible .kpiHint { opacity: 1; }
+
+/* Modal drill-down */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(34, 29, 24, .45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 1rem;
+}
+.modal {
+  background: var(--panel);
+  border: 1px solid var(--hair);
+  border-radius: var(--r-lg);
+  box-shadow: var(--sh-lg);
+  width: 100%;
+  max-width: 560px;
+  max-height: 88vh;
+  overflow-y: auto;
+  animation: modalIn .3s var(--ease) both;
+}
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}

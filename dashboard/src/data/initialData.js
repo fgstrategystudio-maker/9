@@ -26,7 +26,25 @@ export const INITIAL_SETUP = {
   cassaIniziale: 17500,
   crypto: 2000,
   cryptoAggiornato: "21/05/2026",
+  // Reddito annuo storico (anni chiusi). L'anno in corso si calcola dallo
+  // storico mensile. Importo = lordo dell'anno; nota facoltativa.
+  redditiAnnuali: [
+    { anno: 2014, importo: 6400, nota: "nero" },
+    { anno: 2015, importo: 9600, nota: "nero" },
+    { anno: 2016, importo: 5600, nota: "nero" },
+    { anno: 2017, importo: 7000, nota: "nero" },
+    { anno: 2018, importo: 9720, nota: "quasi metà versati" },
+    { anno: 2019, importo: 16000, nota: "tutti versati" },
+    { anno: 2020, importo: 14725, nota: "solo 4000 non versati" },
+    { anno: 2021, importo: 26500, nota: "" },
+    { anno: 2022, importo: 32300, nota: "" },
+    { anno: 2023, importo: 29300, nota: "" },
+    { anno: 2024, importo: null, nota: "" },
+    { anno: 2025, importo: 25000, nota: "lordi" },
+  ],
 };
+
+export const INITIAL_REDDITI_ANNUALI = INITIAL_SETUP.redditiAnnuali;
 
 export const INITIAL_NETWORK = [];
 

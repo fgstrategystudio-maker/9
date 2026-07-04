@@ -1,0 +1,60 @@
+.editTable {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px var(--card-pad) 8px;
+}
+
+.head {
+  display: grid;
+  grid-template-columns: 120px 160px 1fr 34px;
+  gap: 10px;
+  font-size: 11px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  font-weight: 700;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--hair);
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 120px 160px 1fr 34px;
+  gap: 10px;
+  align-items: center;
+}
+
+.addRow {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 4px var(--card-pad) var(--card-pad);
+}
+
+.removeBtn {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  border: 1px solid var(--hair);
+  background: var(--panel);
+  color: var(--ink-3);
+  font-size: 13px;
+  transition: color .2s, border-color .2s, background .2s;
+}
+
+.removeBtn:hover {
+  color: var(--danger);
+  border-color: color-mix(in oklab, var(--danger) 35%, var(--hair));
+  background: var(--danger-wash);
+}
+
+@media (max-width: 640px) {
+  .head { display: none; }
+  .row {
+    grid-template-columns: 70px 1fr 34px;
+    grid-template-areas: "anno importo del" "anno nota del";
+    gap: 8px 10px;
+  }
+}

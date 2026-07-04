@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
   ReferenceLine, ComposedChart, Line,
@@ -7,11 +8,13 @@ import {
   formatCurrency,
   daysUntil,
   getStatoColor,
+  getStatoTone,
   calcNetto,
   getCommessaLordoMensile,
   getRicavoOrario,
   getMeseCorrente,
   getLordoPerMese,
+  sumLordoAnno,
 } from "../../utils/helpers";
 import Icon from "../Icon";
 import styles from "./Dashboard.module.css";
@@ -65,6 +68,7 @@ const kfmt = (v) => {
 };
 
 export default function Dashboard({ commesse, setCommesse, setup, setSetup }) {
+  const [drill, setDrill] = useState(null);
   const now = new Date();
   const anno = now.getFullYear();
   const meseIdx = now.getMonth();
@@ -193,6 +197,13 @@ export default function Dashboard({ commesse, setCommesse, setup, setSetup }) {
     ? ytdNetto - totaleCostiFissi * ytdMesi
     : null;
 
+  // — Confronto anno su anno (lordo) —
+  const lordoAnnoCorrente = sumLordoAnno(revenueHistory, anno);
+  const redditiAnnuali = setup.redditiAnnuali || [];
+  const annoPrecImporto = redditiAnnuali.find((r) => r.anno === anno - 1)?.importo ?? null;
+  const yoyDeltaPct = annoPrecImporto ? Math.round(((lordoAnnoCorrente - annoPrecImporto) / annoPrecImporto) * 100) : null;
+  const yoyDeltaAbs = annoPrecImporto != null ? lordoAnnoCorrente - annoPrecImporto : null;
+
   // — Panoramica annuale —
   const annualData = MESI_IT.map((nome, i) => {
     const label = `${nome} ${anno}`;
@@ -222,17 +233,17 @@ export default function Dashboard({ commesse, setCommesse, setup, setSetup }) {
   const mesiMancanti = annualData.filter((d) => d.tipo === "mancante").length;
 
   const kpis = [
-    { label: "Lordo mensile attivo", value: fmtN(lordoMensileAttivo), cur: "€", sub: "commesse in corso + in scadenza", tone: "accent", icon: "card" },
-    { label: "Netto mensile attivo", value: fmtN(nettoMensileAttivo), cur: "€", sub: `fattore ${(setup.fattoreNetto * 100).toFixed(0)}%`, tone: "pos", icon: "trend" },
-    { label: "Commesse attive", value: attive.length, sub: `su ${commesse.length} totali`, tone: "ink", icon: "folder" },
-    { label: "Potenziale upsell", value: fmtN(upsellOpportunities), cur: "€", sub: "obiettivo mensile aggregato", tone: "info", icon: "spark" },
+    { id: "lordoAttivo", label: "Lordo mensile attivo", value: fmtN(lordoMensileAttivo), cur: "€", sub: "commesse in corso + in scadenza", tone: "accent", icon: "card" },
+    { id: "nettoAttivo", label: "Netto mensile attivo", value: fmtN(nettoMensileAttivo), cur: "€", sub: `fattore ${(setup.fattoreNetto * 100).toFixed(0)}%`, tone: "pos", icon: "trend" },
+    { id: "commesseAttive", label: "Commesse attive", value: attive.length, sub: `su ${commesse.length} totali`, tone: "ink", icon: "folder" },
+    { id: "upsell", label: "Potenziale upsell", value: fmtN(upsellOpportunities), cur: "€", sub: "obiettivo mensile aggregato", tone: "info", icon: "spark" },
     ...(totaleCostiFissi > 0 ? [
-      { label: "Costi mensili", value: fmtN(totaleCostiFissi), cur: "€", sub: `${costiFissi.length} voci · ${meseCorrente.split(" ")[0]}`, tone: "danger", icon: "coin" },
-      { label: "Profitto mensile", value: fmtN(profittoMensile), cur: "€", sub: `netto − ${fmtN(totaleCostiFissi)} € costi fissi`, tone: profittoMensile >= 0 ? "pos" : "danger", icon: "wallet" },
+      { id: "costiMensili", label: "Costi mensili", value: fmtN(totaleCostiFissi), cur: "€", sub: `${costiFissi.length} voci · ${meseCorrente.split(" ")[0]}`, tone: "danger", icon: "coin" },
+      { id: "profitto", label: "Profitto mensile", value: fmtN(profittoMensile), cur: "€", sub: `netto − ${fmtN(totaleCostiFissi)} € costi fissi`, tone: profittoMensile >= 0 ? "pos" : "danger", icon: "wallet" },
     ] : []),
     ...(costiAnnuali.length > 0 ? [
-      { label: "Spese annuali", value: fmtN(totaleCostiAnnuali), cur: "€", sub: "promemoria · non le stai pagando ora", tone: "warn", icon: "calendar" },
-      { label: "Equivalente mensile spese ann.", value: fmtN(totaleCostiAnnualiMensile), cur: "€", sub: "se le spalmassi ogni mese", tone: "warn", icon: "divide" },
+      { id: "speseAnnuali", label: "Spese annuali", value: fmtN(totaleCostiAnnuali), cur: "€", sub: "promemoria · non le stai pagando ora", tone: "warn", icon: "calendar" },
+      { id: "equivMensile", label: "Equivalente mensile spese ann.", value: fmtN(totaleCostiAnnualiMensile), cur: "€", sub: "se le spalmassi ogni mese", tone: "warn", icon: "divide" },
     ] : []),
   ];
 
@@ -292,7 +303,7 @@ export default function Dashboard({ commesse, setCommesse, setup, setSetup }) {
       )}
 
       <div className="grid kpi-grid">
-        {kpis.map((k) => <KpiCard key={k.label} {...k} />)}
+        {kpis.map((k) => <KpiCard key={k.label} {...k} onOpen={() => setDrill(k.id)} />)}
       </div>
 
       {/* Tempo del mese / saturazione */}
@@ -362,6 +373,42 @@ export default function Dashboard({ commesse, setCommesse, setup, setSetup }) {
           )}
         </div>
       </section>
+
+      {/* Confronto anno su anno */}
+      {annoPrecImporto != null && (
+        <section className="panel">
+          <div className="panel-head">
+            <div className="panel-title"><Icon name="trend" size={15} />{anno} vs {anno - 1}</div>
+            <span className="panel-note">lordo incassato · si aggiorna a ogni mese registrato</span>
+          </div>
+          <div className="panel-pad" style={{ paddingTop: 4 }}>
+            <div style={{ display: "flex", gap: 26, flexWrap: "wrap", alignItems: "flex-end", marginBottom: 14 }}>
+              <div>
+                <div className="num" style={{ fontFamily: "var(--font-serif)", fontSize: 34, fontWeight: 500, letterSpacing: "-.02em", color: "var(--accent)" }}>{fmtN(lordoAnnoCorrente)} €</div>
+                <div style={{ fontSize: 12, color: "var(--ink-2)", fontWeight: 600 }}>{anno} · in corso</div>
+              </div>
+              <div style={{ fontSize: 22, color: "var(--ink-3)", paddingBottom: 6 }}>vs</div>
+              <div>
+                <div className="num" style={{ fontFamily: "var(--font-serif)", fontSize: 34, fontWeight: 500, letterSpacing: "-.02em", color: "var(--ink-2)" }}>{fmtN(annoPrecImporto)} €</div>
+                <div style={{ fontSize: 12, color: "var(--ink-2)", fontWeight: 600 }}>{anno - 1} · totale</div>
+              </div>
+              <div style={{ marginLeft: "auto", textAlign: "right" }}>
+                <div className="num" style={{ fontFamily: "var(--font-serif)", fontSize: 30, fontWeight: 500, color: yoyDeltaPct >= 0 ? "var(--pos-ink)" : "var(--danger)" }}>
+                  {yoyDeltaPct >= 0 ? "+" : ""}{yoyDeltaPct}%
+                </div>
+                <div style={{ fontSize: 12, color: "var(--ink-3)" }}>{yoyDeltaAbs >= 0 ? "+" : ""}{fmtN(yoyDeltaAbs)} € sul {anno - 1}</div>
+              </div>
+            </div>
+            <div className="statbar-track" style={{ height: 8 }}>
+              <div className="statbar-fill" style={{ width: Math.min(100, annoPrecImporto ? (lordoAnnoCorrente / annoPrecImporto) * 100 : 0) + "%", background: yoyDeltaPct >= 0 ? "var(--pos)" : "var(--danger)" }}></div>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11.5, color: "var(--ink-3)", marginTop: 6 }}>
+              <span>0 €</span>
+              <span>obiettivo {anno - 1}: {fmtN(annoPrecImporto)} €</span>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Panoramica annuale */}
       <section className="panel">
@@ -689,7 +736,186 @@ export default function Dashboard({ commesse, setCommesse, setup, setSetup }) {
           </ResponsiveContainer>
         </div>
       </section>
+
+      <KpiDrillModal
+        drill={drill}
+        onClose={() => setDrill(null)}
+        commesse={commesse}
+        setCommesse={setCommesse}
+        setup={setup}
+        setSetup={setSetup}
+      />
     </div>
+  );
+}
+
+function KpiDrillModal({ drill, onClose, commesse, setCommesse, setup, setSetup }) {
+  if (!drill) return null;
+  const factor = setup.fattoreNetto;
+  const attive = commesse.filter((c) => c.stato === "In corso" || c.stato === "In scadenza");
+  const costiFissi = setup.costiFissi || [];
+  const costiMensili = costiFissi.filter((c) => c.tipo !== "annuale");
+  const costiAnnuali = costiFissi.filter((c) => c.tipo === "annuale");
+
+  const setCommessaField = (id, field, val) =>
+    setCommesse((prev) => prev.map((c) => (c.id === id ? { ...c, [field]: val === "" ? null : Number(val) } : c)));
+  const setCostoField = (id, field, val) =>
+    setSetup((prev) => ({
+      ...prev,
+      costiFissi: (prev.costiFissi || []).map((c) => (c.id === id ? { ...c, [field]: Number(val) } : c)),
+    }));
+
+  const META = {
+    lordoAttivo: { title: "Lordo mensile attivo", icon: "card", note: "Fee lorda mensile delle commesse in corso e in scadenza. Modifica qui la fee mensile." },
+    nettoAttivo: { title: "Netto mensile attivo", icon: "trend", note: `Netto stimato = lordo × ${(factor * 100).toFixed(0)}% (fattore in Setup).` },
+    commesseAttive: { title: "Commesse attive", icon: "folder", note: "Commesse in corso o in scadenza." },
+    upsell: { title: "Potenziale upsell", icon: "spark", note: "Obiettivo di upsell per commessa. Modifica i target qui." },
+    costiMensili: { title: "Costi mensili", icon: "coin", note: "Voci di costo fisso mensile. Modifica gli importi qui." },
+    profitto: { title: "Profitto mensile", icon: "wallet", note: "Netto mensile attivo meno i costi fissi mensili." },
+    speseAnnuali: { title: "Spese annuali", icon: "calendar", note: "Spese annuali promemoria. Modifica gli importi annui qui." },
+    equivMensile: { title: "Equivalente mensile spese annuali", icon: "divide", note: "Spese annuali divise per 12." },
+  };
+  const meta = META[drill];
+
+  const money = (n) => `${fmtN(n)} €`;
+  const rowStyle = { display: "grid", gridTemplateColumns: "1fr auto", gap: 12, alignItems: "center", padding: "11px var(--card-pad)", borderTop: "1px solid var(--hair-soft)" };
+
+  let body = null;
+
+  if (drill === "lordoAttivo") {
+    const tot = attive.reduce((s, c) => s + (getCommessaLordoMensile(c) || 0), 0);
+    body = (
+      <>
+        {attive.map((c) => {
+          const mensile = c.lordoMensile != null;
+          const val = getCommessaLordoMensile(c);
+          return (
+            <div key={c.id} style={rowStyle}>
+              <div><div className="nm">{c.cliente}</div><div className="meta">{mensile ? "fee mensile" : "progetto · mensilizzato"}</div></div>
+              {mensile ? (
+                <input className="input num" style={{ width: 130 }} type="number" min="0" value={c.lordoMensile ?? ""} onChange={(e) => setCommessaField(c.id, "lordoMensile", e.target.value)} />
+              ) : (
+                <span className="num" style={{ color: "var(--ink-2)" }}>{val ? money(val) : "—"}</span>
+              )}
+            </div>
+          );
+        })}
+        {attive.length === 0 && <p style={{ padding: "12px var(--card-pad)", color: "var(--ink-3)" }}>Nessuna commessa attiva.</p>}
+        <div style={{ ...rowStyle, fontWeight: 700 }}><span>Totale lordo mensile</span><span className="num t-accent">{money(tot)}</span></div>
+      </>
+    );
+  } else if (drill === "nettoAttivo") {
+    const totLordo = attive.reduce((s, c) => s + (getCommessaLordoMensile(c) || 0), 0);
+    body = (
+      <>
+        {attive.map((c) => {
+          const l = getCommessaLordoMensile(c) || 0;
+          return (
+            <div key={c.id} style={rowStyle}>
+              <div><div className="nm">{c.cliente}</div><div className="meta">lordo {money(l)}</div></div>
+              <span className="num t-pos">{money(calcNetto(l, factor))}</span>
+            </div>
+          );
+        })}
+        <div style={{ ...rowStyle, fontWeight: 700 }}><span>Netto totale ({(factor * 100).toFixed(0)}%)</span><span className="num t-pos">{money(calcNetto(totLordo, factor))}</span></div>
+      </>
+    );
+  } else if (drill === "commesseAttive") {
+    body = (
+      <>
+        {attive.map((c) => (
+          <div key={c.id} style={rowStyle}>
+            <div><div className="nm">{c.cliente}</div><div className="meta">{c.servizio}</div></div>
+            <span className={"pill s-" + getStatoTone(c.stato)}><span className="d"></span>{c.stato}</span>
+          </div>
+        ))}
+        {attive.length === 0 && <p style={{ padding: "12px var(--card-pad)", color: "var(--ink-3)" }}>Nessuna commessa attiva.</p>}
+      </>
+    );
+  } else if (drill === "upsell") {
+    const conUpsell = commesse.filter((c) => c.upsellTarget || c.stato === "In corso" || c.stato === "In scadenza" || c.stato === "Da chiarire");
+    const tot = commesse.reduce((s, c) => s + (Number(c.upsellTarget) || 0), 0);
+    body = (
+      <>
+        {conUpsell.map((c) => (
+          <div key={c.id} style={rowStyle}>
+            <div><div className="nm">{c.cliente}</div><div className="meta">{c.servizio}</div></div>
+            <input className="input num" style={{ width: 130 }} type="number" min="0" placeholder="0" value={c.upsellTarget ?? ""} onChange={(e) => setCommessaField(c.id, "upsellTarget", e.target.value)} />
+          </div>
+        ))}
+        <div style={{ ...rowStyle, fontWeight: 700 }}><span>Totale upsell</span><span className="num t-info">{money(tot)}</span></div>
+      </>
+    );
+  } else if (drill === "costiMensili") {
+    const tot = costiMensili.reduce((s, c) => s + c.importo, 0);
+    body = (
+      <>
+        {costiMensili.map((c) => (
+          <div key={c.id} style={rowStyle}>
+            <span className="nm">{c.nome}</span>
+            <input className="input num" style={{ width: 120 }} type="number" min="0" value={c.importo} onChange={(e) => setCostoField(c.id, "importo", e.target.value)} />
+          </div>
+        ))}
+        <div style={{ ...rowStyle, fontWeight: 700 }}><span>Totale mensile</span><span className="num t-danger">{money(tot)}</span></div>
+      </>
+    );
+  } else if (drill === "profitto") {
+    const totLordo = attive.reduce((s, c) => s + (getCommessaLordoMensile(c) || 0), 0);
+    const netto = calcNetto(totLordo, factor);
+    const costi = costiMensili.reduce((s, c) => s + c.importo, 0);
+    body = (
+      <>
+        <div style={rowStyle}><span className="nm">Netto mensile attivo</span><span className="num t-pos">{money(netto)}</span></div>
+        <div style={rowStyle}><span className="nm">− Costi fissi mensili</span><span className="num t-danger">− {money(costi)}</span></div>
+        <div style={{ ...rowStyle, fontWeight: 700 }}><span>= Profitto mensile</span><span className={"num " + (netto - costi >= 0 ? "t-pos" : "t-danger")}>{money(netto - costi)}</span></div>
+      </>
+    );
+  } else if (drill === "speseAnnuali") {
+    const tot = costiAnnuali.reduce((s, c) => s + (c.importoAnnuale || c.importo * 12), 0);
+    body = (
+      <>
+        {costiAnnuali.map((c) => (
+          <div key={c.id} style={rowStyle}>
+            <span className="nm">{c.nome}</span>
+            <input className="input num" style={{ width: 130 }} type="number" min="0" value={c.importoAnnuale || c.importo * 12} onChange={(e) => setCostoField(c.id, "importoAnnuale", e.target.value)} />
+          </div>
+        ))}
+        <div style={{ ...rowStyle, fontWeight: 700 }}><span>Totale annuo</span><span className="num t-warn">{money(tot)}</span></div>
+      </>
+    );
+  } else if (drill === "equivMensile") {
+    const totAnnuo = costiAnnuali.reduce((s, c) => s + (c.importoAnnuale || c.importo * 12), 0);
+    body = (
+      <>
+        {costiAnnuali.map((c) => {
+          const annuo = c.importoAnnuale || c.importo * 12;
+          return (
+            <div key={c.id} style={rowStyle}>
+              <div><div className="nm">{c.nome}</div><div className="meta">{money(annuo)}/anno</div></div>
+              <span className="num t-warn">{money(Math.round(annuo / 12))}/mese</span>
+            </div>
+          );
+        })}
+        <div style={{ ...rowStyle, fontWeight: 700 }}><span>Equivalente mensile</span><span className="num t-warn">{money(Math.round(totAnnuo / 12))}</span></div>
+      </>
+    );
+  }
+
+  return createPortal(
+    <div className={styles.modalOverlay} onClick={onClose}>
+      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+        <div className="panel-head">
+          <div className="panel-title"><Icon name={meta.icon} size={15} />{meta.title}</div>
+          <button className="btn btn-quiet" onClick={onClose} aria-label="Chiudi"><Icon name="x" size={16} /></button>
+        </div>
+        <p style={{ fontSize: 12.5, color: "var(--ink-3)", padding: "0 var(--card-pad) 6px" }}>{meta.note}</p>
+        <div className="row-list">{body}</div>
+        <div style={{ padding: "14px var(--card-pad)", display: "flex", justifyContent: "flex-end" }}>
+          <button className="btn btn-primary" onClick={onClose}>Fatto</button>
+        </div>
+      </div>
+    </div>,
+    document.body
   );
 }
 
@@ -757,9 +983,15 @@ const TONE_ICO = { accent: "ico-accent", pos: "ico-pos", warn: "ico-warn", dange
 const TONE_TXT = { accent: "t-accent", pos: "t-pos", warn: "t-warn", danger: "t-danger", info: "t-info", ink: "t-ink" };
 const TONE_BAR = { accent: "bar-accent", pos: "bar-pos", warn: "bar-warn", danger: "bar-danger", info: "bar-info", ink: "bar-ink" };
 
-function KpiCard({ label, value, cur, sub, tone, icon }) {
+function KpiCard({ label, value, cur, sub, tone, icon, onOpen }) {
   return (
-    <div className="kpi reveal">
+    <div
+      className={"kpi reveal" + (onOpen ? " " + styles.kpiClickable : "")}
+      onClick={onOpen}
+      role={onOpen ? "button" : undefined}
+      tabIndex={onOpen ? 0 : undefined}
+      onKeyDown={onOpen ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onOpen(); } } : undefined}
+    >
       <span className={"kpi-accent-bar " + TONE_BAR[tone]}></span>
       <div className="kpi-top">
         <span className="kpi-label">{label}</span>
@@ -769,6 +1001,7 @@ function KpiCard({ label, value, cur, sub, tone, icon }) {
         {value}{cur && <span className="cur">{cur}</span>}
       </div>
       {sub && <div className="kpi-sub">{sub}</div>}
+      {onOpen && <span className={styles.kpiHint}>Dettaglio →</span>}
     </div>
   );
 }

@@ -63,3 +63,20 @@
   color: var(--ink-2);
   line-height: 1.55;
 }
+
+.archivioHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  padding: 19px var(--card-pad) 13px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.archivioHead:hover .panel-note {
+  color: var(--ink-2);
+}

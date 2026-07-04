@@ -6,6 +6,7 @@ const NAV_ITEMS = [
   { id: "dashboard", label: "Dashboard", icon: "grid" },
   { id: "commesse", label: "Commesse", icon: "folder" },
   { id: "fiscale", label: "Fiscale", icon: "receipt" },
+  { id: "storico", label: "Storico", icon: "trend" },
   { id: "network", label: "Network", icon: "network" },
   { id: "setup", label: "Setup", icon: "sliders" },
 ];

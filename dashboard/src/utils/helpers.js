@@ -100,6 +100,19 @@ export function calcNetto(lordo, fattore) {
   return Math.round(lordo * fattore);
 }
 
+// Estrae l'anno (numero) da una stringa mese tipo "Giugno 2026"
+export function annoFromMese(meseStr) {
+  const m = /(\d{4})/.exec(meseStr || "");
+  return m ? Number(m[1]) : null;
+}
+
+// Somma il lordo dei record mensili di un dato anno
+export function sumLordoAnno(incassatoStorico, anno) {
+  return (incassatoStorico || [])
+    .filter((r) => annoFromMese(r.mese) === anno)
+    .reduce((s, r) => s + (r.lordo || 0), 0);
+}
+
 export function getCommessaLordoMensile(commessa) {
   if (commessa.lordoMensile) return commessa.lordoMensile;
   if (commessa.lordoProgetto && commessa.inizio && commessa.fine) {

@@ -28,6 +28,7 @@ export default function Commesse({ commesse, setCommesse, setup }) {
   const [selectedId, setSelectedId] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [editData, setEditData] = useState(null);
+  const [showArchivio, setShowArchivio] = useState(false);
 
   // Colore stabile per commessa (per posizione nella lista completa): ognuna distinta,
   // coerente tra tabella e dettaglio anche quando si filtra
@@ -48,6 +49,11 @@ export default function Commesse({ commesse, setCommesse, setup }) {
   });
 
   const selected = commesse.find((c) => c.id === selectedId);
+
+  // Separo attive/lavorabili da concluse/archiviate
+  const ARCHIVIATE = ["Concluso", "Perso"];
+  const filteredAttive = filtered.filter((c) => !ARCHIVIATE.includes(c.stato));
+  const filteredArchiviate = filtered.filter((c) => ARCHIVIATE.includes(c.stato));
 
   const attive = commesse.filter((c) => c.stato === "In corso" || c.stato === "In scadenza");
   const daChiarire = commesse.filter((c) => c.stato === "Da chiarire").length;
@@ -149,85 +155,35 @@ export default function Commesse({ commesse, setCommesse, setup }) {
 
       <section className="panel">
         <div className="panel-head">
-          <div className="panel-title"><Icon name="folder" size={15} />Tutte le commesse</div>
-          <span className="panel-note">{filtered.length} {filtered.length === 1 ? "risultato" : "risultati"}</span>
+          <div className="panel-title"><Icon name="folder" size={15} />Commesse attive</div>
+          <span className="panel-note">{filteredAttive.length} {filteredAttive.length === 1 ? "risultato" : "risultati"}</span>
         </div>
-        {filtered.length === 0 ? (
+        {filteredAttive.length === 0 ? (
           <p style={{ color: "var(--ink-3)", fontSize: 13.5, padding: "14px var(--card-pad) 22px" }}>
-            Nessuna commessa trovata.
+            Nessuna commessa attiva{filtered.length > 0 ? " con questi filtri" : ""}.
           </p>
         ) : (
-          <div className={styles.tableWrap}>
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>Commessa</th>
-                  <th>Tipo</th>
-                  <th>Stato</th>
-                  <th className="r">Fee lordo</th>
-                  <th className="r">Netto</th>
-                  <th className="r">Ore/mese</th>
-                  <th className="r">€/h</th>
-                  <th className="r">Scadenza</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((c) => {
-                  const days = c.fine ? daysUntil(c.fine) : null;
-                  const lordo = getCommessaLordoMensile(c);
-                  const netto = calcNetto(lordo, setup.fattoreNetto);
-                  const orario = getRicavoOrario(c, setup.fattoreNetto);
-                  const scadColor =
-                    days === null ? "var(--ink-3)"
-                    : days <= 7 ? "var(--danger)"
-                    : days <= 21 ? "var(--warn)"
-                    : "var(--ink-2)";
-                  return (
-                    <tr
-                      key={c.id}
-                      className={selectedId === c.id ? styles.rowActive : ""}
-                      onClick={() => setSelectedId(selectedId === c.id ? null : c.id)}
-                    >
-                      <td>
-                        <div className="client-cell">
-                          <span className="client-ava" style={{ background: colorById[c.id] }}>
-                            {getInitials(c.cliente)}
-                          </span>
-                          <div>
-                            <div style={{ fontWeight: 600, color: "var(--ink)", whiteSpace: "nowrap" }}>{c.cliente}</div>
-                            <div style={{ fontSize: 12, color: "var(--ink-3)" }}>{c.servizio}</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td style={{ color: "var(--ink-2)" }}>{c.tipo || "—"}</td>
-                      <td>
-                        <span className={"pill s-" + getStatoTone(c.stato)}>
-                          <span className="d"></span>{c.stato}
-                        </span>
-                      </td>
-                      <td className="r num" style={{ fontWeight: 600, whiteSpace: "nowrap" }}>
-                        {lordo ? `${fmtN(lordo)} €` : c.lordoProgetto ? `${fmtN(c.lordoProgetto)} €` : "—"}
-                      </td>
-                      <td className="r num t-pos" style={{ fontWeight: 600, whiteSpace: "nowrap" }}>
-                        {netto ? `${fmtN(netto)} €` : c.lordoProgetto ? `${fmtN(calcNetto(c.lordoProgetto, setup.fattoreNetto))} €` : "—"}
-                      </td>
-                      <td className="r num" style={{ color: "var(--ink-2)", whiteSpace: "nowrap" }}>
-                        {c.oreMensili ? `${c.oreMensili} h` : "—"}
-                      </td>
-                      <td className="r num t-info" style={{ fontWeight: 600, whiteSpace: "nowrap" }}>
-                        {orario ? `${fmtN(orario.lordoOra)} €` : "—"}
-                      </td>
-                      <td className="r num" style={{ color: scadColor, fontWeight: 600, whiteSpace: "nowrap" }}>
-                        {days !== null ? `${days} gg` : "—"}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+          <CommesseTable rows={filteredAttive} colorById={colorById} setup={setup} selectedId={selectedId} setSelectedId={setSelectedId} />
         )}
       </section>
+
+      {filteredArchiviate.length > 0 && (
+        <section className="panel">
+          <button
+            className={styles.archivioHead}
+            onClick={() => setShowArchivio((v) => !v)}
+          >
+            <span className="panel-title" style={{ color: "var(--ink-3)" }}>
+              <Icon name="history" size={15} />Concluse &amp; archiviate
+              <span className="badge" style={{ marginLeft: 6 }}>{filteredArchiviate.length}</span>
+            </span>
+            <span className="panel-note">{showArchivio ? "nascondi ▲" : "mostra ▼"}</span>
+          </button>
+          {showArchivio && (
+            <CommesseTable rows={filteredArchiviate} colorById={colorById} setup={setup} selectedId={selectedId} setSelectedId={setSelectedId} archived />
+          )}
+        </section>
+      )}
 
       {selected && (
         <CommessaDetail
@@ -246,6 +202,81 @@ export default function Commesse({ commesse, setCommesse, setup }) {
           onClose={() => setModalOpen(false)}
         />
       )}
+    </div>
+  );
+}
+
+function CommesseTable({ rows, colorById, setup, selectedId, setSelectedId, archived }) {
+  return (
+    <div className={styles.tableWrap}>
+      <table className="table">
+        <thead>
+          <tr>
+            <th>Commessa</th>
+            <th>Tipo</th>
+            <th>Stato</th>
+            <th className="r">Fee lordo</th>
+            <th className="r">Netto</th>
+            <th className="r">Ore/mese</th>
+            <th className="r">€/h</th>
+            <th className="r">Scadenza</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((c) => {
+            const days = c.fine ? daysUntil(c.fine) : null;
+            const lordo = getCommessaLordoMensile(c);
+            const netto = calcNetto(lordo, setup.fattoreNetto);
+            const orario = getRicavoOrario(c, setup.fattoreNetto);
+            const scadColor =
+              days === null ? "var(--ink-3)"
+              : days <= 7 ? "var(--danger)"
+              : days <= 21 ? "var(--warn)"
+              : "var(--ink-2)";
+            return (
+              <tr
+                key={c.id}
+                className={selectedId === c.id ? styles.rowActive : ""}
+                style={archived ? { opacity: 0.72 } : undefined}
+                onClick={() => setSelectedId(selectedId === c.id ? null : c.id)}
+              >
+                <td>
+                  <div className="client-cell">
+                    <span className="client-ava" style={{ background: colorById[c.id] }}>
+                      {getInitials(c.cliente)}
+                    </span>
+                    <div>
+                      <div style={{ fontWeight: 600, color: "var(--ink)", whiteSpace: "nowrap" }}>{c.cliente}</div>
+                      <div style={{ fontSize: 12, color: "var(--ink-3)" }}>{c.servizio}</div>
+                    </div>
+                  </div>
+                </td>
+                <td style={{ color: "var(--ink-2)" }}>{c.tipo || "—"}</td>
+                <td>
+                  <span className={"pill s-" + getStatoTone(c.stato)}>
+                    <span className="d"></span>{c.stato}
+                  </span>
+                </td>
+                <td className="r num" style={{ fontWeight: 600, whiteSpace: "nowrap" }}>
+                  {lordo ? `${fmtN(lordo)} €` : c.lordoProgetto ? `${fmtN(c.lordoProgetto)} €` : "—"}
+                </td>
+                <td className="r num t-pos" style={{ fontWeight: 600, whiteSpace: "nowrap" }}>
+                  {netto ? `${fmtN(netto)} €` : c.lordoProgetto ? `${fmtN(calcNetto(c.lordoProgetto, setup.fattoreNetto))} €` : "—"}
+                </td>
+                <td className="r num" style={{ color: "var(--ink-2)", whiteSpace: "nowrap" }}>
+                  {c.oreMensili ? `${c.oreMensili} h` : "—"}
+                </td>
+                <td className="r num t-info" style={{ fontWeight: 600, whiteSpace: "nowrap" }}>
+                  {orario ? `${fmtN(orario.lordoOra)} €` : "—"}
+                </td>
+                <td className="r num" style={{ color: scadColor, fontWeight: 600, whiteSpace: "nowrap" }}>
+                  {days !== null ? `${days} gg` : "—"}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
     </div>
   );
 }
