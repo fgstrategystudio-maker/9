@@ -130,8 +130,7 @@
       var m=el.textContent.trim().match(/^(\D*)(\d+)(\D*)$/); if(!m) return;
       var pre=m[1], target=parseInt(m[2],10), suf=m[3], t0=null, dur=1200;
       function step(ts){ if(!t0)t0=ts; var p=Math.min((ts-t0)/dur,1);
-        var val = p<0.72 ? Math.floor(Math.random()*(target+1)) : Math.round((1-Math.pow(1-p,3))*target); // slot poi assesta
-        if(p>=1) val=target;
+        var val=Math.round((1-Math.pow(1-p,3))*target); // salita fluida fino al valore
         el.textContent=pre+val+suf; if(p<1) requestAnimationFrame(step); }
       requestAnimationFrame(step);
     });
