@@ -16,6 +16,7 @@ const EMPTY = {
   lordoProgetto: "",
   oreMensili: "",
   upsellTarget: "",
+  splitMezzoMese: false,
   priorita: "Media",
   note: "",
 };
@@ -29,6 +30,7 @@ export default function CommessaModal({ initial, onSave, onClose }) {
       lordoProgetto: initial.lordoProgetto ?? "",
       oreMensili: initial.oreMensili ?? "",
       upsellTarget: initial.upsellTarget ?? "",
+      splitMezzoMese: initial.splitMezzoMese ?? false,
       inizio: initial.inizio ?? "",
       fine: initial.fine ?? "",
     };
@@ -48,6 +50,7 @@ export default function CommessaModal({ initial, onSave, onClose }) {
       lordoProgetto: form.lordoProgetto !== "" ? Number(form.lordoProgetto) : null,
       oreMensili: form.oreMensili !== "" ? Number(form.oreMensili) : null,
       upsellTarget: form.upsellTarget !== "" ? Number(form.upsellTarget) : null,
+      splitMezzoMese: !!form.splitMezzoMese,
       inizio: form.inizio || null,
       fine: form.fine || null,
     });
@@ -172,6 +175,21 @@ export default function CommessaModal({ initial, onSave, onClose }) {
               min="0"
             />
           </Field>
+
+          <label className={styles.checkRow}>
+            <input
+              type="checkbox"
+              checked={!!form.splitMezzoMese}
+              onChange={(e) => set("splitMezzoMese", e.target.checked)}
+            />
+            <span>
+              <span className={styles.checkLabel}>Ciclo a metà mese (split 50/50)</span>
+              <span className={styles.checkHint}>
+                Attribuisce metà della mensilità al mese corrente e metà al successivo, solo nella
+                visualizzazione (grafici e forecast). Fee e totali salvati restano invariati.
+              </span>
+            </span>
+          </label>
 
           <Field label="Note">
             <textarea

@@ -246,7 +246,12 @@ function CommesseTable({ rows, colorById, setup, selectedId, setSelectedId, arch
                       {getInitials(c.cliente)}
                     </span>
                     <div>
-                      <div style={{ fontWeight: 600, color: "var(--ink)", whiteSpace: "nowrap" }}>{c.cliente}</div>
+                      <div style={{ fontWeight: 600, color: "var(--ink)", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 7 }}>
+                        {c.cliente}
+                        {c.splitMezzoMese && (
+                          <span className="badge" title="Ciclo a metà mese: competenza divisa 50/50 nei grafici e forecast" style={{ fontSize: 10.5, padding: "1px 7px" }}>½ split</span>
+                        )}
+                      </div>
                       <div style={{ fontSize: 12, color: "var(--ink-3)" }}>{c.servizio}</div>
                     </div>
                   </div>
@@ -342,6 +347,9 @@ function CommessaDetail({ commessa: c, color, setup, onEdit, onDelete }) {
             <DetailRow label="Upsell target lordo" value={<span className="num t-info">{formatCurrency(c.upsellTarget)}</span>} />
             <DetailRow label="Upsell target netto" value={<span className="num t-info">{formatCurrency(upsellNetto)}</span>} />
           </>
+        )}
+        {c.splitMezzoMese && (
+          <DetailRow label="Ciclo a metà mese" value={<span className="badge">½ split 50/50</span>} />
         )}
       </div>
 

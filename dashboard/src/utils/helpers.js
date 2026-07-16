@@ -155,31 +155,52 @@ function parseLocalDate(dateStr) {
   return new Date(y, m - 1, d);
 }
 
-export function getLordoPerMese(monthIdx, year, commesse) {
+// La commessa è "attiva" (competenza piena) nel mese dato? Stato in corso/in
+// scadenza + fee mensile presente + mese entro il range date inizio/fine.
+export function isMeseAttivo(c, monthIdx, year) {
+  if (c.stato !== "In corso" && c.stato !== "In scadenza") return false;
+  if (!getCommessaLordoMensile(c)) return false;
   const monthStart = new Date(year, monthIdx, 1);
   const monthEnd = new Date(year, monthIdx + 1, 0, 23, 59, 59);
-  return commesse
-    .filter((c) => {
-      const end = c.fine ? parseLocalDate(c.fine) : null;
-      if (c.stato === "Concluso") {
-        const hasLordo = c.lordoMensile || c.lordoProgetto;
-        return hasLordo && end && end >= monthStart && end <= monthEnd;
-      }
-      if (c.stato !== "In corso" && c.stato !== "In scadenza") return false;
-      const lordo = getCommessaLordoMensile(c);
-      if (!lordo) return false;
-      const start = c.inizio ? parseLocalDate(c.inizio) : null;
-      if (end && end < monthStart) return false;
-      if (start && start > monthEnd) return false;
-      return true;
-    })
-    .reduce((sum, c) => {
-      if (c.stato === "Concluso") {
-        // per commesse concluse usa il totale progetto (pagato in quell'unico mese)
-        return sum + (c.lordoProgetto || c.lordoMensile || 0);
-      }
-      return sum + (getCommessaLordoMensile(c) || 0);
-    }, 0);
+  const start = c.inizio ? parseLocalDate(c.inizio) : null;
+  const end = c.fine ? parseLocalDate(c.fine) : null;
+  if (end && end < monthStart) return false;
+  if (start && start > monthEnd) return false;
+  return true;
+}
+
+/**
+ * Importo di competenza della commessa per (monthIdx, year).
+ * - Concluso: totale progetto nel solo mese di chiusura (invariato, niente split).
+ * - Senza flag: importo pieno se il mese è attivo.
+ * - Con splitMezzoMese: 50% del mese corrente + 50% di coda dal mese precedente.
+ * Nota: è solo logica di visualizzazione; i dati salvati restano invariati e il
+ * totale sull'anno = n. mesi attivi × importo (lo split non crea né perde denaro).
+ */
+export function importoCompetenzaMese(c, monthIdx, year) {
+  if (c.stato === "Concluso") {
+    const end = c.fine ? parseLocalDate(c.fine) : null;
+    const monthStart = new Date(year, monthIdx, 1);
+    const monthEnd = new Date(year, monthIdx + 1, 0, 23, 59, 59);
+    const hasLordo = c.lordoProgetto || c.lordoMensile;
+    if (hasLordo && end && end >= monthStart && end <= monthEnd) {
+      return c.lordoProgetto || c.lordoMensile || 0;
+    }
+    return 0;
+  }
+  const base = getCommessaLordoMensile(c) || 0;
+  if (!base) return 0;
+  if (!c.splitMezzoMese) {
+    return isMeseAttivo(c, monthIdx, year) ? base : 0;
+  }
+  const prev = new Date(year, monthIdx - 1, 1);
+  const quotaCorrente = isMeseAttivo(c, monthIdx, year) ? base * 0.5 : 0;
+  const quotaTrascinata = isMeseAttivo(c, prev.getMonth(), prev.getFullYear()) ? base * 0.5 : 0;
+  return quotaCorrente + quotaTrascinata;
+}
+
+export function getLordoPerMese(monthIdx, year, commesse) {
+  return commesse.reduce((sum, c) => sum + importoCompetenzaMese(c, monthIdx, year), 0);
 }
 
 export function monthsBetween(startStr, endStr) {

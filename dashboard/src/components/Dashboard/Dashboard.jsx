@@ -76,6 +76,7 @@ export default function Dashboard({ commesse, setCommesse, setup, setSetup }) {
   const attive = commesse.filter(
     (c) => c.stato === "In corso" || c.stato === "In scadenza"
   );
+  const hasSplit = commesse.some((c) => c.splitMezzoMese);
 
   const lordoMensileAttivo = getLordoPerMese(meseIdx, anno, commesse);
   const nettoMensileAttivo = calcNetto(lordoMensileAttivo, setup.fattoreNetto);
@@ -436,6 +437,7 @@ export default function Dashboard({ commesse, setCommesse, setup, setSetup }) {
             <span className="li"><span className="sw" style={{ background: C.info }}></span>Proiezione</span>
             {breakEvenLordo && <span className="li"><span className="sw" style={{ background: C.danger }}></span>Sotto soglia costi</span>}
             <span className="li"><span className="sw" style={{ background: C.hair }}></span>Mancante</span>
+            {hasSplit && <span className="li" style={{ color: "var(--ink-3)" }}>½ alcuni clienti sono a competenza 50/50</span>}
           </div>
 
           {mesiMancanti > 0 && (
