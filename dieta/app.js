@@ -2,7 +2,7 @@
 'use strict';
 
 // ---------- Storage ----------
-const APP_VERSION = '9';
+const APP_VERSION = '10';
 const KEY = 'dieta.v1';
 const MEALS = [
   { id: 'colazione', label: 'Colazione' },
@@ -24,6 +24,13 @@ const PALETTES = [
   ['oceano', 'Oceano', ['#0e7490', '#e11d48', '#4f46e5', '#d97706'], ['#07111d', '#38bdf8', '#fb7185', '#a5b4fc']],
   ['fragola', 'Fragola e menta', ['#c2255c', '#e8590c', '#0c8599', '#e0a100'], ['#170c12', '#ff6b9a', '#ff922b', '#3bc9db']],
   ['grafite', 'Grafite e lime', ['#1f2a1c', '#dc2626', '#2563eb', '#d97706'], ['#0b0c0b', '#a3e635', '#f87171', '#60a5fa']],
+  ['bosco', 'Bosco e oro', ['#1d5e3a', '#c0392b', '#2e6fb0', '#c99a0e'], ['#0b120d', '#6fcf97', '#ff8a7a', '#74aef0']],
+  ['cioccolato', 'Cioccolato e caramello', ['#7a4a2a', '#c2410c', '#3b6ea8', '#d49a1a'], ['#140e0a', '#e0a46b', '#ff8f6b', '#7fb0e8']],
+  ['lavanda', 'Lavanda', ['#6b4f9e', '#d6456f', '#2f80c2', '#d99a1c'], ['#110e17', '#c8b3f5', '#ff85a8', '#7cc0f5']],
+  ['artico', 'Artico', ['#334155', '#e0525b', '#2f6fe0', '#d99212'], ['#0a0e13', '#a5c8f0', '#ff8a8f', '#8fb6ff']],
+  ['tramonto', 'Tramonto', ['#a21caf', '#ea580c', '#2563eb', '#d69e00'], ['#150a13', '#f08ef5', '#ff9a5c', '#7ba7ff']],
+  ['ciliegia', 'Ciliegia', ['#b91c1c', '#7c3aed', '#0f7ab8', '#d08a00'], ['#150a0a', '#ff7a7a', '#b69cff', '#6cc3f5']],
+  ['senape', 'Senape e blu', ['#1e3a8a', '#d9480f', '#2f855a', '#b7791f'], ['#100f0a', '#facc15', '#ff8a5c', '#5fd39a']],
 ];
 const GEMINI_DEFAULT_MODEL = 'gemini-3.5-flash';
 // Attività sportive con MET medio (Compendium of Physical Activities)
