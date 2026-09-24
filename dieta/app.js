@@ -1228,13 +1228,29 @@ function suggestGoals(p, weight) {
   const delta = GOAL_DELTA[p.goalType] ?? 0;
   const minKcal = p.sex === 'm' ? 1500 : 1200;
   const kcal = Math.max(minKcal, Math.round((tdee + delta) / 10) * 10);
-  const protein = Math.round(weight * (p.goalType.startsWith('lose') ? 2.0 : p.goalType === 'gain' ? 1.8 : 1.6));
-  const fat = Math.round(Math.max(weight * 0.9, (kcal * 0.25) / 9));
-  const carbs = Math.max(0, Math.round((kcal - protein * 4 - fat * 9) / 4));
   return {
     bmr: r0(bmr), lifestyleKcal: r0(lifestyleKcal), baseActivity: r0(p.baseActivity || 0), tdee: r0(tdee), delta, kcal,
-    protein, fat, carbs, fiber: Math.round((kcal / 1000) * 14), water: Math.round((weight * 35) / 250) * 250,
+    ...macrosFor(kcal, weight, p.goalType), water: Math.round((weight * 35) / 250) * 250,
   };
+}
+
+// Macro per un obiettivo calorico: proteine in base al peso, grassi almeno il 25% delle kcal, carboidrati il resto.
+// Senza peso registrato: 25% proteine, 30% grassi, 45% carboidrati.
+function macrosFor(kcal, weight, goalType) {
+  let protein, fat;
+  if (weight) {
+    protein = weight * (goalType.startsWith('lose') ? 2.0 : goalType === 'gain' ? 1.8 : 1.6);
+    fat = Math.max(weight * 0.9, (kcal * 0.25) / 9);
+    // Con poche calorie proteine e grassi non devono lasciare i carboidrati sotto il 20%
+    const room = kcal * 0.8;
+    if (protein * 4 + fat * 9 > room) { const k = room / (protein * 4 + fat * 9); protein *= k; fat *= k; }
+  } else {
+    protein = (kcal * 0.25) / 4;
+    fat = (kcal * 0.30) / 9;
+  }
+  protein = Math.round(protein); fat = Math.round(fat);
+  const carbs = Math.max(0, Math.round((kcal - protein * 4 - fat * 9) / 4));
+  return { protein, fat, carbs, fiber: Math.round((kcal / 1000) * 14) };
 }
 
 // Con "aggiornamento automatico" attivo, gli obiettivi seguono peso e profilo.
@@ -1359,7 +1375,16 @@ function renderGoals(v) {
     const diff = r0(m - k);
     $('#macroCheck', v).textContent = `I macro valgono ${r0(m)} kcal${Math.abs(diff) > 50 ? ` (${diff > 0 ? '+' : ''}${diff} rispetto all'obiettivo calorie)` : ' ✓'}`;
   };
-  ['#gKcal', '#gProt', '#gCarb', '#gFat'].forEach(id => $(id, v).addEventListener('input', checkMacros));
+  ['#gProt', '#gCarb', '#gFat'].forEach(id => $(id, v).addEventListener('input', checkMacros));
+  // Cambiando le calorie, i macro si adattano (poi si possono ritoccare a mano)
+  $('#gKcal', v).addEventListener('input', () => {
+    const k = num($('#gKcal', v).value);
+    if (k >= 800 && k <= 6000) {
+      const m = macrosFor(k, w?.weight, $('#pGoal', v).value);
+      $('#gProt', v).value = m.protein; $('#gCarb', v).value = m.carbs; $('#gFat', v).value = m.fat; $('#gFib', v).value = m.fiber;
+    }
+    checkMacros();
+  });
   checkMacros();
   $('#saveGoals', v).addEventListener('click', () => {
     const val = id => num($(id, v).value);
