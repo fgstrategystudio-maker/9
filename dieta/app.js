@@ -14,6 +14,22 @@ const MODELS = [
   { id: 'claude-sonnet-5', label: 'Claude Sonnet 5 — più veloce ed economico' },
   { id: 'claude-haiku-4-5', label: 'Claude Haiku 4.5 — il più economico' },
 ];
+const GEMINI_DEFAULT_MODEL = 'gemini-2.5-flash';
+// Attività sportive con MET medio (Compendium of Physical Activities)
+const ACTIVITIES = [
+  ['Camminata', 3.5], ['Camminata veloce', 4.3], ['Corsa lenta (8 km/h)', 8.3], ['Corsa (10 km/h)', 9.8], ['Corsa veloce (12 km/h)', 11.5],
+  ['Bicicletta tranquilla', 5.8], ['Bicicletta sostenuta', 8.0], ['Cyclette / spinning', 7.0], ['Palestra – pesi', 5.0], ['Circuito / HIIT / crossfit', 8.0],
+  ['Nuoto', 7.0], ['Calcio / calcetto', 7.0], ['Padel', 6.0], ['Tennis', 7.3], ['Basket', 6.5], ['Pallavolo', 4.0],
+  ['Yoga', 2.5], ['Pilates', 3.0], ['Ballo', 5.0], ['Escursionismo', 6.0], ['Sci', 7.0], ['Arrampicata', 7.5],
+  ['Ellittica', 5.0], ['Vogatore', 7.0], ['Boxe / arti marziali', 7.8], ['Salto della corda', 11.0], ['Lavori pesanti casa/giardino', 4.0],
+];
+const INTENSITY = [['Leggera', 0.8], ['Media', 1], ['Intensa', 1.2]];
+const LIFESTYLE = [
+  [1.2, 'Seduto quasi tutto il giorno (ufficio, studio, auto)'],
+  [1.3, 'Seduto ma mi muovo un po\' (casa, commissioni)'],
+  [1.45, 'Spesso in piedi o in movimento (negozio, insegnante)'],
+  [1.6, 'Lavoro fisico (cantiere, magazzino, cameriere)'],
+];
 const BODY_FIELDS = [
   { k: 'weight', label: 'Peso', unit: 'kg', step: 0.1 },
   { k: 'bodyFat', label: 'Massa grassa', unit: '%', step: 0.1 },
@@ -29,17 +45,25 @@ const BODY_FIELDS = [
 
 const DEFAULT_DB = {
   version: 1,
-  profile: { sex: 'm', age: 35, height: 175, activity: 1.375, goalType: 'lose' },
+  profile: { sex: 'm', age: 35, height: 175, lifestyle: 1.2, baseActivity: 0, goalType: 'lose' },
   goals: {
     kcal: 2000, protein: 130, carbs: 220, fat: 65, fiber: 28, water: 2000,
     weightTarget: null, weightTargetDate: '', bodyFatTarget: null,
     monthWeight: null, monthDaysInTarget: 20,
+    auto: true,         // ricalcola gli obiettivi quando cambia il peso
+    exerciseAddBack: 1, // quota delle kcal degli allenamenti aggiunta al budget del giorno
   },
   entries: {},   // { 'YYYY-MM-DD': [entry] }
+  exercise: {},  // { 'YYYY-MM-DD': [{ id, name, minutes, kcal }] }
   water: {},     // { 'YYYY-MM-DD': ml }
   body: [],      // [{ date, weight, bodyFat, ... }]
   recent: [],
-  settings: { apiKey: '', model: 'claude-opus-5' },
+  settings: {
+    provider: 'gemini',
+    geminiKey: '', geminiModel: GEMINI_DEFAULT_MODEL, geminiModels: [],
+    apiKey: '', model: 'claude-opus-5',
+    lastActivity: 'Camminata veloce',
+  },
 };
 
 function load() {
@@ -47,12 +71,16 @@ function load() {
     const raw = localStorage.getItem(KEY);
     if (!raw) return structuredClone(DEFAULT_DB);
     const d = JSON.parse(raw);
-    return {
+    const out = {
       ...structuredClone(DEFAULT_DB), ...d,
       profile: { ...DEFAULT_DB.profile, ...d.profile },
       goals: { ...DEFAULT_DB.goals, ...d.goals },
       settings: { ...DEFAULT_DB.settings, ...d.settings },
     };
+    // Dati della prima versione: chi aveva già la chiave Claude continua a usarla.
+    if (!d.settings?.provider) out.settings.provider = d.settings?.apiKey ? 'claude' : 'gemini';
+    if (d.goals && d.goals.auto === undefined) out.goals.auto = false;
+    return out;
   } catch {
     return structuredClone(DEFAULT_DB);
   }
@@ -88,6 +116,13 @@ function sumNutr(list) {
 }
 const dayEntries = d => db.entries[d] || [];
 const dayTotals = d => sumNutr(dayEntries(d));
+const dayExercise = d => db.exercise[d] || [];
+const dayExerciseKcal = d => dayExercise(d).reduce((a, x) => a + (x.kcal || 0), 0);
+// Budget calorico del giorno: obiettivo + (parte delle) kcal bruciate negli allenamenti
+const dayBudget = d => db.goals.kcal + dayExerciseKcal(d) * (db.goals.exerciseAddBack ?? 1);
+// kcal nette (oltre al metabolismo a riposo, già contato nel fabbisogno)
+const exerciseKcal = (met, minutes, weight, intensity = 1) => Math.max(0, met * intensity - 1) * weight * (minutes / 60);
+const hasAiKey = () => db.settings.provider === 'claude' ? !!db.settings.apiKey : !!db.settings.geminiKey;
 
 function defaultMeal() {
   const h = new Date().getHours();
@@ -114,7 +149,9 @@ function toast(msg) {
 }
 
 // ---------- Sheet ----------
+let sheetCleanup = null;
 function openSheet(html, onMount) {
+  runSheetCleanup();
   const s = $('#sheet');
   s.innerHTML = html;
   s.hidden = false; $('#sheetBackdrop').hidden = false;
@@ -122,7 +159,12 @@ function openSheet(html, onMount) {
   document.body.style.overflow = 'hidden';
   onMount && onMount(s);
 }
+function runSheetCleanup() {
+  const fn = sheetCleanup; sheetCleanup = null;
+  fn && fn();
+}
 function closeSheet() {
+  runSheetCleanup();
   $('#sheet').hidden = true; $('#sheetBackdrop').hidden = true;
   $('#sheet').innerHTML = '';
   document.body.style.overflow = '';
@@ -189,7 +231,10 @@ function macroBar(label, val, goal, color, unit = 'g') {
 function renderToday(v) {
   const g = db.goals;
   const tot = dayTotals(curDate);
-  const left = g.kcal - tot.kcal;
+  const exKcal = dayExerciseKcal(curDate);
+  const budget = dayBudget(curDate);
+  const bonus = budget - g.kcal;
+  const left = budget - tot.kcal;
   const water = db.water[curDate] || 0;
   const glasses = Math.max(1, Math.round(g.water / 250));
   const filled = Math.round(water / 250);
@@ -197,16 +242,16 @@ function renderToday(v) {
   const yesterday = addDays(curDate, -1);
 
   let html = '';
-  if (!db.settings.apiKey) {
-    html += `<div class="banner">Per riconoscere i cibi da <b>foto</b> e <b>testo</b> inserisci la tua chiave API di Claude in <b>Obiettivi → Impostazioni</b>. Nel frattempo puoi usare la ricerca alimenti.</div>`;
+  if (!hasAiKey()) {
+    html += `<div class="banner">Per riconoscere i cibi da <b>foto</b> e <b>testo</b> inserisci una chiave AI in <b>Obiettivi → Impostazioni</b> (con Google Gemini è <b>gratis</b>). Intanto puoi cercare alimenti e prodotti di marca o leggere il codice a barre.</div>`;
   }
   html += `<div class="card">
     <div class="summary">
-      <div class="ring">${ringSvg(tot.kcal, g.kcal, 'var(--kcal)')}
+      <div class="ring">${ringSvg(tot.kcal, budget, 'var(--kcal)')}
         <div class="ring-label"><span class="big">${r0(Math.abs(left))}</span><span class="lbl">${left >= 0 ? 'kcal rimaste' : 'kcal in più'}</span></div>
       </div>
       <div class="macros">
-        ${macroBar('Calorie', tot.kcal, g.kcal, 'var(--kcal)', 'kcal')}
+        ${macroBar('Calorie', tot.kcal, budget, 'var(--kcal)', 'kcal')}
         ${macroBar('Proteine', tot.p, g.protein, 'var(--prot)')}
         ${macroBar('Carboidrati', tot.c, g.carbs, 'var(--carb)')}
         ${macroBar('Grassi', tot.f, g.fat, 'var(--fat)')}
@@ -214,8 +259,20 @@ function renderToday(v) {
     </div>
     <div class="row between small muted" style="margin-top:12px">
       <span>Fibre ${r0(tot.fib)} / ${r0(g.fiber)} g</span>
-      <span>Mangiate ${r0(tot.kcal)} di ${r0(g.kcal)} kcal</span>
+      <span>${bonus > 0 ? `Obiettivo ${r0(g.kcal)} + ${r0(bonus)} sport` : `Mangiate ${r0(tot.kcal)} di ${r0(g.kcal)} kcal`}</span>
     </div>
+  </div>`;
+
+  const exList = dayExercise(curDate);
+  html += `<div class="card">
+    <div class="meal-head">
+      <h2>Attività fisica ${exKcal ? `<small>−${r0(exKcal)} kcal</small>` : ''}</h2>
+      <button class="add-mini" id="addExercise">+ Allenamento</button>
+    </div>
+    ${exList.length ? `<ul class="items">${exList.map(x => `<li data-ex="${x.id}">
+      <div class="grow"><div class="name">${esc(x.name)}</div><div class="sub">${x.minutes ? r0(x.minutes) + ' min' : ''}${x.intensity ? ' · ' + esc(x.intensity) : ''}</div></div>
+      <div class="kc">−${r0(x.kcal)}</div></li>`).join('')}</ul>` : `<div class="empty">Nessun allenamento registrato.</div>`}
+    ${db.profile.baseActivity ? `<div class="small muted" style="margin-top:6px">Attività di tutti i giorni (${r0(db.profile.baseActivity)} kcal) già inclusa nell'obiettivo.</div>` : ''}
   </div>`;
 
   for (const m of MEALS) {
@@ -270,6 +327,57 @@ function renderToday(v) {
   }));
   const qw = $('#quickWeigh', v);
   qw && qw.addEventListener('click', () => bodyForm(null, curDate));
+  $('#addExercise', v).addEventListener('click', () => exerciseForm());
+  $$('[data-ex]', v).forEach(li => li.addEventListener('click', () => exerciseForm(li.dataset.ex)));
+}
+
+function exerciseForm(id) {
+  const list = dayExercise(curDate);
+  const existing = id ? list.find(x => x.id === id) : null;
+  const weightRec = latestBody('weight');
+  const weight = weightRec?.weight || 70;
+  let act = existing?.act || db.settings.lastActivity || ACTIVITIES[0][0];
+  let minutes = existing?.minutes || 45;
+  let intensity = existing?.intensity || 'Media';
+  let manual = existing?.manual ? existing.kcal : null;
+  const calc = () => {
+    const met = ACTIVITIES.find(a => a[0] === act)?.[1] || 5;
+    return exerciseKcal(met, minutes, weight, INTENSITY.find(i => i[0] === intensity)[1]);
+  };
+  openSheet(`<h3>${existing ? 'Modifica allenamento' : 'Allenamento'}</h3>
+    <label class="field"><span>Attività</span><select id="xAct">${ACTIVITIES.map(([n]) => `<option ${n === act ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select></label>
+    <label class="field"><span>Durata (minuti)</span>
+      <div class="row"><button class="step" id="xMinus">−</button><input type="number" inputmode="numeric" id="xMin" value="${minutes}" style="text-align:center"><button class="step" id="xPlus">+</button></div>
+    </label>
+    <div class="meal-pick">${INTENSITY.map(([n]) => `<button class="chip ${n === intensity ? 'on' : ''}" data-int="${n}">${n}</button>`).join('')}</div>
+    <div class="stat" style="margin-bottom:10px"><div class="v" id="xKcal"></div><div class="k" id="xHint"></div></div>
+    <label class="field"><span>Oppure kcal dallo smartwatch (facoltativo)</span><input type="number" inputmode="numeric" id="xManual" value="${manual ?? ''}" placeholder="es. 420"></label>
+    <div class="btn-row">${existing ? '<button class="btn danger" id="xDel">Elimina</button>' : ''}<button class="btn" id="xSave">Salva</button></div>`, s => {
+    const draw = () => {
+      const k = manual ?? calc();
+      $('#xKcal', s).textContent = `${r0(k)} kcal`;
+      $('#xHint', s).textContent = manual != null ? 'valore inserito da te'
+        : `stima per ${fmtNum(weight)} kg${weightRec ? '' : ' (registra il peso per una stima più precisa)'}, oltre al consumo a riposo`;
+    };
+    draw();
+    const mi = $('#xMin', s);
+    $('#xAct', s).addEventListener('change', e => { act = e.target.value; draw(); });
+    mi.addEventListener('input', () => { minutes = num(mi.value) || 0; draw(); });
+    $('#xMinus', s).addEventListener('click', () => { minutes = Math.max(5, minutes - 5); mi.value = minutes; draw(); });
+    $('#xPlus', s).addEventListener('click', () => { minutes += 5; mi.value = minutes; draw(); });
+    $$('[data-int]', s).forEach(c => c.addEventListener('click', () => { intensity = c.dataset.int; $$('[data-int]', s).forEach(x => x.classList.toggle('on', x === c)); draw(); }));
+    $('#xManual', s).addEventListener('input', e => { manual = num(e.target.value); draw(); });
+    $('#xSave', s).addEventListener('click', () => {
+      if (!minutes && manual == null) { toast('Indica la durata'); return; }
+      const rec = { id: existing?.id || uid(), name: act, act, minutes, intensity, kcal: r0(manual ?? calc()), manual: manual != null };
+      db.exercise[curDate] = existing ? list.map(x => x.id === rec.id ? rec : x) : [...list, rec];
+      db.settings.lastActivity = act;
+      save(); closeSheet(); render(); toast(`Allenamento salvato: ${rec.kcal} kcal`);
+    });
+    $('#xDel', s)?.addEventListener('click', () => {
+      db.exercise[curDate] = list.filter(x => x.id !== id); save(); closeSheet(); render(); toast('Eliminato');
+    });
+  });
 }
 
 function editEntry(id) {
@@ -309,24 +417,27 @@ function editEntry(id) {
 function renderAdd(v) {
   v.innerHTML = `
     <div class="meal-pick">${MEALS.map(m => `<button class="chip ${m.id === addMeal ? 'on' : ''}" data-m="${m.id}">${m.label}</button>`).join('')}</div>
-    <div class="big-actions">
-      <button class="big-action primary" id="takePhoto"><span class="ic">📷</span>Scatta foto</button>
-      <button class="big-action" id="pickPhoto"><span class="ic">🖼️</span>Dalla galleria</button>
+    <div class="big-actions three">
+      <button class="big-action primary" id="takePhoto"><span class="ic">📷</span>Foto</button>
+      <button class="big-action" id="pickPhoto"><span class="ic">🖼️</span>Galleria</button>
+      <button class="big-action" id="scanCode"><span class="ic">▥</span>Codice a barre</button>
     </div>
     <div class="card">
       <h2>Descrivi cosa hai mangiato</h2>
-      <textarea id="foodText" placeholder="es. 80 g di pasta al pomodoro con parmigiano, un'insalata con un cucchiaio d'olio e una mela"></textarea>
+      <textarea id="foodText" placeholder="es. 80 g di pasta al pomodoro con parmigiano, un'insalata con un cucchiaio d'olio e uno yogurt greco Fage 0%"></textarea>
       <button class="btn" id="analyzeText" style="margin-top:10px">✨ Calcola calorie e macro</button>
     </div>
     <div class="card">
-      <h2>Cerca alimento</h2>
-      <input type="search" id="foodSearch" placeholder="Cerca tra recenti e alimenti comuni" autocomplete="off">
+      <h2>Cerca alimento o prodotto</h2>
+      <input type="search" id="foodSearch" placeholder="es. mela, Nutella, yogurt Müller" autocomplete="off">
       <ul class="search-results" id="searchResults"></ul>
+      <ul class="search-results" id="brandResults"></ul>
       <button class="btn ghost" id="manualAdd" style="margin-top:6px">Inserisci valori a mano</button>
     </div>`;
   $$('[data-m]', v).forEach(c => c.addEventListener('click', () => { addMeal = c.dataset.m; $$('[data-m]', v).forEach(x => x.classList.toggle('on', x === c)); }));
   $('#takePhoto', v).addEventListener('click', () => requireKey() && $('#photoInput').click());
   $('#pickPhoto', v).addEventListener('click', () => requireKey() && $('#galleryInput').click());
+  $('#scanCode', v).addEventListener('click', scanBarcode);
   $('#analyzeText', v).addEventListener('click', () => {
     const text = $('#foodText', v).value.trim();
     if (!text) { toast('Scrivi cosa hai mangiato'); return; }
@@ -334,6 +445,8 @@ function renderAdd(v) {
     runAnalysis({ text });
   });
   const si = $('#foodSearch', v);
+  const row = (x, i, attr) => `<li><button ${attr}="${i}"><span class="grow"><span class="name">${esc(x.name)}</span><br><span class="small muted">${r0(x.grams)} g · ${r0(x.per100.kcal * x.grams / 100)} kcal</span></span><span class="add-mini">+</span></button></li>`;
+  let brandTimer, brandSeq = 0;
   const drawResults = () => {
     const term = si.value.trim().toLowerCase();
     const recents = db.recent.map(r => ({ ...r, recent: true }));
@@ -346,21 +459,142 @@ function renderAdd(v) {
         const k = x.name.toLowerCase();
         if (!k.includes(term) || seen.has(k)) return false;
         seen.add(k); return true;
-      }).slice(0, 25);
+      }).slice(0, 15);
     }
     $('#searchResults', v).innerHTML = (!term && recents.length ? `<li class="small muted" style="border:0;padding-bottom:0">Recenti</li>` : '') +
-      (list.length ? list.map((x, i) => `<li><button data-i="${i}"><span class="grow"><span class="name">${esc(x.name)}</span><br><span class="small muted">${r0(x.grams)} g · ${r0(x.per100.kcal * x.grams / 100)} kcal</span></span><span class="add-mini">+</span></button></li>`).join('')
-        : `<li class="muted small">Nessun risultato. ${db.settings.apiKey ? 'Prova a descriverlo nel box sopra.' : ''}</li>`);
+      (list.length ? list.map((x, i) => row(x, i, 'data-i')).join('') : '');
     $$('#searchResults [data-i]', v).forEach(b => b.addEventListener('click', () => quickAdd(list[+b.dataset.i])));
+
+    // Prodotti di marca da Open Food Facts (serve la connessione)
+    clearTimeout(brandTimer);
+    const bx = $('#brandResults', v);
+    if (term.length < 3) { bx.innerHTML = ''; return; }
+    bx.innerHTML = `<li class="small muted">Cerco tra i prodotti di marca…</li>`;
+    const seq = ++brandSeq;
+    brandTimer = setTimeout(async () => {
+      try {
+        const found = await offSearch(term);
+        if (seq !== brandSeq) return;
+        bx.innerHTML = `<li class="small muted" style="padding-bottom:0">Prodotti di marca · Open Food Facts</li>` +
+          (found.length ? found.map((x, i) => row(x, i, 'data-b')).join('') : `<li class="small muted">Nessun prodotto trovato${hasAiKey() ? ': prova a descriverlo nel box sopra' : ''}.</li>`);
+        $$('[data-b]', bx).forEach(b => b.addEventListener('click', () => quickAdd(found[+b.dataset.b])));
+      } catch {
+        if (seq === brandSeq) bx.innerHTML = `<li class="small muted">Ricerca prodotti di marca non disponibile (sei offline?).</li>`;
+      }
+    }, 600);
   };
   si.addEventListener('input', drawResults);
   drawResults();
   $('#manualAdd', v).addEventListener('click', manualForm);
 }
 
+// ---------- Open Food Facts (database gratuito di prodotti di marca) ----------
+const OFF_FIELDS = 'code,product_name,product_name_it,brands,nutriments,serving_quantity';
+function offToFood(p) {
+  const n = p.nutriments || {};
+  let kcal = n['energy-kcal_100g'];
+  if (kcal == null && n.energy_100g != null) kcal = n.energy_100g / 4.184; // kJ → kcal
+  const name = (p.product_name_it || p.product_name || '').trim();
+  if (kcal == null || !name) return null;
+  const brand = (p.brands || '').split(',')[0].trim();
+  const serving = +p.serving_quantity;
+  return {
+    name: brand && !name.toLowerCase().includes(brand.toLowerCase()) ? `${name} (${brand})` : name,
+    grams: serving > 0 && serving < 2000 ? serving : 100,
+    per100: { kcal: +kcal, p: +n.proteins_100g || 0, c: +n.carbohydrates_100g || 0, f: +n.fat_100g || 0, fib: +n.fiber_100g || 0 },
+    code: p.code,
+  };
+}
+async function offSearch(term) {
+  const url = `https://it.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(term)}&search_simple=1&action=process&json=1&page_size=20&fields=${OFF_FIELDS}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('off');
+  const j = await res.json();
+  return (j.products || []).map(offToFood).filter(Boolean).slice(0, 12);
+}
+async function offBarcode(code) {
+  const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(code)}.json?fields=${OFF_FIELDS}`);
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error('off');
+  const j = await res.json();
+  return j.status === 1 && j.product ? offToFood({ ...j.product, code }) : null;
+}
+
+// ---------- Codice a barre ----------
+let zxingLoading;
+function loadZxing() {
+  if (window.ZXing) return Promise.resolve();
+  zxingLoading ||= new Promise((resolve, reject) => {
+    const sc = document.createElement('script');
+    sc.src = 'https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js';
+    sc.onload = resolve; sc.onerror = () => { zxingLoading = null; reject(new Error('zxing')); };
+    document.head.appendChild(sc);
+  });
+  return zxingLoading;
+}
+
+function scanBarcode() {
+  openSheet(`<h3>Codice a barre</h3>
+    <div class="scanner"><video id="scanVideo" playsinline muted></video><div class="scan-line"></div></div>
+    <p class="small muted center" id="scanMsg">Inquadra il codice a barre della confezione</p>
+    <div class="row"><input type="text" inputmode="numeric" id="codeInput" placeholder="…oppure scrivi il numero" class="grow"><button class="btn" id="codeGo" style="width:auto">Cerca</button></div>`, async s => {
+    let stopped = false, stream = null, reader = null, timer = null;
+    sheetCleanup = () => {
+      stopped = true; clearInterval(timer);
+      try { reader && reader.reset(); } catch {}
+      stream && stream.getTracks().forEach(t => t.stop());
+    };
+    const found = code => { if (stopped) return; sheetCleanup(); sheetCleanup = null; lookupBarcode(code); };
+    $('#codeGo', s).addEventListener('click', () => {
+      const code = $('#codeInput', s).value.replace(/\D/g, '');
+      if (code.length < 8) { toast('Codice non valido'); return; }
+      found(code);
+    });
+    const video = $('#scanVideo', s);
+    const msg = t => { const m = $('#scanMsg', s); if (m) m.textContent = t; };
+    try {
+      if ('BarcodeDetector' in window) {
+        const det = new BarcodeDetector({ formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e'] });
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+        if (stopped) { stream.getTracks().forEach(t => t.stop()); return; }
+        video.srcObject = stream; await video.play();
+        timer = setInterval(async () => {
+          if (stopped || video.readyState < 2) return;
+          try { const r = await det.detect(video); if (r[0]) found(r[0].rawValue); } catch {}
+        }, 250);
+      } else {
+        await loadZxing();
+        if (stopped) return;
+        reader = new ZXing.BrowserMultiFormatReader();
+        await reader.decodeFromConstraints({ video: { facingMode: 'environment' } }, video, r => { if (r) found(r.getText()); });
+      }
+    } catch {
+      msg('Fotocamera non disponibile: scrivi il numero sotto il codice a barre.');
+    }
+  });
+}
+
+async function lookupBarcode(code) {
+  openSheet(`<h3>Cerco il prodotto…</h3><div class="spinner"></div><p class="center muted small">Codice ${esc(code)}</p>`);
+  try {
+    const food = await offBarcode(code);
+    if (food) { quickAdd(food); return; }
+    openSheet(`<h3>Prodotto non trovato</h3>
+      <p>Il codice ${esc(code)} non è nel database Open Food Facts.</p>
+      <p class="small muted">Puoi fotografare la tabella nutrizionale sulla confezione: l'AI legge i valori dell'etichetta.</p>
+      <div class="btn-row"><button class="btn secondary" id="nfManual">A mano</button><button class="btn" id="nfPhoto">📷 Foto etichetta</button></div>`, s => {
+      $('#nfManual', s).addEventListener('click', manualForm);
+      $('#nfPhoto', s).addEventListener('click', () => { closeSheet(); requireKey() && $('#photoInput').click(); });
+    });
+  } catch {
+    openSheet(`<h3>Nessuna connessione</h3><p>Per cercare i prodotti col codice a barre serve internet.</p><button class="btn" id="nfOk">Ok</button>`,
+      s => $('#nfOk', s).addEventListener('click', closeSheet));
+  }
+}
+
 function requireKey() {
-  if (db.settings.apiKey) return true;
-  toast('Inserisci prima la chiave API in Obiettivi → Impostazioni');
+  if (hasAiKey()) return true;
+  toast('Inserisci prima una chiave AI in Obiettivi → Impostazioni (Gemini è gratis)');
   go('goals');
   setTimeout(() => $('#settingsCard')?.scrollIntoView({ behavior: 'smooth' }), 100);
   return false;
@@ -500,7 +734,9 @@ const SYSTEM_PROMPT = `Sei un nutrizionista che aiuta una persona a tenere il di
 
 Come lavorare:
 - Elenca separatamente ogni alimento o componente riconoscibile (es. pasta, sugo, parmigiano; oppure un piatto composto se non è scomponibile in modo sensato). Nomi brevi in italiano.
-- Se l'utente indica quantità o marche, usale. Altrimenti stima la porzione realistica dalla foto (dimensione del piatto, posate, confezioni) o da una porzione tipica italiana.
+- Se l'utente indica quantità o marche, usale: per un prodotto di marca usa i valori nutrizionali di quel prodotto e metti la marca nel nome (es. "Yogurt greco 0% Fage").
+- Se nella foto c'è una confezione o una tabella nutrizionale, leggi marca e valori dall'etichetta e usa quelli, riportati alla porzione mangiata (se non è indicata, usa la porzione consigliata in etichetta).
+- Altrimenti stima la porzione realistica dalla foto (dimensione del piatto, posate, confezioni) o da una porzione tipica italiana.
 - "grams" è il peso della porzione così come mangiata (cotta se cotta). Per le bevande usa i ml come grammi. Scrivi in "portion" una descrizione leggibile (es. "1 piatto medio", "2 cucchiai").
 - Calorie, proteine, carboidrati, grassi e fibre si riferiscono all'intera porzione, basati su tabelle di composizione (CREA, USDA). Includi i condimenti probabili (olio, burro, salse) come voce separata quando sono rilevanti.
 - "confidence" indica quanto sei sicuro di identificazione e porzione.
@@ -548,19 +784,89 @@ async function callClaude(content) {
   return JSON.parse(text);
 }
 
+// Google Gemini: ha un livello gratuito (con limiti di richieste al minuto e al giorno).
+function toGeminiSchema(sc) {
+  const out = { type: sc.type.toUpperCase() };
+  if (sc.enum) out.enum = sc.enum;
+  if (sc.items) out.items = toGeminiSchema(sc.items);
+  if (sc.properties) {
+    out.properties = Object.fromEntries(Object.entries(sc.properties).map(([k, v]) => [k, toGeminiSchema(v)]));
+    out.propertyOrdering = Object.keys(sc.properties);
+  }
+  if (sc.required) out.required = sc.required;
+  return out;
+}
+const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta';
+
+async function geminiFetch(path, init = {}) {
+  let res;
+  try {
+    res = await fetch(GEMINI_BASE + path, { ...init, headers: { 'content-type': 'application/json', 'x-goog-api-key': db.settings.geminiKey, ...(init.headers || {}) } });
+  } catch {
+    throw new Error('Connessione assente. Riprova quando sei online.');
+  }
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const msg = data?.error?.message || `Errore ${res.status}`;
+    if (res.status === 400 && /api key/i.test(msg)) throw new Error('Chiave Gemini non valida. Controllala nelle impostazioni.');
+    if (res.status === 403) throw new Error('Chiave Gemini non autorizzata. Controllala nelle impostazioni.');
+    if (res.status === 404) throw new Error('Modello Gemini non disponibile: premi "Prova" nelle impostazioni per aggiornare l\'elenco.');
+    if (res.status === 429) throw new Error('Limite gratuito di Gemini raggiunto per ora. Riprova tra qualche minuto (o domani se hai finito le richieste del giorno).');
+    if (res.status >= 500) throw new Error('Gemini è momentaneamente sovraccarico, riprova tra poco.');
+    throw new Error(msg);
+  }
+  return data;
+}
+
+async function callGemini({ prompt, imageB64 }) {
+  const model = db.settings.geminiModel || GEMINI_DEFAULT_MODEL;
+  const parts = [];
+  if (imageB64) parts.push({ inline_data: { mime_type: 'image/jpeg', data: imageB64 } });
+  parts.push({ text: prompt });
+  const data = await geminiFetch(`/models/${encodeURIComponent(model)}:generateContent`, {
+    method: 'POST',
+    body: JSON.stringify({
+      systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+      contents: [{ role: 'user', parts }],
+      generationConfig: { responseMimeType: 'application/json', responseSchema: toGeminiSchema(FOOD_SCHEMA) },
+    }),
+  });
+  if (data.promptFeedback?.blockReason) throw new Error('La richiesta non è stata elaborata. Prova a riformularla.');
+  const cand = data.candidates?.[0];
+  const text = (cand?.content?.parts || []).filter(p => p.text && !p.thought).map(p => p.text).join('');
+  if (!text) throw new Error(cand?.finishReason === 'MAX_TOKENS' ? 'Risposta troppo lunga: prova a dividere il pasto in più parti.' : 'Risposta vuota, riprova.');
+  return JSON.parse(text);
+}
+
+// Elenca i modelli "flash" disponibili per la chiave, dal più recente.
+async function listGeminiModels() {
+  const data = await geminiFetch('/models?pageSize=1000');
+  const ver = n => parseFloat((n.match(/gemini-(\d+(?:\.\d+)?)/) || [])[1] || 0);
+  return (data.models || [])
+    .filter(m => (m.supportedGenerationMethods || []).includes('generateContent'))
+    .map(m => m.name.replace(/^models\//, ''))
+    .filter(n => /^gemini-[\d.]+-flash(-lite)?(-preview)?$/.test(n))
+    .sort((a, b) => /preview/.test(a) - /preview/.test(b) || ver(b) - ver(a) || /lite/.test(a) - /lite/.test(b));
+}
+
+function analyzeFood({ prompt, imageB64 }) {
+  if (db.settings.provider === 'claude') {
+    const content = [];
+    if (imageB64) content.push({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: imageB64 } });
+    content.push({ type: 'text', text: prompt });
+    return callClaude(content);
+  }
+  return callGemini({ prompt, imageB64 });
+}
+
 async function runAnalysis({ text, imageB64, preview }) {
   openSheet(`<h3>Analizzo…</h3>${preview ? `<img class="preview" src="${preview}" alt="">` : ''}
     <div class="spinner"></div><p class="center muted small">Riconoscimento alimenti e calcolo di calorie e macro</p>`);
-  const content = [];
-  if (imageB64) content.push({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: imageB64 } });
-  content.push({
-    type: 'text',
-    text: imageB64
-      ? (text ? `Foto del mio pasto. Dettagli: ${text}` : 'Foto del mio pasto.')
-      : `Ho mangiato: ${text}`,
-  });
+  const prompt = imageB64
+    ? (text ? `Foto del mio pasto. Dettagli: ${text}` : 'Foto del mio pasto.')
+    : `Ho mangiato: ${text}`;
   try {
-    const out = await callClaude(content);
+    const out = await analyzeFood({ prompt, imageB64 });
     const items = (out.items || []).map(it => {
       const grams = it.grams > 0 ? it.grams : 100;
       const k = 100 / grams;
@@ -667,7 +973,7 @@ function barChart(days, goal) {
     <text x="${pl - 4}" y="${Y(0) + 3}" text-anchor="end">0</text>
     ${days.map((d, i) => {
       const x = pl + i * bw + bw * 0.15, w = Math.max(1, bw * 0.7);
-      const over = d.v > goal * 1.1;
+      const over = d.v > (d.b || goal) * 1.1;
       return d.v > 0 ? `<rect x="${x}" y="${Y(d.v)}" width="${w}" height="${Y(0) - Y(d.v)}" rx="${Math.min(3, w / 2)}" fill="${over ? 'var(--danger)' : 'var(--kcal)'}"/>` : '';
     }).join('')}
     ${days.map((d, i) => i % labelEvery === 0 ? `<text x="${pl + i * bw + bw / 2}" y="${H - 4}" text-anchor="middle">${fmtDate(d.date, days.length > 10 ? { day: 'numeric', month: 'numeric' } : { weekday: 'narrow' })}</text>` : '').join('')}
@@ -682,14 +988,15 @@ function rangeStats(fromDate, toDate) {
   const logged = days.filter(d => dayEntries(d).length);
   const totals = logged.map(dayTotals);
   const avg = k => totals.length ? totals.reduce((a, t) => a + t[k], 0) / totals.length : 0;
-  const g = db.goals.kcal;
-  const inTarget = totals.filter(t => t.kcal >= g * 0.9 && t.kcal <= g * 1.1).length;
+  const inTarget = logged.filter((d, i) => { const b = dayBudget(d); return totals[i].kcal >= b * 0.9 && totals[i].kcal <= b * 1.1; }).length;
+  const workouts = days.reduce((a, d) => a + dayExercise(d).length, 0);
+  const burned = days.reduce((a, d) => a + dayExerciseKcal(d), 0);
   const bodyIn = db.body.filter(b => b.date >= fromDate && b.date <= toDate).sort((a, b) => a.date.localeCompare(b.date));
   const delta = k => {
     const l = bodyIn.filter(b => b[k] != null);
     return l.length >= 2 ? l[l.length - 1][k] - l[0][k] : null;
   };
-  return { days, logged: logged.length, kcal: avg('kcal'), p: avg('p'), c: avg('c'), f: avg('f'), fib: avg('fib'), inTarget, dW: delta('weight'), dBF: delta('bodyFat') };
+  return { days, logged: logged.length, kcal: avg('kcal'), p: avg('p'), c: avg('c'), f: avg('f'), fib: avg('fib'), inTarget, workouts, burned, dW: delta('weight'), dBF: delta('bodyFat') };
 }
 const signed = (n, u) => n == null ? '–' : `${n > 0 ? '+' : ''}${fmtNum(n, 1)} ${u}`;
 
@@ -718,10 +1025,12 @@ function renderProgress(v) {
     <div class="stat"><div class="v">${signed(s.dBF, '%')}</div><div class="k">variazione massa grassa</div></div>
     <div class="stat"><div class="v">${r0(s.p)} g</div><div class="k">proteine medie (obiettivo ${r0(g.protein)})</div></div>
     <div class="stat"><div class="v">${s.logged}<span class="muted" style="font-size:15px">/${s.days.length}</span></div><div class="k">giorni registrati</div></div>
+    <div class="stat"><div class="v">${s.workouts}</div><div class="k">allenamenti</div></div>
+    <div class="stat"><div class="v">${fmtNum(s.burned, 0)}</div><div class="k">kcal bruciate con lo sport</div></div>
   </div></div>`;
 
   if (progressRange <= 90) {
-    html += `<div class="card"><h2>Calorie giornaliere</h2>${barChart(s.days.map(d => ({ date: d, v: dayTotals(d).kcal })), g.kcal)}</div>`;
+    html += `<div class="card"><h2>Calorie giornaliere</h2>${barChart(s.days.map(d => ({ date: d, v: dayTotals(d).kcal, b: dayBudget(d) })), g.kcal)}</div>`;
   } else {
     const weeks = [];
     for (let i = 0; i < s.days.length; i += 7) {
@@ -881,7 +1190,9 @@ function bodyForm(date, newDate) {
       if (!any) { toast('Inserisci almeno un valore'); return; }
       db.body = db.body.filter(b => b.date !== d && (!existing || b.date !== existing.date));
       db.body.push(out);
-      save(); closeSheet(); render(); toast('Misurazione salvata');
+      const changed = out.weight != null && autoGoals();
+      save(); closeSheet(); render();
+      toast(changed ? `Misurazione salvata · nuovo obiettivo ${db.goals.kcal} kcal` : 'Misurazione salvata');
     });
     const del = $('#bDel', s);
     del && del.addEventListener('click', () => {
@@ -891,38 +1202,63 @@ function bodyForm(date, newDate) {
 }
 
 // ---------- Goals & settings ----------
-const ACTIVITY = [
-  [1.2, 'Sedentario (poco o nessun esercizio)'],
-  [1.375, 'Leggero (1–3 allenamenti/sett.)'],
-  [1.55, 'Moderato (3–5 allenamenti/sett.)'],
-  [1.725, 'Intenso (6–7 allenamenti/sett.)'],
-  [1.9, 'Molto intenso (lavoro fisico + sport)'],
-];
 const GOAL_TYPES = [
   ['lose', 'Dimagrire (circa −0,5 kg/sett.)'],
   ['lose_slow', 'Dimagrire piano (circa −0,25 kg/sett.)'],
   ['maintain', 'Mantenere il peso'],
   ['gain', 'Aumentare massa (circa +0,25 kg/sett.)'],
 ];
+const GOAL_DELTA = { lose: -500, lose_slow: -250, maintain: 0, gain: 250 };
 
 function suggestGoals(p, weight) {
-  // Mifflin-St Jeor
+  // Metabolismo basale con Mifflin-St Jeor, poi stile di vita (senza sport) + attività fissa di ogni giorno.
   const bmr = 10 * weight + 6.25 * p.height - 5 * p.age + (p.sex === 'm' ? 5 : -161);
-  const tdee = bmr * p.activity;
-  const delta = { lose: -500, lose_slow: -250, maintain: 0, gain: 250 }[p.goalType];
+  const lifestyleKcal = bmr * ((p.lifestyle || 1.2) - 1);
+  const tdee = bmr + lifestyleKcal + (p.baseActivity || 0);
+  const delta = GOAL_DELTA[p.goalType] ?? 0;
   const minKcal = p.sex === 'm' ? 1500 : 1200;
   const kcal = Math.max(minKcal, Math.round((tdee + delta) / 10) * 10);
-  const protein = Math.round(weight * (p.goalType.startsWith('lose') ? 2.0 : 1.6));
+  const protein = Math.round(weight * (p.goalType.startsWith('lose') ? 2.0 : p.goalType === 'gain' ? 1.8 : 1.6));
   const fat = Math.round(Math.max(weight * 0.9, (kcal * 0.25) / 9));
   const carbs = Math.max(0, Math.round((kcal - protein * 4 - fat * 9) / 4));
-  return { bmr: r0(bmr), tdee: r0(tdee), kcal, protein, fat, carbs, fiber: Math.round((kcal / 1000) * 14), water: Math.round((weight * 35) / 250) * 250 };
+  return {
+    bmr: r0(bmr), lifestyleKcal: r0(lifestyleKcal), baseActivity: r0(p.baseActivity || 0), tdee: r0(tdee), delta, kcal,
+    protein, fat, carbs, fiber: Math.round((kcal / 1000) * 14), water: Math.round((weight * 35) / 250) * 250,
+  };
+}
+
+// Con "aggiornamento automatico" attivo, gli obiettivi seguono peso e profilo.
+function autoGoals() {
+  const w = latestBody('weight');
+  if (!db.goals.auto || !w) return false;
+  const sg = suggestGoals(db.profile, w.weight);
+  const changed = sg.kcal !== db.goals.kcal;
+  Object.assign(db.goals, { kcal: sg.kcal, protein: sg.protein, carbs: sg.carbs, fat: sg.fat, fiber: sg.fiber, water: sg.water });
+  return changed;
 }
 
 function renderGoals(v) {
   const g = db.goals, p = db.profile, st = db.settings;
   const w = latestBody('weight');
   const field = (id, label, val, extra = '') => `<label class="field"><span>${label}</span><input type="number" inputmode="decimal" id="${id}" value="${val ?? ''}" ${extra}></label>`;
+  const geminiModels = st.geminiModels?.length ? st.geminiModels : [st.geminiModel || GEMINI_DEFAULT_MODEL];
   v.innerHTML = `
+  <div class="card">
+    <h2>Il tuo fabbisogno</h2>
+    <div class="grid2">
+      <label class="field"><span>Sesso</span><select id="pSex"><option value="m" ${p.sex === 'm' ? 'selected' : ''}>Uomo</option><option value="f" ${p.sex === 'f' ? 'selected' : ''}>Donna</option></select></label>
+      ${field('pAge', 'Età', p.age)}
+      ${field('pH', 'Altezza (cm)', p.height)}
+      <label class="field"><span>Peso attuale</span><input type="text" value="${w ? fmtNum(w.weight) + ' kg' : 'registralo in Corpo'}" disabled></label>
+    </div>
+    <label class="field"><span>Com'è la tua giornata tipo (sport escluso)</span><select id="pLife">${LIFESTYLE.map(([k, l]) => `<option value="${k}" ${+p.lifestyle === k ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
+    <label class="field"><span>Attività fissa di ogni giorno (kcal)</span><input type="number" inputmode="numeric" id="pBase" value="${p.baseActivity || ''}" placeholder="es. 200 per camminate e passi quotidiani"></label>
+    <p class="small muted" style="margin-top:-4px">Metti qui quello che fai tutti i giorni (es. 40 min a piedi ≈ 150–200 kcal). Gli allenamenti occasionali invece li aggiungi nel Diario, giorno per giorno.</p>
+    <label class="field"><span>Obiettivo</span><select id="pGoal">${GOAL_TYPES.map(([k, l]) => `<option value="${k}" ${p.goalType === k ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
+    <div class="calc" id="calcBox"></div>
+    <label class="check"><input type="checkbox" id="gAuto" ${g.auto ? 'checked' : ''}> Aggiorna gli obiettivi da solo quando cambia il peso</label>
+    <button class="btn" id="applyCalc">Usa questi valori come obiettivi</button>
+  </div>
   <div class="card">
     <h2>Obiettivi giornalieri</h2>
     <div class="grid2">
@@ -934,10 +1270,10 @@ function renderGoals(v) {
       ${field('gWater', 'Acqua (ml)', g.water)}
     </div>
     <p class="small muted" id="macroCheck" style="margin-top:0"></p>
-    <button class="btn secondary" id="openCalc">🧮 Calcolali per me</button>
-  </div>
-  <div class="card">
-    <h2>Obiettivi a lungo termine</h2>
+    <label class="field"><span>Calorie degli allenamenti da aggiungere al budget del giorno</span><select id="gAddBack">
+      ${[[1, 'Tutte (100%)'], [0.5, 'Metà (50%) – più prudente'], [0, 'Nessuna']].map(([k, l]) => `<option value="${k}" ${+g.exerciseAddBack === k ? 'selected' : ''}>${l}</option>`).join('')}
+    </select></label>
+    <h2 style="margin-top:6px">Obiettivi a lungo termine</h2>
     <div class="grid2">
       ${field('gWT', 'Peso obiettivo (kg)', g.weightTarget, 'step="0.1"')}
       <label class="field"><span>Entro il</span><input type="date" id="gWTD" value="${g.weightTargetDate || ''}"></label>
@@ -950,23 +1286,24 @@ function renderGoals(v) {
     </div>
     <button class="btn" id="saveGoals">Salva obiettivi</button>
   </div>
-  <div class="card">
-    <h2>Profilo</h2>
-    <div class="grid2">
-      <label class="field"><span>Sesso</span><select id="pSex"><option value="m" ${p.sex === 'm' ? 'selected' : ''}>Uomo</option><option value="f" ${p.sex === 'f' ? 'selected' : ''}>Donna</option></select></label>
-      ${field('pAge', 'Età', p.age)}
-      ${field('pH', 'Altezza (cm)', p.height)}
-      <label class="field"><span>Peso attuale</span><input type="text" value="${w ? fmtNum(w.weight) + ' kg' : 'da registrare in Corpo'}" disabled></label>
-    </div>
-    <label class="field"><span>Attività</span><select id="pAct">${ACTIVITY.map(([k, l]) => `<option value="${k}" ${+p.activity === k ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
-    <label class="field"><span>Obiettivo</span><select id="pGoal">${GOAL_TYPES.map(([k, l]) => `<option value="${k}" ${p.goalType === k ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
-    <button class="btn secondary" id="saveProfile">Salva profilo</button>
-  </div>
   <div class="card" id="settingsCard">
-    <h2>Impostazioni</h2>
-    <label class="field"><span>Chiave API di Claude</span><input type="password" id="sKey" value="${esc(st.apiKey)}" placeholder="sk-ant-..." autocomplete="off"></label>
-    <p class="small muted" style="margin-top:-4px">Creala su <b>console.anthropic.com</b> → API Keys. Resta salvata solo su questo telefono e viene inviata solo ad Anthropic.</p>
-    <label class="field"><span>Modello</span><select id="sModel">${MODELS.map(m => `<option value="${m.id}" ${st.model === m.id ? 'selected' : ''}>${m.label}</option>`).join('')}</select></label>
+    <h2>Intelligenza artificiale</h2>
+    <p class="small muted" style="margin-top:0">Serve per riconoscere i cibi da foto e testo. Ricerca, codice a barre e tutto il resto funzionano anche senza.</p>
+    <div class="seg" id="provSeg">
+      <button data-prov="gemini" class="${st.provider !== 'claude' ? 'on' : ''}">Gemini · gratis</button>
+      <button data-prov="claude" class="${st.provider === 'claude' ? 'on' : ''}">Claude · a pagamento</button>
+    </div>
+    <div id="provGemini" ${st.provider === 'claude' ? 'hidden' : ''}>
+      <label class="field"><span>Chiave API di Google Gemini</span><input type="password" id="sGKey" value="${esc(st.geminiKey)}" placeholder="AIza..." autocomplete="off"></label>
+      <p class="small muted" style="margin-top:-4px">Gratis su <b>aistudio.google.com</b> → Get API key (basta un account Google, niente carta). Il piano gratuito ha un limite di richieste al giorno, più che sufficiente per un diario, e Google può usare i dati inviati per migliorare i suoi servizi.</p>
+      <label class="field"><span>Modello</span><select id="sGModel">${geminiModels.map(m => `<option ${m === st.geminiModel ? 'selected' : ''}>${esc(m)}</option>`).join('')}</select></label>
+    </div>
+    <div id="provClaude" ${st.provider === 'claude' ? '' : 'hidden'}>
+      <label class="field"><span>Chiave API di Claude</span><input type="password" id="sKey" value="${esc(st.apiKey)}" placeholder="sk-ant-..." autocomplete="off"></label>
+      <p class="small muted" style="margin-top:-4px">Creala su <b>console.anthropic.com</b> → API Keys. Si paga a consumo (pochi centesimi a foto). Riconoscimento più preciso.</p>
+      <label class="field"><span>Modello</span><select id="sModel">${MODELS.map(m => `<option value="${m.id}" ${st.model === m.id ? 'selected' : ''}>${m.label}</option>`).join('')}</select></label>
+    </div>
+    <p class="small muted">Le chiavi restano solo su questo telefono e vengono inviate solo al servizio scelto.</p>
     <div class="btn-row"><button class="btn secondary" id="testKey">Prova</button><button class="btn" id="saveSettings">Salva</button></div>
   </div>
   <div class="card">
@@ -976,6 +1313,36 @@ function renderGoals(v) {
     <button class="btn danger" id="wipe" style="margin-top:6px">Cancella tutti i dati</button>
   </div>`;
 
+  const readProfile = () => ({
+    sex: $('#pSex', v).value, age: num($('#pAge', v).value) || p.age, height: num($('#pH', v).value) || p.height,
+    lifestyle: +$('#pLife', v).value, baseActivity: Math.max(0, num($('#pBase', v).value) || 0), goalType: $('#pGoal', v).value,
+  });
+  let sg = null;
+  const drawCalc = () => {
+    const box = $('#calcBox', v);
+    if (!w) { sg = null; box.innerHTML = `<p class="small muted">Registra il tuo peso nella scheda <b>Corpo</b> per calcolare il fabbisogno.</p>`; return; }
+    sg = suggestGoals(readProfile(), w.weight);
+    box.innerHTML = `<div class="calc-rows">
+      <div><span>Metabolismo basale</span><b>${sg.bmr}</b></div>
+      <div><span>+ Giornata tipo</span><b>${sg.lifestyleKcal}</b></div>
+      ${sg.baseActivity ? `<div><span>+ Attività fissa</span><b>${sg.baseActivity}</b></div>` : ''}
+      <div class="sum"><span>= Fabbisogno giornaliero</span><b>${sg.tdee} kcal</b></div>
+      ${sg.delta ? `<div><span>${sg.delta < 0 ? '− Deficit per dimagrire' : '+ Surplus per aumentare'}</span><b>${Math.abs(sg.delta)}</b></div>` : ''}
+      <div class="sum accent"><span>Calorie da mangiare</span><b>${sg.kcal} kcal</b></div>
+    </div>
+    <p class="small muted">Proteine ${sg.protein} g · Carboidrati ${sg.carbs} g · Grassi ${sg.fat} g · Fibre ${sg.fiber} g · Acqua ${fmtNum(sg.water / 1000, 2)} L. Gli allenamenti si aggiungono giorno per giorno.</p>`;
+  };
+  ['#pSex', '#pAge', '#pH', '#pLife', '#pBase', '#pGoal'].forEach(id => $(id, v).addEventListener('input', drawCalc));
+  drawCalc();
+  $('#applyCalc', v).addEventListener('click', () => {
+    db.profile = readProfile();
+    db.goals.auto = $('#gAuto', v).checked;
+    if (!sg) { save(); toast('Profilo salvato. Registra il peso per calcolare gli obiettivi'); return; }
+    Object.assign(db.goals, { kcal: sg.kcal, protein: sg.protein, carbs: sg.carbs, fat: sg.fat, fiber: sg.fiber, water: sg.water });
+    save(); render(); toast(`Obiettivo: ${sg.kcal} kcal al giorno`);
+  });
+  $('#gAuto', v).addEventListener('change', e => { db.goals.auto = e.target.checked; save(); });
+
   const checkMacros = () => {
     const k = num($('#gKcal', v).value) || 0;
     const m = (num($('#gProt', v).value) || 0) * 4 + (num($('#gCarb', v).value) || 0) * 4 + (num($('#gFat', v).value) || 0) * 9;
@@ -984,61 +1351,56 @@ function renderGoals(v) {
   };
   ['#gKcal', '#gProt', '#gCarb', '#gFat'].forEach(id => $(id, v).addEventListener('input', checkMacros));
   checkMacros();
-
-  const readProfile = () => ({
-    sex: $('#pSex', v).value, age: num($('#pAge', v).value) || p.age, height: num($('#pH', v).value) || p.height,
-    activity: +$('#pAct', v).value, goalType: $('#pGoal', v).value,
-  });
-  $('#saveProfile', v).addEventListener('click', () => { db.profile = readProfile(); save(); toast('Profilo salvato'); });
   $('#saveGoals', v).addEventListener('click', () => {
     const val = id => num($(id, v).value);
+    const kcal = val('#gKcal') || g.kcal;
+    // Se l'obiettivo calorie viene cambiato a mano, disattiva l'aggiornamento automatico
+    if (kcal !== g.kcal && db.goals.auto) { db.goals.auto = false; toast('Aggiornamento automatico disattivato: usi obiettivi personalizzati'); }
     Object.assign(db.goals, {
-      kcal: val('#gKcal') || g.kcal, protein: val('#gProt') ?? g.protein, carbs: val('#gCarb') ?? g.carbs, fat: val('#gFat') ?? g.fat,
-      fiber: val('#gFib') ?? g.fiber, water: val('#gWater') ?? g.water,
+      kcal, protein: val('#gProt') ?? g.protein, carbs: val('#gCarb') ?? g.carbs, fat: val('#gFat') ?? g.fat,
+      fiber: val('#gFib') ?? g.fiber, water: val('#gWater') ?? g.water, exerciseAddBack: +$('#gAddBack', v).value,
       weightTarget: val('#gWT'), weightTargetDate: $('#gWTD', v).value, bodyFatTarget: val('#gBF'),
       monthWeight: val('#gMW'), monthDaysInTarget: val('#gMD') ?? 0,
     });
-    save(); toast('Obiettivi salvati');
+    save(); render(); toast('Obiettivi salvati');
   });
-  $('#openCalc', v).addEventListener('click', () => {
-    const prof = readProfile();
-    const weight = w?.weight;
-    if (!weight) { toast('Registra prima il tuo peso nella scheda Corpo'); return; }
-    db.profile = prof; save();
-    const sg = suggestGoals(prof, weight);
-    openSheet(`<h3>Obiettivi consigliati</h3>
-      <p class="small muted">Metabolismo basale ${sg.bmr} kcal · fabbisogno giornaliero stimato ${sg.tdee} kcal (formula Mifflin-St Jeor).</p>
-      <div class="stats">
-        <div class="stat"><div class="v">${sg.kcal}</div><div class="k">kcal</div></div>
-        <div class="stat"><div class="v">${sg.protein} g</div><div class="k">proteine</div></div>
-        <div class="stat"><div class="v">${sg.carbs} g</div><div class="k">carboidrati</div></div>
-        <div class="stat"><div class="v">${sg.fat} g</div><div class="k">grassi</div></div>
-        <div class="stat"><div class="v">${sg.fiber} g</div><div class="k">fibre</div></div>
-        <div class="stat"><div class="v">${fmtNum(sg.water / 1000, 2)} L</div><div class="k">acqua</div></div>
-      </div>
-      <p class="small muted">Sono stime di partenza: dopo 2–3 settimane guarda l'andamento del peso e correggi di 100–200 kcal. Per esigenze mediche chiedi a un professionista.</p>
-      <div class="btn-row"><button class="btn secondary" id="cNo">Annulla</button><button class="btn" id="cYes">Usa questi valori</button></div>`, s => {
-      $('#cNo', s).addEventListener('click', closeSheet);
-      $('#cYes', s).addEventListener('click', () => {
-        Object.assign(db.goals, { kcal: sg.kcal, protein: sg.protein, carbs: sg.carbs, fat: sg.fat, fiber: sg.fiber, water: sg.water });
-        save(); closeSheet(); render(); toast('Obiettivi aggiornati');
-      });
-    });
-  });
-  const saveSettings = () => { db.settings.apiKey = $('#sKey', v).value.trim(); db.settings.model = $('#sModel', v).value; save(); };
+
+  $$('[data-prov]', v).forEach(b => b.addEventListener('click', () => {
+    $$('[data-prov]', v).forEach(x => x.classList.toggle('on', x === b));
+    $('#provGemini', v).hidden = b.dataset.prov !== 'gemini';
+    $('#provClaude', v).hidden = b.dataset.prov !== 'claude';
+  }));
+  const saveSettings = () => {
+    db.settings.provider = $('#provSeg .on', v).dataset.prov;
+    db.settings.geminiKey = $('#sGKey', v).value.trim();
+    db.settings.geminiModel = $('#sGModel', v).value;
+    db.settings.apiKey = $('#sKey', v).value.trim();
+    db.settings.model = $('#sModel', v).value;
+    save();
+  };
   $('#saveSettings', v).addEventListener('click', () => { saveSettings(); toast('Impostazioni salvate'); });
   $('#testKey', v).addEventListener('click', async e => {
     saveSettings();
-    if (!db.settings.apiKey) { toast('Inserisci la chiave'); return; }
+    if (!hasAiKey()) { toast('Inserisci la chiave'); return; }
     const b = e.currentTarget; b.disabled = true; b.textContent = 'Provo…';
     try {
-      const out = await callClaude([{ type: 'text', text: 'Ho mangiato: una mela' }]);
+      if (db.settings.provider === 'gemini') {
+        const models = await listGeminiModels();
+        if (models.length) {
+          db.settings.geminiModels = models;
+          if (!models.includes(db.settings.geminiModel)) db.settings.geminiModel = models[0];
+          save();
+          const sel = $('#sGModel', v);
+          sel.innerHTML = models.map(m => `<option ${m === db.settings.geminiModel ? 'selected' : ''}>${esc(m)}</option>`).join('');
+        }
+      }
+      const out = await analyzeFood({ prompt: 'Ho mangiato: una mela' });
       toast(`Funziona! Mela ≈ ${r0(out.items[0]?.kcal)} kcal`);
     } catch (err) { toast(err.message); }
     b.disabled = false; b.textContent = 'Prova';
   });
   $('#exportData', v).addEventListener('click', () => {
-    const copy = { ...db, settings: { ...db.settings, apiKey: '' } };
+    const copy = { ...db, settings: { ...db.settings, apiKey: '', geminiKey: '' } };
     const blob = new Blob([JSON.stringify(copy, null, 1)], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob); a.download = `dieta-backup-${today()}.json`;
@@ -1060,10 +1422,11 @@ $('#importInput').addEventListener('change', async e => {
     const d = JSON.parse(await f.text());
     if (!d || typeof d !== 'object' || !d.entries) throw new Error();
     if (!confirm('Sostituire i dati attuali con quelli del backup?')) return;
-    const key = db.settings.apiKey;
+    const { apiKey, geminiKey } = db.settings;
     localStorage.setItem(KEY, JSON.stringify(d));
     db = load();
-    if (!db.settings.apiKey) db.settings.apiKey = key;
+    if (!db.settings.apiKey) db.settings.apiKey = apiKey;
+    if (!db.settings.geminiKey) db.settings.geminiKey = geminiKey;
     save(); render(); toast('Backup importato');
   } catch { toast('File di backup non valido'); }
 });
