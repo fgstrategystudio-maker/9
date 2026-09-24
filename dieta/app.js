@@ -2,7 +2,7 @@
 'use strict';
 
 // ---------- Storage ----------
-const APP_VERSION = '8';
+const APP_VERSION = '9';
 const KEY = 'dieta.v1';
 const MEALS = [
   { id: 'colazione', label: 'Colazione' },
@@ -14,6 +14,16 @@ const MODELS = [
   { id: 'claude-opus-5', label: 'Claude Opus 5 — più preciso' },
   { id: 'claude-sonnet-5', label: 'Claude Sonnet 5 — più veloce ed economico' },
   { id: 'claude-haiku-4-5', label: 'Claude Haiku 4.5 — il più economico' },
+];
+// [id, nome, colori chiaro (accento, proteine, carboidrati, grassi), colori scuro (sfondo, accento, proteine, carboidrati)]
+const PALETTES = [
+  ['salvia', 'Salvia (attuale)', ['#0f766e', '#d0563b', '#2f6fd6', '#c98a12'], ['#0e1412', '#2bb3a3', '#ec7a5f', '#6d9cf0']],
+  ['mirtillo', 'Mirtillo', ['#5a45d6', '#e0457b', '#2d8fd5', '#e8a317'], ['#100e1d', '#9d8cff', '#ff7aa8', '#5cb8f5']],
+  ['agrumi', 'Agrumi', ['#c2410c', '#c2255c', '#1c7ed6', '#e8a200'], ['#171009', '#ff8a4c', '#f06595', '#4dabf7']],
+  ['oliva', 'Oliva e terracotta', ['#56661c', '#b84a28', '#35689e', '#c8901f'], ['#12130d', '#b3c75a', '#e8825e', '#79a7dd']],
+  ['oceano', 'Oceano', ['#0e7490', '#e11d48', '#4f46e5', '#d97706'], ['#07111d', '#38bdf8', '#fb7185', '#a5b4fc']],
+  ['fragola', 'Fragola e menta', ['#c2255c', '#e8590c', '#0c8599', '#e0a100'], ['#170c12', '#ff6b9a', '#ff922b', '#3bc9db']],
+  ['grafite', 'Grafite e lime', ['#1f2a1c', '#dc2626', '#2563eb', '#d97706'], ['#0b0c0b', '#a3e635', '#f87171', '#60a5fa']],
 ];
 const GEMINI_DEFAULT_MODEL = 'gemini-3.5-flash';
 // Attività sportive con MET medio (Compendium of Physical Activities)
@@ -64,6 +74,7 @@ const DEFAULT_DB = {
     geminiKey: '', geminiModel: GEMINI_DEFAULT_MODEL, geminiModels: [],
     apiKey: '', model: 'claude-opus-5',
     lastActivity: 'Camminata veloce',
+    palette: 'salvia',
   },
 };
 
@@ -1425,6 +1436,14 @@ function renderGoals(v) {
     <div class="btn-row"><button class="btn secondary" id="testKey">Prova</button><button class="btn" id="saveSettings">Salva</button></div>
   </div>
   <div class="card">
+    <h2>Aspetto</h2>
+    <p class="small muted" style="margin-top:0">Ogni palette ha la versione chiara e quella scura, che segue il tema del telefono.</p>
+    <div class="palettes">${PALETTES.map(([id, name, light, dark]) => `<button class="pal ${id === (st.palette || 'salvia') ? 'on' : ''}" data-pal="${id}">
+      <span class="sw">${light.map(c => `<i style="background:${c}"></i>`).join('')}</span>
+      <span class="sw">${dark.map(c => `<i style="background:${c}"></i>`).join('')}</span>
+      <b>${name}</b></button>`).join('')}</div>
+  </div>
+  <div class="card">
     <h2>Dati</h2>
     <p class="small muted" style="margin-top:0">I dati restano sul telefono. Esporta un backup ogni tanto: servirà anche per passare a un altro dispositivo.</p>
     <div class="btn-row"><button class="btn secondary" id="exportData">Esporta backup</button><button class="btn secondary" id="importData">Importa</button></div>
@@ -1533,6 +1552,10 @@ function renderGoals(v) {
     } catch (err) { toast(err.message); }
     b.disabled = false; b.textContent = 'Prova';
   });
+  $$('[data-pal]', v).forEach(b => b.addEventListener('click', () => {
+    db.settings.palette = b.dataset.pal; save(); applyPalette();
+    $$('[data-pal]', v).forEach(x => x.classList.toggle('on', x === b));
+  }));
   $('#exportData', v).addEventListener('click', () => {
     const copy = { ...db, settings: { ...db.settings, apiKey: '', geminiKey: '' } };
     const blob = new Blob([JSON.stringify(copy, null, 1)], { type: 'application/json' });
@@ -1566,6 +1589,17 @@ $('#importInput').addEventListener('change', async e => {
 });
 
 // ---------- Boot ----------
+function applyPalette() {
+  const p = db.settings.palette || 'salvia';
+  if (p === 'salvia') delete document.documentElement.dataset.palette;
+  else document.documentElement.dataset.palette = p;
+  // colore della barra di stato del telefono
+  const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+  document.querySelector('meta[name=theme-color]')?.setAttribute('content', accent || '#0f766e');
+}
+applyPalette();
+matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', applyPalette);
+
 // Configurazione con un link: ...#k=CHIAVE_GEMINI. La chiave resta nel telefono e sparisce dall'indirizzo.
 async function importKeyFromLink() {
   const params = new URLSearchParams(location.hash.slice(1));

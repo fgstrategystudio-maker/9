@@ -123,7 +123,7 @@ main { padding: 4px 16px 16px; max-width: 640px; margin: 0 auto; }
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   border: 0; border-radius: 12px; padding: 12px 16px; font-weight: 600;
-  background: var(--accent); color: #fff; width: 100%;
+  background: var(--accent); color: var(--on-accent); width: 100%;
 }
 .btn.secondary { background: var(--accent-soft); color: var(--accent); }
 .btn.ghost { background: transparent; color: var(--accent); }
@@ -139,14 +139,14 @@ main { padding: 4px 16px 16px; max-width: 640px; margin: 0 auto; }
   padding: 18px 10px; display: flex; flex-direction: column; align-items: center; gap: 6px; font-weight: 600;
 }
 .big-action .ic { font-size: 30px; }
-.big-action.primary { background: var(--accent); color: #fff; }
+.big-action.primary { background: var(--accent); color: var(--on-accent); }
 .meal-pick { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; margin-bottom: 12px; scrollbar-width: none; }
 .meal-pick::-webkit-scrollbar { display: none; }
 .chip {
   border: 1px solid var(--line); background: var(--card); border-radius: 99px;
   padding: 7px 14px; font-size: 14px; white-space: nowrap; font-weight: 500;
 }
-.chip.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+.chip.on { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
 
 textarea, input[type=text], input[type=number], input[type=date], input[type=password], input[type=search], select {
   width: 100%; border: 1px solid var(--line); background: var(--bg); border-radius: 12px;
@@ -244,7 +244,7 @@ label.field > span { display: block; font-size: 13px; color: var(--muted); margi
 .tabbar .ti { font-size: 20px; line-height: 1.1; }
 .tabbar button.active { color: var(--accent); }
 .tabbar .tab-add span {
-  width: 54px; height: 54px; border-radius: 50%; background: var(--accent); color: #fff;
+  width: 54px; height: 54px; border-radius: 50%; background: var(--accent); color: var(--on-accent);
   font-size: 32px; line-height: 52px; font-weight: 400; margin-top: -22px;
   box-shadow: 0 6px 18px color-mix(in srgb, var(--accent) 40%, transparent);
 }
@@ -286,3 +286,28 @@ label.check input { width: 20px; height: 20px; accent-color: var(--accent); }
 .cal-day.today .dot { box-shadow: 0 0 0 2px var(--card), 0 0 0 4px var(--accent); }
 .cal-day.sel { background: var(--accent-soft); }
 .cal-day:disabled { opacity: .45; }
+
+/* ---------- Palette colori (Obiettivi → Aspetto) ---------- */
+:root { --on-accent: #fff; }
+@media (prefers-color-scheme: dark) { :root { --on-accent: #0b1210; } }
+:root[data-palette="mirtillo"] { --bg:#f4f3fb; --card:#ffffff; --text:#1b1834; --muted:#6c6889; --line:#e4e2f1; --accent:#5a45d6; --accent-soft:#e6e1fb; --kcal:#5a45d6; --prot:#e0457b; --carb:#2d8fd5; --fat:#e8a317; --water:#2d8fd5; --on-accent:#ffffff; }
+:root[data-palette="agrumi"] { --bg:#fbf6f1; --card:#ffffff; --text:#2a1a12; --muted:#85705f; --line:#f0e4d8; --accent:#c2410c; --accent-soft:#fde4d6; --kcal:#c2410c; --prot:#c2255c; --carb:#1c7ed6; --fat:#e8a200; --water:#1c7ed6; --on-accent:#111111; }
+:root[data-palette="oliva"] { --bg:#f5f3ea; --card:#fffdf7; --text:#22241a; --muted:#74765f; --line:#e6e2d0; --accent:#56661c; --accent-soft:#e6ebcf; --kcal:#56661c; --prot:#b84a28; --carb:#35689e; --fat:#c8901f; --water:#35689e; --on-accent:#ffffff; }
+:root[data-palette="oceano"] { --bg:#eff5f9; --card:#ffffff; --text:#0e1b2b; --muted:#5c6d80; --line:#dce6ee; --accent:#0e7490; --accent-soft:#d3eef5; --kcal:#0e7490; --prot:#e11d48; --carb:#4f46e5; --fat:#d97706; --water:#0284c7; --on-accent:#ffffff; }
+:root[data-palette="fragola"] { --bg:#fbf4f6; --card:#ffffff; --text:#2b1520; --muted:#86677a; --line:#f1e0e7; --accent:#c2255c; --accent-soft:#fbdce7; --kcal:#c2255c; --prot:#e8590c; --carb:#0c8599; --fat:#e0a100; --water:#0c8599; --on-accent:#ffffff; }
+:root[data-palette="grafite"] { --bg:#f3f4f2; --card:#ffffff; --text:#141614; --muted:#666b64; --line:#e1e3df; --accent:#1f2a1c; --accent-soft:#e4f3c7; --kcal:#4d7c0f; --prot:#dc2626; --carb:#2563eb; --fat:#d97706; --water:#0891b2; --on-accent:#ffffff; }
+@media (prefers-color-scheme: dark) {
+  :root[data-palette="salvia"] { --bg:#0e1412; --card:#17201d; --text:#e8efec; --muted:#93a19c; --line:#26322e; --accent:#2bb3a3; --accent-soft:#173a35; --kcal:#2bb3a3; --prot:#ec7a5f; --carb:#6d9cf0; --fat:#e2ac3d; --water:#4cb4e4; --on-accent:#0b0c0b; }
+  :root[data-palette="mirtillo"] { --bg:#100e1d; --card:#1a172d; --text:#ecebf7; --muted:#a19dbf; --line:#2a2645; --accent:#9d8cff; --accent-soft:#2a2356; --kcal:#9d8cff; --prot:#ff7aa8; --carb:#5cb8f5; --fat:#f5c04a; --water:#5cb8f5; --on-accent:#0b0c0b; }
+  :root[data-palette="agrumi"] { --bg:#171009; --card:#221811; --text:#f7ede4; --muted:#b39c89; --line:#3a2a1e; --accent:#ff8a4c; --accent-soft:#43261a; --kcal:#ff8a4c; --prot:#f06595; --carb:#4dabf7; --fat:#ffd43b; --water:#4dabf7; --on-accent:#0b0c0b; }
+  :root[data-palette="oliva"] { --bg:#12130d; --card:#1c1d15; --text:#eeeee2; --muted:#a3a58c; --line:#2f3023; --accent:#b3c75a; --accent-soft:#2e341a; --kcal:#b3c75a; --prot:#e8825e; --carb:#79a7dd; --fat:#e6b755; --water:#79a7dd; --on-accent:#0b0c0b; }
+  :root[data-palette="oceano"] { --bg:#07111d; --card:#0f1c2c; --text:#e6eef7; --muted:#8ea3b9; --line:#1d2f44; --accent:#38bdf8; --accent-soft:#0f3350; --kcal:#38bdf8; --prot:#fb7185; --carb:#a5b4fc; --fat:#fbbf24; --water:#7dd3fc; --on-accent:#0b0c0b; }
+  :root[data-palette="fragola"] { --bg:#170c12; --card:#22131b; --text:#f8e9f0; --muted:#b894a6; --line:#3b2230; --accent:#ff6b9a; --accent-soft:#45182b; --kcal:#ff6b9a; --prot:#ff922b; --carb:#3bc9db; --fat:#ffd43b; --water:#3bc9db; --on-accent:#0b0c0b; }
+  :root[data-palette="grafite"] { --bg:#0b0c0b; --card:#161816; --text:#eef0ec; --muted:#9a9f96; --line:#262925; --accent:#a3e635; --accent-soft:#26351a; --kcal:#a3e635; --prot:#f87171; --carb:#60a5fa; --fat:#fbbf24; --water:#22d3ee; --on-accent:#0b0c0b; }
+}
+.palettes { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.pal { border: 2px solid var(--line); background: var(--bg); border-radius: 14px; padding: 10px; text-align: left; }
+.pal.on { border-color: var(--accent); }
+.pal .sw { display: flex; gap: 4px; margin-bottom: 6px; }
+.pal .sw i { width: 18px; height: 18px; border-radius: 50%; display: block; }
+.pal b { font-size: 13px; }
