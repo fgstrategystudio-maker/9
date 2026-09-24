@@ -12,7 +12,7 @@ App per il telefono all'indirizzo `/dieta` del sito. Non richiede build: sono fi
 - **Progressi**: medie su 7/30/90/365 giorni, giorni in target, grafici calorie e peso, andamento settimanale e data di arrivo stimata.
 
 ## Installazione sul telefono
-Apri `https://<tuo-dominio>/dieta` e poi:
+Apri l.indirizzo dove hai pubblicato la cartella e poi:
 - **iPhone (Safari)**: Condividi → "Aggiungi alla schermata Home".
 - **Android (Chrome)**: menu ⋮ → "Installa app".
 

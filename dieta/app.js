@@ -810,16 +810,26 @@ async function geminiFetch(path, init = {}) {
     const msg = data?.error?.message || `Errore ${res.status}`;
     if (res.status === 400 && /api key/i.test(msg)) throw new Error('Chiave Gemini non valida. Controllala nelle impostazioni.');
     if (res.status === 403) throw new Error('Chiave Gemini non autorizzata. Controllala nelle impostazioni.');
-    if (res.status === 404) throw new Error('Modello Gemini non disponibile: premi "Prova" nelle impostazioni per aggiornare l\'elenco.');
-    if (res.status === 429) throw new Error('Limite gratuito di Gemini raggiunto per ora. Riprova tra qualche minuto (o domani se hai finito le richieste del giorno).');
-    if (res.status >= 500) throw new Error('Gemini è momentaneamente sovraccarico, riprova tra poco.');
+    const fail = (text, retryable) => Object.assign(new Error(text), { retryable });
+    if (res.status === 404) throw fail('Modello Gemini non disponibile: premi "Prova" nelle impostazioni per aggiornare l\'elenco.', true);
+    if (res.status === 429) throw fail('Limite gratuito di Gemini raggiunto per ora. Riprova tra qualche minuto (o domani se hai finito le richieste del giorno).', true);
+    if (res.status >= 500) throw fail('Gemini è momentaneamente sovraccarico, riprova tra poco.', true);
     throw new Error(msg);
   }
   return data;
 }
 
-async function callGemini({ prompt, imageB64 }) {
-  const model = db.settings.geminiModel || GEMINI_DEFAULT_MODEL;
+// Se il modello scelto ha finito le richieste gratuite (ogni modello ha la sua quota) o non esiste più, prova i successivi.
+const GEMINI_FALLBACKS = ['gemini-2.5-flash', 'gemini-2.5-flash-lite'];
+async function callGemini(input) {
+  const chain = [...new Set([db.settings.geminiModel || GEMINI_DEFAULT_MODEL, ...GEMINI_FALLBACKS])];
+  for (let i = 0; ; i++) {
+    try { return await callGeminiModel(chain[i], input); }
+    catch (err) { if (!err.retryable || i === chain.length - 1) throw err; }
+  }
+}
+
+async function callGeminiModel(model, { prompt, imageB64 }) {
   const parts = [];
   if (imageB64) parts.push({ inline_data: { mime_type: 'image/jpeg', data: imageB64 } });
   parts.push({ text: prompt });
@@ -1432,6 +1442,27 @@ $('#importInput').addEventListener('change', async e => {
 });
 
 // ---------- Boot ----------
+// Configurazione con un link: ...#k=CHIAVE_GEMINI. La chiave resta nel telefono e sparisce dall'indirizzo.
+async function importKeyFromLink() {
+  const params = new URLSearchParams(location.hash.slice(1));
+  const key = params.get('k');
+  if (!key) return;
+  history.replaceState(null, '', location.pathname + location.search);
+  db.settings.geminiKey = key.trim();
+  db.settings.provider = 'gemini';
+  save();
+  toast('Chiave Gemini configurata ✓');
+  try {
+    const models = await listGeminiModels();
+    if (models.length) {
+      db.settings.geminiModels = models;
+      db.settings.geminiModel = models[0];
+      save();
+    }
+  } catch {}
+  render();
+}
+
 let lastSeenDay = today();
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) return;
@@ -1443,5 +1474,6 @@ document.addEventListener('visibilitychange', () => {
   }
 });
 render();
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('/dieta/sw.js', { scope: '/dieta' }).catch(() => {});
+importKeyFromLink();
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 })();

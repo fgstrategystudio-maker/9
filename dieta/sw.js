@@ -1,6 +1,6 @@
 // Cache dell'app per l'uso offline. Aumenta VERSION a ogni modifica dei file.
-const VERSION = 'dieta-v2';
-const FILES = ['/dieta', 'index.html', 'style.css', 'app.js', 'foods.js', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png'];
+const VERSION = 'dieta-v3';
+const FILES = ['./', 'index.html', 'style.css', 'app.js', 'foods.js', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(VERSION).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));
@@ -17,6 +17,6 @@ self.addEventListener('fetch', e => {
       const copy = res.clone();
       caches.open(VERSION).then(c => c.put(e.request, copy));
       return res;
-    }).catch(() => caches.match(e.request).then(r => r || caches.match('/dieta/index.html')))
+    }).catch(() => caches.match(e.request).then(r => r || caches.match('index.html')))
   );
 });
