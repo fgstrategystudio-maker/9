@@ -2,7 +2,7 @@
 'use strict';
 
 // ---------- Storage ----------
-const APP_VERSION = '10';
+const APP_VERSION = '11';
 const KEY = 'dieta.v1';
 const MEALS = [
   { id: 'colazione', label: 'Colazione' },
@@ -82,6 +82,7 @@ const DEFAULT_DB = {
     apiKey: '', model: 'claude-opus-5',
     lastActivity: 'Camminata veloce',
     palette: 'salvia',
+    scheme: 'auto', // auto | light | dark
   },
 };
 
@@ -1444,7 +1445,8 @@ function renderGoals(v) {
   </div>
   <div class="card">
     <h2>Aspetto</h2>
-    <p class="small muted" style="margin-top:0">Ogni palette ha la versione chiara e quella scura, che segue il tema del telefono.</p>
+    <div class="seg" id="schemeSeg">${[['auto', 'Automatico'], ['light', 'Chiaro'], ['dark', 'Scuro']].map(([k, l]) => `<button data-scheme="${k}" class="${(st.scheme || 'auto') === k ? 'on' : ''}">${l}</button>`).join('')}</div>
+    <p class="small muted" style="margin-top:0">Automatico segue il tema del telefono. Ogni palette ha la versione chiara e quella scura.</p>
     <div class="palettes">${PALETTES.map(([id, name, light, dark]) => `<button class="pal ${id === (st.palette || 'salvia') ? 'on' : ''}" data-pal="${id}">
       <span class="sw">${light.map(c => `<i style="background:${c}"></i>`).join('')}</span>
       <span class="sw">${dark.map(c => `<i style="background:${c}"></i>`).join('')}</span>
@@ -1559,6 +1561,10 @@ function renderGoals(v) {
     } catch (err) { toast(err.message); }
     b.disabled = false; b.textContent = 'Prova';
   });
+  $$('#schemeSeg [data-scheme]', v).forEach(b => b.addEventListener('click', () => {
+    db.settings.scheme = b.dataset.scheme; save(); applyPalette();
+    $$('#schemeSeg [data-scheme]', v).forEach(x => x.classList.toggle('on', x === b));
+  }));
   $$('[data-pal]', v).forEach(b => b.addEventListener('click', () => {
     db.settings.palette = b.dataset.pal; save(); applyPalette();
     $$('[data-pal]', v).forEach(x => x.classList.toggle('on', x === b));
@@ -1600,6 +1606,9 @@ function applyPalette() {
   const p = db.settings.palette || 'salvia';
   if (p === 'salvia') delete document.documentElement.dataset.palette;
   else document.documentElement.dataset.palette = p;
+  const scheme = db.settings.scheme || 'auto';
+  if (scheme === 'auto') delete document.documentElement.dataset.scheme;
+  else document.documentElement.dataset.scheme = scheme;
   // colore della barra di stato del telefono
   const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
   document.querySelector('meta[name=theme-color]')?.setAttribute('content', accent || '#0f766e');
