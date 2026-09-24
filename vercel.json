@@ -5,6 +5,15 @@
     { "source": "/en", "destination": "/en/index.html" },
     { "source": "/pt", "destination": "/pt/index.html" }
   ],
+  "headers": [
+    {
+      "source": "/dieta/sw.js",
+      "headers": [
+        { "key": "Service-Worker-Allowed", "value": "/dieta" },
+        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
+      ]
+    }
+  ],
   "redirects": [
     { "source": "/blog-consulente-marketing-per-posizionamento-acquisition-ed-execution", "destination": "/consulente-marketing-pmi", "permanent": true },
     { "source": "/blog-consulenza-marketing-per-aziende-che-vogliono-crescere-meglio", "destination": "/servizi-marketing", "permanent": true },

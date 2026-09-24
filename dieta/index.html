@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<base href="/dieta/">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dieta</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0f766e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Dieta">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+  <h1 id="title">Oggi</h1>
+  <div class="daynav" id="daynav">
+    <button class="icon-btn" id="prevDay" aria-label="Giorno precedente">‹</button>
+    <button class="date-btn" id="dateLabel"></button>
+    <button class="icon-btn" id="nextDay" aria-label="Giorno successivo">›</button>
+  </div>
+</header>
+
+<main id="view"></main>
+
+<nav class="tabbar">
+  <button data-tab="today" class="active"><span class="ti">◉</span>Oggi</button>
+  <button data-tab="progress"><span class="ti">↗</span>Progressi</button>
+  <button data-tab="add" class="tab-add" aria-label="Aggiungi cibo"><span>+</span></button>
+  <button data-tab="body"><span class="ti">⚖</span>Corpo</button>
+  <button data-tab="goals"><span class="ti">◎</span>Obiettivi</button>
+</nav>
+
+<div class="sheet-backdrop" id="sheetBackdrop" hidden></div>
+<section class="sheet" id="sheet" hidden></section>
+<div class="toast" id="toast" hidden></div>
+
+<input type="file" id="photoInput" accept="image/*" capture="environment" hidden>
+<input type="file" id="galleryInput" accept="image/*" hidden>
+<input type="file" id="importInput" accept="application/json" hidden>
+
+<script src="foods.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
