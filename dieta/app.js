@@ -2,7 +2,7 @@
 'use strict';
 
 // ---------- Storage ----------
-const APP_VERSION = '5';
+const APP_VERSION = '6';
 const KEY = 'dieta.v1';
 const MEALS = [
   { id: 'colazione', label: 'Colazione' },
@@ -1297,6 +1297,7 @@ function renderGoals(v) {
       ${field('gWater', 'Acqua (ml)', g.water)}
     </div>
     <p class="small muted" id="macroCheck" style="margin-top:0"></p>
+    <button class="btn secondary" id="fixMacros" hidden style="margin-bottom:10px">Ricalcola macro per queste calorie</button>
     <label class="field"><span>Calorie degli allenamenti da aggiungere al budget del giorno</span><select id="gAddBack">
       ${[[1, 'Tutte (100%)'], [0.5, 'Metà (50%) – più prudente'], [0, 'Nessuna']].map(([k, l]) => `<option value="${k}" ${+g.exerciseAddBack === k ? 'selected' : ''}>${l}</option>`).join('')}
     </select></label>
@@ -1376,17 +1377,21 @@ function renderGoals(v) {
     const m = (num($('#gProt', v).value) || 0) * 4 + (num($('#gCarb', v).value) || 0) * 4 + (num($('#gFat', v).value) || 0) * 9;
     const diff = r0(m - k);
     $('#macroCheck', v).textContent = `I macro valgono ${r0(m)} kcal${Math.abs(diff) > 50 ? ` (${diff > 0 ? '+' : ''}${diff} rispetto all'obiettivo calorie)` : ' ✓'}`;
+    $('#fixMacros', v).hidden = Math.abs(diff) <= 50 || k < 800;
+  };
+  const fillMacros = () => {
+    const k = num($('#gKcal', v).value);
+    const m = macrosFor(k, w?.weight, $('#pGoal', v).value);
+    $('#gProt', v).value = m.protein; $('#gCarb', v).value = m.carbs; $('#gFat', v).value = m.fat; $('#gFib', v).value = m.fiber;
   };
   ['#gProt', '#gCarb', '#gFat'].forEach(id => $(id, v).addEventListener('input', checkMacros));
   // Cambiando le calorie, i macro si adattano (poi si possono ritoccare a mano)
   $('#gKcal', v).addEventListener('input', () => {
     const k = num($('#gKcal', v).value);
-    if (k >= 800 && k <= 6000) {
-      const m = macrosFor(k, w?.weight, $('#pGoal', v).value);
-      $('#gProt', v).value = m.protein; $('#gCarb', v).value = m.carbs; $('#gFat', v).value = m.fat; $('#gFib', v).value = m.fiber;
-    }
+    if (k >= 800 && k <= 6000) fillMacros();
     checkMacros();
   });
+  $('#fixMacros', v).addEventListener('click', () => { fillMacros(); checkMacros(); toast('Macro ricalcolati: tocca "Salva obiettivi"'); });
   checkMacros();
   $('#saveGoals', v).addEventListener('click', () => {
     const val = id => num($(id, v).value);
@@ -1500,6 +1505,14 @@ document.addEventListener('visibilitychange', () => {
     render();
   }
 });
+// Chi ha cambiato le calorie con una versione vecchia ha ancora i macro iniziali (130/220/65): ricalcolali.
+(() => {
+  const g = db.goals;
+  if (g.protein === 130 && g.carbs === 220 && g.fat === 65 && g.kcal !== 2000) {
+    Object.assign(g, macrosFor(g.kcal, latestBody('weight')?.weight, db.profile.goalType));
+    save();
+  }
+})();
 render();
 importKeyFromLink();
 // Chiede al browser di non cancellare mai i dati salvati (diario, misure, chiave)
