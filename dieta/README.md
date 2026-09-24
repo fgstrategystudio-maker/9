@@ -1,6 +1,8 @@
 # Dieta – diario alimentare (PWA)
 
-App per il telefono all'indirizzo `/dieta` del sito. Non richiede build: sono file statici.
+App per il telefono. Non richiede build: sono file statici con percorsi relativi, quindi funziona a qualsiasi indirizzo (es. GitHub Pages o Netlify).
+
+Configurazione rapida della chiave Gemini: apri una volta sul telefono `INDIRIZZO-APP/#k=CHIAVE`. La chiave viene salvata sul dispositivo e tolta dall'indirizzo.
 
 - **Foto → cibo**: scatta o scegli una foto; Claude riconosce gli alimenti e stima porzioni, calorie e macro.
 - **Testo → calorie e macro**: descrivi il pasto a parole ("80 g di pasta al pomodoro e una mela").
@@ -12,7 +14,7 @@ App per il telefono all'indirizzo `/dieta` del sito. Non richiede build: sono fi
 - **Progressi**: medie su 7/30/90/365 giorni, giorni in target, grafici calorie e peso, andamento settimanale e data di arrivo stimata.
 
 ## Installazione sul telefono
-Apri l.indirizzo dove hai pubblicato la cartella e poi:
+Apri l'indirizzo dove hai pubblicato la cartella e poi:
 - **iPhone (Safari)**: Condividi → "Aggiungi alla schermata Home".
 - **Android (Chrome)**: menu ⋮ → "Installa app".
 
