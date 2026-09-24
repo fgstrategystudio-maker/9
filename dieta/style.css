@@ -266,3 +266,23 @@ label.field > span { display: block; font-size: 13px; color: var(--muted); margi
 label.check { display: flex; gap: 10px; align-items: center; font-size: 14px; margin: 8px 0 12px; }
 label.check input { width: 20px; height: 20px; accent-color: var(--accent); }
 .seg button[hidden], [hidden] { display: none !important; }
+
+/* Calendario */
+:root { --ok: #3fa34d; }
+.cal-btn { color: var(--accent); display: inline-flex; align-items: center; justify-content: center; margin-left: 4px; }
+.cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.cal-head h3 { margin: 0; text-transform: capitalize; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px 2px; text-align: center; }
+.cal-grid .wd { font-size: 12px; font-weight: 700; color: var(--muted); padding: 4px 0; }
+.cal-day { border: 0; background: none; padding: 4px 0; border-radius: 12px; display: flex; flex-direction: column; align-items: center; gap: 3px; min-height: 64px; }
+.cal-day .n { font-size: 14px; font-weight: 600; }
+.cal-day .dot { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; color: #fff; background: var(--line); }
+.cal-day .dot.ok { background: var(--ok); }
+.cal-day .dot.over { background: var(--danger); }
+.cal-day .dot.low { background: var(--warn); }
+.cal-day .dot.future { background: transparent; border: 2px solid var(--line); }
+.cal-day .k { font-size: 10px; color: var(--muted); min-height: 12px; }
+.cal-day.today .n { color: var(--accent); }
+.cal-day.today .dot { box-shadow: 0 0 0 2px var(--card), 0 0 0 4px var(--accent); }
+.cal-day.sel { background: var(--accent-soft); }
+.cal-day:disabled { opacity: .45; }

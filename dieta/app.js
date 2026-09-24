@@ -2,7 +2,7 @@
 'use strict';
 
 // ---------- Storage ----------
-const APP_VERSION = '7';
+const APP_VERSION = '8';
 const KEY = 'dieta.v1';
 const MEALS = [
   { id: 'colazione', label: 'Colazione' },
@@ -124,6 +124,12 @@ const dayExerciseKcal = d => dayExercise(d).reduce((a, x) => a + (x.kcal || 0), 
 const dayBudget = d => db.goals.kcal + dayExerciseKcal(d) * (db.goals.exerciseAddBack ?? 1);
 // kcal nette (oltre al metabolismo a riposo, già contato nel fabbisogno)
 const exerciseKcal = (met, minutes, weight, intensity = 1) => Math.max(0, met * intensity - 1) * weight * (minutes / 60);
+// Esito di un giorno: 'ok' nel target, 'over' oltre il 110% del budget, 'low' sotto il 75%, 'none' niente registrato
+function dayStatus(d) {
+  if (!dayEntries(d).length) return 'none';
+  const k = dayTotals(d).kcal, b = dayBudget(d);
+  return k > b * 1.1 ? 'over' : k < b * 0.75 ? 'low' : 'ok';
+}
 const hasAiKey = () => db.settings.provider === 'claude' ? !!db.settings.apiKey : !!db.settings.geminiKey;
 
 function defaultMeal() {
@@ -194,7 +200,8 @@ $$('.tabbar button').forEach(b => b.addEventListener('click', () => {
 }));
 $('#prevDay').addEventListener('click', () => { curDate = addDays(curDate, -1); render(); });
 $('#nextDay').addEventListener('click', () => { if (curDate < today()) { curDate = addDays(curDate, 1); render(); } });
-$('#dateLabel').addEventListener('click', () => { curDate = today(); render(); });
+$('#dateLabel').addEventListener('click', () => openCalendar());
+$('#calBtn').addEventListener('click', () => openCalendar());
 
 function render() {
   $('#title').textContent = TITLES[tab];
@@ -208,6 +215,64 @@ function render() {
   }
   const v = $('#view');
   ({ today: renderToday, add: renderAdd, progress: renderProgress, body: renderBody, goals: renderGoals })[tab](v);
+}
+
+// ---------- Calendario ----------
+let calMonth = null; // 'YYYY-MM'
+function loggedStreak() {
+  // Giorni registrati di fila, fino a oggi (o fino a ieri se oggi è ancora vuoto)
+  let d = today(), n = 0;
+  if (!dayEntries(d).length) d = addDays(d, -1);
+  while (dayEntries(d).length) { n++; d = addDays(d, -1); }
+  return n;
+}
+function openCalendar() {
+  calMonth = curDate.slice(0, 7);
+  openSheet('<div id="calBox"></div>', drawCalendar);
+}
+function drawCalendar(s) {
+  const box = $('#calBox', s);
+  const t = today();
+  const [y, m] = calMonth.split('-').map(Number);
+  const first = new Date(y, m - 1, 1);
+  const daysIn = new Date(y, m, 0).getDate();
+  const lead = (first.getDay() + 6) % 7; // lunedì = 0
+  const isCurMonth = calMonth === t.slice(0, 7);
+  const days = Array.from({ length: daysIn }, (_, i) => `${calMonth}-${String(i + 1).padStart(2, '0')}`);
+  const past = days.filter(d => d <= t);
+  const green = past.filter(d => dayStatus(d) === 'ok').length;
+  const logged = past.filter(d => dayEntries(d).length);
+  const avg = logged.length ? logged.reduce((a, d) => a + dayTotals(d).kcal, 0) / logged.length : 0;
+  const wIn = db.body.filter(b => b.weight != null && b.date.startsWith(calMonth)).sort((a, b) => a.date.localeCompare(b.date));
+  const dW = wIn.length >= 2 ? wIn[wIn.length - 1].weight - wIn[0].weight : null;
+  const icon = { ok: '✓', over: '✕', low: '!', none: '' };
+  const cells = days.map(d => {
+    const future = d > t;
+    const st = future ? 'future' : dayStatus(d);
+    const k = dayTotals(d).kcal;
+    return `<button class="cal-day ${d === t ? 'today' : ''} ${d === curDate ? 'sel' : ''}" data-day="${d}" ${future ? 'disabled' : ''}>
+      <span class="n">${+d.slice(8)}</span><span class="dot ${st}">${icon[st] || ''}</span><span class="k">${k ? r0(k) : ''}</span></button>`;
+  }).join('');
+  box.innerHTML = `
+    <div class="cal-head">
+      <button class="icon-btn" id="calPrev" aria-label="Mese precedente">‹</button>
+      <h3>${first.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' })}</h3>
+      <button class="icon-btn" id="calNext" aria-label="Mese successivo" ${isCurMonth ? 'disabled style="opacity:.35"' : ''}>›</button>
+    </div>
+    <div class="cal-grid">${['L', 'M', 'M', 'G', 'V', 'S', 'D'].map(x => `<span class="wd">${x}</span>`).join('')}${'<span></span>'.repeat(lead)}${cells}</div>
+    <div class="legend" style="justify-content:center"><span><i style="background:var(--ok)"></i>nel target</span><span><i style="background:var(--danger)"></i>oltre</span><span><i style="background:var(--warn)"></i>sotto il 75%</span><span><i style="background:var(--line)"></i>vuoto</span></div>
+    <div class="stats" style="margin-top:14px">
+      <div class="stat"><div class="v">${loggedStreak()}</div><div class="k">giorni di fila registrati</div></div>
+      <div class="stat"><div class="v">${green}<span class="muted" style="font-size:15px">/${past.length}</span></div><div class="k">giorni verdi nel mese</div></div>
+      <div class="stat"><div class="v">${signed(dW, 'kg')}</div><div class="k">peso nel mese</div></div>
+      <div class="stat"><div class="v">${r0(avg)}</div><div class="k">kcal medie (${logged.length} giorni registrati)</div></div>
+    </div>
+    <div class="btn-row" style="margin-top:12px"><button class="btn secondary" id="calClose">Chiudi</button><button class="btn" id="calToday">Vai a oggi</button></div>`;
+  $('#calPrev', box).addEventListener('click', () => { calMonth = ymd(new Date(y, m - 2, 1)).slice(0, 7); drawCalendar(s); });
+  $('#calNext', box).addEventListener('click', () => { if (!isCurMonth) { calMonth = ymd(new Date(y, m, 1)).slice(0, 7); drawCalendar(s); } });
+  $('#calClose', box).addEventListener('click', closeSheet);
+  $('#calToday', box).addEventListener('click', () => { curDate = t; closeSheet(); go('today'); });
+  $$('[data-day]', box).forEach(b => b.addEventListener('click', () => { curDate = b.dataset.day; closeSheet(); go('today'); }));
 }
 
 // ---------- Today ----------
@@ -244,6 +309,9 @@ function renderToday(v) {
   const yesterday = addDays(curDate, -1);
 
   let html = '';
+  if (curDate !== today()) {
+    html += `<div class="banner row between"><span>Stai vedendo <b>${fmtDate(curDate, { weekday: 'long', day: 'numeric', month: 'long' })}</b>: puoi aggiungere e modificare.</span><button class="add-mini" id="backToday">Oggi</button></div>`;
+  }
   if (!hasAiKey()) {
     html += `<div class="banner">Per riconoscere i cibi da <b>foto</b> e <b>testo</b> inserisci una chiave AI in <b>Obiettivi → Impostazioni</b> (con Google Gemini è <b>gratis</b>). Intanto puoi cercare alimenti e prodotti di marca o leggere il codice a barre.</div>`;
   }
@@ -330,6 +398,7 @@ function renderToday(v) {
   const qw = $('#quickWeigh', v);
   qw && qw.addEventListener('click', () => bodyForm(null, curDate));
   $('#addExercise', v).addEventListener('click', () => exerciseForm());
+  $('#backToday', v)?.addEventListener('click', () => { curDate = today(); render(); });
   $$('[data-ex]', v).forEach(li => li.addEventListener('click', () => exerciseForm(li.dataset.ex)));
 }
 
@@ -1018,7 +1087,7 @@ function rangeStats(fromDate, toDate) {
   const logged = days.filter(d => dayEntries(d).length);
   const totals = logged.map(dayTotals);
   const avg = k => totals.length ? totals.reduce((a, t) => a + t[k], 0) / totals.length : 0;
-  const inTarget = logged.filter((d, i) => { const b = dayBudget(d); return totals[i].kcal >= b * 0.9 && totals[i].kcal <= b * 1.1; }).length;
+  const inTarget = logged.filter(d => dayStatus(d) === 'ok').length;
   const workouts = days.reduce((a, d) => a + dayExercise(d).length, 0);
   const burned = days.reduce((a, d) => a + dayExerciseKcal(d), 0);
   const bodyIn = db.body.filter(b => b.date >= fromDate && b.date <= toDate).sort((a, b) => a.date.localeCompare(b.date));
@@ -1048,9 +1117,10 @@ function renderProgress(v) {
 
   let html = `<div class="seg">${[[7, '7 giorni'], [30, '30 giorni'], [90, '3 mesi'], [365, '1 anno']].map(([n, l]) => `<button data-r="${n}" class="${n === progressRange ? 'on' : ''}">${l}</button>`).join('')}</div>`;
 
+  html += `<button class="btn secondary" id="openCal" style="margin-bottom:12px">📅 Calendario giorno per giorno</button>`;
   html += `<div class="card"><h2>Riepilogo</h2><div class="stats">
     <div class="stat"><div class="v">${r0(s.kcal)}</div><div class="k">kcal medie / giorno (obiettivo ${r0(g.kcal)})</div></div>
-    <div class="stat"><div class="v">${s.inTarget}<span class="muted" style="font-size:15px">/${s.logged}</span></div><div class="k">giorni in target (±10%)</div></div>
+    <div class="stat"><div class="v">${s.inTarget}<span class="muted" style="font-size:15px">/${s.logged}</span></div><div class="k">giorni verdi (nel target)</div></div>
     <div class="stat"><div class="v">${signed(s.dW, 'kg')}</div><div class="k">variazione peso</div></div>
     <div class="stat"><div class="v">${signed(s.dBF, '%')}</div><div class="k">variazione massa grassa</div></div>
     <div class="stat"><div class="v">${r0(s.p)} g</div><div class="k">proteine medie (obiettivo ${r0(g.protein)})</div></div>
@@ -1109,6 +1179,7 @@ function renderProgress(v) {
   html += weightGoalCard();
   v.innerHTML = html;
   $$('[data-r]', v).forEach(b => b.addEventListener('click', () => { progressRange = +b.dataset.r; render(); }));
+  $('#openCal', v).addEventListener('click', openCalendar);
 }
 
 function weightTrend() {
