@@ -2,7 +2,7 @@
 'use strict';
 
 // ---------- Storage ----------
-const APP_VERSION = '6';
+const APP_VERSION = '7';
 const KEY = 'dieta.v1';
 const MEALS = [
   { id: 'colazione', label: 'Colazione' },
@@ -15,7 +15,7 @@ const MODELS = [
   { id: 'claude-sonnet-5', label: 'Claude Sonnet 5 — più veloce ed economico' },
   { id: 'claude-haiku-4-5', label: 'Claude Haiku 4.5 — il più economico' },
 ];
-const GEMINI_DEFAULT_MODEL = 'gemini-2.5-flash';
+const GEMINI_DEFAULT_MODEL = 'gemini-3.5-flash';
 // Attività sportive con MET medio (Compendium of Physical Activities)
 const ACTIVITIES = [
   ['Camminata', 3.5], ['Camminata veloce', 4.3], ['Corsa lenta (8 km/h)', 8.3], ['Corsa (10 km/h)', 9.8], ['Corsa veloce (12 km/h)', 11.5],
@@ -81,6 +81,7 @@ function load() {
     // Dati della prima versione: chi aveva già la chiave Claude continua a usarla.
     if (!d.settings?.provider) out.settings.provider = d.settings?.apiKey ? 'claude' : 'gemini';
     if (d.goals && d.goals.auto === undefined) out.goals.auto = false;
+    if (/^gemini-2\.5/.test(out.settings.geminiModel || '') || out.settings.geminiModel === 'gemini-3.8-flash') out.settings.geminiModel = GEMINI_DEFAULT_MODEL;
     return out;
   } catch {
     return structuredClone(DEFAULT_DB);
@@ -811,23 +812,41 @@ async function geminiFetch(path, init = {}) {
     const msg = data?.error?.message || `Errore ${res.status}`;
     if (res.status === 400 && /api key/i.test(msg)) throw new Error('Chiave Gemini non valida. Controllala nelle impostazioni.');
     if (res.status === 403) throw new Error('Chiave Gemini non autorizzata. Controllala nelle impostazioni.');
-    const fail = (text, retryable) => Object.assign(new Error(text), { retryable });
-    if (res.status === 404) throw fail('Modello Gemini non disponibile: premi "Prova" nelle impostazioni per aggiornare l\'elenco.', true);
+    const fail = (text, retryable) => Object.assign(new Error(text), { retryable, status: res.status, detail: msg });
+    if (res.status === 404) throw fail('Nessun modello Gemini disponibile: premi "Prova" nelle impostazioni per aggiornare l\'elenco.', true);
     if (res.status === 429) throw fail('Limite gratuito di Gemini raggiunto per ora. Riprova tra qualche minuto (o domani se hai finito le richieste del giorno).', true);
-    if (res.status >= 500) throw fail('Gemini è momentaneamente sovraccarico, riprova tra poco.', true);
+    if (res.status >= 500) throw fail('I server di Gemini sono sovraccarichi in questo momento, riprova tra poco.', true);
     throw new Error(msg);
   }
   return data;
 }
 
-// Se il modello scelto ha finito le richieste gratuite (ogni modello ha la sua quota) o non esiste più, prova i successivi.
-const GEMINI_FALLBACKS = ['gemini-2.5-flash', 'gemini-2.5-flash-lite'];
+// Se un modello è sovraccarico (503), ha finito la quota gratuita (429) o non è più disponibile (404), prova il successivo.
+// Parte dall'ultimo modello che ha funzionato; quelli che rispondono 404 vengono scartati per sempre.
+const GEMINI_FALLBACKS = ['gemini-3.5-flash', 'gemini-3.5-flash-lite'];
 async function callGemini(input) {
-  const chain = [...new Set([db.settings.geminiModel || GEMINI_DEFAULT_MODEL, ...GEMINI_FALLBACKS])];
-  for (let i = 0; ; i++) {
-    try { return await callGeminiModel(chain[i], input); }
-    catch (err) { if (!err.retryable || i === chain.length - 1) throw err; }
+  const st = db.settings;
+  const dead = new Set(st.geminiDead || []);
+  const chain = [...new Set([st.geminiWorking, st.geminiModel || GEMINI_DEFAULT_MODEL, ...GEMINI_FALLBACKS, ...(st.geminiModels || [])])]
+    .filter(m => m && !dead.has(m)).slice(0, 5);
+  let lastErr;
+  for (const model of chain) {
+    try {
+      const out = await callGeminiModel(model, input);
+      if (st.geminiWorking !== model) { st.geminiWorking = model; save(); }
+      return out;
+    } catch (err) {
+      lastErr = err;
+      if (!err.retryable) throw err;
+      if (err.status === 404) {
+        st.geminiDead = [...dead.add(model)];
+        st.geminiModels = (st.geminiModels || []).filter(m => m !== model);
+        if (st.geminiWorking === model) st.geminiWorking = null;
+        save();
+      }
+    }
   }
+  throw lastErr || new Error('Nessun modello Gemini disponibile al momento, riprova tra poco.');
 }
 
 async function callGeminiModel(model, { prompt, imageB64 }) {
@@ -856,7 +875,7 @@ async function listGeminiModels() {
   return (data.models || [])
     .filter(m => (m.supportedGenerationMethods || []).includes('generateContent'))
     .map(m => m.name.replace(/^models\//, ''))
-    .filter(n => /^gemini-[\d.]+-flash(-lite)?(-preview)?$/.test(n))
+    .filter(n => /^gemini-[\d.]+-flash(-lite)?(-preview)?$/.test(n) && !(db.settings.geminiDead || []).includes(n))
     .sort((a, b) => /preview/.test(a) - /preview/.test(b) || ver(b) - ver(a) || /lite/.test(a) - /lite/.test(b));
 }
 
@@ -888,7 +907,7 @@ async function runAnalysis({ text, imageB64, preview }) {
     });
     reviewResult(items, out.notes, preview);
   } catch (err) {
-    openSheet(`<h3>Qualcosa non va</h3><p>${esc(err.message)}</p>
+    openSheet(`<h3>Qualcosa non va</h3><p>${esc(err.message)}</p>${err.detail ? `<p class="small muted">Dettaglio: ${esc(err.detail)}</p>` : ''}
       <div class="btn-row"><button class="btn secondary" id="rClose">Chiudi</button><button class="btn" id="rRetry">Riprova</button></div>`, s => {
       $('#rClose', s).addEventListener('click', closeSheet);
       $('#rRetry', s).addEventListener('click', () => runAnalysis({ text, imageB64, preview }));
@@ -1427,10 +1446,12 @@ function renderGoals(v) {
     const b = e.currentTarget; b.disabled = true; b.textContent = 'Provo…';
     try {
       if (db.settings.provider === 'gemini') {
+        db.settings.geminiDead = [];
+        db.settings.geminiWorking = null;
         const models = await listGeminiModels();
         if (models.length) {
           db.settings.geminiModels = models;
-          if (!models.includes(db.settings.geminiModel)) db.settings.geminiModel = models[0];
+          if (!models.includes(db.settings.geminiModel)) db.settings.geminiModel = models.includes(GEMINI_DEFAULT_MODEL) ? GEMINI_DEFAULT_MODEL : models[0];
           save();
           const sel = $('#sGModel', v);
           sel.innerHTML = models.map(m => `<option ${m === db.settings.geminiModel ? 'selected' : ''}>${esc(m)}</option>`).join('');
@@ -1488,7 +1509,7 @@ async function importKeyFromLink() {
     const models = await listGeminiModels();
     if (models.length) {
       db.settings.geminiModels = models;
-      db.settings.geminiModel = models[0];
+      db.settings.geminiModel = models.includes(GEMINI_DEFAULT_MODEL) ? GEMINI_DEFAULT_MODEL : models[0];
       save();
     }
   } catch {}
