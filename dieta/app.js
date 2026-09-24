@@ -2,6 +2,7 @@
 'use strict';
 
 // ---------- Storage ----------
+const APP_VERSION = '5';
 const KEY = 'dieta.v1';
 const MEALS = [
   { id: 'colazione', label: 'Colazione' },
@@ -1337,7 +1338,8 @@ function renderGoals(v) {
     <p class="small muted" style="margin-top:0">I dati restano sul telefono. Esporta un backup ogni tanto: servirà anche per passare a un altro dispositivo.</p>
     <div class="btn-row"><button class="btn secondary" id="exportData">Esporta backup</button><button class="btn secondary" id="importData">Importa</button></div>
     <button class="btn danger" id="wipe" style="margin-top:6px">Cancella tutti i dati</button>
-  </div>`;
+  </div>
+  <p class="center small muted">Versione ${APP_VERSION} · ${esc(location.host)}</p>`;
 
   const readProfile = () => ({
     sex: $('#pSex', v).value, age: num($('#pAge', v).value) || p.age, height: num($('#pH', v).value) || p.height,
@@ -1500,5 +1502,7 @@ document.addEventListener('visibilitychange', () => {
 });
 render();
 importKeyFromLink();
+// Chiede al browser di non cancellare mai i dati salvati (diario, misure, chiave)
+navigator.storage?.persist?.().catch(() => {});
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 })();
