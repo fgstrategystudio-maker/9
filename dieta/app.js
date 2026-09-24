@@ -2,7 +2,7 @@
 'use strict';
 
 // ---------- Storage ----------
-const APP_VERSION = '11';
+const APP_VERSION = '12';
 const KEY = 'dieta.v1';
 const MEALS = [
   { id: 'colazione', label: 'Colazione' },
@@ -15,22 +15,13 @@ const MODELS = [
   { id: 'claude-sonnet-5', label: 'Claude Sonnet 5 — più veloce ed economico' },
   { id: 'claude-haiku-4-5', label: 'Claude Haiku 4.5 — il più economico' },
 ];
-// [id, nome, colori chiaro (accento, proteine, carboidrati, grassi), colori scuro (sfondo, accento, proteine, carboidrati)]
+// [id, nome, anteprima chiaro, anteprima scuro]
 const PALETTES = [
-  ['salvia', 'Salvia (attuale)', ['#0f766e', '#d0563b', '#2f6fd6', '#c98a12'], ['#0e1412', '#2bb3a3', '#ec7a5f', '#6d9cf0']],
-  ['mirtillo', 'Mirtillo', ['#5a45d6', '#e0457b', '#2d8fd5', '#e8a317'], ['#100e1d', '#9d8cff', '#ff7aa8', '#5cb8f5']],
-  ['agrumi', 'Agrumi', ['#c2410c', '#c2255c', '#1c7ed6', '#e8a200'], ['#171009', '#ff8a4c', '#f06595', '#4dabf7']],
-  ['oliva', 'Oliva e terracotta', ['#56661c', '#b84a28', '#35689e', '#c8901f'], ['#12130d', '#b3c75a', '#e8825e', '#79a7dd']],
-  ['oceano', 'Oceano', ['#0e7490', '#e11d48', '#4f46e5', '#d97706'], ['#07111d', '#38bdf8', '#fb7185', '#a5b4fc']],
-  ['fragola', 'Fragola e menta', ['#c2255c', '#e8590c', '#0c8599', '#e0a100'], ['#170c12', '#ff6b9a', '#ff922b', '#3bc9db']],
-  ['grafite', 'Grafite e lime', ['#1f2a1c', '#dc2626', '#2563eb', '#d97706'], ['#0b0c0b', '#a3e635', '#f87171', '#60a5fa']],
-  ['bosco', 'Bosco e oro', ['#1d5e3a', '#c0392b', '#2e6fb0', '#c99a0e'], ['#0b120d', '#6fcf97', '#ff8a7a', '#74aef0']],
-  ['cioccolato', 'Cioccolato e caramello', ['#7a4a2a', '#c2410c', '#3b6ea8', '#d49a1a'], ['#140e0a', '#e0a46b', '#ff8f6b', '#7fb0e8']],
-  ['lavanda', 'Lavanda', ['#6b4f9e', '#d6456f', '#2f80c2', '#d99a1c'], ['#110e17', '#c8b3f5', '#ff85a8', '#7cc0f5']],
-  ['artico', 'Artico', ['#334155', '#e0525b', '#2f6fe0', '#d99212'], ['#0a0e13', '#a5c8f0', '#ff8a8f', '#8fb6ff']],
-  ['tramonto', 'Tramonto', ['#a21caf', '#ea580c', '#2563eb', '#d69e00'], ['#150a13', '#f08ef5', '#ff9a5c', '#7ba7ff']],
-  ['ciliegia', 'Ciliegia', ['#b91c1c', '#7c3aed', '#0f7ab8', '#d08a00'], ['#150a0a', '#ff7a7a', '#b69cff', '#6cc3f5']],
-  ['senape', 'Senape e blu', ['#1e3a8a', '#d9480f', '#2f855a', '#b7791f'], ['#100f0a', '#facc15', '#ff8a5c', '#5fd39a']],
+  ['salvia', 'Salvia', { bg: '#f4f6f5', card: '#ffffff', accent: '#0f766e', on: '#ffffff', prot: '#d0563b', carb: '#2f6fd6', fat: '#c98a12' }, { bg: '#0e1412', card: '#17201d', accent: '#2bb3a3', on: '#0b0c0b', prot: '#ec7a5f', carb: '#6d9cf0', fat: '#e2ac3d' }],
+  ['oceano', 'Oceano', { bg: '#eff5f9', card: '#ffffff', accent: '#0e7490', on: '#ffffff', prot: '#e11d48', carb: '#4f46e5', fat: '#d97706' }, { bg: '#07111d', card: '#0f1c2c', accent: '#38bdf8', on: '#0b0c0b', prot: '#fb7185', carb: '#a5b4fc', fat: '#fbbf24' }],
+  ['artico', 'Artico', { bg: '#f2f5f8', card: '#ffffff', accent: '#334155', on: '#ffffff', prot: '#e0525b', carb: '#2f6fe0', fat: '#d99212' }, { bg: '#0a0e13', card: '#121820', accent: '#a5c8f0', on: '#0b0c0b', prot: '#ff8a8f', carb: '#8fb6ff', fat: '#f5c350' }],
+  ['oliva', 'Oliva e terracotta', { bg: '#f5f3ea', card: '#fffdf7', accent: '#56661c', on: '#ffffff', prot: '#b84a28', carb: '#35689e', fat: '#c8901f' }, { bg: '#12130d', card: '#1c1d15', accent: '#b3c75a', on: '#0b0c0b', prot: '#e8825e', carb: '#79a7dd', fat: '#e6b755' }],
+  ['grafite', 'Grafite e lime', { bg: '#f3f4f2', card: '#ffffff', accent: '#1f2a1c', on: '#ffffff', prot: '#dc2626', carb: '#2563eb', fat: '#d97706' }, { bg: '#0b0c0b', card: '#161816', accent: '#a3e635', on: '#0b0c0b', prot: '#f87171', carb: '#60a5fa', fat: '#fbbf24' }],
 ];
 const GEMINI_DEFAULT_MODEL = 'gemini-3.5-flash';
 // Attività sportive con MET medio (Compendium of Physical Activities)
@@ -100,6 +91,7 @@ function load() {
     // Dati della prima versione: chi aveva già la chiave Claude continua a usarla.
     if (!d.settings?.provider) out.settings.provider = d.settings?.apiKey ? 'claude' : 'gemini';
     if (d.goals && d.goals.auto === undefined) out.goals.auto = false;
+    if (!['salvia', 'oceano', 'artico', 'oliva', 'grafite'].includes(out.settings.palette)) out.settings.palette = 'salvia';
     if (/^gemini-2\.5/.test(out.settings.geminiModel || '') || out.settings.geminiModel === 'gemini-3.8-flash') out.settings.geminiModel = GEMINI_DEFAULT_MODEL;
     return out;
   } catch {
@@ -1377,6 +1369,8 @@ function renderGoals(v) {
   const g = db.goals, p = db.profile, st = db.settings;
   const w = latestBody('weight');
   const field = (id, label, val, extra = '') => `<label class="field"><span>${label}</span><input type="number" inputmode="decimal" id="${id}" value="${val ?? ''}" ${extra}></label>`;
+  const curPal = st.palette || 'salvia';
+  const curScheme = st.scheme === 'dark' || (st.scheme !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
   const geminiModels = st.geminiModels?.length ? st.geminiModels : [st.geminiModel || GEMINI_DEFAULT_MODEL];
   v.innerHTML = `
   <div class="card">
@@ -1445,12 +1439,18 @@ function renderGoals(v) {
   </div>
   <div class="card">
     <h2>Aspetto</h2>
-    <div class="seg" id="schemeSeg">${[['auto', 'Automatico'], ['light', 'Chiaro'], ['dark', 'Scuro']].map(([k, l]) => `<button data-scheme="${k}" class="${(st.scheme || 'auto') === k ? 'on' : ''}">${l}</button>`).join('')}</div>
-    <p class="small muted" style="margin-top:0">Automatico segue il tema del telefono. Ogni palette ha la versione chiara e quella scura.</p>
-    <div class="palettes">${PALETTES.map(([id, name, light, dark]) => `<button class="pal ${id === (st.palette || 'salvia') ? 'on' : ''}" data-pal="${id}">
-      <span class="sw">${light.map(c => `<i style="background:${c}"></i>`).join('')}</span>
-      <span class="sw">${dark.map(c => `<i style="background:${c}"></i>`).join('')}</span>
-      <b>${name}</b></button>`).join('')}</div>
+    <p class="small muted" style="margin-top:0">Tocca una combinazione per provarla subito.</p>
+    ${PALETTES.map(([id, name, light, dark]) => `<div class="pal-group"><b>${name}</b><div class="pal-row">
+      ${[['light', 'Chiaro', light], ['dark', 'Scuro', dark]].map(([sc, label, c]) => `<button class="pal-tile ${id === curPal && sc === curScheme ? 'on' : ''}" data-pal="${id}" data-sc="${sc}">
+        <span class="mock" style="background:${c.bg}">
+          <span class="mcard" style="background:${c.card}"><span class="ring" style="border-color:${c.accent}"></span>
+            <span class="bars"><i style="background:${c.prot};width:80%"></i><i style="background:${c.carb};width:60%"></i><i style="background:${c.fat};width:45%"></i></span></span>
+          <span class="mbtn" style="background:${c.accent};color:${c.on}">+ Aggiungi</span>
+        </span>
+        <span class="lbl">${label}${id === curPal && sc === curScheme ? '<span class="check">✓</span>' : ''}</span>
+      </button>`).join('')}
+    </div></div>`).join('')}
+    <label class="check"><input type="checkbox" id="autoScheme" ${st.scheme === 'auto' ? 'checked' : ''}> Passa da solo tra chiaro e scuro seguendo il telefono</label>
   </div>
   <div class="card">
     <h2>Dati</h2>
@@ -1561,14 +1561,15 @@ function renderGoals(v) {
     } catch (err) { toast(err.message); }
     b.disabled = false; b.textContent = 'Prova';
   });
-  $$('#schemeSeg [data-scheme]', v).forEach(b => b.addEventListener('click', () => {
-    db.settings.scheme = b.dataset.scheme; save(); applyPalette();
-    $$('#schemeSeg [data-scheme]', v).forEach(x => x.classList.toggle('on', x === b));
-  }));
   $$('[data-pal]', v).forEach(b => b.addEventListener('click', () => {
-    db.settings.palette = b.dataset.pal; save(); applyPalette();
-    $$('[data-pal]', v).forEach(x => x.classList.toggle('on', x === b));
+    db.settings.palette = b.dataset.pal;
+    db.settings.scheme = b.dataset.sc;
+    save(); applyPalette(); render();
   }));
+  $('#autoScheme', v).addEventListener('change', e => {
+    db.settings.scheme = e.target.checked ? 'auto' : curScheme;
+    save(); applyPalette(); render();
+  });
   $('#exportData', v).addEventListener('click', () => {
     const copy = { ...db, settings: { ...db.settings, apiKey: '', geminiKey: '' } };
     const blob = new Blob([JSON.stringify(copy, null, 1)], { type: 'application/json' });
