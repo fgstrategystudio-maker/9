@@ -1,20 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400" width="640" height="400">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" width="1600" height="1000">
 <defs>
-<linearGradient id="bgg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fbf9f4"/><stop offset="1" stop-color="#efe6d5"/></linearGradient>
-<linearGradient id="gg" x1="0.12" y1="0" x2="0.88" y2="1"><stop offset="0" stop-color="#e3c777"/><stop offset="0.5" stop-color="#c2a25a"/><stop offset="1" stop-color="#9a7c39"/></linearGradient>
-<linearGradient id="tg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c9a45f"/><stop offset="1" stop-color="#b9933f"/></linearGradient>
-<radialGradient id="duo" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffffff" stop-opacity="0.5"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></radialGradient>
-<radialGradient id="med" cx="0.5" cy="0.42" r="0.62"><stop offset="0" stop-color="#ffffff" stop-opacity="0.5"/><stop offset="0.75" stop-color="#fbf7ee" stop-opacity="0.18"/><stop offset="1" stop-color="#fbf7ee" stop-opacity="0"/></radialGradient>
+<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F3F1EB"/><stop offset="1" stop-color="#E8E2D6"/></linearGradient>
+<radialGradient id="glow" cx="0.77" cy="0.36" r="0.6"><stop offset="0" stop-color="#FBFAF7" stop-opacity="0.85"/><stop offset="1" stop-color="#FBFAF7" stop-opacity="0"/></radialGradient>
+<linearGradient id="fade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8A6F4E" stop-opacity="0.28"/><stop offset="1" stop-color="#8A6F4E" stop-opacity="0"/></linearGradient>
+<filter id="grain" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch"/><feColorMatrix values="0 0 0 0 0.07  0 0 0 0 0.07  0 0 0 0 0.07  0 0 0 0.09 0"/></filter>
+
 </defs>
-<rect width="640" height="400" fill="url(#bgg)"/>
-<circle cx="490" cy="120" r="40" fill="none" stroke="url(#tg)" stroke-width="1" opacity="0.09"/><circle cx="490" cy="120" r="74" fill="none" stroke="url(#tg)" stroke-width="1" opacity="0.09"/><circle cx="490" cy="120" r="108" fill="none" stroke="url(#tg)" stroke-width="1" opacity="0.09"/><circle cx="490" cy="120" r="142" fill="none" stroke="url(#tg)" stroke-width="1" opacity="0.09"/><circle cx="490" cy="120" r="176" fill="none" stroke="url(#tg)" stroke-width="1" opacity="0.09"/><circle cx="490" cy="120" r="210" fill="none" stroke="url(#tg)" stroke-width="1" opacity="0.09"/><circle cx="490" cy="120" r="244" fill="none" stroke="url(#tg)" stroke-width="1" opacity="0.09"/><circle cx="490" cy="120" r="278" fill="none" stroke="url(#tg)" stroke-width="1" opacity="0.09"/><circle cx="490" cy="120" r="312" fill="none" stroke="url(#tg)" stroke-width="1" opacity="0.09"/><circle cx="490" cy="120" r="346" fill="none" stroke="url(#tg)" stroke-width="1" opacity="0.09"/>
-<path d="M0 0 H318 L214 400 H0 Z" fill="url(#duo)"/>
-<circle cx="320" cy="200" r="138" fill="url(#med)"/>
-<circle cx="320" cy="200" r="138" fill="none" stroke="url(#gg)" stroke-width="1.1" opacity="0.18"/>
-<g><path d="M196 250 A124 124 0 0 1 444 250" fill="none" stroke="url(#gg)" stroke-width="22"/><path d="M196 250 A124 124 0 0 1 444 250" fill="none" stroke="#fbf8f1" stroke-width="22" stroke-dasharray="3 36" opacity="0.9"/><path d="M320 250 L252 182" stroke="url(#gg)" stroke-width="7" stroke-linecap="round"/><circle cx="320" cy="250" r="15" fill="url(#gg)"/><circle cx="320" cy="250" r="7" fill="#fbf8f1"/></g>
-<circle cx="120" cy="92" r="3" fill="url(#gg)" opacity="0.5"/><circle cx="279" cy="145" r="3" fill="url(#gg)" opacity="0.5"/><circle cx="490" cy="106" r="3" fill="url(#gg)" opacity="0.5"/><circle cx="282" cy="214" r="3" fill="url(#gg)" opacity="0.5"/>
-<rect x="16" y="16" width="608" height="368" fill="none" stroke="#e2dac9" stroke-width="1.5" rx="16"/>
-<rect x="22" y="22" width="596" height="356" fill="none" stroke="url(#gg)" stroke-width="1" rx="12" opacity="0.28"/>
-<path d="M28 64 V28 H75 M565 28 H612 V64 M612 336 V372 H565 M75 372 H28 V336" fill="none" stroke="url(#gg)" stroke-width="1.4" opacity="0.5"/>
-<rect x="304" y="356" width="32" height="2.5" rx="1.25" fill="url(#gg)"/>
+<rect width="1600" height="1000" fill="url(#bg)"/>
+<rect width="1600" height="1000" fill="url(#glow)"/>
+<rect x="170" y="150" width="610" height="330" rx="18" fill="#FBFAF7" stroke="#CFC7BA" stroke-width="3"/><rect x="820" y="150" width="610" height="330" rx="18" fill="#FBFAF7" stroke="#CFC7BA" stroke-width="3"/><rect x="170" y="520" width="610" height="330" rx="18" fill="#FBFAF7" stroke="#CFC7BA" stroke-width="3"/><rect x="820" y="520" width="610" height="330" rx="18" fill="#FBFAF7" stroke="#CFC7BA" stroke-width="3"/><rect x="210" y="194" width="140" height="18" rx="9" fill="#DDD0BC"/><rect x="210" y="250" width="332" height="96" rx="16" fill="#121212"/><path d="M210 410 l40 -30 l40 20 l40 -46 l40 12 l40 -40" fill="none" stroke="#8A6F4E" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="1125" cy="315" r="110" fill="none" stroke="#DDD0BC" stroke-width="44"/><path d="M1125 205 A110 110 0 1 1 1015.8 301.8" fill="none" stroke="#8A6F4E" stroke-width="44"/><rect x="220" y="606.8" width="44" height="203.2" rx="8" fill="#DDD0BC"/><rect x="296" y="706.5" width="44" height="103.5" rx="8" fill="#DDD0BC"/><rect x="372" y="616.8" width="44" height="193.2" rx="8" fill="#DDD0BC"/><rect x="448" y="680.3" width="44" height="129.7" rx="8" fill="#DDD0BC"/><rect x="524" y="707.7" width="44" height="102.3" rx="8" fill="#DDD0BC"/><rect x="600" y="677.2" width="44" height="132.8" rx="8" fill="#121212"/><rect x="676" y="636.7" width="44" height="173.3" rx="8" fill="#DDD0BC"/><path d="M870 789.3 C884.2 786 926.7 782 955 769.4 C983.3 756.9 1011.7 726.3 1040 714 C1068.3 701.6 1096.7 700.9 1125 695.3 C1153.3 689.6 1181.7 687.3 1210 680 C1238.3 672.8 1266.7 665.9 1295 651.9 C1323.3 637.8 1365.8 605.1 1380 595.7" fill="none" stroke="#121212" stroke-width="9" stroke-linecap="round"/><circle cx="1380" cy="595.7" r="16" fill="#8A6F4E"/>
+<rect width="1600" height="1000" filter="url(#grain)"/>
 </svg>

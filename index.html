@@ -5,12 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Consulente marketing, sales e dati per PMI e startup | Francesco Gizzi</title>
   <meta name="description" content="Aiuto PMI, startup e scale-up a capire dove perdono opportunità tra marketing, vendite e dati. Richiedi un audit e definisci le priorità." />
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=Newsreader:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&display=swap" rel="stylesheet">
   <link rel="manifest" href="/manifest.json" />
-  <meta name="theme-color" content="#d8b86a" />
-  <link rel="stylesheet" href="premium.css" />
+  <meta name="theme-color" content="#F7F6F2" />
 <!-- Google tag (gtag.js) -->
   <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('consent','default',{'analytics_storage':'denied','ad_storage':'denied','ad_user_data':'denied','ad_personalization':'denied'});</script>
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-BDW0NNT2XH"></script>
@@ -27,6 +23,7 @@
 <link rel="alternate" hreflang="it" href="https://francescogizzi.com/" />
 <link rel="alternate" hreflang="en" href="https://francescogizzi.com/en" />
 <link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt" />
+<link rel="alternate" hreflang="es" href="https://francescogizzi.com/es" />
 <link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/" />
 <script type="application/ld+json">
   {
@@ -56,193 +53,150 @@
   }
   </script>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/home.css" />
 </head>
 <body>
-<header style="border-bottom:1px solid var(--line);">
-    <div style="max-width:1200px;margin:0 auto;padding:26px 40px;display:flex;align-items:center;justify-content:space-between;gap:24px;">
-      <div style="display:flex;align-items:baseline;gap:14px;">
-        <span style="font:600 20px 'Newsreader',serif;letter-spacing:.01em;color:var(--ink);">Francesco Gizzi</span>
-        <span style="font:500 11px 'Hanken Grotesk',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);">Advisory</span>
-      </div>
-      <nav style="display:flex;align-items:center;gap:30px;font:500 14px 'Hanken Grotesk',sans-serif;color:var(--ink);">
-        <a href="chi-sono.html" style="color:inherit;text-decoration:none;">Chi sono</a>
-        <a href="servizi.html" style="color:inherit;text-decoration:none;">Servizi</a>
-        <a href="progetti.html" style="color:inherit;text-decoration:none;">Progetti</a>
-        <a href="blog.html" style="color:inherit;text-decoration:none;">Blog</a>
-        <a href="#contatti" style="color:inherit;text-decoration:none;border:1px solid var(--line-strong);padding:8px 16px;border-radius:7px;">Contatti</a>
-      </nav>
-    </div>
-  </header>
+<div class="nav">
+  <div class="wrap">
+    <a class="brand" href="/">Francesco Gizzi</a>
+    <nav aria-label="Menu">
+      <div class="links"><a href="#chi-sono">Chi sono</a><a href="#servizi">Servizi</a><a href="#risultati">Risultati</a><a href="#institutional">Institutional</a><a href="#blog">Blog</a></div>
+      <div class="langs"><a href="/" hreflang="it" lang="it" aria-current="true">IT</a><a href="/en/" hreflang="en" lang="en">EN</a><a href="/pt/" hreflang="pt" lang="pt">PT</a><a href="/es/" hreflang="es" lang="es">ES</a></div>
+      <a class="pill" href="#contatti">Contatti</a>
+    </nav>
+  </div>
+</div>
 
-  <!-- HERO -->
-  <section style="border-bottom:1px solid var(--line);">
-    <div style="max-width:1200px;margin:0 auto;padding:74px 40px 64px;display:grid;grid-template-columns:1.12fr .88fr;gap:56px;align-items:center;">
-      <div>
-        <div style="font:600 11px 'Hanken Grotesk',sans-serif;letter-spacing:.34em;text-transform:uppercase;color:var(--gold);margin-bottom:26px;">Marketing · Data · Sales · Strategy</div>
-        <h1 style="margin:0;font:500 56px/1.07 'Newsreader',serif;letter-spacing:-.014em;color:var(--ink);">Aiuto le aziende a crescere allineando marketing, dati, sales e <em style="color:var(--gold);">direzione strategica.</em></h1>
-        <div style="height:1px;background:linear-gradient(90deg,var(--gold),transparent);margin:34px 0 26px;max-width:480px;"></div>
-        <p style="margin:0;max-width:520px;font:400 18px/1.66 'Hanken Grotesk',sans-serif;color:var(--muted);">Studio il contesto, definisco le priorità e costruisco sistemi di crescita più chiari, misurabili e sostenibili, indipendentemente dal settore.</p>
-        <div style="margin-top:34px;display:flex;align-items:center;gap:26px;">
-          <a href="contatti.html" style="text-decoration:none;background:var(--cta);color:var(--cta-ink);font:600 15px 'Hanken Grotesk',sans-serif;padding:14px 28px;border-radius:8px;">Richiedi un audit</a>
-          <a href="progetti.html" style="text-decoration:none;font:500 15px 'Hanken Grotesk',sans-serif;color:var(--ink);border-bottom:1px solid var(--gold);padding-bottom:3px;">Vedi i progetti →</a>
+<header class="hero">
+  <div class="aura" aria-hidden="true"><i></i><i></i></div>
+  <div class="wrap">
+    <div class="hero-body">
+      <div class="eyebrow fade-in">Consulenza strategica per PMI, startup e scale-up</div>
+      <h1 aria-label="Marketing, vendite e dati allineati per far crescere la tua azienda."><span aria-hidden="true"><span class="w"><span style="--i:0">Marketing,</span></span> <span class="w"><span style="--i:1">vendite</span></span> <span class="w"><span style="--i:2">e</span></span> <span class="w"><span style="--i:3">dati</span></span> <span class="w"><span style="--i:4">allineati</span></span> <span class="w"><span style="--i:5">per</span></span> <span class="w"><span style="--i:6">far</span></span> <span class="w"><span style="--i:7"><em>crescere</em></span></span> <span class="w"><span style="--i:8">la</span></span> <span class="w"><span style="--i:9">tua</span></span> <span class="w"><span style="--i:10">azienda.</span></span></span></h1>
+      <div class="hero-foot">
+        <p class="hero-sub fade-in" style="--d:750ms">Parto dai numeri che hai già, scelgo le priorità e costruisco con il tuo team un sistema di crescita che si può misurare.</p>
+        <div class="ctas fade-in" style="--d:900ms">
+          <a class="btn" href="#contatti">Richiedi un audit <span class="arr" aria-hidden="true">→</span></a>
+          <a class="link" href="#risultati">Guarda i risultati</a>
         </div>
       </div>
-      <div class="hero-photo-box" style="position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line-strong);background:radial-gradient(120% 92% at 70% 6%, var(--p1), var(--p2));aspect-ratio:1/1.12;min-height:380px;display:flex;align-items:flex-end;justify-content:center;">
-        <img src="assets/img/ritratto.jpg" alt="Francesco Gizzi, consulente marketing, sales e dati" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" />
+    </div>
+    <div class="stats fade-in" style="--d:1050ms">
+      <div><b data-count="18">18</b>Clienti seguiti</div>
+      <div><b data-count="15" data-suffix="+">15+</b>Settori</div>
+      <div><b data-count="13" data-suffix="+">13+</b>Anni di esperienza</div>
+    </div>
+  </div>
+</header>
+
+<div class="ribbon" role="region" aria-label="Settori"><div class="ribbon-track"><span>Marketplace</span><span>Healthcare</span><span>SaaS e tech</span><span>Finance e investimenti</span><span>Fashion e lusso</span><span>E-commerce e retail</span><span>Hospitality e travel</span><span>Pubblica amministrazione</span><span>Consulenza</span><span>Edilizia e real estate</span><span>Ristorazione</span><span>Proptech</span><span aria-hidden="true">Marketplace</span><span aria-hidden="true">Healthcare</span><span aria-hidden="true">SaaS e tech</span><span aria-hidden="true">Finance e investimenti</span><span aria-hidden="true">Fashion e lusso</span><span aria-hidden="true">E-commerce e retail</span><span aria-hidden="true">Hospitality e travel</span><span aria-hidden="true">Pubblica amministrazione</span><span aria-hidden="true">Consulenza</span><span aria-hidden="true">Edilizia e real estate</span><span aria-hidden="true">Ristorazione</span><span aria-hidden="true">Proptech</span></div></div>
+
+<main>
+  <section class="block" id="risultati">
+    <div class="wrap">
+      <div class="head">
+        <div class="reveal"><div class="eyebrow">Risultati</div><h2>Il lavoro si misura nei numeri.</h2></div>
+        <p class="reveal" style="--d:120ms">Alcuni progetti recenti, in settori diversi.</p>
+      </div>
+      <div class="results"><div class="res reveal"><div class="fig" aria-label="0 → 40">0<span class="arrow" aria-hidden="true">→</span><span data-count="40">40</span></div><div><h3>Clienti B2B acquisiti</h3><p>Startup proptech</p></div><div class="when">In 6 mesi</div></div><div class="res reveal"><div class="fig" aria-label="+110%"><span data-count="110" data-prefix="+" data-suffix="%">+110%</span></div><div><h3>ROI delle campagne online</h3><p>Azienda finanziaria</p></div><div class="when">In 3 mesi</div></div><div class="res reveal"><div class="fig" aria-label="+20%"><span data-count="20" data-prefix="+" data-suffix="%">+20%</span></div><div><h3>Fatturato mensile</h3><p>Gruppo ristorazione</p></div><div class="when">In 2 mesi</div></div><div class="res reveal"><div class="fig" aria-label="20+"><span data-count="20" data-suffix="+">20+</span></div><div><h3>Aziende seguite ogni settimana</h3><p>Società di consulenza · marketing, sviluppo, sales e dati</p></div><div class="when">In modo continuativo</div></div></div>
+    </div>
+  </section>
+
+  <section class="block alt" id="clienti">
+    <div class="wrap">
+      <div class="head">
+        <div class="reveal"><div class="eyebrow">Clienti</div><h2>18 aziende e istituzioni seguite.</h2></div>
+        <p class="reveal" style="--d:120ms">Startup, PMI, gruppi internazionali e pubblica amministrazione, in più di 15 settori: dal real estate al fintech, dall&#x27;hospitality all&#x27;e-commerce.</p>
+      </div>
+      <div class="logos">
+        <a class="logo" href="https://www.peekaboovision.com/" target="_blank" rel="noopener"><div class="plate"><img src="/assets/img/logo-peekaboo.png" alt="Peekaboo" loading="lazy"></div><span>Peekaboo</span></a><a class="logo" href="https://lassistedilegroupbrasil.com.br/" target="_blank" rel="noopener"><div class="plate"><img src="/logo-LGB-sticky400.png" alt="L&#x27;Assistedile Group Brasil" loading="lazy"></div><span>L&#x27;Assistedile Group Brasil</span></a><a class="logo" href="https://lassistedile2.it/" target="_blank" rel="noopener"><div class="plate"><img src="/cropped-logo-lassistedile-800-1-600x116.png" alt="L&#x27;Assistedile 2" loading="lazy"></div><span>L&#x27;Assistedile 2</span></a><a class="logo" href="https://moshe3000.com/" target="_blank" rel="noopener"><div class="plate"><img src="/assets/img/svc-3df1d0057f.png" alt="Moshe 3000" loading="lazy"></div><span>Moshe 3000</span></a><a class="logo" href="https://www.ariatattoolab.com/" target="_blank" rel="noopener"><div class="plate"><img src="/assets/img/svc-301190309d.jpg" alt="Aria Tattoo Lab" loading="lazy"></div><span>Aria Tattoo Lab</span></a><a class="logo" href="https://www.totale.one/" target="_blank" rel="noopener"><div class="plate"><img src="/assets/img/svc-8580cdd588.png" alt="Totale.one" loading="lazy"></div><span>Totale.one</span></a><a class="logo" href="https://welyk.tech/" target="_blank" rel="noopener"><div class="plate"><img src="/assets/img/svc-eee1e43833.jpg" alt="Welyk" loading="lazy"></div><span>Welyk</span></a><a class="logo" href="https://landing.ospita.re/venditori-1/" target="_blank" rel="noopener"><div class="plate"><img src="/assets/img/svc-df11aa36c1.png" alt="Ospita.re" loading="lazy"></div><span>Ospita.re</span></a><a class="logo" href="https://www.dropper.ai/" target="_blank" rel="noopener"><div class="plate"><img src="/assets/img/svc-950e4ab197.png" alt="Dropper.io" loading="lazy"></div><span>Dropper.io</span></a><a class="logo" href="https://mangroviashop.com/" target="_blank" rel="noopener"><div class="plate"><img src="/assets/img/svc-c798f66853.png" alt="Mangrovia.shop" loading="lazy"></div><span>Mangrovia.shop</span></a><a class="logo" href="https://www.comune.roma.it/web/it/casa-delle-tecnologie-emergenti.page" target="_blank" rel="noopener"><div class="plate"><img src="/assets/img/logo-roma-capitale.png" alt="Roma Capitale" loading="lazy"></div><span>Roma Capitale</span></a><div class="logo"><div class="plate"><img src="/assets/img/svc-5a5badd894.webp" alt="Santaniello" loading="lazy"></div><span>Santaniello</span></div><a class="logo" href="https://www.torripagroup.com/en/homepage/" target="_blank" rel="noopener"><div class="plate"><img src="/assets/img/svc-d3316cc459.png" alt="Torripa Group" loading="lazy"></div><span>Torripa Group</span></a><a class="logo" href="https://www.liquinvex.com/" target="_blank" rel="noopener"><div class="plate"><img src="/assets/img/svc-dc2c986ed2.jpg" alt="Liquinvex" loading="lazy"></div><span>Liquinvex</span></a><a class="logo" href="https://cyclando.com/en/" target="_blank" rel="noopener"><div class="plate"><img src="/assets/img/svc-fbb29c4004.png" alt="Cyclando" loading="lazy"></div><span>Cyclando</span></a><div class="logo"><div class="plate"><img src="/assets/img/svc-97406f57e5.png" alt="Crediticash.it" loading="lazy"></div><span>Crediticash.it</span></div><div class="logo"><div class="plate"><img src="/assets/img/svc-d92d130190.png" alt="Homever" loading="lazy"></div><span>Homever</span></div><div class="logo"><div class="plate"><img src="/assets/img/svc-f599e77b97.jpg" alt="Edil Mec Srl" loading="lazy"></div><span>Edil Mec Srl</span></div>
       </div>
     </div>
   </section>
 
-  <!-- STATS -->
-  <section style="border-bottom:1px solid var(--line);">
-    <div class="home-stats" style="max-width:1200px;margin:0 auto;padding:0 40px;display:flex;">
-      <div style="flex:1;padding:30px 0;border-right:1px solid var(--line);">
-        <div style="font:500 46px 'Newsreader',serif;color:var(--ink);line-height:1;">+18</div>
-        <div style="margin-top:9px;font:500 12.5px 'Hanken Grotesk',sans-serif;letter-spacing:.03em;color:var(--faint);">Progetti supportati nel tempo</div>
-      </div>
-      <div style="flex:1;padding:30px 0 30px 34px;border-right:1px solid var(--line);">
-        <div style="font:500 46px 'Newsreader',serif;color:var(--ink);line-height:1;">15+</div>
-        <div style="margin-top:9px;font:500 12.5px 'Hanken Grotesk',sans-serif;letter-spacing:.03em;color:var(--faint);">Settori differenti</div>
-      </div>
-      <div style="flex:1;padding:30px 0 30px 34px;">
-        <div style="font:500 46px 'Newsreader',serif;color:var(--ink);line-height:1;">13+</div>
-        <div style="margin-top:9px;font:500 12.5px 'Hanken Grotesk',sans-serif;letter-spacing:.03em;color:var(--faint);">Anni di esperienza</div>
-      </div>
-    </div>
-  </section>
-
-  <!-- CHI SONO -->
-  <section style="background:var(--panel);border-bottom:1px solid var(--line);">
-    <div style="max-width:1200px;margin:0 auto;padding:78px 40px;display:grid;grid-template-columns:1.15fr .85fr;gap:64px;align-items:start;">
-      <div>
-        <div style="font:600 11px 'Hanken Grotesk',sans-serif;letter-spacing:.28em;text-transform:uppercase;color:var(--gold);margin-bottom:20px;">Chi sono</div>
-        <h2 style="margin:0 0 28px;font:500 36px/1.16 'Newsreader',serif;letter-spacing:-.01em;color:var(--ink);max-width:480px;">Consulenza strategica ed operativa, con mentalità imprenditoriale.</h2>
-        <p style="margin:0 0 18px;font:400 16.5px/1.68 'Hanken Grotesk',sans-serif;color:var(--muted);max-width:580px;">Lavoro con aziende che vogliono crescere, mettere ordine, fare scelte migliori e accelerare ciò che funziona, indipendentemente dal settore.</p>
-        <p style="margin:0 0 30px;font:400 16.5px/1.68 'Hanken Grotesk',sans-serif;color:var(--muted);max-width:580px;">Con un forte <strong style="color:var(--gold);font-weight:600;">background tech e manageriale</strong>, non entro per fare una campagna isolata: leggo lo storico, interpreto i numeri, scelgo le priorità e costruisco un sistema di crescita che tiene insieme <strong style="color:var(--gold);font-weight:600;">commerciale, marketing, SEO, dati e strategia</strong>.</p>
-        <a href="https://www.linkedin.com/in/francescogizzi/" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:11px;font:500 14px 'Hanken Grotesk',sans-serif;color:var(--ink);border-bottom:1px solid var(--gold);padding-bottom:3px;">Profilo LinkedIn →</a>
-      </div>
-      <div style="background:var(--card);border:1px solid var(--line);border-radius:14px;padding:30px 32px;">
-        <div style="font:600 11px 'Hanken Grotesk',sans-serif;letter-spacing:.22em;text-transform:uppercase;color:var(--faint);padding-bottom:18px;border-bottom:1px solid var(--line);">Come lavoro</div>
-        <a href="audit-iniziale.html" style="text-decoration:none;color:inherit;display:block;"><div style="display:flex;flex-direction:column;">
-          <div style="display:flex;gap:16px;align-items:baseline;padding:18px 0;border-bottom:1px solid var(--line);">
-            <span style="font:500 14px 'Newsreader',serif;color:var(--gold);">01</span>
-            <div><div style="font:600 16px 'Hanken Grotesk',sans-serif;color:var(--ink);">Audit & lettura dei numeri</div><div style="margin-top:3px;font:400 13.5px/1.5 'Hanken Grotesk',sans-serif;color:var(--muted);">Storico, KPI e contesto competitivo.</div></div>
-          </div>
-          <div style="display:flex;gap:16px;align-items:baseline;padding:18px 0;border-bottom:1px solid var(--line);">
-            <span style="font:500 14px 'Newsreader',serif;color:var(--gold);">02</span>
-            <div><div style="font:600 16px 'Hanken Grotesk',sans-serif;color:var(--ink);">Priorità & roadmap</div><div style="margin-top:3px;font:400 13.5px/1.5 'Hanken Grotesk',sans-serif;color:var(--muted);">Cosa muove davvero la crescita, prima.</div></div>
-          </div>
-          <div style="display:flex;gap:16px;align-items:baseline;padding:18px 0 4px;">
-            <span style="font:500 14px 'Newsreader',serif;color:var(--gold);">03</span>
-            <div><div style="font:600 16px 'Hanken Grotesk',sans-serif;color:var(--ink);">Sistema & execution</div><div style="margin-top:3px;font:400 13.5px/1.5 'Hanken Grotesk',sans-serif;color:var(--muted);">Marketing, sales e dati allineati.</div></div>
-          </div>
-        </div></a>
-      </div>
-    </div>
-  </section>
-
-  <!-- COSA FACCIO, INDEX -->
-  <section style="border-bottom:1px solid var(--line);">
-    <div style="max-width:1200px;margin:0 auto;padding:78px 40px;">
-      <div style="display:flex;justify-content:space-between;align-items:end;margin-bottom:6px;">
-        <div>
-          <div style="font:600 11px 'Hanken Grotesk',sans-serif;letter-spacing:.28em;text-transform:uppercase;color:var(--gold);margin-bottom:14px;">Cosa faccio</div>
-          <h2 style="margin:0;font:500 36px/1.12 'Newsreader',serif;letter-spacing:-.01em;color:var(--ink);">Aree di lavoro supportate.</h2>
+  <section class="block" id="chi-sono">
+    <div class="wrap">
+      <div class="about">
+        <div class="reveal"><div class="eyebrow">Chi sono</div><h2>Consulenza strategica, con mentalità da imprenditore.</h2></div>
+        <div class="about-text reveal" style="--d:120ms">
+          <p>Ho un <strong>background tech e manageriale</strong>. Non entro per fare una campagna isolata: leggo lo storico, interpreto i numeri e costruisco un sistema che tiene insieme commerciale, marketing, SEO, dati e strategia.</p>
+          <p>Lavoro a fianco dell&#x27;imprenditore e del management, come consulente esterno o fractional CMO, finché i risultati non si vedono nei numeri.</p>
+          <a class="link" href="/chi-sono">La mia storia →</a>
         </div>
       </div>
-      <div style="margin-top:28px;">
-        <a href="servizi-marketing.html" style="text-decoration:none;color:inherit;display:block;"><div style="display:grid;grid-template-columns:60px 1fr 1.1fr auto;gap:28px;align-items:baseline;padding:24px 0;border-top:1px solid var(--line);">
-          <span style="font:500 17px 'Newsreader',serif;color:var(--gold);">01</span>
-          <div style="font:600 23px 'Hanken Grotesk',sans-serif;color:var(--ink);">Marketing</div>
-          <div style="font:400 14.5px/1.55 'Hanken Grotesk',sans-serif;color:var(--muted);max-width:440px;">Posizionamento, funnel, acquisizione, contenuti, performance e ottimizzazione continua.</div>
-          <span style="font:400 20px 'Newsreader',serif;color:var(--gold);">→</span>
-        </div></a>
-        <a href="servizi-data.html" style="text-decoration:none;color:inherit;display:block;"><div style="display:grid;grid-template-columns:60px 1fr 1.1fr auto;gap:28px;align-items:baseline;padding:24px 0;border-top:1px solid var(--line);">
-          <span style="font:500 17px 'Newsreader',serif;color:var(--gold);">02</span>
-          <div style="font:600 23px 'Hanken Grotesk',sans-serif;color:var(--ink);">Data</div>
-          <div style="font:400 14.5px/1.55 'Hanken Grotesk',sans-serif;color:var(--muted);max-width:440px;">Tracking, KPI, dashboard e reportistica per decisioni meno istintive e più utili.</div>
-          <span style="font:400 20px 'Newsreader',serif;color:var(--gold);">→</span>
-        </div></a>
-        <a href="servizi-sales.html" style="text-decoration:none;color:inherit;display:block;"><div style="display:grid;grid-template-columns:60px 1fr 1.1fr auto;gap:28px;align-items:baseline;padding:24px 0;border-top:1px solid var(--line);">
-          <span style="font:500 17px 'Newsreader',serif;color:var(--gold);">03</span>
-          <div style="font:600 23px 'Hanken Grotesk',sans-serif;color:var(--ink);">Sales</div>
-          <div style="font:400 14.5px/1.55 'Hanken Grotesk',sans-serif;color:var(--muted);max-width:440px;">Pipeline, conversione, processo commerciale, materiali sales e business development.</div>
-          <span style="font:400 20px 'Newsreader',serif;color:var(--gold);">→</span>
-        </div></a>
-        <a href="servizi-strategy.html" style="text-decoration:none;color:inherit;display:block;"><div style="display:grid;grid-template-columns:60px 1fr 1.1fr auto;gap:28px;align-items:baseline;padding:24px 0;border-top:1px solid var(--line);">
-          <span style="font:500 17px 'Newsreader',serif;color:var(--gold);">04</span>
-          <div style="font:600 23px 'Hanken Grotesk',sans-serif;color:var(--ink);">Strategy</div>
-          <div style="font:400 14.5px/1.55 'Hanken Grotesk',sans-serif;color:var(--muted);max-width:440px;">Priorità, roadmap, allineamento tra funzioni e direzione strategica della crescita.</div>
-          <span style="font:400 20px 'Newsreader',serif;color:var(--gold);">→</span>
-        </div></a>
-        <a href="institutional.html" style="text-decoration:none;color:inherit;display:block;"><div style="display:grid;grid-template-columns:60px 1fr 1.1fr auto;gap:28px;align-items:baseline;padding:24px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);">
-          <span style="font:500 17px 'Newsreader',serif;color:var(--gold);">05</span>
-          <div style="font:600 23px 'Hanken Grotesk',sans-serif;color:var(--ink);">Institutional</div>
-          <div style="font:400 14.5px/1.55 'Hanken Grotesk',sans-serif;color:var(--muted);max-width:440px;">Relazioni istituzionali, eventi, partnership e joint venture nazionali e internazionali.</div>
-          <span style="font:400 20px 'Newsreader',serif;color:var(--gold);">→</span>
-        </div></a>
+      <div class="method"><div class="reveal" style="--d:0ms"><div class="n">1</div><h3>Audit e lettura dei numeri</h3><p>Storico, KPI, funnel e contesto competitivo.</p></div><div class="reveal" style="--d:120ms"><div class="n">2</div><h3>Priorità e roadmap</h3><p>Cosa muove davvero la crescita, e in che ordine.</p></div><div class="reveal" style="--d:240ms"><div class="n">3</div><h3>Sistema ed execution</h3><p>Marketing, sales e dati allineati, con indicatori chiari.</p></div></div>
+    </div>
+  </section>
+
+  <section class="block alt" id="servizi">
+    <div class="wrap">
+      <div class="head">
+        <div class="reveal"><div class="eyebrow">Servizi</div><h2>Cinque aree, un solo sistema di crescita.</h2></div>
+        <p class="reveal" style="--d:120ms">Puoi partire da un&#x27;area sola. I risultati migliori arrivano quando lavorano insieme, sotto un&#x27;unica regia.</p>
+      </div>
+      <div class="areas"><a class="area reveal" href="/servizi-marketing"><h3>Marketing</h3><p>Posizionamento, funnel, acquisizione, contenuti, performance e ottimizzazione continua.</p><span class="arrow" aria-hidden="true">→</span></a><a class="area reveal" href="/servizi-data"><h3>Data</h3><p>Tracking, KPI, dashboard e reportistica per decidere sui numeri.</p><span class="arrow" aria-hidden="true">→</span></a><a class="area reveal" href="/servizi-sales"><h3>Sales</h3><p>Pipeline, conversione, processo commerciale, materiali sales e business development.</p><span class="arrow" aria-hidden="true">→</span></a><a class="area reveal" href="/servizi-strategy"><h3>Strategy</h3><p>Priorità, roadmap, allineamento tra funzioni e direzione della crescita.</p><span class="arrow" aria-hidden="true">→</span></a><a class="area reveal" href="/institutional"><h3>Institutional</h3><p>Relazioni istituzionali, eventi, partnership e joint venture in Italia e all&#x27;estero.</p><span class="arrow" aria-hidden="true">→</span></a></div>
+    </div>
+  </section>
+
+  <section class="block" id="institutional">
+    <div class="wrap">
+      <div class="head">
+        <div class="reveal"><div class="eyebrow">Institutional</div><h2>Relazioni istituzionali tra Italia e Brasile.</h2></div>
+        <p class="reveal" style="--d:120ms">Accanto alla consulenza per le aziende, costruisco partnership con istituzioni e grandi gruppi. Due progetti recenti.</p>
+      </div>
+      <div class="cases">
+        <article class="case"><figure class="case-img reveal-only"><img src="/sel.jpg" alt="Firma della joint venture all&#x27;Ambasciata Brasiliana di Roma" loading="lazy" width="1600" height="1066"></figure><div class="reveal" style="--d:150ms"><div class="meta">Luglio 2025 · Roma, Ambasciata Brasiliana</div><h3>Una joint venture italo-brasiliana</h3><p>Ho accompagnato la nascita di una joint venture tra un&#x27;azienda italiana e una brasiliana, fino alla firma nella sede dell&#x27;Ambasciata a Piazza Navona, alla presenza dell&#x27;Ambasciatore Renato Mosca e del Console Brasiliano in Italia.</p><dl><dt>Il mio ruolo</dt><dd>Coordinamento delle parti, relazioni diplomatiche, comunicazione dell&#x27;accordo</dd><dt>Con</dt><dd>Moshe 3000 · L&#x27;Assistedile 2</dd></dl></div></article>
+        <article class="case"><figure class="case-img reveal-only"><img src="/SEL.jpg" alt="Partida do Coração allo stadio Maracanã con Enel Rio" loading="lazy" width="1600" height="1066"></figure><div class="reveal" style="--d:150ms"><div class="meta">Ottobre 2025 · Rio de Janeiro, Maracanã</div><h3>Partida do Coração con Enel Rio</h3><p>Una partita benefica gratuita tra leggende di Brasile e Italia, promossa da Enel Rio con il progetto Craque do Amanhã, che ha portato migliaia di bambini delle favelas al Maracanã.</p><dl><dt>Il mio ruolo</dt><dd>Supporto come sponsor alla comunicazione, partnership istituzionali, relazioni pubbliche tra Italia e Brasile</dd><dt>Con</dt><dd>Enel Rio · Maracanã · Craque do Amanhã · L&#x27;Assistedile Group Brasil</dd></dl><div class="press"><a href="https://ge.globo.com/futebol/futebol-internacional/noticia/2025/10/08/partida-do-coracao-reune-lendas-de-brasil-e-italia-no-maracana-veja-nomes.ghtml" target="_blank" rel="noopener">GE Globo ↗</a><a href="https://ansabrasil.com.br/brasil/noticias/esporte/2025/10/09/partida-do-coracao-brasil-italia-sera-marcada-por-solidariedade_8ea1b37e-34ca-478a-ba1e-18be4a3be9ff.html" target="_blank" rel="noopener">ANSA Brasil ↗</a><a href="https://www.ansa.it/sito/notizie/mondo/americalatina/2025/09/22/calcio-superstar-ce-la-partita-del-cuore-italia-brasile_797696b2-92b7-4fde-80c7-f6b5383b2739.html" target="_blank" rel="noopener">ANSA ↗</a></div></div></article>
       </div>
     </div>
   </section>
 
-  <!-- BRAND E SETTORI -->
-  <section style="background:var(--panel);border-bottom:1px solid var(--line);">
-    <div style="max-width:1200px;margin:0 auto;padding:78px 40px;">
-      <div style="font:600 11px 'Hanken Grotesk',sans-serif;letter-spacing:.28em;text-transform:uppercase;color:var(--gold);margin-bottom:14px;">Progetti e collaborazioni</div>
-      <h2 style="margin:0 0 28px;font:500 34px/1.14 'Newsreader',serif;letter-spacing:-.01em;color:var(--ink);max-width:760px;">Brand, aziende e piattaforme con cui ho collaborato per sviluppare marketing, dati, sales e strategia.</h2>
-      <div class="sector-marquee" data-dir="1"><div class="sector-track"><span class="sector-chip">Marketplace</span><span class="sector-chip">Healthcare</span><span class="sector-chip">SaaS & Tech</span><span class="sector-chip">Finance & Investimenti</span><span class="sector-chip">Fashion & Lusso</span><span class="sector-chip">E-commerce & Retail</span><span class="sector-chip">Hospitality & Travel</span><span class="sector-chip">Pubblica Amministrazione</span><span class="sector-chip">Consulenza</span><span class="sector-chip">Edilizia & Real Estate</span><span class="sector-chip">Marketplace</span><span class="sector-chip">Healthcare</span><span class="sector-chip">SaaS & Tech</span><span class="sector-chip">Finance & Investimenti</span><span class="sector-chip">Fashion & Lusso</span><span class="sector-chip">E-commerce & Retail</span><span class="sector-chip">Hospitality & Travel</span><span class="sector-chip">Pubblica Amministrazione</span><span class="sector-chip">Consulenza</span><span class="sector-chip">Edilizia & Real Estate</span></div></div>
-      <div class="brand-marquee" data-dir="1"><div class="brand-track"><a class="brand-chip" href="https://www.peekaboovision.com/" target="_blank" rel="noopener"><img src="assets/img/logo-peekaboo-mark.png" alt="Peekaboo"><span>Peekaboo</span></a><a class="brand-chip" href="https://lassistedilegroupbrasil.com.br/" target="_blank" rel="noopener"><img src="assets/img/svc-b4b984b37a.png" alt="L&#x27;Assistedile Group Brasil"><span>L&#x27;Assistedile Group Brasil</span></a><a class="brand-chip" href="https://moshe3000.com/" target="_blank" rel="noopener"><img src="assets/img/svc-3df1d0057f.png" alt="Moshe 3000"><span>Moshe 3000</span></a><a class="brand-chip" href="https://www.ariatattoolab.com/" target="_blank" rel="noopener"><img src="assets/img/svc-301190309d.jpg" alt="Aria Tattoo Lab"><span>Aria Tattoo Lab</span></a><a class="brand-chip" href="https://www.totale.one/" target="_blank" rel="noopener"><img src="assets/img/svc-8580cdd588.png" alt="Totale.one"><span>Totale.one</span></a><a class="brand-chip" href="https://welyk.tech/" target="_blank" rel="noopener"><img src="assets/img/svc-eee1e43833.jpg" alt="Welyk"><span>Welyk</span></a><a class="brand-chip" href="https://landing.ospita.re/venditori-1/" target="_blank" rel="noopener"><img src="assets/img/svc-df11aa36c1.png" alt="Ospita.re"><span>Ospita.re</span></a><a class="brand-chip" href="https://www.dropper.ai/" target="_blank" rel="noopener"><img src="assets/img/svc-950e4ab197.png" alt="Dropper.io"><span>Dropper.io</span></a><a class="brand-chip" href="https://mangroviashop.com/" target="_blank" rel="noopener"><img src="assets/img/svc-c798f66853.png" alt="Mangrovia.shop"><span>Mangrovia.shop</span></a><a class="brand-chip" href="https://www.peekaboovision.com/" target="_blank" rel="noopener"><img src="assets/img/logo-peekaboo-mark.png" alt="Peekaboo"><span>Peekaboo</span></a><a class="brand-chip" href="https://lassistedilegroupbrasil.com.br/" target="_blank" rel="noopener"><img src="assets/img/svc-b4b984b37a.png" alt="L&#x27;Assistedile Group Brasil"><span>L&#x27;Assistedile Group Brasil</span></a><a class="brand-chip" href="https://moshe3000.com/" target="_blank" rel="noopener"><img src="assets/img/svc-3df1d0057f.png" alt="Moshe 3000"><span>Moshe 3000</span></a><a class="brand-chip" href="https://www.ariatattoolab.com/" target="_blank" rel="noopener"><img src="assets/img/svc-301190309d.jpg" alt="Aria Tattoo Lab"><span>Aria Tattoo Lab</span></a><a class="brand-chip" href="https://www.totale.one/" target="_blank" rel="noopener"><img src="assets/img/svc-8580cdd588.png" alt="Totale.one"><span>Totale.one</span></a><a class="brand-chip" href="https://welyk.tech/" target="_blank" rel="noopener"><img src="assets/img/svc-eee1e43833.jpg" alt="Welyk"><span>Welyk</span></a><a class="brand-chip" href="https://landing.ospita.re/venditori-1/" target="_blank" rel="noopener"><img src="assets/img/svc-df11aa36c1.png" alt="Ospita.re"><span>Ospita.re</span></a><a class="brand-chip" href="https://www.dropper.ai/" target="_blank" rel="noopener"><img src="assets/img/svc-950e4ab197.png" alt="Dropper.io"><span>Dropper.io</span></a><a class="brand-chip" href="https://mangroviashop.com/" target="_blank" rel="noopener"><img src="assets/img/svc-c798f66853.png" alt="Mangrovia.shop"><span>Mangrovia.shop</span></a></div></div><div class="brand-marquee" data-dir="1" style="margin-top:10px"><div class="brand-track"><a class="brand-chip" href="https://www.comune.roma.it/web/it/casa-delle-tecnologie-emergenti.page" target="_blank" rel="noopener"><img src="assets/img/logo-roma-capitale-mark.png" alt="Roma Capitale"><span>Roma Capitale</span></a><a class="brand-chip" href="https://biagiosantaniello.com/password" target="_blank" rel="noopener"><img src="assets/img/svc-5a5badd894.webp" alt="Santaniello"><span>Santaniello</span></a><a class="brand-chip" href="https://www.torripagroup.com/en/homepage/" target="_blank" rel="noopener"><img src="assets/img/svc-d3316cc459.png" alt="Torripa Group"><span>Torripa Group</span></a><a class="brand-chip" href="https://www.liquinvex.com/" target="_blank" rel="noopener"><img src="assets/img/svc-dc2c986ed2.jpg" alt="Liquinvex"><span>Liquinvex</span></a><a class="brand-chip" href="https://cyclando.com/en/" target="_blank" rel="noopener"><img src="assets/img/svc-fbb29c4004.png" alt="Cyclando"><span>Cyclando</span></a><div class="brand-chip"><img src="assets/img/svc-97406f57e5.png" alt="Crediticash.it"><span>Crediticash.it</span></div><div class="brand-chip"><img src="assets/img/svc-d92d130190.png" alt="Homever"><span>Homever</span></div><div class="brand-chip"><img src="assets/img/svc-f599e77b97.jpg" alt="Edil Mec Srl"><span>Edil Mec Srl</span></div><a class="brand-chip" href="https://www.comune.roma.it/web/it/casa-delle-tecnologie-emergenti.page" target="_blank" rel="noopener"><img src="assets/img/logo-roma-capitale-mark.png" alt="Roma Capitale"><span>Roma Capitale</span></a><a class="brand-chip" href="https://biagiosantaniello.com/password" target="_blank" rel="noopener"><img src="assets/img/svc-5a5badd894.webp" alt="Santaniello"><span>Santaniello</span></a><a class="brand-chip" href="https://www.torripagroup.com/en/homepage/" target="_blank" rel="noopener"><img src="assets/img/svc-d3316cc459.png" alt="Torripa Group"><span>Torripa Group</span></a><a class="brand-chip" href="https://www.liquinvex.com/" target="_blank" rel="noopener"><img src="assets/img/svc-dc2c986ed2.jpg" alt="Liquinvex"><span>Liquinvex</span></a><a class="brand-chip" href="https://cyclando.com/en/" target="_blank" rel="noopener"><img src="assets/img/svc-fbb29c4004.png" alt="Cyclando"><span>Cyclando</span></a><div class="brand-chip"><img src="assets/img/svc-97406f57e5.png" alt="Crediticash.it"><span>Crediticash.it</span></div><div class="brand-chip"><img src="assets/img/svc-d92d130190.png" alt="Homever"><span>Homever</span></div><div class="brand-chip"><img src="assets/img/svc-f599e77b97.jpg" alt="Edil Mec Srl"><span>Edil Mec Srl</span></div></div></div>
+  <section class="block alt" id="blog">
+    <div class="wrap">
+      <div class="head">
+        <div class="reveal"><div class="eyebrow">Blog</div><h2>Approfondimenti.</h2></div>
+        <div class="ctas reveal" style="--d:120ms"><a class="link" href="/blog">Tutti gli articoli →</a></div>
+      </div>
+      <div class="posts"><a class="post reveal" style="--d:0ms" href="/blog-audit-marketing-per-capire-cosa-sta-bloccando-la-crescita"><div class="post-cover"><img src="/assets/img/cover/blog-audit-marketing-per-capire-cosa-sta-bloccando-la-crescita.svg" alt="" loading="lazy" width="1600" height="1000"></div><span class="cat">Marketing</span><h3>Audit marketing per capire cosa sta bloccando la crescita</h3><p>Cosa analizza un audit marketing e quando conviene farlo per trovare i colli di bottiglia e scegliere le priorità.</p><span class="more">Leggi <span class="arr" aria-hidden="true">→</span></span></a><a class="post reveal" style="--d:120ms" href="/blog-consulenza-sales-per-migliorare-pipeline-conversione-e-processo-commerciale"><div class="post-cover"><img src="/assets/img/cover/blog-consulenza-sales-per-migliorare-pipeline-conversione-e-processo-commerciale.svg" alt="" loading="lazy" width="1600" height="1000"></div><span class="cat">Sales</span><h3>Come migliorare pipeline, conversione e processo commerciale</h3><p>Come costruire una pipeline leggibile per migliorare la conversione e il processo di vendita.</p><span class="more">Leggi <span class="arr" aria-hidden="true">→</span></span></a><a class="post reveal" style="--d:240ms" href="/blog-come-costruire-una-roadmap-strategica-utile-alla-crescita-aziendale"><div class="post-cover"><img src="/assets/img/cover/blog-come-costruire-una-roadmap-strategica-utile-alla-crescita-aziendale.svg" alt="" loading="lazy" width="1600" height="1000"></div><span class="cat">Strategy</span><h3>Come costruire una roadmap strategica utile alla crescita</h3><p>Cosa deve contenere un piano di crescita e come trasformare gli obiettivi in una roadmap concreta.</p><span class="more">Leggi <span class="arr" aria-hidden="true">→</span></span></a></div>
     </div>
   </section>
+</main>
 
-  <!-- BLOG -->
-  <section style="background:var(--panel);border-bottom:1px solid var(--line);">
-    <div style="max-width:1200px;margin:0 auto;padding:78px 40px;">
-      <div style="display:flex;justify-content:space-between;align-items:end;margin-bottom:36px;">
-        <div>
-          <div style="font:600 11px 'Hanken Grotesk',sans-serif;letter-spacing:.28em;text-transform:uppercase;color:var(--gold);margin-bottom:14px;">Blog</div>
-          <h2 style="margin:0;font:500 34px/1.12 'Newsreader',serif;letter-spacing:-.01em;color:var(--ink);">Approfondimenti tecnici e news.</h2>
-        </div>
-        <a href="blog.html" style="text-decoration:none;font:500 14px 'Hanken Grotesk',sans-serif;color:var(--ink);border-bottom:1px solid var(--gold);padding-bottom:3px;">Tutti gli articoli →</a>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:30px;"><a href="blog-audit-marketing-per-capire-cosa-sta-bloccando-la-crescita.html" style="text-decoration:none;border-top:1px solid var(--line-strong);padding-top:22px;display:block;"><img class="home-card-cover" src="assets/img/cover/blog-audit-marketing-per-capire-cosa-sta-bloccando-la-crescita.svg" alt="Audit marketing per capire cosa sta bloccando la crescita"><div style="font:600 10.5px 'Hanken Grotesk',sans-serif;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin-bottom:14px;">Marketing</div><h3 style="margin:0 0 12px;font:500 21px/1.28 'Newsreader',serif;color:var(--ink);">Audit marketing per capire cosa sta bloccando la crescita</h3><p style="margin:0 0 16px;font:400 14px/1.6 'Hanken Grotesk',sans-serif;color:var(--muted);">Cos’è un audit marketing, cosa analizza e quando conviene farlo per individuare i colli di bottiglia e definire le prior</p><span style="font:500 13.5px 'Hanken Grotesk',sans-serif;color:var(--ink);border-bottom:1px solid var(--gold);padding-bottom:2px;">Leggi →</span></a><a href="blog-consulenza-sales-per-migliorare-pipeline-conversione-e-processo-commerciale.html" style="text-decoration:none;border-top:1px solid var(--line-strong);padding-top:22px;display:block;"><img class="home-card-cover" src="assets/img/cover/blog-consulenza-sales-per-migliorare-pipeline-conversione-e-processo-commerciale.svg" alt="Consulenza sales per migliorare pipeline, conversione e processo commerciale"><div style="font:600 10.5px 'Hanken Grotesk',sans-serif;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin-bottom:14px;">Sales</div><h3 style="margin:0 0 12px;font:500 21px/1.28 'Newsreader',serif;color:var(--ink);">Consulenza sales per migliorare pipeline, conversione e processo commerciale</h3><p style="margin:0 0 16px;font:400 14px/1.6 'Hanken Grotesk',sans-serif;color:var(--muted);">Come costruire una pipeline commerciale leggibile per migliorare conversione e processo di vendita, con una consulenza s</p><span style="font:500 13.5px 'Hanken Grotesk',sans-serif;color:var(--ink);border-bottom:1px solid var(--gold);padding-bottom:2px;">Leggi →</span></a><a href="blog-come-costruire-una-roadmap-strategica-utile-alla-crescita-aziendale.html" style="text-decoration:none;border-top:1px solid var(--line-strong);padding-top:22px;display:block;"><img class="home-card-cover" src="assets/img/cover/blog-come-costruire-una-roadmap-strategica-utile-alla-crescita-aziendale.svg" alt="Come costruire una roadmap strategica utile alla crescita aziendale"><div style="font:600 10.5px 'Hanken Grotesk',sans-serif;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin-bottom:14px;">Strategy</div><h3 style="margin:0 0 12px;font:500 21px/1.28 'Newsreader',serif;color:var(--ink);">Come costruire una roadmap strategica utile alla crescita aziendale</h3><p style="margin:0 0 16px;font:400 14px/1.6 'Hanken Grotesk',sans-serif;color:var(--muted);">Cosa deve contenere un piano di crescita aziendale e come costruire una roadmap strategica che trasformi gli obiettivi i</p><span style="font:500 13.5px 'Hanken Grotesk',sans-serif;color:var(--ink);border-bottom:1px solid var(--gold);padding-bottom:2px;">Leggi →</span></a></div>
+<section class="cta" id="contatti">
+  <div class="wrap">
+    <div class="cta-intro reveal">
+      <h2>Partiamo dai tuoi numeri.</h2>
+      <p>Un audit iniziale per capire dove intervenire, poi un piano operativo con priorità e tempi. Scrivimi: ti rispondo entro due giorni lavorativi.</p>
+      <a class="link" href="https://www.linkedin.com/in/francescogizzi/" target="_blank" rel="noopener">LinkedIn →</a>
     </div>
-  </section>
+    <form class="form reveal" style="--d:150ms" action="https://api.web3forms.com/submit" method="POST">
+          <input type="hidden" name="access_key" value="5432da80-1229-4940-8bcd-cafbb17b98d1"><input type="hidden" name="subject" value="Nuova lead dal sito Francesco Gizzi"><input type="hidden" name="redirect" value="https://francescogizzi.com/grazie"><input type="checkbox" name="botcheck" style="display:none" tabindex="-1" autocomplete="off">
+          <label><span>Nome <span class="req">*</span></span><input id="f-nome" name="Nome" required autocomplete="given-name"></label>
+          <label><span>Cognome <span class="req">*</span></span><input id="f-cognome" name="Cognome" required autocomplete="family-name"></label>
+          <label><span>Azienda <span class="req">*</span></span><input id="f-azienda" name="Azienda" required autocomplete="organization"></label>
+          <label><span>Città <span class="opt">(facoltativo)</span></span><input id="f-citta" name="Città" autocomplete="address-level2"></label>
+          <label class="full"><span>Servizio richiesto <span class="req">*</span></span><select id="f-servizio" name="Servizio richiesto" required><option value="" disabled selected>Seleziona un servizio</option><option>Marketing</option><option>Data</option><option>Sales</option><option>Strategy</option><option>Institutional</option></select></label>
+          <label><span>Email <span class="req">*</span></span><input id="f-email" name="Email" type="email" required autocomplete="email"></label>
+          <label><span>Telefono <span class="opt">(facoltativo)</span></span><input id="f-telefono" name="Telefono" type="tel" autocomplete="tel"></label>
+          <label class="full"><span>Messaggio <span class="opt">(facoltativo)</span></span><textarea id="f-messaggio" name="Messaggio" rows="4" placeholder="Raccontami in breve di cosa hai bisogno"></textarea></label>
+          <label class="consent"><input id="f-privacy" type="checkbox" name="Privacy" value="Accettato" required><span><span class="req">*</span> Autorizzo il trattamento dei dati per essere ricontattato in merito alla richiesta.</span></label>
+          <p class="note">I campi contrassegnati con * sono obbligatori.</p>
+          <button class="btn" type="submit">Invia richiesta <span class="arr" aria-hidden="true">→</span></button>
+        </form>
+  </div>
+</section>
 
-  <!-- CONTACT -->
-  <section style="border-bottom:1px solid var(--line);">
-    <div style="max-width:1200px;margin:0 auto;padding:78px 40px;display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:start;">
-      <div>
-        <div style="font:600 11px 'Hanken Grotesk',sans-serif;letter-spacing:.28em;text-transform:uppercase;color:var(--gold);margin-bottom:20px;">Richiedi un contatto</div>
-        <h2 style="margin:0 0 24px;font:500 34px/1.18 'Newsreader',serif;letter-spacing:-.01em;color:var(--ink);max-width:440px;">Facciamo crescere la tua azienda con più coerenza.</h2>
-        <p style="margin:0;font:400 16.5px/1.66 'Hanken Grotesk',sans-serif;color:var(--muted);max-width:440px;">Partiamo da un audit iniziale, definiamo le priorità e costruiamo un piano operativo per capire dove intervenire davvero.</p>
-      </div>
-      <form action="https://api.web3forms.com/submit" method="POST" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;"><input type="hidden" name="access_key" value="5432da80-1229-4940-8bcd-cafbb17b98d1"><input type="hidden" name="subject" value="Nuova lead dal sito Francesco Gizzi"><input type="hidden" name="redirect" value="https://francescogizzi.com/grazie"><input type="checkbox" name="botcheck" style="display:none">
-        <label style="display:flex;flex-direction:column;gap:7px;"><span style="font:600 10px 'Hanken Grotesk',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);">Nome <span style="color:#b8902f;">*</span></span><input name="Nome" required style="background:var(--card);border:1px solid var(--line-strong);border-radius:8px;padding:12px;color:var(--ink);font-size:14px;"></label>
-        <label style="display:flex;flex-direction:column;gap:7px;"><span style="font:600 10px 'Hanken Grotesk',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);">Cognome <span style="color:#b8902f;">*</span></span><input name="Cognome" required style="background:var(--card);border:1px solid var(--line-strong);border-radius:8px;padding:12px;color:var(--ink);font-size:14px;"></label>
-        <label style="display:flex;flex-direction:column;gap:7px;"><span style="font:600 10px 'Hanken Grotesk',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);">Azienda <span style="color:#b8902f;">*</span></span><input name="Azienda" required style="background:var(--card);border:1px solid var(--line-strong);border-radius:8px;padding:12px;color:var(--ink);font-size:14px;"></label>
-        <label style="display:flex;flex-direction:column;gap:7px;"><span style="font:600 10px 'Hanken Grotesk',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);">Città <span style="opacity:.55;font-weight:400;letter-spacing:0;text-transform:none;">(facoltativo)</span></span><input name="Città" style="background:var(--card);border:1px solid var(--line-strong);border-radius:8px;padding:12px;color:var(--ink);font-size:14px;"></label>
-        <label style="display:flex;flex-direction:column;gap:7px;grid-column:1 / -1;"><span style="font:600 10px 'Hanken Grotesk',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);">Servizio richiesto <span style="color:#b8902f;">*</span></span><select name="Servizio richiesto" required style="background:var(--card);border:1px solid var(--line-strong);border-radius:8px;padding:12px;color:var(--muted);font-size:14px;"><option value="" disabled selected>Seleziona un servizio</option><option>Marketing</option><option>Data</option><option>Sales</option><option>Strategy</option></select></label>
-        <label style="display:flex;flex-direction:column;gap:7px;"><span style="font:600 10px 'Hanken Grotesk',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);">Email <span style="color:#b8902f;">*</span></span><input name="Email" type="email" required style="background:var(--card);border:1px solid var(--line-strong);border-radius:8px;padding:12px;color:var(--ink);font-size:14px;"></label>
-        <label style="display:flex;flex-direction:column;gap:7px;"><span style="font:600 10px 'Hanken Grotesk',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);">Telefono <span style="opacity:.55;font-weight:400;letter-spacing:0;text-transform:none;">(facoltativo)</span></span><input name="Telefono" style="background:var(--card);border:1px solid var(--line-strong);border-radius:8px;padding:12px;color:var(--ink);font-size:14px;"></label>
-        <label style="display:flex;flex-direction:column;gap:7px;grid-column:1 / -1;"><span style="font:600 10px 'Hanken Grotesk',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);">Messaggio <span style="opacity:.55;font-weight:400;letter-spacing:0;text-transform:none;">(facoltativo)</span></span><textarea name="Messaggio" rows="3" placeholder="Raccontami in breve di cosa hai bisogno" style="background:var(--card);border:1px solid var(--line-strong);border-radius:8px;padding:12px;color:var(--ink);font-size:14px;resize:vertical;"></textarea></label>
-        <label style="grid-column:1 / -1;display:flex;gap:10px;align-items:flex-start;font:400 12.5px/1.5 'Hanken Grotesk',sans-serif;color:var(--muted);"><input type="checkbox" name="Privacy" value="Accettato" required style="margin-top:2px;accent-color:var(--gold);"><span style="color:#b8902f;font-weight:700;">*</span> Autorizzo il trattamento dei dati per essere ricontattato in merito alla richiesta.</label>
-        <p style="grid-column:1 / -1;margin:0;font:400 11.5px 'Hanken Grotesk',sans-serif;color:var(--faint);">I campi contrassegnati con <span style="color:#b8902f;">*</span> sono obbligatori.</p><button type="submit" style="grid-column:1 / -1;background:var(--cta);color:var(--cta-ink);font:600 15px 'Hanken Grotesk',sans-serif;padding:15px;border:none;border-radius:8px;text-align:center;cursor:pointer;">Invia richiesta</button>
-      </form>
-    </div>
-  </section>
+<footer class="foot">
+  <div class="wrap">
+    <span>Francesco Gizzi · Marketing · Data · Sales · Strategy · Roma</span>
+    <nav aria-label="Footer"><a href="/privacy">Privacy</a><a href="/progetti">Progetti</a><a href="https://www.linkedin.com/in/francescogizzi/" target="_blank" rel="noopener">LinkedIn</a></nav>
+  </div>
+</footer>
 
-  <!-- FOOTER -->
-  <footer style="background:var(--panel);">
-    <div style="max-width:1200px;margin:0 auto;padding:40px;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;">
-      <div style="display:flex;align-items:baseline;gap:12px;">
-        <span style="font:600 17px 'Newsreader',serif;color:var(--ink);">Francesco Gizzi</span>
-        <span style="font:400 13px 'Hanken Grotesk',sans-serif;color:var(--faint);">Marketing · Data · Sales · Strategy, Roma</span>
-      </div>
-      <span style="display:flex;gap:26px;font:500 13px 'Hanken Grotesk',sans-serif;color:var(--muted);"><a href="/privacy" style="color:inherit;text-decoration:none;">Privacy</a><a href="https://www.linkedin.com/in/francescogizzi/" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;">LinkedIn</a></span>
-    </div>
-  </footer>
-<script src="marquee.js"></script>
-<script src="consent.js"></script>
-<script src="/anim.js" defer></script>
-</body></html>
+<script src="/consent.js"></script>
+<script src="/home.js" defer></script>
+</body>
+</html>
