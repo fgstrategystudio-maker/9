@@ -39,9 +39,10 @@ const AZIONI_SCHEMA = {
       items: {
         type: 'object',
         properties: {
-          tipo: { type: 'string', enum: ['registra_incasso', 'aggiorna_commessa', 'aggiungi_nota', 'nessuna_azione'] },
+          tipo: { type: 'string', enum: ['registra_pagamento', 'registra_incasso', 'aggiorna_commessa', 'aggiungi_nota', 'nessuna_azione'] },
           mese: { type: 'string' },
           lordo: { type: 'number' },
+          importo: { type: 'number' },
           id: { type: 'number' },
           campi: {
             type: 'object',
@@ -89,14 +90,19 @@ function systemPrompt(ctx) {
 Interpreti richieste in linguaggio naturale e rispondi SOLO col JSON richiesto: "spiegazione" (breve, in italiano) e "azioni".
 
 TIPI DI AZIONE
-- registra_incasso: { tipo, mese, lordo, motivo } — "mese" in italiano con anno (es. "Settembre 2026"); "lordo" = totale lordo REALE incassato in quel mese (tutti i clienti insieme).
+- registra_pagamento: { tipo, id, mese, importo, testo, motivo } — un singolo pagamento ricevuto da UN cliente (commessa "id") nel "mese"; "testo" = nota breve facoltativa (es. "fisso mensile", "extra non chiaro").
+- registra_incasso: { tipo, mese, lordo, motivo } — "mese" in italiano con anno (es. "Settembre 2026"); "lordo" = TOTALE lordo REALE incassato in quel mese da tutti i clienti insieme. Sostituisce il valore già registrato per quel mese.
 - aggiorna_commessa: { tipo, id, campi, motivo } — "campi" contiene SOLO i campi da cambiare; date inizio/fine in YYYY-MM-DD.
 - aggiungi_nota: { tipo, id, testo, motivo } — aggiunge una nota alla commessa.
 - nessuna_azione: { tipo, motivo } — quando è meglio non agire.
 
-REGOLE DI DOMINIO
-- "incassatoStorico" registra il TOTALE lordo per mese; il netto lo calcola l'app (fattore ${Math.round((ctx.fattoreNetto ?? 0.7) * 100)}%). Per registra_incasso indica sempre il totale mese, non il singolo pagamento: se un cliente ha pagato una cifra diversa dal previsto, parti dalla stima o dal valore già registrato del mese e applica la differenza.
-- Pagamento insolito UNA TANTUM (acconto, sconto, cifra concordata diversa per questo mese): NON cambiare la fee della commessa; proponi registra_incasso col totale reale del mese + aggiungi_nota sulla commessa per tenerne traccia.
+REGOLE SUGLI INCASSI (importanti: sono soldi veri)
+- Per ogni pagamento che l'utente dice di aver ricevuto da un cliente proponi un registra_pagamento su quella commessa (anche due pagamenti dello stesso cliente nello stesso mese = due azioni). Controlla nel contesto "pagamenti" della commessa per non registrare due volte un pagamento già presente.
+- Il totale del mese (registra_incasso) è la SOMMA ESATTA dei pagamenti del mese: quelli già registrati nel contesto + quelli nuovi. Nella "spiegazione" scrivi SEMPRE il calcolo esplicito, es. "2.071 + 1.690 + 1.000 + 750 = 5.511 €".
+- NON usare mai la stima dai contratti (fee mensili) per riempire il totale del mese, e non sommare fee previste a pagamenti reali. Se l'utente vuole aggiornare il totale del mese ma non sai cosa ha incassato dagli altri clienti attivi, NON indovinare: registra i pagamenti che conosci e usa nessuna_azione per chiedere gli importi mancanti (elencando i clienti attivi senza pagamento nel mese).
+- Se l'utente dà direttamente il totale del mese (es. "il totale di settembre è 5.511"), usa quel numero per registra_incasso.
+- Il netto lo calcola l'app (fattore ${Math.round((ctx.fattoreNetto ?? 0.7) * 100)}%): tu lavori solo sul lordo.
+- Pagamento insolito UNA TANTUM (acconto, sconto, cifra diversa solo per questo mese): NON cambiare la fee della commessa; registra il pagamento reale + aggiungi_nota per tenerne traccia.
 - Cambio DURATURO di accordo (nuova fee mensile, rinnovo, chiusura): proponi aggiorna_commessa (es. lordoMensile, fine, stato).
 - Stati validi commessa: "In corso", "In scadenza", "Da chiarire", "Sospeso", "Concluso", "Perso".
 - Oggi è ${ctx.oggi}.

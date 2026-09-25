@@ -106,6 +106,25 @@ export function annoFromMese(meseStr) {
   return m ? Number(m[1]) : null;
 }
 
+// Pagamenti registrati sulle commesse per un mese ("Settembre 2026"),
+// appiattiti con il nome cliente. Ogni commessa può avere più pagamenti
+// nello stesso mese (es. fisso + extra).
+export function pagamentiDelMese(commesse, mese) {
+  const m = (mese || "").toLowerCase();
+  return (commesse || []).flatMap((c) =>
+    (c.pagamenti || [])
+      .filter((p) => (p.mese || "").toLowerCase() === m)
+      .map((p) => ({ cliente: c.cliente, commessaId: c.id, importo: Number(p.importo) || 0, nota: p.nota || "", data: p.data || null }))
+  );
+}
+
+// Totale incassato da una commessa (tutti i pagamenti registrati), opz. per anno
+export function totalePagamentiCommessa(c, anno = null) {
+  return (c.pagamenti || [])
+    .filter((p) => anno == null || annoFromMese(p.mese) === anno)
+    .reduce((s, p) => s + (Number(p.importo) || 0), 0);
+}
+
 // Somma il lordo dei record mensili di un dato anno
 export function sumLordoAnno(incassatoStorico, anno) {
   return (incassatoStorico || [])

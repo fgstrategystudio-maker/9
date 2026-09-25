@@ -15,6 +15,7 @@ import {
   getMeseCorrente,
   getLordoPerMese,
   sumLordoAnno,
+  pagamentiDelMese,
 } from "../../utils/helpers";
 import Icon from "../Icon";
 import Assistente from "../Assistente/Assistente";
@@ -154,6 +155,14 @@ export default function Dashboard({ commesse, setCommesse, setup, setSetup }) {
   const meseCorrManc = !revenueHistory.some(
     (r) => r.mese.toLowerCase() === meseCorrente.toLowerCase()
   );
+  // Mese corrente già registrato nello storico? Allora i box del mese mostrano
+  // l'incassato reale; altrimenti la previsione dai contratti.
+  const meseRegistrato = revenueHistory.find(
+    (r) => r.mese.toLowerCase() === meseCorrente.toLowerCase()
+  ) || null;
+  const lordoMese = meseRegistrato ? meseRegistrato.lordo : lordoMensileAttivo;
+  const nettoMese = meseRegistrato ? meseRegistrato.netto : nettoMensileAttivo;
+  const nomeMese = meseCorrente.split(" ")[0];
 
   const costiFissi = setup.costiFissi || [];
   const costiFissiMensili = costiFissi.filter((c) => c.tipo !== "annuale");
@@ -185,7 +194,7 @@ export default function Dashboard({ commesse, setCommesse, setup, setSetup }) {
   })();
   const cassaFinale = cashFlowData[cashFlowData.length - 1]?.cassa ?? cassaIniziale;
 
-  const profittoMensile = nettoMensileAttivo - totaleCostiFissi;
+  const profittoMensile = nettoMese - totaleCostiFissi;
   const breakEvenLordo = totaleCostiFissi > 0
     ? Math.round(totaleCostiFissi / setup.fattoreNetto)
     : null;
@@ -235,13 +244,17 @@ export default function Dashboard({ commesse, setCommesse, setup, setSetup }) {
   const mesiMancanti = annualData.filter((d) => d.tipo === "mancante").length;
 
   const kpis = [
-    { id: "lordoAttivo", label: "Lordo mensile attivo", value: fmtN(lordoMensileAttivo), cur: "€", sub: "commesse in corso + in scadenza", tone: "accent", icon: "card" },
-    { id: "nettoAttivo", label: "Netto mensile attivo", value: fmtN(nettoMensileAttivo), cur: "€", sub: `fattore ${(setup.fattoreNetto * 100).toFixed(0)}%`, tone: "pos", icon: "trend" },
+    meseRegistrato
+      ? { id: "lordoAttivo", label: `Lordo incassato · ${nomeMese}`, value: fmtN(lordoMese), cur: "€", sub: `reale · previsto per ${nomeMese} ${fmtN(lordoMensileAttivo)} €`, tone: "accent", icon: "card" }
+      : { id: "lordoAttivo", label: "Lordo mensile attivo", value: fmtN(lordoMensileAttivo), cur: "€", sub: `previsto · ${nomeMese} non ancora registrato`, tone: "accent", icon: "card" },
+    meseRegistrato
+      ? { id: "nettoAttivo", label: `Netto incassato · ${nomeMese}`, value: fmtN(nettoMese), cur: "€", sub: `reale · previsto ${fmtN(nettoMensileAttivo)} €`, tone: "pos", icon: "trend" }
+      : { id: "nettoAttivo", label: "Netto mensile attivo", value: fmtN(nettoMensileAttivo), cur: "€", sub: `previsto · fattore ${(setup.fattoreNetto * 100).toFixed(0)}%`, tone: "pos", icon: "trend" },
     { id: "commesseAttive", label: "Commesse attive", value: attive.length, sub: `su ${commesse.length} totali`, tone: "ink", icon: "folder" },
     { id: "upsell", label: "Potenziale upsell", value: fmtN(upsellOpportunities), cur: "€", sub: "obiettivo mensile aggregato", tone: "info", icon: "spark" },
     ...(totaleCostiFissi > 0 ? [
       { id: "costiMensili", label: "Costi mensili", value: fmtN(totaleCostiFissi), cur: "€", sub: `${costiFissi.length} voci · ${meseCorrente.split(" ")[0]}`, tone: "danger", icon: "coin" },
-      { id: "profitto", label: "Profitto mensile", value: fmtN(profittoMensile), cur: "€", sub: `netto − ${fmtN(totaleCostiFissi)} € costi fissi`, tone: profittoMensile >= 0 ? "pos" : "danger", icon: "wallet" },
+      { id: "profitto", label: "Profitto mensile", value: fmtN(profittoMensile), cur: "€", sub: `${meseRegistrato ? "netto reale" : "netto previsto"} − ${fmtN(totaleCostiFissi)} € costi fissi`, tone: profittoMensile >= 0 ? "pos" : "danger", icon: "wallet" },
     ] : []),
     ...(costiAnnuali.length > 0 ? [
       { id: "speseAnnuali", label: "Spese annuali", value: fmtN(totaleCostiAnnuali), cur: "€", sub: "promemoria · non le stai pagando ora", tone: "warn", icon: "calendar" },
@@ -749,12 +762,50 @@ export default function Dashboard({ commesse, setCommesse, setup, setSetup }) {
         setCommesse={setCommesse}
         setup={setup}
         setSetup={setSetup}
+        meseCorrente={meseCorrente}
+        meseRegistrato={meseRegistrato}
       />
     </div>
   );
 }
 
-function KpiDrillModal({ drill, onClose, commesse, setCommesse, setup, setSetup }) {
+// Blocco "incassato reale del mese": totale registrato + pagamenti per cliente
+function IncassatoReale({ meseRegistrato, meseCorrente, commesse, rowStyle, money, netto }) {
+  const pagamenti = pagamentiDelMese(commesse, meseCorrente);
+  const sommaClienti = pagamenti.reduce((s, p) => s + p.importo, 0);
+  const totale = netto ? meseRegistrato.netto : meseRegistrato.lordo;
+  const nonAttribuito = meseRegistrato.lordo - sommaClienti;
+  return (
+    <>
+      <div style={{ ...rowStyle, fontWeight: 700, background: "var(--panel-2)" }}>
+        <span>{netto ? "Netto" : "Lordo"} incassato · {meseCorrente}</span>
+        <span className={"num " + (netto ? "t-pos" : "t-accent")}>{money(totale)}</span>
+      </div>
+      {!netto && pagamenti.map((p, i) => (
+        <div key={i} style={rowStyle}>
+          <div><div className="nm">{p.cliente}</div>{p.nota && <div className="meta">{p.nota}</div>}</div>
+          <span className="num">{money(p.importo)}</span>
+        </div>
+      ))}
+      {!netto && pagamenti.length > 0 && nonAttribuito !== 0 && (
+        <div style={rowStyle}>
+          <span className="meta">{nonAttribuito > 0 ? "Non attribuito a un cliente" : "Pagamenti clienti oltre il totale registrato"}</span>
+          <span className="num" style={{ color: "var(--warn)" }}>{money(nonAttribuito)}</span>
+        </div>
+      )}
+      {!netto && pagamenti.length === 0 && (
+        <p style={{ padding: "8px var(--card-pad)", fontSize: 12.5, color: "var(--ink-3)" }}>
+          Nessun pagamento per cliente registrato questo mese: dillo all&apos;assistente (es. «Domò mi ha pagato 1.690 €») per vedere il dettaglio.
+        </p>
+      )}
+      <div style={{ padding: "14px var(--card-pad) 4px", fontSize: 11, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--ink-3)" }}>
+        Previsto da contratti
+      </div>
+    </>
+  );
+}
+
+function KpiDrillModal({ drill, onClose, commesse, setCommesse, setup, setSetup, meseCorrente, meseRegistrato }) {
   if (!drill) return null;
   const factor = setup.fattoreNetto;
   const attive = commesse.filter((c) => c.stato === "In corso" || c.stato === "In scadenza");
@@ -771,12 +822,16 @@ function KpiDrillModal({ drill, onClose, commesse, setCommesse, setup, setSetup 
     }));
 
   const META = {
-    lordoAttivo: { title: "Lordo mensile attivo", icon: "card", note: "Fee lorda mensile delle commesse in corso e in scadenza. Modifica qui la fee mensile." },
-    nettoAttivo: { title: "Netto mensile attivo", icon: "trend", note: `Netto stimato = lordo × ${(factor * 100).toFixed(0)}% (fattore in Setup).` },
+    lordoAttivo: meseRegistrato
+      ? { title: `Lordo · ${meseCorrente}`, icon: "card", note: "Incassato reale del mese (dallo storico) con i pagamenti per cliente; sotto, le fee da contratto." }
+      : { title: "Lordo mensile attivo", icon: "card", note: "Fee lorda mensile delle commesse in corso e in scadenza. Modifica qui la fee mensile." },
+    nettoAttivo: meseRegistrato
+      ? { title: `Netto · ${meseCorrente}`, icon: "trend", note: `Netto reale del mese dallo storico; sotto, il previsto = lordo × ${(factor * 100).toFixed(0)}%.` }
+      : { title: "Netto mensile attivo", icon: "trend", note: `Netto stimato = lordo × ${(factor * 100).toFixed(0)}% (fattore in Setup).` },
     commesseAttive: { title: "Commesse attive", icon: "folder", note: "Commesse in corso o in scadenza." },
     upsell: { title: "Potenziale upsell", icon: "spark", note: "Obiettivo di upsell per commessa. Modifica i target qui." },
     costiMensili: { title: "Costi mensili", icon: "coin", note: "Voci di costo fisso mensile. Modifica gli importi qui." },
-    profitto: { title: "Profitto mensile", icon: "wallet", note: "Netto mensile attivo meno i costi fissi mensili." },
+    profitto: { title: "Profitto mensile", icon: "wallet", note: meseRegistrato ? "Netto reale del mese meno i costi fissi mensili." : "Netto mensile previsto meno i costi fissi mensili." },
     speseAnnuali: { title: "Spese annuali", icon: "calendar", note: "Spese annuali promemoria. Modifica gli importi annui qui." },
     equivMensile: { title: "Equivalente mensile spese annuali", icon: "divide", note: "Spese annuali divise per 12." },
   };
@@ -791,6 +846,9 @@ function KpiDrillModal({ drill, onClose, commesse, setCommesse, setup, setSetup 
     const tot = attive.reduce((s, c) => s + (getCommessaLordoMensile(c) || 0), 0);
     body = (
       <>
+        {meseRegistrato && (
+          <IncassatoReale meseRegistrato={meseRegistrato} meseCorrente={meseCorrente} commesse={commesse} rowStyle={rowStyle} money={money} />
+        )}
         {attive.map((c) => {
           const mensile = c.lordoMensile != null;
           const val = getCommessaLordoMensile(c);
@@ -806,13 +864,30 @@ function KpiDrillModal({ drill, onClose, commesse, setCommesse, setup, setSetup 
           );
         })}
         {attive.length === 0 && <p style={{ padding: "12px var(--card-pad)", color: "var(--ink-3)" }}>Nessuna commessa attiva.</p>}
-        <div style={{ ...rowStyle, fontWeight: 700 }}><span>Totale lordo mensile</span><span className="num t-accent">{money(tot)}</span></div>
+        <div style={{ ...rowStyle, fontWeight: 700 }}><span>Totale fee commesse attive</span><span className="num t-accent">{money(tot)}</span></div>
+        {(() => {
+          const now = new Date();
+          const competenza = getLordoPerMese(now.getMonth(), now.getFullYear(), commesse);
+          if (Math.round(competenza) === Math.round(tot)) return null;
+          return (
+            <div style={rowStyle}>
+              <div>
+                <div className="nm">Di competenza di {meseCorrente}</div>
+                <div className="meta">conta solo le commesse attive nelle loro date di inizio/fine, con lo split 50/50 dove impostato</div>
+              </div>
+              <span className="num t-accent">{money(competenza)}</span>
+            </div>
+          );
+        })()}
       </>
     );
   } else if (drill === "nettoAttivo") {
     const totLordo = attive.reduce((s, c) => s + (getCommessaLordoMensile(c) || 0), 0);
     body = (
       <>
+        {meseRegistrato && (
+          <IncassatoReale meseRegistrato={meseRegistrato} meseCorrente={meseCorrente} commesse={commesse} rowStyle={rowStyle} money={money} netto />
+        )}
         {attive.map((c) => {
           const l = getCommessaLordoMensile(c) || 0;
           return (
@@ -866,11 +941,11 @@ function KpiDrillModal({ drill, onClose, commesse, setCommesse, setup, setSetup 
     );
   } else if (drill === "profitto") {
     const totLordo = attive.reduce((s, c) => s + (getCommessaLordoMensile(c) || 0), 0);
-    const netto = calcNetto(totLordo, factor);
+    const netto = meseRegistrato ? meseRegistrato.netto : calcNetto(totLordo, factor);
     const costi = costiMensili.reduce((s, c) => s + c.importo, 0);
     body = (
       <>
-        <div style={rowStyle}><span className="nm">Netto mensile attivo</span><span className="num t-pos">{money(netto)}</span></div>
+        <div style={rowStyle}><span className="nm">{meseRegistrato ? `Netto incassato · ${meseCorrente}` : "Netto mensile previsto"}</span><span className="num t-pos">{money(netto)}</span></div>
         <div style={rowStyle}><span className="nm">− Costi fissi mensili</span><span className="num t-danger">− {money(costi)}</span></div>
         <div style={{ ...rowStyle, fontWeight: 700 }}><span>= Profitto mensile</span><span className={"num " + (netto - costi >= 0 ? "t-pos" : "t-danger")}>{money(netto - costi)}</span></div>
       </>

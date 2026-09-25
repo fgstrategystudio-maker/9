@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { useLocalStorage } from "../../hooks/useLocalStorage";
+import { getMeseCorrente, pagamentiDelMese } from "../../utils/helpers";
 import Icon from "../Icon";
 import styles from "./Assistente.module.css";
 
@@ -37,6 +38,28 @@ export default function Assistente({ commesse, setCommesse, setup, setSetup }) {
   const secondi = (ms) => (ms / 1000).toFixed(1).replace(".", ",");
 
   const byId = (id) => commesse.find((c) => c.id === id);
+  const meseCorrente = getMeseCorrente();
+
+  // Controllo di coerenza: per ogni totale mese proposto, confronta con la
+  // somma dei pagamenti per cliente (già registrati + nuovi nella proposta).
+  function avvisiCoerenza(azioni) {
+    const avvisi = [];
+    for (const inc of azioni.filter((a) => a.tipo === "registra_incasso" && a.mese)) {
+      const m = inc.mese.toLowerCase();
+      const esistenti = pagamentiDelMese(commesse, inc.mese).reduce((s, p) => s + p.importo, 0);
+      const nuovi = azioni
+        .filter((a) => a.tipo === "registra_pagamento" && (a.mese || "").toLowerCase() === m && byId(a.id))
+        .reduce((s, a) => s + (Number(a.importo) || 0), 0);
+      const somma = esistenti + nuovi;
+      if (somma > 0 && Math.round(somma) !== Math.round(Number(inc.lordo))) {
+        avvisi.push(
+          `Attenzione: il totale proposto per ${inc.mese} è ${fmtN(inc.lordo)} €, ma la somma dei pagamenti per cliente è ${fmtN(somma)} €` +
+          ` (${fmtN(esistenti)} già registrati + ${fmtN(nuovi)} nuovi). Se mancano clienti va bene, altrimenti verifica prima di applicare.`
+        );
+      }
+    }
+    return avvisi;
+  }
 
   function buildContesto() {
     return {
@@ -47,6 +70,7 @@ export default function Assistente({ commesse, setCommesse, setup, setSetup }) {
         lordoMensile: c.lordoMensile, lordoProgetto: c.lordoProgetto,
         inizio: c.inizio, fine: c.fine, oreMensili: c.oreMensili,
         upsellTarget: c.upsellTarget, splitMezzoMese: !!c.splitMezzoMese,
+        pagamenti: (c.pagamenti || []).map((p) => ({ mese: p.mese, importo: p.importo, nota: p.nota })),
       })),
       incassatoStorico: setup.incassatoStorico || [],
     };
@@ -96,6 +120,15 @@ export default function Assistente({ commesse, setCommesse, setup, setSetup }) {
   // Anteprima leggibile di un'azione (null = azione non applicabile, viene scartata)
   function descrivi(a) {
     if (a.tipo === "nessuna_azione") return { label: a.motivo || "Nessuna azione necessaria.", applicabile: false };
+    if (a.tipo === "registra_pagamento") {
+      const c = byId(a.id);
+      const importo = Number(a.importo);
+      if (!c || !a.mese || !(importo > 0)) return null;
+      return {
+        label: `Pagamento da «${c.cliente}» — ${a.mese}: ${fmtN(importo)} €${a.testo ? ` (${a.testo})` : ""}`,
+        motivo: a.motivo, applicabile: true,
+      };
+    }
     if (a.tipo === "registra_incasso") {
       if (!a.mese || !(Number(a.lordo) >= 0)) return null;
       const esistente = (setup.incassatoStorico || []).find((r) => r.mese.toLowerCase() === a.mese.toLowerCase());
@@ -130,9 +163,18 @@ export default function Assistente({ commesse, setCommesse, setup, setSetup }) {
     const riepilogo = [];
     for (const a of proposta.azioni) {
       if (!descrivi(a)?.applicabile) continue;
-      if (a.tipo === "registra_incasso") {
+      if (a.tipo === "registra_pagamento") {
+        const importo = Number(a.importo);
+        const pagamento = { mese: a.mese, importo, nota: a.testo || "", data: new Date().toISOString().slice(0, 10) };
+        setCommesse((prev) => prev.map((c) =>
+          c.id === a.id ? { ...c, pagamenti: [...(c.pagamenti || []), pagamento] } : c
+        ));
+        riepilogo.push(`Pagamento ${fmtN(importo)} € da «${byId(a.id)?.cliente}» (${a.mese}) → nel dettaglio della commessa, sezione «Incassi registrati»`);
+        applicate++;
+      } else if (a.tipo === "registra_incasso") {
         const lordo = Number(a.lordo);
-        riepilogo.push(`Incasso ${a.mese}: ${fmtN(lordo)} € lordo → lo vedi in «Incassato storico», nella barra di ${a.mese.split(" ")[0]} della Panoramica e nella card anno su anno`);
+        const eMeseCorrente = a.mese.toLowerCase() === meseCorrente.toLowerCase();
+        riepilogo.push(`Totale ${a.mese}: ${fmtN(lordo)} € lordo → ${eMeseCorrente ? "nei box del mese in alto, " : ""}in «Incassato storico», nella Panoramica e nella card anno su anno`);
         setSetup((prev) => {
           const netto = Math.round(lordo * prev.fattoreNetto);
           const rows = prev.incassatoStorico || [];
@@ -171,6 +213,7 @@ export default function Assistente({ commesse, setCommesse, setup, setSetup }) {
   }
 
   const anteprime = proposta ? proposta.azioni.map(descrivi).filter(Boolean) : [];
+  const avvisi = proposta ? avvisiCoerenza(proposta.azioni) : [];
   const applicabili = anteprime.filter((d) => d.applicabile).length;
 
   return (
@@ -233,10 +276,10 @@ export default function Assistente({ commesse, setCommesse, setup, setSetup }) {
                   {esito.righe.map((r, i) => <li key={i}>{r}</li>)}
                 </ul>
               )}
-              {esito.righe.some((r) => r.startsWith("Incasso")) && (
+              {esito.righe.some((r) => r.startsWith("Pagamento")) && !esito.righe.some((r) => r.startsWith("Totale")) && (
                 <p className={styles.esitoNota}>
-                  Nota: il box «Lordo mensile attivo» non cambia con gli incassi — è la somma delle fee
-                  contrattuali delle commesse attive (quanto dovresti fatturare a regime), non l&apos;incassato del mese.
+                  Nota: i pagamenti per cliente non cambiano da soli il totale del mese nello storico.
+                  Per aggiornarlo chiedi all&apos;assistente «aggiorna il totale del mese» oppure correggilo in Setup → Storico incassato.
                 </p>
               )}
             </div>
@@ -245,6 +288,7 @@ export default function Assistente({ commesse, setCommesse, setup, setSetup }) {
           {proposta && (
             <div className={styles.proposta}>
               <p className={styles.spiegazione}>{proposta.spiegazione}</p>
+              {avvisi.map((w, i) => <p key={i} className={styles.avviso}>{w}</p>)}
               {tempo && (
                 <p className={styles.tempoNota}>
                   risposta in {secondi(tempo.ms)} s
