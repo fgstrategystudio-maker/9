@@ -59,26 +59,35 @@ export default function Assistente({ commesse, setCommesse, setup, setSetup }) {
     setElapsedMs(0);
     clearInterval(timerRef.current);
     timerRef.current = setInterval(() => setElapsedMs(Date.now() - t0), 100);
+    const ctrl = new AbortController();
+    const timeoutId = setTimeout(() => ctrl.abort(), 65000);
     try {
       const res = await fetch("/api/ai", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        signal: ctrl.signal,
         body: JSON.stringify({ istruzione: testo.trim(), contesto: buildContesto(), modalita }),
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setErrore(json.error === "missing_api_key"
-          ? "Assistente non configurato: crea una chiave gratuita su aistudio.google.com e aggiungila come GEMINI_API_KEY nelle variabili d'ambiente su Vercel, poi rideploya."
-          : "L'assistente non ha risposto. Riprova tra poco.");
+        if (json.error === "missing_api_key") {
+          setErrore("Assistente non configurato: crea una chiave gratuita su aistudio.google.com e aggiungila come GEMINI_API_KEY nelle variabili d'ambiente su Vercel, poi rideploya.");
+        } else {
+          setErrore("L'assistente non ha risposto. Riprova tra poco."
+            + (json.message ? ` — dettaglio: ${String(json.message).slice(0, 220)}` : ""));
+        }
         return;
       }
       const p = json.result;
       if (!p || !Array.isArray(p.azioni)) { setErrore("Risposta non valida dall'assistente."); return; }
       setTempo({ ms: Date.now() - t0, modello: json.modello, fallback: !!json.fallback });
       setProposta(p);
-    } catch {
-      setErrore("Connessione all'assistente fallita. Riprova.");
+    } catch (err) {
+      setErrore(err?.name === "AbortError"
+        ? "L'assistente sta impiegando troppo tempo: richiesta interrotta. Riprova, o prova l'altra modalità."
+        : "Connessione all'assistente fallita. Riprova.");
     } finally {
+      clearTimeout(timeoutId);
       clearInterval(timerRef.current);
       setLoading(false);
     }

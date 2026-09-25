@@ -14,7 +14,12 @@ const CATENE = {
   veloce: ['gemini-3.5-flash-lite', 'gemini-3.5-flash', 'gemini-2.5-flash-lite', 'gemini-2.5-flash'],
   preciso: ['gemini-3.5-flash', 'gemini-3.5-flash-lite', 'gemini-2.5-flash', 'gemini-2.5-flash-lite'],
 }
-const THINKING_BUDGET = { veloce: 0, preciso: 512 }
+// Timeout per singola chiamata: un modello che "ragiona" troppo o è appeso
+// viene abortito e si passa al successivo della catena.
+const TIMEOUT_CALL_MS = { veloce: 12000, preciso: 25000 }
+// Tetto complessivo: oltre questo non si provano altri modelli (le funzioni
+// Vercel hanno comunque una durata massima).
+const DEADLINE_MS = 45000
 
 // Schema della risposta JSON (subset OpenAPI supportato da Gemini)
 const RESPONSE_SCHEMA = {
@@ -81,32 +86,51 @@ CONTESTO ATTUALE (JSON)
 ${JSON.stringify(ctx, null, 1)}`
 }
 
-async function chiamaModello(apiKey, model, system, istruzione, thinkingBudget) {
+async function chiamaModello(apiKey, model, system, istruzione, thinkingConfig, timeoutMs) {
   const generationConfig = {
     responseMimeType: 'application/json',
     responseSchema: RESPONSE_SCHEMA,
-    maxOutputTokens: 2000,
+    // Ampio: sui modelli con "thinking" i token di ragionamento contano nel
+    // limite di output, e un limite basso tronca il JSON finale.
+    maxOutputTokens: 8000,
     temperature: 0.2,
   }
-  if (thinkingBudget !== null) generationConfig.thinkingConfig = { thinkingBudget }
-  const r = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-    {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        systemInstruction: { parts: [{ text: system }] },
-        contents: [{ role: 'user', parts: [{ text: istruzione }] }],
-        generationConfig,
-      }),
-    }
-  )
-  if (!r.ok) return { ok: false, status: r.status, text: await r.text() }
-  return { ok: true, data: await r.json() }
+  if (thinkingConfig) generationConfig.thinkingConfig = thinkingConfig
+  const ctrl = new AbortController()
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs)
+  try {
+    const r = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        signal: ctrl.signal,
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: system }] },
+          contents: [{ role: 'user', parts: [{ text: istruzione }] }],
+          generationConfig,
+        }),
+      }
+    )
+    if (!r.ok) return { ok: false, status: r.status, text: await r.text() }
+    return { ok: true, data: await r.json() }
+  } catch (err) {
+    if (err.name === 'AbortError') return { ok: false, status: 0, text: `timeout dopo ${Math.round(timeoutMs / 1000)}s` }
+    throw err
+  } finally {
+    clearTimeout(timer)
+  }
 }
 
 function estrai(data) {
-  const text = (data.candidates?.[0]?.content?.parts || []).map((p) => p.text || '').join('')
+  let text = (data.candidates?.[0]?.content?.parts || [])
+    .filter((p) => !p.thought) // esclude eventuali riassunti di ragionamento
+    .map((p) => p.text || '')
+    .join('')
+    .trim()
+  // Difensivo: alcuni modelli avvolgono comunque il JSON in un fence markdown
+  const fence = text.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/)
+  if (fence) text = fence[1]
   try {
     const parsed = JSON.parse(text)
     if (parsed && typeof parsed.spiegazione === 'string' && Array.isArray(parsed.azioni)) return parsed
@@ -133,29 +157,44 @@ export default async function handler(req, res) {
   const modalita = modalitaRaw === 'preciso' ? 'preciso' : 'veloce'
   const system = systemPrompt(contesto || {})
 
-  let ultimoErrore = null
+  // Configurazioni thinking da provare in ordine sullo stesso modello: prima il
+  // parametro dei 2.5 (thinkingBudget), poi quello delle generazioni nuove
+  // (thinkingLevel), infine nessuna config. Un 400 su "thinking" costa
+  // pochissimo e passa subito al tentativo successivo.
+  const configThinking = modalita === 'veloce'
+    ? [{ thinkingBudget: 0 }, { thinkingLevel: 'low' }, null]
+    : [{ thinkingBudget: 512 }, null]
+
+  const t0 = Date.now()
+  const errori = []
   const catena = CATENE[modalita]
   for (let i = 0; i < catena.length; i++) {
+    if (Date.now() - t0 > DEADLINE_MS) {
+      errori.push('tempo esaurito, modelli restanti saltati')
+      break
+    }
     const model = catena[i]
     try {
-      let r = await chiamaModello(apiKey, model, system, istruzione, THINKING_BUDGET[modalita])
-      // Alcuni modelli non accettano thinkingConfig: ritenta lo stesso modello senza
-      if (!r.ok && r.status === 400 && /thinking/i.test(r.text || '')) {
-        r = await chiamaModello(apiKey, model, system, istruzione, null)
+      let r = null
+      for (const cfg of configThinking) {
+        r = await chiamaModello(apiKey, model, system, istruzione, cfg, TIMEOUT_CALL_MS[modalita])
+        // Config thinking non supportata da questo modello → prova la successiva
+        if (!r.ok && r.status === 400 && /thinking/i.test(r.text || '')) continue
+        break
       }
       if (!r.ok) {
-        ultimoErrore = `${model}: HTTP ${r.status}`
-        continue // sovraccarico (429/503), modello non disponibile (404), ecc. → prossimo
+        errori.push(`${model}: ${r.status ? `HTTP ${r.status}` : r.text}`)
+        continue // sovraccarico (429/503), modello non disponibile (404), timeout, ecc. → prossimo
       }
       const parsed = estrai(r.data)
       if (!parsed) {
-        ultimoErrore = `${model}: output non valido`
+        errori.push(`${model}: output non valido`)
         continue
       }
-      return res.json({ result: parsed, modello: model, fallback: i > 0 })
+      return res.json({ result: parsed, modello: model, fallback: i > 0, ms: Date.now() - t0 })
     } catch (err) {
-      ultimoErrore = `${model}: ${err.message}`
+      errori.push(`${model}: ${err.message}`)
     }
   }
-  res.status(502).json({ error: 'all_models_failed', message: ultimoErrore || 'nessun modello disponibile' })
+  res.status(502).json({ error: 'all_models_failed', message: errori.join(' · ') || 'nessun modello disponibile' })
 }
