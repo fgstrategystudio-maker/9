@@ -2,7 +2,7 @@
 'use strict';
 
 // ---------- Storage ----------
-const APP_VERSION = '12';
+const APP_VERSION = '13';
 const KEY = 'dieta.v1';
 const MEALS = [
   { id: 'colazione', label: 'Colazione' },
@@ -63,6 +63,7 @@ const DEFAULT_DB = {
     exerciseAddBack: 1, // quota delle kcal degli allenamenti aggiunta al budget del giorno
   },
   entries: {},   // { 'YYYY-MM-DD': [entry] }
+  deficitStart: {}, // { 'YYYY-MM': { kcal, until } } bilancio inserito a mano per i giorni prima di 'until'
   exercise: {},  // { 'YYYY-MM-DD': [{ id, name, minutes, kcal }] }
   water: {},     // { 'YYYY-MM-DD': ml }
   body: [],      // [{ date, weight, bodyFat, ... }]
@@ -154,6 +155,45 @@ function latestBody(field) {
   const list = [...db.body].filter(b => b[field] != null).sort((a, b) => a.date.localeCompare(b.date));
   return list.length ? list[list.length - 1] : null;
 }
+// ---------- Bilancio calorico ----------
+const KCAL_PER_KG_FAT = 7700;
+function weightOn(d) {
+  const list = db.body.filter(b => b.weight != null).sort((a, b) => a.date.localeCompare(b.date));
+  if (!list.length) return null;
+  const before = list.filter(b => b.date <= d);
+  return (before.length ? before[before.length - 1] : list[0]).weight;
+}
+// Calorie consumate in un giorno: metabolismo basale (+ giornata tipo, attività fissa e allenamenti se si usa il fabbisogno totale)
+function dayBurn(d) {
+  const p = db.profile, w = weightOn(d);
+  if (!w) return null;
+  const bmr = 10 * w + 6.25 * p.height - 5 * p.age + (p.sex === 'm' ? 5 : -161);
+  if (db.goals.deficitRef === 'bmr') return bmr;
+  return bmr * (p.lifestyle || 1.2) + (p.baseActivity || 0) + dayExerciseKcal(d);
+}
+// Bilancio del mese: negativo = deficit. Oggi è a parte perché la giornata non è finita.
+function monthBalance(month) {
+  const t = today();
+  const start = db.deficitStart?.[month];
+  const first = `${month}-01`;
+  const last = ymd(new Date(+month.slice(0, 4), +month.slice(5, 7), 0));
+  let from = start?.until && start.until > first ? start.until : first;
+  let total = start ? -start.kcal : 0, days = 0, missing = false;
+  for (let d = from; d <= last && d < t; d = addDays(d, 1)) {
+    if (!dayEntries(d).length) continue;
+    const burn = dayBurn(d);
+    if (burn == null) { missing = true; continue; }
+    total += dayTotals(d).kcal - burn; days++;
+  }
+  let todayVal = null;
+  if (t.startsWith(month) && t >= from && dayEntries(t).length && dayBurn(t) != null) todayVal = dayTotals(t).kcal - dayBurn(t);
+  const daysLeft = t.startsWith(month) ? (+last.slice(8) - +t.slice(8) + 1) : 0;
+  const avg = days ? (total - (start ? -start.kcal : 0)) / days : null;
+  return { total, days, todayVal, start, from, avg, daysLeft, missing };
+}
+const fmtBalance = k => `${k > 0 ? '+' : k < 0 ? '−' : ''}${Math.abs(r0(k)).toLocaleString('it-IT')} kcal`;
+const fatKg = k => fmtNum(Math.abs(k) / KCAL_PER_KG_FAT, 2);
+
 function rememberRecent(item) {
   const key = item.name.trim().toLowerCase();
   db.recent = [{ name: item.name, grams: item.grams, per100: item.per100 }, ...db.recent.filter(r => r.name.trim().toLowerCase() !== key)].slice(0, 40);
@@ -277,6 +317,7 @@ function drawCalendar(s) {
       <div class="stat"><div class="v">${green}<span class="muted" style="font-size:15px">/${past.length}</span></div><div class="k">giorni verdi nel mese</div></div>
       <div class="stat"><div class="v">${signed(dW, 'kg')}</div><div class="k">peso nel mese</div></div>
       <div class="stat"><div class="v">${r0(avg)}</div><div class="k">kcal medie (${logged.length} giorni registrati)</div></div>
+      ${(() => { const mb = monthBalance(calMonth); return mb.days || mb.start ? `<div class="stat" style="grid-column:1/-1"><div class="v">${fmtBalance(mb.total)}</div><div class="k">bilancio del mese ≈ ${fatKg(mb.total)} kg di grasso ${mb.total <= 0 ? 'persi' : 'in più'}</div></div>` : ''; })()}
     </div>
     <div class="btn-row" style="margin-top:12px"><button class="btn secondary" id="calClose">Chiudi</button><button class="btn" id="calToday">Vai a oggi</button></div>`;
   $('#calPrev', box).addEventListener('click', () => { calMonth = ymd(new Date(y, m - 2, 1)).slice(0, 7); drawCalendar(s); });
@@ -342,6 +383,11 @@ function renderToday(v) {
       <span>Fibre ${r0(tot.fib)} / ${r0(g.fiber)} g</span>
       <span>${bonus > 0 ? `Obiettivo ${r0(g.kcal)} + ${r0(bonus)} sport` : `Mangiate ${r0(tot.kcal)} di ${r0(g.kcal)} kcal`}</span>
     </div>
+    ${(() => {
+      const mb = monthBalance(today().slice(0, 7));
+      if (!mb.days && !mb.start) return '';
+      return `<button class="balance-line" id="balanceLine"><span>Bilancio del mese</span><b class="${mb.total <= 0 ? 'good' : 'bad'}">${fmtBalance(mb.total)}</b><span>≈ ${fatKg(mb.total)} kg di grasso ${mb.total <= 0 ? 'persi' : 'in più'}</span></button>`;
+    })()}
   </div>`;
 
   const exList = dayExercise(curDate);
@@ -410,6 +456,7 @@ function renderToday(v) {
   qw && qw.addEventListener('click', () => bodyForm(null, curDate));
   $('#addExercise', v).addEventListener('click', () => exerciseForm());
   $('#backToday', v)?.addEventListener('click', () => { curDate = today(); render(); });
+  $('#balanceLine', v)?.addEventListener('click', () => go('progress'));
   $$('[data-ex]', v).forEach(li => li.addEventListener('click', () => exerciseForm(li.dataset.ex)));
 }
 
@@ -1129,6 +1176,7 @@ function renderProgress(v) {
   let html = `<div class="seg">${[[7, '7 giorni'], [30, '30 giorni'], [90, '3 mesi'], [365, '1 anno']].map(([n, l]) => `<button data-r="${n}" class="${n === progressRange ? 'on' : ''}">${l}</button>`).join('')}</div>`;
 
   html += `<button class="btn secondary" id="openCal" style="margin-bottom:12px">📅 Calendario giorno per giorno</button>`;
+  html += balanceCard();
   html += `<div class="card"><h2>Riepilogo</h2><div class="stats">
     <div class="stat"><div class="v">${r0(s.kcal)}</div><div class="k">kcal medie / giorno (obiettivo ${r0(g.kcal)})</div></div>
     <div class="stat"><div class="v">${s.inTarget}<span class="muted" style="font-size:15px">/${s.logged}</span></div><div class="k">giorni verdi (nel target)</div></div>
@@ -1191,6 +1239,59 @@ function renderProgress(v) {
   v.innerHTML = html;
   $$('[data-r]', v).forEach(b => b.addEventListener('click', () => { progressRange = +b.dataset.r; render(); }));
   $('#openCal', v).addEventListener('click', openCalendar);
+  $('#editStart', v)?.addEventListener('click', startForm);
+  $$('[data-ref]', v).forEach(b => b.addEventListener('click', () => { db.goals.deficitRef = b.dataset.ref; save(); render(); }));
+}
+
+function balanceCard() {
+  const month = today().slice(0, 7);
+  const mb = monthBalance(month);
+  const name = parseYmd(today()).toLocaleDateString('it-IT', { month: 'long' });
+  const ref = db.goals.deficitRef === 'bmr' ? 'bmr' : 'tdee';
+  if (!weightOn(today())) return `<div class="card"><h2>Bilancio calorico di ${name}</h2><p class="small muted">Registra il tuo peso in <b>Corpo</b> per calcolare le calorie consumate.</p></div>`;
+  const proj = mb.avg != null && mb.daysLeft ? mb.total + mb.avg * mb.daysLeft : null;
+  return `<div class="card">
+    <h2>Bilancio calorico di ${name}</h2>
+    <div class="balance-big ${mb.total <= 0 ? 'good' : 'bad'}">${fmtBalance(mb.total)}</div>
+    <div class="center" style="margin-bottom:10px">≈ <b>${fatKg(mb.total)} kg di grasso</b> ${mb.total <= 0 ? 'persi' : 'accumulati'} <span class="muted small">(7.700 kcal ≈ 1 kg)</span></div>
+    <div class="calc-rows">
+      ${mb.start ? `<div><span>Valore iniziale fino al ${fmtDate(addDays(mb.start.until, -1), { day: 'numeric', month: 'short' })}</span><b>${fmtBalance(-mb.start.kcal)}</b></div>` : ''}
+      <div><span>Giorni registrati da ${fmtDate(mb.from, { day: 'numeric', month: 'short' })}${mb.days ? ` (${mb.days})` : ''}</span><b>${fmtBalance(mb.total - (mb.start ? -mb.start.kcal : 0))}</b></div>
+      ${mb.avg != null ? `<div><span>Media al giorno</span><b>${fmtBalance(mb.avg)}</b></div>` : ''}
+      ${mb.todayVal != null ? `<div><span>Oggi (in corso, si somma a fine giornata)</span><b>${fmtBalance(mb.todayVal)}</b></div>` : ''}
+      ${proj != null ? `<div class="sum"><span>A fine mese, di questo passo</span><b>${fmtBalance(proj)} · ${fatKg(proj)} kg</b></div>` : ''}
+    </div>
+    <div class="seg" style="margin-top:10px">
+      <button data-ref="tdee" class="${ref === 'tdee' ? 'on' : ''}">Fabbisogno totale</button>
+      <button data-ref="bmr" class="${ref === 'bmr' ? 'on' : ''}">Solo metabolismo basale</button>
+    </div>
+    <p class="small muted" style="margin-top:-4px">${ref === 'tdee'
+      ? 'Calorie mangiate − (metabolismo basale + giornata tipo + attività fissa + allenamenti).'
+      : 'Calorie mangiate − metabolismo basale (senza contare movimento e sport).'} Contano solo i giorni in cui hai registrato i pasti.${mb.missing ? ' Alcuni giorni non hanno un peso di riferimento.' : ''}</p>
+    <button class="btn secondary" id="editStart">${mb.start ? 'Modifica valore iniziale' : 'Inserisci valore iniziale del mese'}</button>
+  </div>`;
+}
+
+function startForm() {
+  const month = today().slice(0, 7);
+  const cur = db.deficitStart?.[month];
+  openSheet(`<h3>Valore iniziale del mese</h3>
+    <p class="small muted">Se hai già tenuto il conto altrove, inserisci il deficit accumulato dall'inizio del mese fino al giorno indicato (escluso). L'app aggiunge i giorni da quella data in poi.</p>
+    <label class="field"><span>Deficit accumulato (kcal)</span><input type="number" inputmode="numeric" id="sKcal" value="${cur ? cur.kcal : ''}" placeholder="es. 11700"></label>
+    <p class="small muted" style="margin-top:-4px">Scrivi il numero senza segno per un deficit. Se eri in surplus, mettilo con il meno (es. −500).</p>
+    <label class="field"><span>Fino al giorno (escluso)</span><input type="date" id="sUntil" value="${cur?.until || today()}" min="${month}-01" max="${today()}"></label>
+    <div class="btn-row">${cur ? '<button class="btn danger" id="sDel">Rimuovi</button>' : ''}<button class="btn" id="sSave">Salva</button></div>`, s => {
+    $('#sSave', s).addEventListener('click', () => {
+      const kcal = num($('#sKcal', s).value);
+      const until = $('#sUntil', s).value || today();
+      if (kcal == null) { toast('Inserisci il valore in kcal'); return; }
+      db.deficitStart = { ...(db.deficitStart || {}), [until.slice(0, 7)]: { kcal, until } };
+      save(); closeSheet(); render(); toast('Valore iniziale salvato');
+    });
+    $('#sDel', s)?.addEventListener('click', () => {
+      delete db.deficitStart[month]; save(); closeSheet(); render();
+    });
+  });
 }
 
 function weightTrend() {

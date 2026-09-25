@@ -339,3 +339,12 @@ label.check input { width: 20px; height: 20px; accent-color: var(--accent); }
   :root[data-palette="oceano"][data-scheme="dark"] { --bg:#07111d; --card:#0f1c2c; --text:#e6eef7; --muted:#8ea3b9; --line:#1d2f44; --accent:#38bdf8; --accent-soft:#0f3350; --kcal:#38bdf8; --prot:#fb7185; --carb:#a5b4fc; --fat:#fbbf24; --water:#7dd3fc; --on-accent:#0b0c0b; }
   :root[data-palette="grafite"][data-scheme="dark"] { --bg:#0b0c0b; --card:#161816; --text:#eef0ec; --muted:#9a9f96; --line:#262925; --accent:#a3e635; --accent-soft:#26351a; --kcal:#a3e635; --prot:#f87171; --carb:#60a5fa; --fat:#fbbf24; --water:#22d3ee; --on-accent:#0b0c0b; }
   :root[data-palette="artico"][data-scheme="dark"] { --bg:#0a0e13; --card:#121820; --text:#e8eef5; --muted:#8e9bab; --line:#232d39; --accent:#a5c8f0; --accent-soft:#1c2a3b; --kcal:#a5c8f0; --prot:#ff8a8f; --carb:#8fb6ff; --fat:#f5c350; --water:#7dd3fc; --on-accent:#0b0c0b; }
+
+/* Bilancio calorico */
+.balance-line { width: 100%; margin-top: 10px; border: 0; border-radius: 12px; background: var(--bg); padding: 8px 12px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 2px 10px; font-size: 13px; color: var(--muted); text-align: left; }
+.balance-line b { font-size: 15px; }
+.balance-line span:last-child { width: 100%; }
+.good { color: var(--ok); }
+.bad { color: var(--danger); }
+.balance-big { font-size: 34px; font-weight: 800; text-align: center; letter-spacing: -.02em; }
+.calc-rows > div b { white-space: nowrap; margin-left: 10px; }
