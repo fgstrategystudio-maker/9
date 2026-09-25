@@ -298,3 +298,7 @@ a[style*="background:var(--gold)"]:hover, button[style*="background:var(--gold)"
 .sf-services { width: 100%; display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 13px; padding-top: 14px; border-top: 1px solid var(--av-line); }
 .related-services { margin-top: 34px !important; padding-top: 22px; border-top: 1px solid var(--av-line); font-size: 15px !important; }
 .related-services a { margin-right: 14px; }
+.author-box { margin-top: 30px; padding: 20px 22px; background: var(--av-bg-2); border-radius: 8px; }
+.author-box p { margin: 0 !important; font-size: 15px !important; line-height: 1.6 !important; color: var(--av-muted) !important; }
+.author-box strong { color: var(--av-ink) !important; font-weight: 500 !important; }
+.author-box a { margin-left: 0; }

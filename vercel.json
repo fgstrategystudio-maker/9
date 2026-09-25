@@ -1,17 +1,141 @@
 {
   "ignoreCommand": "[ -n \"$VERCEL_GIT_PREVIOUS_SHA\" ] && git diff --quiet \"$VERCEL_GIT_PREVIOUS_SHA\" HEAD -- . ':(exclude)dashboard' ':(exclude)backups' ':(exclude).github'",
   "git": {
-    "deploymentEnabled": { "claude/*": false }
+    "deploymentEnabled": {
+      "claude/*": false
+    }
   },
   "cleanUrls": true,
   "trailingSlash": false,
   "rewrites": [
-    { "source": "/en", "destination": "/en/index.html" },
-    { "source": "/pt", "destination": "/pt/index.html" }
+    {
+      "source": "/en",
+      "destination": "/en/index.html"
+    },
+    {
+      "source": "/pt",
+      "destination": "/pt/index.html"
+    },
+    {
+      "source": "/es",
+      "destination": "/es/index.html"
+    }
   ],
   "redirects": [
-    { "source": "/blog-consulente-marketing-per-posizionamento-acquisition-ed-execution", "destination": "/consulente-marketing-pmi", "permanent": true },
-    { "source": "/blog-consulenza-marketing-per-aziende-che-vogliono-crescere-meglio", "destination": "/servizi-marketing", "permanent": true },
-    { "source": "/blog-strategia-marketing-per-pmi-e-aziende-in-fase-di-crescita", "destination": "/consulente-marketing-pmi", "permanent": true }
+    {
+      "source": "/blog-consulente-marketing-per-posizionamento-acquisition-ed-execution",
+      "destination": "/consulente-marketing-pmi",
+      "permanent": true
+    },
+    {
+      "source": "/blog-consulenza-marketing-per-aziende-che-vogliono-crescere-meglio",
+      "destination": "/servizi-marketing",
+      "permanent": true
+    },
+    {
+      "source": "/blog-strategia-marketing-per-pmi-e-aziende-in-fase-di-crescita",
+      "destination": "/consulente-marketing-pmi",
+      "permanent": true
+    },
+    {
+      "source": "/blog-come-impostare-un-controllo-di-gestione-utile-al-management",
+      "destination": "/blog-controllo-di-gestione-per-pmi-e-aziende-in-fase-di-crescita",
+      "permanent": true
+    },
+    {
+      "source": "/:lang(en|pt|es)/blog-come-impostare-un-controllo-di-gestione-utile-al-management",
+      "destination": "/:lang/blog-controllo-di-gestione-per-pmi-e-aziende-in-fase-di-crescita",
+      "permanent": true
+    },
+    {
+      "source": "/blog-controllo-di-gestione-per-capire-margini-costi-e-priorita",
+      "destination": "/blog-controllo-di-gestione-per-pmi-e-aziende-in-fase-di-crescita",
+      "permanent": true
+    },
+    {
+      "source": "/:lang(en|pt|es)/blog-controllo-di-gestione-per-capire-margini-costi-e-priorita",
+      "destination": "/:lang/blog-controllo-di-gestione-per-pmi-e-aziende-in-fase-di-crescita",
+      "permanent": true
+    },
+    {
+      "source": "/blog-margini-costi-e-sostenibilita-il-valore-del-controllo-di-gestione",
+      "destination": "/blog-controllo-di-gestione-per-pmi-e-aziende-in-fase-di-crescita",
+      "permanent": true
+    },
+    {
+      "source": "/:lang(en|pt|es)/blog-margini-costi-e-sostenibilita-il-valore-del-controllo-di-gestione",
+      "destination": "/:lang/blog-controllo-di-gestione-per-pmi-e-aziende-in-fase-di-crescita",
+      "permanent": true
+    },
+    {
+      "source": "/blog-consulenza-data-driven-per-kpi-dashboard-e-decisioni-migliori",
+      "destination": "/blog-kpi-e-dashboard-per-aziende-che-vogliono-decidere-meglio",
+      "permanent": true
+    },
+    {
+      "source": "/:lang(en|pt|es)/blog-consulenza-data-driven-per-kpi-dashboard-e-decisioni-migliori",
+      "destination": "/:lang/blog-kpi-e-dashboard-per-aziende-che-vogliono-decidere-meglio",
+      "permanent": true
+    },
+    {
+      "source": "/blog-tracking-dashboard-e-reportistica-per-aziende-in-crescita",
+      "destination": "/blog-kpi-e-dashboard-per-aziende-che-vogliono-decidere-meglio",
+      "permanent": true
+    },
+    {
+      "source": "/:lang(en|pt|es)/blog-tracking-dashboard-e-reportistica-per-aziende-in-crescita",
+      "destination": "/:lang/blog-kpi-e-dashboard-per-aziende-che-vogliono-decidere-meglio",
+      "permanent": true
+    },
+    {
+      "source": "/blog-dati-e-reporting-per-una-crescita-piu-leggibile-e-sostenibile",
+      "destination": "/blog-kpi-e-dashboard-per-aziende-che-vogliono-decidere-meglio",
+      "permanent": true
+    },
+    {
+      "source": "/:lang(en|pt|es)/blog-dati-e-reporting-per-una-crescita-piu-leggibile-e-sostenibile",
+      "destination": "/:lang/blog-kpi-e-dashboard-per-aziende-che-vogliono-decidere-meglio",
+      "permanent": true
+    },
+    {
+      "source": "/blog-articoli-seo-per-migliorare-posizionamento-e-autorevolezza",
+      "destination": "/blog-come-scrivere-articoli-seo-che-portano-traffico-qualificato",
+      "permanent": true
+    },
+    {
+      "source": "/:lang(en|pt|es)/blog-articoli-seo-per-migliorare-posizionamento-e-autorevolezza",
+      "destination": "/:lang/blog-come-scrivere-articoli-seo-che-portano-traffico-qualificato",
+      "permanent": true
+    },
+    {
+      "source": "/blog-redazione-articoli-seo-per-aziende-che-vogliono-crescere",
+      "destination": "/blog-come-scrivere-articoli-seo-che-portano-traffico-qualificato",
+      "permanent": true
+    },
+    {
+      "source": "/:lang(en|pt|es)/blog-redazione-articoli-seo-per-aziende-che-vogliono-crescere",
+      "destination": "/:lang/blog-come-scrivere-articoli-seo-che-portano-traffico-qualificato",
+      "permanent": true
+    },
+    {
+      "source": "/blog-servizio-di-redazione-articoli-per-blog-aziendali-b2b",
+      "destination": "/blog-come-scrivere-articoli-seo-che-portano-traffico-qualificato",
+      "permanent": true
+    },
+    {
+      "source": "/:lang(en|pt|es)/blog-servizio-di-redazione-articoli-per-blog-aziendali-b2b",
+      "destination": "/:lang/blog-come-scrivere-articoli-seo-che-portano-traffico-qualificato",
+      "permanent": true
+    },
+    {
+      "source": "/blog-consulenza-per-sviluppo-del-business-partnership-e-crescita-sostenibile",
+      "destination": "/blog-sviluppo-del-business-per-aziende-che-vogliono-aprire-nuove-opportunita",
+      "permanent": true
+    },
+    {
+      "source": "/:lang(en|pt|es)/blog-consulenza-per-sviluppo-del-business-partnership-e-crescita-sostenibile",
+      "destination": "/:lang/blog-sviluppo-del-business-per-aziende-che-vogliono-aprire-nuove-opportunita",
+      "permanent": true
+    }
   ]
 }
