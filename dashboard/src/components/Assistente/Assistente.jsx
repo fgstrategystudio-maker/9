@@ -1,0 +1,217 @@
+import { useState } from "react";
+import Icon from "../Icon";
+import styles from "./Assistente.module.css";
+
+const nf = new Intl.NumberFormat("it-IT");
+const fmtN = (n) => nf.format(Math.round(n ?? 0));
+
+const STATI = ["In corso", "In scadenza", "Da chiarire", "Sospeso", "Concluso", "Perso"];
+const CAMPI_NUM = ["lordoMensile", "lordoProgetto", "oreMensili", "upsellTarget"];
+const CAMPI_STR = ["stato", "tipo", "inizio", "fine", "priorita", "servizio", "note"];
+const CAMPI_BOOL = ["splitMezzoMese"];
+const LABEL_CAMPO = {
+  lordoMensile: "Fee lorda mensile", lordoProgetto: "Lordo progetto", oreMensili: "Ore/mese",
+  upsellTarget: "Upsell target", stato: "Stato", tipo: "Tipo", inizio: "Inizio", fine: "Fine",
+  splitMezzoMese: "Split 50/50", priorita: "Priorità", servizio: "Servizio", note: "Note",
+};
+
+const ESEMPI = [
+  "Grano mi ha pagato 500 invece di 800 questo mese",
+  "L'Assistedile rinnova a 1.200 €/mese fino a dicembre",
+  "Segna conclusa la commessa Sering",
+];
+
+export default function Assistente({ commesse, setCommesse, setup, setSetup }) {
+  const [open, setOpen] = useState(false);
+  const [testo, setTesto] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [errore, setErrore] = useState(null);
+  const [proposta, setProposta] = useState(null);
+  const [esito, setEsito] = useState(null);
+
+  const byId = (id) => commesse.find((c) => c.id === id);
+
+  function buildContesto() {
+    return {
+      oggi: new Date().toISOString().slice(0, 10),
+      fattoreNetto: setup.fattoreNetto,
+      commesse: commesse.map((c) => ({
+        id: c.id, cliente: c.cliente, servizio: c.servizio, tipo: c.tipo, stato: c.stato,
+        lordoMensile: c.lordoMensile, lordoProgetto: c.lordoProgetto,
+        inizio: c.inizio, fine: c.fine, oreMensili: c.oreMensili,
+        upsellTarget: c.upsellTarget, splitMezzoMese: !!c.splitMezzoMese,
+      })),
+      incassatoStorico: setup.incassatoStorico || [],
+    };
+  }
+
+  async function chiedi() {
+    if (!testo.trim() || loading) return;
+    setLoading(true); setErrore(null); setProposta(null); setEsito(null);
+    try {
+      const res = await fetch("/api/ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ istruzione: testo.trim(), contesto: buildContesto() }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setErrore(json.error === "missing_api_key"
+          ? "Assistente non configurato: aggiungi ANTHROPIC_API_KEY nelle variabili d'ambiente su Vercel e rideploya."
+          : "L'assistente non ha risposto. Riprova tra poco.");
+        return;
+      }
+      const p = json.result;
+      if (!p || !Array.isArray(p.azioni)) { setErrore("Risposta non valida dall'assistente."); return; }
+      setProposta(p);
+    } catch {
+      setErrore("Connessione all'assistente fallita. Riprova.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // Anteprima leggibile di un'azione (null = azione non applicabile, viene scartata)
+  function descrivi(a) {
+    if (a.tipo === "nessuna_azione") return { label: a.motivo || "Nessuna azione necessaria.", applicabile: false };
+    if (a.tipo === "registra_incasso") {
+      if (!a.mese || !(Number(a.lordo) >= 0)) return null;
+      const esistente = (setup.incassatoStorico || []).find((r) => r.mese.toLowerCase() === a.mese.toLowerCase());
+      const netto = Math.round(Number(a.lordo) * setup.fattoreNetto);
+      return {
+        label: `${esistente ? "Aggiorna" : "Registra"} incasso ${a.mese}: ${fmtN(a.lordo)} € lordo (netto ${fmtN(netto)} €)` +
+          (esistente ? ` — era ${fmtN(esistente.lordo)} €` : ""),
+        motivo: a.motivo, applicabile: true,
+      };
+    }
+    if (a.tipo === "aggiorna_commessa") {
+      const c = byId(a.id);
+      if (!c || !a.campi) return null;
+      const cambi = Object.entries(a.campi)
+        .filter(([k]) => CAMPI_NUM.includes(k) || CAMPI_STR.includes(k) || CAMPI_BOOL.includes(k))
+        .filter(([k, v]) => !(k === "stato" && !STATI.includes(v)))
+        .map(([k, v]) => `${LABEL_CAMPO[k] || k}: ${c[k] ?? "—"} → ${v}`);
+      if (cambi.length === 0) return null;
+      return { label: `Aggiorna «${c.cliente}» — ${cambi.join(" · ")}`, motivo: a.motivo, applicabile: true };
+    }
+    if (a.tipo === "aggiungi_nota") {
+      const c = byId(a.id);
+      if (!c || !a.testo) return null;
+      return { label: `Nota su «${c.cliente}»: “${a.testo}”`, motivo: a.motivo, applicabile: true };
+    }
+    return null;
+  }
+
+  function applica() {
+    const oggi = new Date().toLocaleDateString("it-IT");
+    let applicate = 0;
+    for (const a of proposta.azioni) {
+      if (!descrivi(a)?.applicabile) continue;
+      if (a.tipo === "registra_incasso") {
+        const lordo = Number(a.lordo);
+        setSetup((prev) => {
+          const netto = Math.round(lordo * prev.fattoreNetto);
+          const rows = prev.incassatoStorico || [];
+          const idx = rows.findIndex((r) => r.mese.toLowerCase() === a.mese.toLowerCase());
+          const row = { mese: a.mese, lordo, netto };
+          return {
+            ...prev,
+            incassatoStorico: idx >= 0 ? rows.map((r, i) => (i === idx ? row : r)) : [...rows, row],
+          };
+        });
+        applicate++;
+      } else if (a.tipo === "aggiorna_commessa") {
+        const puliti = {};
+        for (const [k, v] of Object.entries(a.campi || {})) {
+          if (CAMPI_NUM.includes(k)) puliti[k] = v === null || v === "" ? null : Number(v);
+          else if (CAMPI_BOOL.includes(k)) puliti[k] = !!v;
+          else if (k === "stato") { if (STATI.includes(v)) puliti[k] = v; }
+          else if (CAMPI_STR.includes(k)) puliti[k] = v == null ? null : String(v);
+        }
+        setCommesse((prev) => prev.map((c) => (c.id === a.id ? { ...c, ...puliti } : c)));
+        applicate++;
+      } else if (a.tipo === "aggiungi_nota") {
+        setCommesse((prev) => prev.map((c) =>
+          c.id === a.id ? { ...c, note: `${c.note ? c.note + "\n" : ""}[${oggi}] ${a.testo}` } : c
+        ));
+        applicate++;
+      }
+    }
+    setProposta(null);
+    setTesto("");
+    setEsito(applicate > 0 ? `✓ ${applicate === 1 ? "Modifica applicata" : applicate + " modifiche applicate"} e salvate` : "Nessuna modifica da applicare.");
+  }
+
+  const anteprime = proposta ? proposta.azioni.map(descrivi).filter(Boolean) : [];
+  const applicabili = anteprime.filter((d) => d.applicabile).length;
+
+  return (
+    <section className="panel">
+      <button className={styles.head} onClick={() => setOpen((v) => !v)}>
+        <span className="panel-title"><Icon name="spark" size={15} />Assistente AI</span>
+        <span className="panel-note">
+          {open ? "chiudi ▲" : "scrivi cosa è successo, penso io ad aggiornare ▼"}
+        </span>
+      </button>
+
+      {open && (
+        <div className={styles.body}>
+          <div className={styles.inputRow}>
+            <textarea
+              className="textarea"
+              rows={2}
+              placeholder='Es. "Grano mi ha pagato 500 invece di 800 questo mese"'
+              value={testo}
+              onChange={(e) => setTesto(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) chiedi(); }}
+            />
+            <button className="btn btn-primary" onClick={chiedi} disabled={loading || !testo.trim()}>
+              {loading ? "Ci penso…" : "Chiedi"}
+            </button>
+          </div>
+
+          {!proposta && !loading && !errore && !esito && (
+            <div className={styles.esempi}>
+              {ESEMPI.map((e) => (
+                <button key={e} className={styles.esempio} onClick={() => setTesto(e)}>{e}</button>
+              ))}
+            </div>
+          )}
+
+          {errore && <p className={styles.errore}>{errore}</p>}
+          {esito && <p className={styles.esito}>{esito}</p>}
+
+          {proposta && (
+            <div className={styles.proposta}>
+              <p className={styles.spiegazione}>{proposta.spiegazione}</p>
+              <ul className={styles.azioni}>
+                {anteprime.map((d, i) => (
+                  <li key={i} className={d.applicabile ? "" : styles.nonApplicabile}>
+                    <Icon name={d.applicabile ? "check" : "alert"} size={14} />
+                    <span>
+                      {d.label}
+                      {d.motivo && <span className={styles.motivo}> — {d.motivo}</span>}
+                    </span>
+                  </li>
+                ))}
+                {anteprime.length === 0 && <li className={styles.nonApplicabile}><Icon name="alert" size={14} /><span>Nessuna azione valida proposta.</span></li>}
+              </ul>
+              <div className={styles.azioniBar}>
+                <button className="btn btn-ghost" onClick={() => setProposta(null)}>Annulla</button>
+                {applicabili > 0 && (
+                  <button className="btn btn-primary" onClick={applica}>
+                    <Icon name="check" size={15} /> Applica {applicabili === 1 ? "la modifica" : `${applicabili} modifiche`}
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          <p className={styles.disclaimer}>
+            Le modifiche vengono applicate solo dopo la tua conferma. Controlla sempre i numeri proposti.
+          </p>
+        </div>
+      )}
+    </section>
+  );
+}

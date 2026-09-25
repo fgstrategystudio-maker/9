@@ -17,6 +17,7 @@ import {
   sumLordoAnno,
 } from "../../utils/helpers";
 import Icon from "../Icon";
+import Assistente from "../Assistente/Assistente";
 import styles from "./Dashboard.module.css";
 
 const MESI_IT = [
@@ -260,6 +261,8 @@ export default function Dashboard({ commesse, setCommesse, setup, setSetup }) {
           <p className="page-sub">Panoramica commesse, incassato e cash flow — anno fiscale {anno}.</p>
         </div>
       </header>
+
+      <Assistente commesse={commesse} setCommesse={setCommesse} setup={setup} setSetup={setSetup} />
 
       {(inScadenza.length > 0 || scadute.length > 0) && (
         <div className="notice warn reveal">
