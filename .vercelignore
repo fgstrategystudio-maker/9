@@ -1,0 +1,8 @@
+# File del repo che il sito (francescogizzi.com) non usa: non vengono
+# pubblicati. Riduce il peso di ogni deploy e non li espone sul sito.
+# Restano comunque nel repository GitHub.
+*.docx
+*.zip
+*.py
+backups/
+.github/
