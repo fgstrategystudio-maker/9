@@ -379,7 +379,7 @@ document.addEventListener('DOMContentLoaded', function(){
   if(/grazie/.test(location.pathname)) return;
   var lang = document.documentElement.getAttribute('lang')||'it';
   var T = {it:'Contattami', en:'Contact me', pt:'Fale comigo'};
-  var anchor = lang==='en' ? '#contact' : lang==='pt' ? '#contato' : '#contatti';
+  var anchor = lang==='en' ? '#contact' : lang==='pt' ? '#contato' : lang==='es' ? '#contacto' : '#contatti';
   var contactEl = document.querySelector(anchor);
   var heroEl = document.querySelector('.hero');
 
@@ -410,11 +410,12 @@ document.addEventListener('DOMContentLoaded', function(){
   var T = {
     it:{h:'Hai un progetto da sviluppare o migliorare?', p:'Scrivimi: ti rispondo entro 24 ore.', cta:'Parliamone', dismiss:'No grazie'},
     en:{h:'Got a project to build or improve?', p:'Drop me a line — I reply within 24 hours.', cta:"Let's talk", dismiss:'No thanks'},
-    pt:{h:'Tem um projeto para desenvolver ou melhorar?', p:'Me escreva: respondo em 24 horas.', cta:'Vamos conversar', dismiss:'Não, obrigado'}
+    pt:{h:'Tem um projeto para desenvolver ou melhorar?', p:'Me escreva: respondo em 24 horas.', cta:'Vamos conversar', dismiss:'Não, obrigado'},
+    es:{h:'¿Tienes un proyecto que desarrollar o mejorar?', p:'Escríbeme: respondo en 24 horas.', cta:'Hablemos', dismiss:'No, gracias'}
   };
-  var t = T[lang];
+  var t = T[lang] || T.it;
   var base = lang==='en' ? '/en' : lang==='pt' ? '/pt' : '';
-  var anchor = lang==='en' ? '#contact' : lang==='pt' ? '#contato' : '#contatti';
+  var anchor = lang==='en' ? '#contact' : lang==='pt' ? '#contato' : lang==='es' ? '#contacto' : '#contatti';
 
   document.addEventListener('DOMContentLoaded', function(){
     var popup = document.createElement('div');

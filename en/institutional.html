@@ -20,7 +20,7 @@
   <link rel="preconnect" href="https://www.googletagmanager.com" crossorigin />
   <link rel="dns-prefetch" href="https://www.google-analytics.com" />
   <link rel="manifest" href="/manifest.json" />
-  <meta name="theme-color" content="#c8a96e" />
+  <meta name="theme-color" content="#F7F6F2" />
   <link rel="stylesheet" href="../style.css" />
   <link rel="canonical" href="https://francescogizzi.com/en/institutional" />
 <link rel="alternate" hreflang="it" href="https://francescogizzi.com/institutional" />
@@ -28,9 +28,24 @@
 <link rel="alternate" hreflang="pt" href="https://francescogizzi.com/pt/institutional" />
 <link rel="alternate" hreflang="x-default" href="https://francescogizzi.com/institutional" />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/site.css" />
 </head>
 <body>
-<header class="site-header"><div class="container header-inner"><a href="/en/index.html" class="logo">Francesco Gizzi</a><button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Open menu"><span class="line"></span><span class="line"></span><span class="line"></span></button><nav class="nav" id="site-nav"><a href="/en/index.html#about">About</a><div class="has-dropdown"><a href="/en/index.html#services" class="nav-dropdown-toggle">Services <span class="nav-caret">&#9660;</span></a><div class="nav-dropdown"><a href="/en/servizi-marketing.html">Marketing</a><a href="/en/servizi-data.html">Data</a><a href="/en/servizi-sales.html">Sales</a><a href="/en/servizi-strategy.html">Strategy</a><a href="/en/institutional.html">Institutional</a></div></div><a href="/en/index.html#projects">Projects</a><a href="/en/blog.html">Blog</a><a href="/en/index.html#contact">Contact</a></nav><div class="lang-sw" translate="no"><a href="/">IT</a><a href="/en/">EN</a><a href="/pt/">PT</a></div></div></header>
+<header class="topbar">
+  <div class="tb-wrap">
+    <a class="tb-brand" href="/en/">Francesco Gizzi</a>
+    <div class="tb-right">
+      <nav class="tb-links" aria-label="Menu"><a href="/en/#chi-sono">About</a><a href="/en/#servizi">Services</a><a href="/en/institutional" aria-current="page">Institutional</a><a href="/en/blog">Blog</a></nav>
+      <div class="tb-langs"><a href="/institutional" hreflang="it" lang="it">IT</a><a href="/en/institutional" hreflang="en" lang="en" aria-current="true">EN</a><a href="/pt/institutional" hreflang="pt" lang="pt">PT</a><a href="/es/institutional" hreflang="es" lang="es">ES</a></div>
+      <a class="tb-pill" href="/en/#contatti">Contact</a>
+      <button class="tb-menu" type="button" aria-expanded="false">Menu</button>
+    </div>
+  </div>
+  <nav class="tb-panel" aria-label="Menu"><a href="/en/#chi-sono">About</a><a href="/en/#servizi">Services</a><a href="/en/institutional" aria-current="page">Institutional</a><a href="/en/blog">Blog</a><a href="/en/#contatti">Contact</a></nav>
+</header>
 
 <main>
 <section class="page-hero">
@@ -205,7 +220,12 @@
     <div class="form-actions"><button class="btn primary" type="submit">Send request</button></div>
   </form>
 </div></div></section>
-<footer class="footer"><div class="container">Francesco Gizzi, marketing, data, sales and strategy.</div></footer>
+<footer class="sitefoot">
+  <div class="sf-wrap">
+    <span>Francesco Gizzi · Marketing · Data · Sales · Strategy · Rome</span>
+    <nav class="sf-links" aria-label="Footer"><a href="/en/privacy">Privacy</a><a href="https://www.linkedin.com/in/francescogizzi/" target="_blank" rel="noopener">LinkedIn</a></nav>
+  </div>
+</footer>
 <script src="../script.js"></script>
 <script src="/anim.js" defer></script>
 </body></html>
