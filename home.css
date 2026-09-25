@@ -66,10 +66,10 @@ h1, h2, h3 { margin: 0; text-wrap: balance; font-weight: 300; letter-spacing: -.
 @keyframes wordUp { from { transform: translateY(105%); } to { transform: none; } }
 .fade-in { animation: fadeUp .9s var(--ease) both; animation-delay: var(--d, 0ms); }
 @keyframes fadeUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
-.hero-foot { margin-top: clamp(40px, 5vw, 64px); display: grid; grid-template-columns: 1.1fr 1fr; gap: 28px 64px; align-items: end; }
+.hero-foot { margin-top: clamp(32px, 4vw, 52px); display: grid; grid-template-columns: minmax(0, 1fr); gap: 30px; justify-items: start; }
 .hero-sub { margin: 0; max-width: 33em; color: var(--muted); font-size: 18px; }
 .ctas { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 28px; }
-.hero .ctas { justify-content: flex-end; }
+.hero .ctas { justify-content: flex-start; }
 .btn {
   position: relative; overflow: hidden; isolation: isolate;
   display: inline-flex; align-items: center; justify-content: center; gap: 12px; text-decoration: none;

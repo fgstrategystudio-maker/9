@@ -1253,4 +1253,22 @@
     <priority>0.8</priority>
     <changefreq>monthly</changefreq>
   </url>
+  <url>
+    <loc>https://francescogizzi.com/consulenza-marketing-roma</loc>
+    <lastmod>2026-09-25</lastmod>
+    <priority>0.9</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/consulenza-strategica-roma</loc>
+    <lastmod>2026-09-25</lastmod>
+    <priority>0.9</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://francescogizzi.com/ottimizzazione-processi-aziendali</loc>
+    <lastmod>2026-09-25</lastmod>
+    <priority>0.9</priority>
+    <changefreq>monthly</changefreq>
+  </url>
 </urlset>
