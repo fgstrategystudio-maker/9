@@ -2,7 +2,7 @@
 'use strict';
 
 // ---------- Storage ----------
-const APP_VERSION = '14';
+const APP_VERSION = '15';
 const KEY = 'dieta.v1';
 const MEALS = [
   { id: 'colazione', label: 'Colazione' },
@@ -45,11 +45,11 @@ const BODY_FIELDS = [
   { k: 'muscle', label: 'Massa muscolare', unit: 'kg', step: 0.1 },
   { k: 'water', label: 'Acqua corporea', unit: '%', step: 0.1 },
   { k: 'visceral', label: 'Grasso viscerale', unit: '', step: 1 },
-  { k: 'neck', label: 'Collo', unit: 'cm', step: 0.5 },
-  { k: 'waist', label: 'Vita', unit: 'cm', step: 0.5 },
-  { k: 'hips', label: 'Fianchi', unit: 'cm', step: 0.5 },
-  { k: 'chest', label: 'Petto', unit: 'cm', step: 0.5 },
-  { k: 'thigh', label: 'Coscia', unit: 'cm', step: 0.5 },
+  { k: 'neck', label: 'Collo', unit: 'cm', step: 0.5, circ: true, hint: "Appena sotto il pomo d'Adamo, metro leggermente inclinato in avanti." },
+  { k: 'chest', label: 'Petto', unit: 'cm', step: 0.5, circ: true, hint: 'Sulla linea dei capezzoli, sotto le ascelle, a fine espirazione, braccia lungo i fianchi.' },
+  { k: 'waist', label: 'Vita', unit: 'cm', step: 0.5, circ: true, hint: "All'altezza dell'ombelico, pancia rilassata, a fine espirazione." },
+  { k: 'hips', label: 'Fianchi', unit: 'cm', step: 0.5, circ: true, hint: 'Nel punto più largo dei glutei, in piedi a piedi uniti, glutei rilassati.' },
+  { k: 'thigh', label: 'Coscia', unit: 'cm', step: 0.5, circ: true, hint: "A metà tra inguine e ginocchio, gamba rilassata, peso su entrambi i piedi." },
 ];
 
 const DEFAULT_DB = {
@@ -1399,16 +1399,55 @@ function navyBodyFat(p) {
   return { bf, date: rec.date, fatKg: w ? w * bf / 100 : null };
 }
 
+// Sagoma con i punti di misura; la linea del campo attivo viene evidenziata
+function measureFigure() {
+  const lines = [
+    ['neck', 60, 100, 13, 'Collo', "sotto il pomo d'Adamo"],
+    ['chest', 104, 100, 47, 'Petto', 'linea dei capezzoli'],
+    ['waist', 150, 100, 41, 'Vita', "all'ombelico"],
+    ['hips', 190, 100, 49, 'Fianchi', 'punto più largo dei glutei'],
+    ['thigh', 236, 77, 20, 'Coscia', 'a metà coscia'],
+  ];
+  return `<svg class="measure-fig" viewBox="0 0 300 350" role="img" aria-label="Dove misurare le circonferenze">
+    <g class="body">
+      <ellipse cx="100" cy="28" rx="17" ry="21"/>
+      <path d="M91 44 h18 v18 h-18z"/>
+      <path d="M88 60 L112 60 L140 70 Q152 74 152 88 L150 124 Q146 140 142 150 Q150 170 150 190 L146 214 L124 336 L106 336 L102 226 L98 226 L94 336 L76 336 L54 214 L50 190 Q50 170 58 150 Q54 140 50 124 L48 88 Q48 74 60 70 Z"/>
+      <path d="M50 76 Q38 80 36 100 L28 186 Q27 196 34 196 Q40 196 41 188 L50 120 Z"/>
+      <path d="M150 76 Q162 80 164 100 L172 186 Q173 196 166 196 Q160 196 159 188 L150 120 Z"/>
+      <circle cx="100" cy="152" r="2"/>
+    </g>
+    ${lines.map(([k, y, cx, rx, name, where]) => `<g class="mline" data-line="${k}">
+      <ellipse cx="${cx}" cy="${y}" rx="${rx}" ry="5"/>
+      <path class="lead" d="M${cx + rx + 3} ${y} L184 ${y}"/>
+      <text x="188" y="${y - 2}" class="t1">${name}</text>
+      <text x="188" y="${y + 11}" class="t2">${where}</text>
+    </g>`).join('')}
+  </svg>`;
+}
+
 function bodyForm(date, newDate) {
   const existing = date ? db.body.find(b => b.date === date) : db.body.find(b => b.date === newDate);
   const rec = existing || { date: newDate || today() };
   const last = latestBody('weight');
   openSheet(`<h3>${existing ? 'Modifica misurazione' : 'Nuova misurazione'}</h3>
     <label class="field"><span>Data</span><input type="date" id="bDate" value="${rec.date}" max="${today()}"></label>
-    <div class="grid2">${BODY_FIELDS.map(f => `<label class="field"><span>${f.label}${f.unit ? ' (' + f.unit + ')' : ''}</span>
+    <div class="grid2">${BODY_FIELDS.filter(f => !f.circ).map(f => `<label class="field"><span>${f.label}${f.unit ? ' (' + f.unit + ')' : ''}</span>
       <input type="number" inputmode="decimal" step="${f.step}" data-f="${f.k}" value="${rec[f.k] ?? ''}" placeholder="${f.k === 'weight' && last ? fmtNum(last.weight) : ''}"></label>`).join('')}</div>
+    <h3 style="font-size:16px;margin:6px 0 4px">Circonferenze</h3>
+    <p class="small muted" style="margin:0 0 6px">Metro da sarta aderente senza stringere, orizzontale, sulla pelle. Tocca un campo per vedere il punto.</p>
+    ${measureFigure()}
+    ${BODY_FIELDS.filter(f => f.circ).map(f => `<label class="field circ-field"><span>${f.label} (${f.unit})</span>
+      <input type="number" inputmode="decimal" step="${f.step}" data-f="${f.k}" value="${rec[f.k] ?? ''}">
+      <small class="hint" data-hint="${f.k}">${esc(f.hint)}</small></label>`).join('')}
     <label class="field"><span>Note</span><input type="text" id="bNote" value="${esc(rec.note || '')}" placeholder="es. dopo allenamento, bilancia impedenziometrica"></label>
     <div class="btn-row">${existing ? '<button class="btn danger" id="bDel">Elimina</button>' : ''}<button class="btn" id="bSave">Salva</button></div>`, s => {
+    const highlight = k => {
+      $$('.mline', s).forEach(g => g.classList.toggle('on', g.dataset.line === k));
+      $$('[data-hint]', s).forEach(h => h.classList.toggle('show', h.dataset.hint === k));
+    };
+    $$('.circ-field input', s).forEach(i => i.addEventListener('focus', () => highlight(i.dataset.f)));
+    $$('.mline', s).forEach(g => g.addEventListener('click', () => $(`[data-f="${g.dataset.line}"]`, s).focus()));
     $('#bSave', s).addEventListener('click', () => {
       const d = $('#bDate', s).value || today();
       const out = { date: d };
