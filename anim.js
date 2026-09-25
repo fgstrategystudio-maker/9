@@ -14,6 +14,16 @@
     });
   }
 
+  // Richiesta inviata dal modulo: evento "generate_lead" per Google Analytics
+  // (le pagine EN/PT/ES lo tracciano già in script.js)
+  if (!document.querySelector('script[src*="script.js"]')) {
+    document.querySelectorAll('form').forEach(function (f) {
+      f.addEventListener('submit', function () {
+        if (window.gtag) gtag('event', 'generate_lead', { form_location: location.pathname });
+      });
+    });
+  }
+
   var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (reduce || !('IntersectionObserver' in window)) return;
 

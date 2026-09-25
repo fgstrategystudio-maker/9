@@ -295,3 +295,6 @@ a[style*="background:var(--gold)"]:hover, button[style*="background:var(--gold)"
 [style*="color:#f8f4e9"] { color: var(--av-ink) !important; }
 [style*="color:#aeb2ba"] { color: var(--av-muted) !important; }
 [style*="background:var(--ink)"] [style*="border-bottom:1px solid"], [style*="background:var(--ink)"] [style*="border-top:1px solid"] { border-color: rgba(18, 18, 18, .12) !important; }
+.sf-services { width: 100%; display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 13px; padding-top: 14px; border-top: 1px solid var(--av-line); }
+.related-services { margin-top: 34px !important; padding-top: 22px; border-top: 1px solid var(--av-line); font-size: 15px !important; }
+.related-services a { margin-right: 14px; }

@@ -5,7 +5,24 @@
     var onScroll = function () { nav.classList.toggle('scrolled', window.scrollY > 40); };
     window.addEventListener('scroll', onScroll, { passive: true });
     onScroll();
+    var menu = nav.querySelector('.nav-menu');
+    if (menu) {
+      menu.addEventListener('click', function () {
+        var open = nav.classList.toggle('open');
+        menu.setAttribute('aria-expanded', open ? 'true' : 'false');
+      });
+      nav.querySelectorAll('.nav-panel a').forEach(function (a) {
+        a.addEventListener('click', function () { nav.classList.remove('open'); menu.setAttribute('aria-expanded', 'false'); });
+      });
+    }
   }
+
+  // Richiesta inviata dal modulo: evento "generate_lead" per Google Analytics
+  document.querySelectorAll('form').forEach(function (f) {
+    f.addEventListener('submit', function () {
+      if (window.gtag) gtag('event', 'generate_lead', { form_location: location.pathname });
+    });
+  });
 
   // Loghi: comparsa a cascata riga per riga
   document.querySelectorAll('.logo').forEach(function (el, i) {

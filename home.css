@@ -254,7 +254,7 @@ footer.foot a:hover { color: var(--ink); }
   .nav nav { gap: 12px; }
   .langs { font-size: 12px; }
   .nav .langs a { padding: 4px 4px; }
-  .nav .pill { padding: 9px 14px; }
+  .nav .pill { display: none; }
   .hero-sub { font-size: 16.5px; }
   .stats div + div { padding-left: 14px; }
   .stats div { font-size: 12.5px; }
@@ -272,3 +272,48 @@ footer.foot a:hover { color: var(--ink); }
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* ---------- Menu mobile ---------- */
+.nav-menu { display: none; background: none; border: 1px solid #CFC8BC; border-radius: 999px; padding: 8px 14px; font: 500 13px var(--sans); color: var(--ink); cursor: pointer; }
+.nav .nav-panel { display: none; }
+@media (max-width: 1080px) {
+  .nav-menu { display: inline-block; }
+  .nav.open { background: rgba(247, 246, 242, .96); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+  .nav.open .nav-panel { display: grid; gap: 0; padding: 4px clamp(16px, 4vw, 48px) 20px; border-top: 1px solid var(--line); }
+  .nav-panel a { color: var(--ink); text-decoration: none; font-size: 20px; font-weight: 300; letter-spacing: -.02em; padding: 10px 0; border-bottom: 1px solid var(--line); }
+}
+
+/* ---------- Pagine servizio (landing SEO) ---------- */
+.crumbs { display: flex; flex-wrap: wrap; gap: 6px; font-size: 13px; color: var(--muted); }
+.crumbs a { color: var(--muted); text-decoration: none; }
+.crumbs a:hover { color: var(--ink); }
+.crumbs span[aria-hidden] { opacity: .5; }
+.hero.page .hero-body { padding-block: clamp(40px, 6vw, 88px) clamp(40px, 5vw, 64px); }
+.hero.page h1 { margin-top: 22px; font-size: clamp(38px, 6vw, 80px); max-width: 16em; }
+.prose-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 32px 80px; align-items: start; }
+.prose-grid h2 { margin-top: 18px; font-size: clamp(32px, 4vw, 52px); line-height: 1.04; }
+.prose { display: grid; gap: 18px; color: var(--muted); max-width: 40em; }
+.prose p { margin: 0; }
+.prose strong { color: var(--ink); font-weight: 500; }
+.prose a { color: var(--ink); text-decoration: none; border-bottom: 1px solid #CFC8BC; }
+.prose a:hover { border-bottom-color: var(--ink); }
+.ticks { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; border-top: 1px solid var(--line); }
+.ticks li { padding: 16px 0 16px 34px; border-bottom: 1px solid var(--line); position: relative; color: var(--ink); }
+.ticks li::before { content: ""; position: absolute; left: 4px; top: 25px; width: 14px; height: 1px; background: var(--accent); }
+.ticks li span { display: block; color: var(--muted); font-size: 15px; margin-top: 2px; }
+.area.static { cursor: default; }
+.area.static::before { display: none; }
+.area.static:hover h3 { transform: none; }
+.faq { border-top: 1px solid var(--ink); }
+.faq details { border-bottom: 1px solid var(--line); }
+.faq summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; gap: 24px; padding: 24px 0; font-size: clamp(19px, 1.8vw, 23px); font-weight: 400; letter-spacing: -.02em; color: var(--ink); }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after { content: "+"; font-weight: 300; font-size: 26px; line-height: 1; color: var(--muted); transition: transform .3s var(--ease); }
+.faq details[open] summary::after { transform: rotate(45deg); }
+.faq details p { margin: 0 0 24px; max-width: 46em; color: var(--muted); }
+.faq details p a { color: var(--ink); }
+.related-links { margin-top: 28px; display: flex; flex-wrap: wrap; gap: 8px; }
+.related-links a { font-size: 14px; text-decoration: none; border: 1px solid var(--line); border-radius: 999px; padding: 9px 15px; transition: background-color .3s, color .3s, border-color .3s; }
+.related-links a:hover { background: var(--ink); color: var(--on-ink); border-color: var(--ink); }
+.foot-services { width: 100%; display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 13px; padding-top: 14px; border-top: 1px solid var(--line); }
+@media (max-width: 980px) { .prose-grid { grid-template-columns: minmax(0, 1fr); } }
