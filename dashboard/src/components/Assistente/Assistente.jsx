@@ -127,10 +127,12 @@ export default function Assistente({ commesse, setCommesse, setup, setSetup }) {
   function applica() {
     const oggi = new Date().toLocaleDateString("it-IT");
     let applicate = 0;
+    const riepilogo = [];
     for (const a of proposta.azioni) {
       if (!descrivi(a)?.applicabile) continue;
       if (a.tipo === "registra_incasso") {
         const lordo = Number(a.lordo);
+        riepilogo.push(`Incasso ${a.mese}: ${fmtN(lordo)} € lordo → lo vedi in «Incassato storico», nella barra di ${a.mese.split(" ")[0]} della Panoramica e nella card anno su anno`);
         setSetup((prev) => {
           const netto = Math.round(lordo * prev.fattoreNetto);
           const rows = prev.incassatoStorico || [];
@@ -151,17 +153,21 @@ export default function Assistente({ commesse, setCommesse, setup, setSetup }) {
           else if (CAMPI_STR.includes(k)) puliti[k] = v == null ? null : String(v);
         }
         setCommesse((prev) => prev.map((c) => (c.id === a.id ? { ...c, ...puliti } : c)));
+        riepilogo.push(`Commessa «${byId(a.id)?.cliente}» aggiornata → la vedi in Commesse (e nei box in alto se è cambiata la fee)`);
         applicate++;
       } else if (a.tipo === "aggiungi_nota") {
         setCommesse((prev) => prev.map((c) =>
           c.id === a.id ? { ...c, note: `${c.note ? c.note + "\n" : ""}[${oggi}] ${a.testo}` } : c
         ));
+        riepilogo.push(`Nota aggiunta a «${byId(a.id)?.cliente}» → la vedi aprendo la commessa in Commesse`);
         applicate++;
       }
     }
     setProposta(null);
     setTesto("");
-    setEsito(applicate > 0 ? `✓ ${applicate === 1 ? "Modifica applicata" : applicate + " modifiche applicate"} e salvate` : "Nessuna modifica da applicare.");
+    setEsito(applicate > 0
+      ? { titolo: `✓ ${applicate === 1 ? "Modifica applicata" : applicate + " modifiche applicate"} e salvate`, righe: riepilogo }
+      : { titolo: "Nessuna modifica da applicare.", righe: [] });
   }
 
   const anteprime = proposta ? proposta.azioni.map(descrivi).filter(Boolean) : [];
@@ -219,7 +225,22 @@ export default function Assistente({ commesse, setCommesse, setup, setSetup }) {
           )}
 
           {errore && <p className={styles.errore}>{errore}</p>}
-          {esito && <p className={styles.esito}>{esito}</p>}
+          {esito && (
+            <div className={styles.esito}>
+              <div>{esito.titolo}</div>
+              {esito.righe.length > 0 && (
+                <ul className={styles.esitoRighe}>
+                  {esito.righe.map((r, i) => <li key={i}>{r}</li>)}
+                </ul>
+              )}
+              {esito.righe.some((r) => r.startsWith("Incasso")) && (
+                <p className={styles.esitoNota}>
+                  Nota: il box «Lordo mensile attivo» non cambia con gli incassi — è la somma delle fee
+                  contrattuali delle commesse attive (quanto dovresti fatturare a regime), non l&apos;incassato del mese.
+                </p>
+              )}
+            </div>
+          )}
 
           {proposta && (
             <div className={styles.proposta}>
