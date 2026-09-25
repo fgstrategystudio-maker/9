@@ -3,8 +3,18 @@
 // commesse/incassi. La chiave resta lato server (env GEMINI_API_KEY su
 // Vercel). L'app mostra le azioni proposte e le applica solo dopo conferma
 // dell'utente: qui non si scrive mai nulla.
+//
+// Due modalità, come nell'app dieta:
+//  - veloce (default): modello lite, risposta in ~1-2 s
+//  - preciso: modello pieno con un po' di ragionamento, per casi ambigui
+// Se un modello è sovraccarico o non disponibile si passa da soli al
+// successivo della catena (fino ai 2.5 come rete di sicurezza).
 
-const MODEL = 'gemini-2.5-flash'
+const CATENE = {
+  veloce: ['gemini-3.5-flash-lite', 'gemini-3.5-flash', 'gemini-2.5-flash-lite', 'gemini-2.5-flash'],
+  preciso: ['gemini-3.5-flash', 'gemini-3.5-flash-lite', 'gemini-2.5-flash', 'gemini-2.5-flash-lite'],
+}
+const THINKING_BUDGET = { veloce: 0, preciso: 512 }
 
 // Schema della risposta JSON (subset OpenAPI supportato da Gemini)
 const RESPONSE_SCHEMA = {
@@ -71,6 +81,39 @@ CONTESTO ATTUALE (JSON)
 ${JSON.stringify(ctx, null, 1)}`
 }
 
+async function chiamaModello(apiKey, model, system, istruzione, thinkingBudget) {
+  const generationConfig = {
+    responseMimeType: 'application/json',
+    responseSchema: RESPONSE_SCHEMA,
+    maxOutputTokens: 2000,
+    temperature: 0.2,
+  }
+  if (thinkingBudget !== null) generationConfig.thinkingConfig = { thinkingBudget }
+  const r = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+    {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: system }] },
+        contents: [{ role: 'user', parts: [{ text: istruzione }] }],
+        generationConfig,
+      }),
+    }
+  )
+  if (!r.ok) return { ok: false, status: r.status, text: await r.text() }
+  return { ok: true, data: await r.json() }
+}
+
+function estrai(data) {
+  const text = (data.candidates?.[0]?.content?.parts || []).map((p) => p.text || '').join('')
+  try {
+    const parsed = JSON.parse(text)
+    if (parsed && typeof parsed.spiegazione === 'string' && Array.isArray(parsed.azioni)) return parsed
+  } catch { /* output non JSON: si prova il modello successivo */ }
+  return null
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
@@ -83,49 +126,36 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'missing_api_key', message: 'GEMINI_API_KEY non configurata su Vercel.' })
   }
 
-  const { istruzione, contesto } = req.body || {}
+  const { istruzione, contesto, modalita: modalitaRaw } = req.body || {}
   if (!istruzione || typeof istruzione !== 'string' || istruzione.length > 2000) {
     return res.status(400).json({ error: 'bad_request' })
   }
+  const modalita = modalitaRaw === 'preciso' ? 'preciso' : 'veloce'
+  const system = systemPrompt(contesto || {})
 
-  try {
-    const r = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          systemInstruction: { parts: [{ text: systemPrompt(contesto || {}) }] },
-          contents: [{ role: 'user', parts: [{ text: istruzione }] }],
-          generationConfig: {
-            responseMimeType: 'application/json',
-            responseSchema: RESPONSE_SCHEMA,
-            maxOutputTokens: 2000,
-            temperature: 0.2,
-            thinkingConfig: { thinkingBudget: 0 },
-          },
-        }),
-      }
-    )
-    if (!r.ok) {
-      const txt = await r.text()
-      return res.status(502).json({ error: 'gemini_error', message: txt.slice(0, 500) })
-    }
-    const data = await r.json()
-    const text = (data.candidates?.[0]?.content?.parts || [])
-      .map((p) => p.text || '')
-      .join('')
-    let parsed
+  let ultimoErrore = null
+  const catena = CATENE[modalita]
+  for (let i = 0; i < catena.length; i++) {
+    const model = catena[i]
     try {
-      parsed = JSON.parse(text)
-    } catch {
-      return res.status(502).json({ error: 'bad_model_output', message: text.slice(0, 300) })
+      let r = await chiamaModello(apiKey, model, system, istruzione, THINKING_BUDGET[modalita])
+      // Alcuni modelli non accettano thinkingConfig: ritenta lo stesso modello senza
+      if (!r.ok && r.status === 400 && /thinking/i.test(r.text || '')) {
+        r = await chiamaModello(apiKey, model, system, istruzione, null)
+      }
+      if (!r.ok) {
+        ultimoErrore = `${model}: HTTP ${r.status}`
+        continue // sovraccarico (429/503), modello non disponibile (404), ecc. → prossimo
+      }
+      const parsed = estrai(r.data)
+      if (!parsed) {
+        ultimoErrore = `${model}: output non valido`
+        continue
+      }
+      return res.json({ result: parsed, modello: model, fallback: i > 0 })
+    } catch (err) {
+      ultimoErrore = `${model}: ${err.message}`
     }
-    if (!parsed || typeof parsed.spiegazione !== 'string' || !Array.isArray(parsed.azioni)) {
-      return res.status(502).json({ error: 'bad_model_output' })
-    }
-    res.json({ result: parsed })
-  } catch (err) {
-    res.status(500).json({ error: 'server_error', message: err.message })
   }
+  res.status(502).json({ error: 'all_models_failed', message: ultimoErrore || 'nessun modello disponibile' })
 }

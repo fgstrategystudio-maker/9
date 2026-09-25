@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
+import { useLocalStorage } from "../../hooks/useLocalStorage";
 import Icon from "../Icon";
 import styles from "./Assistente.module.css";
 
@@ -28,6 +29,12 @@ export default function Assistente({ commesse, setCommesse, setup, setSetup }) {
   const [errore, setErrore] = useState(null);
   const [proposta, setProposta] = useState(null);
   const [esito, setEsito] = useState(null);
+  const [modalita, setModalita] = useLocalStorage("assistenteModalita", "veloce");
+  const [elapsedMs, setElapsedMs] = useState(0);
+  const [tempo, setTempo] = useState(null); // { ms, modello, fallback }
+  const timerRef = useRef(null);
+
+  const secondi = (ms) => (ms / 1000).toFixed(1).replace(".", ",");
 
   const byId = (id) => commesse.find((c) => c.id === id);
 
@@ -47,12 +54,16 @@ export default function Assistente({ commesse, setCommesse, setup, setSetup }) {
 
   async function chiedi() {
     if (!testo.trim() || loading) return;
-    setLoading(true); setErrore(null); setProposta(null); setEsito(null);
+    setLoading(true); setErrore(null); setProposta(null); setEsito(null); setTempo(null);
+    const t0 = Date.now();
+    setElapsedMs(0);
+    clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => setElapsedMs(Date.now() - t0), 100);
     try {
       const res = await fetch("/api/ai", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ istruzione: testo.trim(), contesto: buildContesto() }),
+        body: JSON.stringify({ istruzione: testo.trim(), contesto: buildContesto(), modalita }),
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -63,10 +74,12 @@ export default function Assistente({ commesse, setCommesse, setup, setSetup }) {
       }
       const p = json.result;
       if (!p || !Array.isArray(p.azioni)) { setErrore("Risposta non valida dall'assistente."); return; }
+      setTempo({ ms: Date.now() - t0, modello: json.modello, fallback: !!json.fallback });
       setProposta(p);
     } catch {
       setErrore("Connessione all'assistente fallita. Riprova.");
     } finally {
+      clearInterval(timerRef.current);
       setLoading(false);
     }
   }
@@ -166,8 +179,26 @@ export default function Assistente({ commesse, setCommesse, setup, setSetup }) {
               onKeyDown={(e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) chiedi(); }}
             />
             <button className="btn btn-primary" onClick={chiedi} disabled={loading || !testo.trim()}>
-              {loading ? "Ci penso…" : "Chiedi"}
+              {loading ? `Ci penso… ${secondi(elapsedMs)} s` : "Chiedi"}
             </button>
+          </div>
+
+          <div className={styles.modalitaRow}>
+            <button
+              className={modalita === "veloce" ? styles.modAttiva : styles.mod}
+              onClick={() => setModalita("veloce")}
+              type="button"
+            >⚡ Veloce</button>
+            <button
+              className={modalita === "preciso" ? styles.modAttiva : styles.mod}
+              onClick={() => setModalita("preciso")}
+              type="button"
+            >🎯 Preciso</button>
+            <span className={styles.modHint}>
+              {modalita === "veloce"
+                ? "1–2 secondi, ideale tutti i giorni"
+                : "più riflessivo, per richieste ambigue o complesse"}
+            </span>
           </div>
 
           {!proposta && !loading && !errore && !esito && (
@@ -184,6 +215,12 @@ export default function Assistente({ commesse, setCommesse, setup, setSetup }) {
           {proposta && (
             <div className={styles.proposta}>
               <p className={styles.spiegazione}>{proposta.spiegazione}</p>
+              {tempo && (
+                <p className={styles.tempoNota}>
+                  risposta in {secondi(tempo.ms)} s
+                  {tempo.fallback && " · modello predefinito occupato, usato quello alternativo"}
+                </p>
+              )}
               <ul className={styles.azioni}>
                 {anteprime.map((d, i) => (
                   <li key={i} className={d.applicabile ? "" : styles.nonApplicabile}>
