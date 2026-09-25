@@ -2,7 +2,7 @@
 'use strict';
 
 // ---------- Storage ----------
-const APP_VERSION = '15';
+const APP_VERSION = '16';
 const KEY = 'dieta.v1';
 const MEALS = [
   { id: 'colazione', label: 'Colazione' },
@@ -23,7 +23,8 @@ const PALETTES = [
   ['oliva', 'Oliva e terracotta', { bg: '#f5f3ea', card: '#fffdf7', accent: '#56661c', on: '#ffffff', prot: '#b84a28', carb: '#35689e', fat: '#c8901f' }, { bg: '#12130d', card: '#1c1d15', accent: '#b3c75a', on: '#0b0c0b', prot: '#e8825e', carb: '#79a7dd', fat: '#e6b755' }],
   ['grafite', 'Grafite e lime', { bg: '#f3f4f2', card: '#ffffff', accent: '#1f2a1c', on: '#ffffff', prot: '#dc2626', carb: '#2563eb', fat: '#d97706' }, { bg: '#0b0c0b', card: '#161816', accent: '#a3e635', on: '#0b0c0b', prot: '#f87171', carb: '#60a5fa', fat: '#fbbf24' }],
 ];
-const GEMINI_DEFAULT_MODEL = 'gemini-3.5-flash';
+const GEMINI_DEFAULT_MODEL = 'gemini-3.5-flash';  // modalità "Preciso"
+const GEMINI_FAST_MODEL = 'gemini-3.5-flash-lite'; // modalità "Veloce" (circa 1 secondo)
 // Attività sportive con MET medio (Compendium of Physical Activities)
 const ACTIVITIES = [
   ['Camminata', 3.5], ['Camminata veloce', 4.3], ['Corsa lenta (8 km/h)', 8.3], ['Corsa (10 km/h)', 9.8], ['Corsa veloce (12 km/h)', 11.5],
@@ -73,6 +74,7 @@ const DEFAULT_DB = {
     geminiKey: '', geminiModel: GEMINI_DEFAULT_MODEL, geminiModels: [],
     apiKey: '', model: 'claude-opus-5',
     lastActivity: 'Camminata veloce',
+    aiMode: 'fast', // fast | precise
     palette: 'salvia',
     scheme: 'auto', // auto | light | dark
   },
@@ -796,7 +798,7 @@ function manualForm() {
 async function handlePhoto(file) {
   if (!file) return;
   try {
-    const { dataUrl, b64 } = await resizeImage(file, 1280, 0.85);
+    const { dataUrl, b64 } = await resizeImage(file, 1024, 0.8);
     openSheet(`<h3>Foto del pasto</h3>
       <img class="preview" src="${dataUrl}" alt="">
       <label class="field"><span>Dettagli (facoltativo)</span><input type="text" id="pNote" placeholder="es. porzione abbondante, condita con olio, pasta integrale"></label>
@@ -943,7 +945,7 @@ async function geminiFetch(path, init = {}) {
     if (res.status === 404) throw fail('Nessun modello Gemini disponibile: premi "Prova" nelle impostazioni per aggiornare l\'elenco.', true);
     if (res.status === 429) throw fail('Limite gratuito di Gemini raggiunto per ora. Riprova tra qualche minuto (o domani se hai finito le richieste del giorno).', true);
     if (res.status >= 500) throw fail('I server di Gemini sono sovraccarichi in questo momento, riprova tra poco.', true);
-    throw new Error(msg);
+    throw fail(msg, false);
   }
   return data;
 }
@@ -954,7 +956,8 @@ const GEMINI_FALLBACKS = ['gemini-3.5-flash', 'gemini-3.5-flash-lite'];
 async function callGemini(input) {
   const st = db.settings;
   const dead = new Set(st.geminiDead || []);
-  const chain = [...new Set([st.geminiWorking, st.geminiModel || GEMINI_DEFAULT_MODEL, ...GEMINI_FALLBACKS, ...(st.geminiModels || [])])]
+  const primary = st.aiMode === 'precise' ? (st.geminiModel || GEMINI_DEFAULT_MODEL) : GEMINI_FAST_MODEL;
+  const chain = [...new Set([primary, st.geminiWorking, ...GEMINI_FALLBACKS, ...(st.geminiModels || [])])]
     .filter(m => m && !dead.has(m)).slice(0, 5);
   let lastErr;
   for (const model of chain) {
@@ -980,14 +983,22 @@ async function callGeminiModel(model, { prompt, imageB64 }) {
   const parts = [];
   if (imageB64) parts.push({ inline_data: { mime_type: 'image/jpeg', data: imageB64 } });
   parts.push({ text: prompt });
-  const data = await geminiFetch(`/models/${encodeURIComponent(model)}:generateContent`, {
+  // Meno "ragionamento" = risposta molto più rapida; per stimare un pasto basta.
+  const thinking = /^gemini-3/.test(model) ? { thinkingLevel: /lite/.test(model) ? 'minimal' : 'low' } : null;
+  const request = withThinking => geminiFetch(`/models/${encodeURIComponent(model)}:generateContent`, {
     method: 'POST',
     body: JSON.stringify({
       systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
       contents: [{ role: 'user', parts }],
-      generationConfig: { responseMimeType: 'application/json', responseSchema: toGeminiSchema(FOOD_SCHEMA) },
+      generationConfig: {
+        responseMimeType: 'application/json', responseSchema: toGeminiSchema(FOOD_SCHEMA),
+        ...(withThinking && thinking ? { thinkingConfig: thinking } : {}),
+      },
     }),
   });
+  let data;
+  try { data = await request(true); }
+  catch (err) { if (thinking && err.status === 400) data = await request(false); else throw err; }
   if (data.promptFeedback?.blockReason) throw new Error('La richiesta non è stata elaborata. Prova a riformularla.');
   const cand = data.candidates?.[0];
   const text = (cand?.content?.parts || []).filter(p => p.text && !p.thought).map(p => p.text).join('');
@@ -1018,7 +1029,9 @@ function analyzeFood({ prompt, imageB64 }) {
 
 async function runAnalysis({ text, imageB64, preview }) {
   openSheet(`<h3>Analizzo…</h3>${preview ? `<img class="preview" src="${preview}" alt="">` : ''}
-    <div class="spinner"></div><p class="center muted small">Riconoscimento alimenti e calcolo di calorie e macro</p>`);
+    <div class="spinner"></div><p class="center muted small">Riconoscimento alimenti e calcolo di calorie e macro · <span id="aiSecs">0</span> s</p>`);
+  const t0 = Date.now();
+  const tick = setInterval(() => { const el = $('#aiSecs'); if (el) el.textContent = Math.round((Date.now() - t0) / 1000); else clearInterval(tick); }, 500);
   const prompt = imageB64
     ? (text ? `Foto del mio pasto. Dettagli: ${text}` : 'Foto del mio pasto.')
     : `Ho mangiato: ${text}`;
@@ -1583,7 +1596,12 @@ function renderGoals(v) {
     <div id="provGemini" ${st.provider === 'claude' ? 'hidden' : ''}>
       <label class="field"><span>Chiave API di Google Gemini</span><input type="password" id="sGKey" value="${esc(st.geminiKey)}" placeholder="AIza..." autocomplete="off"></label>
       <p class="small muted" style="margin-top:-4px">Gratis su <b>aistudio.google.com</b> → Get API key (basta un account Google, niente carta). Il piano gratuito ha un limite di richieste al giorno, più che sufficiente per un diario, e Google può usare i dati inviati per migliorare i suoi servizi.</p>
-      <label class="field"><span>Modello</span><select id="sGModel">${geminiModels.map(m => `<option ${m === st.geminiModel ? 'selected' : ''}>${esc(m)}</option>`).join('')}</select></label>
+      <div class="seg" id="aiModeSeg">
+        <button data-mode="fast" class="${st.aiMode !== 'precise' ? 'on' : ''}">⚡ Veloce</button>
+        <button data-mode="precise" class="${st.aiMode === 'precise' ? 'on' : ''}">🎯 Preciso</button>
+      </div>
+      <p class="small muted" style="margin-top:-4px">Veloce risponde in 1–2 secondi ed è ottimo per il diario di tutti i giorni. Preciso è più lento (5–10 secondi): utile per piatti complessi o foto difficili.</p>
+      <label class="field" id="gModelField" ${st.aiMode === 'precise' ? '' : 'hidden'}><span>Modello (modalità Preciso)</span><select id="sGModel">${geminiModels.map(m => `<option ${m === st.geminiModel ? 'selected' : ''}>${esc(m)}</option>`).join('')}</select></label>
     </div>
     <div id="provClaude" ${st.provider === 'claude' ? '' : 'hidden'}>
       <label class="field"><span>Chiave API di Claude</span><input type="password" id="sKey" value="${esc(st.apiKey)}" placeholder="sk-ant-..." autocomplete="off"></label>
@@ -1681,6 +1699,12 @@ function renderGoals(v) {
     save(); render(); toast('Obiettivi salvati');
   });
 
+  $$('#aiModeSeg [data-mode]', v).forEach(b => b.addEventListener('click', () => {
+    db.settings.aiMode = b.dataset.mode; save();
+    $$('#aiModeSeg [data-mode]', v).forEach(x => x.classList.toggle('on', x === b));
+    $('#gModelField', v).hidden = b.dataset.mode !== 'precise';
+    toast(b.dataset.mode === 'fast' ? 'Modalità veloce' : 'Modalità precisa');
+  }));
   $$('[data-prov]', v).forEach(b => b.addEventListener('click', () => {
     $$('[data-prov]', v).forEach(x => x.classList.toggle('on', x === b));
     $('#provGemini', v).hidden = b.dataset.prov !== 'gemini';
