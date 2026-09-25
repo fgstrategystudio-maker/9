@@ -57,7 +57,7 @@ export default function Assistente({ commesse, setCommesse, setup, setSetup }) {
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
         setErrore(json.error === "missing_api_key"
-          ? "Assistente non configurato: aggiungi ANTHROPIC_API_KEY nelle variabili d'ambiente su Vercel e rideploya."
+          ? "Assistente non configurato: crea una chiave gratuita su aistudio.google.com e aggiungila come GEMINI_API_KEY nelle variabili d'ambiente su Vercel, poi rideploya."
           : "L'assistente non ha risposto. Riprova tra poco.");
         return;
       }
