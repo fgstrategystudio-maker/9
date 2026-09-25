@@ -136,6 +136,16 @@
       "source": "/:lang(en|pt|es)/blog-consulenza-per-sviluppo-del-business-partnership-e-crescita-sostenibile",
       "destination": "/:lang/blog-sviluppo-del-business-per-aziende-che-vogliono-aprire-nuove-opportunita",
       "permanent": true
+    },
+    {
+      "source": "/blog-come-migliorare-vendite-e-conversione-in-aziende-b2b",
+      "destination": "/blog-consulenza-sales-per-migliorare-pipeline-conversione-e-processo-commerciale",
+      "permanent": true
+    },
+    {
+      "source": "/:lang(en|pt|es)/blog-come-migliorare-vendite-e-conversione-in-aziende-b2b",
+      "destination": "/:lang/blog-consulenza-sales-per-migliorare-pipeline-conversione-e-processo-commerciale",
+      "permanent": true
     }
   ]
 }
