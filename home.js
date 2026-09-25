@@ -17,6 +17,25 @@
     }
   }
 
+  // Menu Servizi: apertura al clic (tastiera e touch), chiusura con Esc o clic fuori
+  document.querySelectorAll('.has-mega').forEach(function (m) {
+    var t = m.querySelector('.mega-trigger');
+    t.addEventListener('click', function (ev) {
+      ev.stopPropagation();
+      var open = !m.classList.contains('open');
+      document.querySelectorAll('.has-mega.open').forEach(function (o) { o.classList.remove('open'); o.querySelector('.mega-trigger').setAttribute('aria-expanded', 'false'); });
+      m.classList.toggle('open', open); t.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+    m.addEventListener('mouseleave', function () { m.classList.remove('open'); t.setAttribute('aria-expanded', 'false'); });
+  });
+  document.addEventListener('click', function (ev) {
+    document.querySelectorAll('.has-mega.open').forEach(function (m) { if (!m.contains(ev.target)) { m.classList.remove('open'); m.querySelector('.mega-trigger').setAttribute('aria-expanded', 'false'); } });
+  });
+  document.addEventListener('keydown', function (ev) {
+    if (ev.key !== 'Escape') return;
+    document.querySelectorAll('.has-mega.open').forEach(function (m) { m.classList.remove('open'); var t = m.querySelector('.mega-trigger'); t.setAttribute('aria-expanded', 'false'); t.focus(); });
+  });
+
   // Richiesta inviata dal modulo: evento "generate_lead" per Google Analytics
   document.querySelectorAll('form').forEach(function (f) {
     f.addEventListener('submit', function () {

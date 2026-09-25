@@ -317,3 +317,47 @@ footer.foot a:hover { color: var(--ink); }
 .related-links a:hover { background: var(--ink); color: var(--on-ink); border-color: var(--ink); }
 .foot-services { width: 100%; display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 13px; padding-top: 14px; border-top: 1px solid var(--line); }
 @media (max-width: 980px) { .prose-grid { grid-template-columns: minmax(0, 1fr); } }
+
+/* ---------- Menu Servizi a tendina ---------- */
+.has-mega { position: static; display: flex; align-items: center; }
+.mega-trigger { display: inline-flex; align-items: center; gap: 6px; background: none; border: 0; padding: 22px 0; margin: -22px 0; font: inherit; font-size: 14px; color: #625F58; cursor: pointer; }
+.mega-trigger svg { transition: transform .3s cubic-bezier(.2,.7,.1,1); }
+.has-mega:hover .mega-trigger, .has-mega.open .mega-trigger, .mega-trigger[aria-current="page"] { color: #121212; }
+.has-mega:hover .mega-trigger svg, .has-mega.open .mega-trigger svg { transform: rotate(180deg); }
+.mega { position: absolute; left: 0; right: 0; top: 100%; background: #F7F6F2; border-top: 1px solid #DEDBD3; border-bottom: 1px solid #DEDBD3; box-shadow: 0 30px 60px rgba(18, 18, 18, .08);
+  visibility: hidden; opacity: 0; transform: translateY(-6px); transition: opacity .25s, transform .3s cubic-bezier(.2,.7,.1,1), visibility 0s linear .3s; z-index: 60; }
+.has-mega:hover .mega, .has-mega:focus-within .mega, .has-mega.open .mega { visibility: visible; opacity: 1; transform: none; transition: opacity .25s, transform .3s cubic-bezier(.2,.7,.1,1), visibility 0s; }
+.mega-inner { max-width: 1200px; margin: 0 auto; padding: 30px clamp(16px, 4vw, 48px) 34px; display: grid; grid-template-columns: repeat(var(--cols, 2), minmax(0, 1fr)) minmax(0, .9fr); gap: 28px; }
+.mega-wide .mega-inner { --cols: 4; grid-template-columns: repeat(4, minmax(0, 1fr)) minmax(0, .95fr); }
+.mega:not(.mega-wide) .mega-inner { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); max-width: 900px; }
+.mega:not(.mega-wide) .mega-col ul { display: grid; grid-template-columns: 1fr 1fr; column-gap: 24px; }
+.mega-h { margin: 0 0 12px !important; font: 500 12.5px/1.4 "Geist", Arial, sans-serif !important; color: #8A6F4E !important; letter-spacing: .01em; }
+.mega-col ul { list-style: none; margin: 0; padding: 0; }
+.mega-col a { display: block; padding: 8px 0; text-decoration: none; }
+.mega-col a b { display: block; font: 400 15px/1.3 "Geist", Arial, sans-serif; color: #121212; letter-spacing: -.01em; transition: color .2s; }
+.mega-col a span { display: block; font: 400 12.5px/1.4 "Geist", Arial, sans-serif; color: #8A867E; margin-top: 2px; }
+.mega-col a:hover b, .mega-col a[aria-current="page"] b { color: #8A6F4E; }
+.mega-card { background: #E8DFD2; border-radius: 10px; padding: 22px; display: flex; flex-direction: column; gap: 8px; align-self: start; }
+.mega-card p { margin: 0 !important; font: 400 13.5px/1.5 "Geist", Arial, sans-serif !important; color: #625F58 !important; }
+.mega-card .mega-q { font: 400 19px/1.2 "Geist", Arial, sans-serif !important; color: #121212 !important; letter-spacing: -.02em; }
+.mega-cta { margin-top: 8px; align-self: flex-start; background: #121212; color: #F7F6F2 !important; text-decoration: none; font: 500 13.5px "Geist", Arial, sans-serif; padding: 10px 16px; border-radius: 999px; transition: background-color .3s; }
+.mega-cta:hover { background: #8A6F4E; }
+.mega-all { font: 500 13px "Geist", Arial, sans-serif; color: #121212 !important; text-decoration: none; border-bottom: 1px solid #CFC8BC; align-self: flex-start; margin-top: 6px; }
+/* menu mobile */
+.mm-services { border-bottom: 1px solid #DEDBD3; }
+.mm-services summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; font-size: 20px; font-weight: 300; letter-spacing: -.02em; padding: 10px 0; color: #121212; }
+.mm-services summary::-webkit-details-marker { display: none; }
+.mm-services summary::after { content: "+"; color: #625F58; }
+.mm-services[open] summary::after { content: "–"; }
+.mm-list { display: grid; padding: 0 0 12px 2px; }
+.mm-list .mm-h { margin: 12px 0 2px !important; font: 500 12.5px "Geist", Arial, sans-serif !important; color: #8A6F4E !important; }
+.mm-list a { font-size: 16px !important; font-weight: 400 !important; padding: 7px 0 !important; border: 0 !important; color: #121212 !important; text-decoration: none; }
+.mm-list .mm-all { margin-top: 8px; font-weight: 500 !important; }
+@media (max-width: 1180px) { .mega-wide .mega-inner { grid-template-columns: repeat(4, minmax(0, 1fr)); } .mega-wide .mega-card { display: none; } }
+@media (prefers-reduced-motion: reduce) { .mega, .mega-trigger svg { transition: none !important; } }
+
+.nav nav .links .mega a::after { display: none; }
+.nav nav .links .mega a { color: inherit; }
+.nav .links { align-items: center; }
+.nav nav .links .mega .mega-cta { color: #F7F6F2; }
+@media (max-width: 1080px) { .nav.open .nav-panel { max-height: calc(100vh - 72px); max-height: calc(100dvh - 72px); overflow-y: auto; overscroll-behavior: contain; } }
