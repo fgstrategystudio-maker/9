@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { formatCurrency } from "../../utils/helpers";
+import { formatCurrency, etichettaMese, stessoMese } from "../../utils/helpers";
 import Icon from "../Icon";
 import styles from "./Setup.module.css";
 import { exportData } from "../../lib/backup";
@@ -76,11 +76,13 @@ export default function Setup({ setup, setSetup }) {
     if (!newMese || !newLordo) return;
     const lordo = Number(newLordo);
     const netto = Math.round(lordo * setup.fattoreNetto);
+    const mese = etichettaMese(newMese.trim());
     setSetup((prev) => ({
       ...prev,
+      // se il mese esiste già (anche scritto diversamente) lo sostituisce
       incassatoStorico: [
-        ...(prev.incassatoStorico || []),
-        { mese: newMese, lordo, netto },
+        ...(prev.incassatoStorico || []).filter((r) => !stessoMese(r.mese, mese)),
+        { mese, lordo, netto },
       ],
     }));
     setNewMese("");

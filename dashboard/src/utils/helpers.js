@@ -102,18 +102,51 @@ export function calcNetto(lordo, fattore) {
 
 // Estrae l'anno (numero) da una stringa mese tipo "Giugno 2026"
 export function annoFromMese(meseStr) {
-  const m = /(\d{4})/.exec(meseStr || "");
-  return m ? Number(m[1]) : null;
+  const k = chiaveMese(meseStr);
+  return k ? Number(k.slice(0, 4)) : null;
+}
+
+const MESI_PREFISSI = ["gen", "feb", "mar", "apr", "mag", "giu", "lug", "ago", "set", "ott", "nov", "dic"];
+
+// Normalizza un mese scritto in qualunque forma ("Settembre 2026",
+// "settembre 2026 ", "Set '26", "sett. 2026", "2026-09") in "YYYY-MM".
+// Tutti i confronti tra mesi passano da qui: un confronto di stringhe
+// esatto fallisce per una maiuscola o uno spazio.
+export function chiaveMese(meseStr) {
+  const s = String(meseStr || "").toLowerCase().trim();
+  if (!s) return null;
+  const iso = /^(\d{4})-(\d{1,2})$/.exec(s);
+  if (iso) return `${iso[1]}-${iso[2].padStart(2, "0")}`;
+  const anno4 = /(\d{4})/.exec(s);
+  const anno2 = /['’]\s*(\d{2})\b/.exec(s);
+  const anno = anno4 ? Number(anno4[1]) : anno2 ? 2000 + Number(anno2[1]) : null;
+  const parola = (/([a-zà-ù]+)/.exec(s) || [])[1] || "";
+  const idx = MESI_PREFISSI.indexOf(parola.slice(0, 3));
+  if (anno == null || idx < 0) return null;
+  return `${anno}-${String(idx + 1).padStart(2, "0")}`;
+}
+
+// true se le due stringhe indicano lo stesso mese
+export function stessoMese(a, b) {
+  const ka = chiaveMese(a);
+  return ka !== null && ka === chiaveMese(b);
+}
+
+// Etichetta canonica "Settembre 2026" da una chiave o stringa di mese
+export function etichettaMese(meseStr) {
+  const k = chiaveMese(meseStr);
+  if (!k) return meseStr;
+  const [y, m] = k.split("-").map(Number);
+  return `${MESI_IT[m - 1]} ${y}`;
 }
 
 // Pagamenti registrati sulle commesse per un mese ("Settembre 2026"),
 // appiattiti con il nome cliente. Ogni commessa può avere più pagamenti
 // nello stesso mese (es. fisso + extra).
 export function pagamentiDelMese(commesse, mese) {
-  const m = (mese || "").toLowerCase();
   return (commesse || []).flatMap((c) =>
     (c.pagamenti || [])
-      .filter((p) => (p.mese || "").toLowerCase() === m)
+      .filter((p) => stessoMese(p.mese, mese))
       .map((p) => ({ cliente: c.cliente, commessaId: c.id, importo: Number(p.importo) || 0, nota: p.nota || "", data: p.data || null }))
   );
 }
@@ -123,6 +156,23 @@ export function totalePagamentiCommessa(c, anno = null) {
   return (c.pagamenti || [])
     .filter((p) => anno == null || annoFromMese(p.mese) === anno)
     .reduce((s, p) => s + (Number(p.importo) || 0), 0);
+}
+
+// Confronto incassato reale vs fee concordata, sui soli mesi in cui ci sono
+// pagamenti registrati (opz. filtrati per anno). null se non ci sono dati.
+export function statPagamentiCommessa(c, anno = null) {
+  const perMese = {};
+  for (const p of c.pagamenti || []) {
+    const k = chiaveMese(p.mese);
+    if (!k || (anno != null && Number(k.slice(0, 4)) !== anno)) continue;
+    perMese[k] = (perMese[k] || 0) + (Number(p.importo) || 0);
+  }
+  const mesi = Object.keys(perMese).length;
+  if (mesi === 0) return null;
+  const reale = Object.values(perMese).reduce((s, v) => s + v, 0);
+  const fee = getCommessaLordoMensile(c) || 0;
+  const previsto = fee * mesi;
+  return { mesi, reale, fee, previsto, diff: reale - previsto, mediaMensile: Math.round(reale / mesi) };
 }
 
 // Somma il lordo dei record mensili di un dato anno

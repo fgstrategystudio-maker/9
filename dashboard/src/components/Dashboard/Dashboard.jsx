@@ -16,6 +16,9 @@ import {
   getLordoPerMese,
   sumLordoAnno,
   pagamentiDelMese,
+  stessoMese,
+  chiaveMese,
+  statPagamentiCommessa,
 } from "../../utils/helpers";
 import Icon from "../Icon";
 import Assistente from "../Assistente/Assistente";
@@ -135,30 +138,33 @@ export default function Dashboard({ commesse, setCommesse, setup, setSetup }) {
   const attiveSenzaOre = attive.filter((c) => !(Number(c.oreMensili) > 0)).length;
 
   const barData = commesse
-    .filter((c) => getCommessaLordoMensile(c))
-    .map((c) => ({
-      nome: c.cliente.length > 12 ? c.cliente.slice(0, 11) + "…" : c.cliente,
-      Lordo: getCommessaLordoMensile(c),
-      Netto: calcNetto(getCommessaLordoMensile(c), setup.fattoreNetto),
-    }));
+    .filter((c) => getCommessaLordoMensile(c) || statPagamentiCommessa(c, anno))
+    .map((c) => {
+      const stat = statPagamentiCommessa(c, anno);
+      return {
+        nome: c.cliente.length > 12 ? c.cliente.slice(0, 11) + "…" : c.cliente,
+        Lordo: getCommessaLordoMensile(c) || 0,
+        Netto: calcNetto(getCommessaLordoMensile(c) || 0, setup.fattoreNetto),
+        // media mensile realmente incassata nei mesi con pagamenti registrati
+        Incassato: stat ? stat.mediaMensile : null,
+        mesiIncassati: stat ? stat.mesi : 0,
+      };
+    });
+  const hasIncassatoReale = barData.some((d) => d.Incassato != null);
 
   const revenueHistory = setup.incassatoStorico || [];
-  const sortedStorico = [...revenueHistory].sort((a, b) => {
-    const [mA, yA = "0"] = a.mese.split(" ");
-    const [mB, yB = "0"] = b.mese.split(" ");
-    const yearDiff = Number(yA) - Number(yB);
-    if (yearDiff !== 0) return yearDiff;
-    return MESI_IT.indexOf(mA) - MESI_IT.indexOf(mB);
-  });
+  const sortedStorico = [...revenueHistory].sort((a, b) =>
+    (chiaveMese(a.mese) || "").localeCompare(chiaveMese(b.mese) || "")
+  );
 
   const meseCorrente = getMeseCorrente();
   const meseCorrManc = !revenueHistory.some(
-    (r) => r.mese.toLowerCase() === meseCorrente.toLowerCase()
+    (r) => stessoMese(r.mese, meseCorrente)
   );
   // Mese corrente già registrato nello storico? Allora i box del mese mostrano
   // l'incassato reale; altrimenti la previsione dai contratti.
   const meseRegistrato = revenueHistory.find(
-    (r) => r.mese.toLowerCase() === meseCorrente.toLowerCase()
+    (r) => stessoMese(r.mese, meseCorrente)
   ) || null;
   const lordoMese = meseRegistrato ? meseRegistrato.lordo : lordoMensileAttivo;
   const nettoMese = meseRegistrato ? meseRegistrato.netto : nettoMensileAttivo;
@@ -182,7 +188,7 @@ export default function Dashboard({ commesse, setCommesse, setup, setSetup }) {
       const mIdx  = d.getMonth();
       const y     = d.getFullYear();
       const label = `${MESI_IT[mIdx]} ${y}`;
-      const recorded = revenueHistory.find(r => r.mese.toLowerCase() === label.toLowerCase());
+      const recorded = revenueHistory.find(r => stessoMese(r.mese, label));
       const netto = recorded
         ? recorded.netto
         : calcNetto(getLordoPerMese(mIdx, y, commesse), setup.fattoreNetto);
@@ -219,7 +225,7 @@ export default function Dashboard({ commesse, setCommesse, setup, setSetup }) {
   const annualData = MESI_IT.map((nome, i) => {
     const label = `${nome} ${anno}`;
     const recorded = revenueHistory.find(
-      (r) => r.mese.toLowerCase() === label.toLowerCase()
+      (r) => stessoMese(r.mese, label)
     );
     let tipo, lordo;
     if (recorded) {
@@ -514,9 +520,10 @@ export default function Dashboard({ commesse, setCommesse, setup, setSetup }) {
                 const cols = [sortedStorico.slice(0, half), sortedStorico.slice(half)];
                 const renderRow = (r, i) => {
                   const meseShort = (() => {
-                    const [m, y] = r.mese.split(" ");
-                    const idx = MESI_IT.indexOf(m);
-                    return idx >= 0 ? `${MESI_SHORT[idx]} '${(y || "").slice(2)}` : r.mese;
+                    const k = chiaveMese(r.mese);
+                    if (!k) return r.mese;
+                    const [y, m] = k.split("-");
+                    return `${MESI_SHORT[Number(m) - 1]} '${y.slice(2)}`;
                   })();
                   const profR = totaleCostiFissi > 0 ? r.netto - totaleCostiFissi : null;
                   return (
@@ -602,10 +609,11 @@ export default function Dashboard({ commesse, setCommesse, setup, setSetup }) {
 
         <section className="panel">
           <div className="panel-head">
-            <div className="panel-title"><Icon name="bars" size={15} />Fee mensile per cliente</div>
+            <div className="panel-title"><Icon name="bars" size={15} />{hasIncassatoReale ? "Fee vs incassato per cliente" : "Fee mensile per cliente"}</div>
             <div className="legend">
-              <span className="li"><span className="sw" style={{ background: "var(--accent)" }}></span>Lordo</span>
+              <span className="li"><span className="sw" style={{ background: "var(--accent)" }}></span>Fee lorda</span>
               <span className="li"><span className="sw" style={{ background: C.pos }}></span>Netto</span>
+              {hasIncassatoReale && <span className="li"><span className="sw" style={{ background: C.info }}></span>Incassato reale (media/mese)</span>}
             </div>
           </div>
           <div className="panel-pad" style={{ paddingTop: 4 }}>
@@ -613,9 +621,21 @@ export default function Dashboard({ commesse, setCommesse, setup, setSetup }) {
               <BarChart data={barData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }} barGap={4}>
                 <XAxis dataKey="nome" tick={{ fill: C.ink2, fontSize: 11, fontWeight: 600 }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fill: C.ink3, fontSize: 10.5 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${kfmt(v)}€`} width={46} />
-                <Tooltip cursor={{ fill: "rgba(60,44,28,.05)" }} contentStyle={TOOLTIP_STYLE} labelStyle={{ color: "#A39684", fontWeight: 700 }} itemStyle={{ color: "#E9E0D0" }} formatter={(v) => formatCurrency(v)} />
+                <Tooltip
+                  cursor={{ fill: "rgba(60,44,28,.05)" }}
+                  contentStyle={TOOLTIP_STYLE}
+                  labelStyle={{ color: "#A39684", fontWeight: 700 }}
+                  itemStyle={{ color: "#E9E0D0" }}
+                  formatter={(v, name, props) => [
+                    formatCurrency(v),
+                    name === "Incassato"
+                      ? `Incassato reale (media su ${props.payload.mesiIncassati} ${props.payload.mesiIncassati === 1 ? "mese" : "mesi"})`
+                      : name === "Lordo" ? "Fee lorda" : name,
+                  ]}
+                />
                 <Bar dataKey="Lordo" fill="#B5654A" radius={[3.5, 3.5, 0, 0]} maxBarSize={20} />
                 <Bar dataKey="Netto" fill={C.pos} radius={[3.5, 3.5, 0, 0]} maxBarSize={20} />
+                {hasIncassatoReale && <Bar dataKey="Incassato" fill={C.info} radius={[3.5, 3.5, 0, 0]} maxBarSize={20} />}
               </BarChart>
             </ResponsiveContainer>
           </div>

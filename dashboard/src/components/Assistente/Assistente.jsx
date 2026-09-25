@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { useLocalStorage } from "../../hooks/useLocalStorage";
-import { getMeseCorrente, pagamentiDelMese } from "../../utils/helpers";
+import { getMeseCorrente, pagamentiDelMese, stessoMese, etichettaMese, chiaveMese } from "../../utils/helpers";
 import Icon from "../Icon";
 import styles from "./Assistente.module.css";
 
@@ -45,10 +45,9 @@ export default function Assistente({ commesse, setCommesse, setup, setSetup }) {
   function avvisiCoerenza(azioni) {
     const avvisi = [];
     for (const inc of azioni.filter((a) => a.tipo === "registra_incasso" && a.mese)) {
-      const m = inc.mese.toLowerCase();
       const esistenti = pagamentiDelMese(commesse, inc.mese).reduce((s, p) => s + p.importo, 0);
       const nuovi = azioni
-        .filter((a) => a.tipo === "registra_pagamento" && (a.mese || "").toLowerCase() === m && byId(a.id))
+        .filter((a) => a.tipo === "registra_pagamento" && stessoMese(a.mese, inc.mese) && byId(a.id))
         .reduce((s, a) => s + (Number(a.importo) || 0), 0);
       const somma = esistenti + nuovi;
       if (somma > 0 && Math.round(somma) !== Math.round(Number(inc.lordo))) {
@@ -123,18 +122,18 @@ export default function Assistente({ commesse, setCommesse, setup, setSetup }) {
     if (a.tipo === "registra_pagamento") {
       const c = byId(a.id);
       const importo = Number(a.importo);
-      if (!c || !a.mese || !(importo > 0)) return null;
+      if (!c || !chiaveMese(a.mese) || !(importo > 0)) return null;
       return {
-        label: `Pagamento da «${c.cliente}» — ${a.mese}: ${fmtN(importo)} €${a.testo ? ` (${a.testo})` : ""}`,
+        label: `Pagamento da «${c.cliente}» — ${etichettaMese(a.mese)}: ${fmtN(importo)} €${a.testo ? ` (${a.testo})` : ""}`,
         motivo: a.motivo, applicabile: true,
       };
     }
     if (a.tipo === "registra_incasso") {
-      if (!a.mese || !(Number(a.lordo) >= 0)) return null;
-      const esistente = (setup.incassatoStorico || []).find((r) => r.mese.toLowerCase() === a.mese.toLowerCase());
+      if (!chiaveMese(a.mese) || !(Number(a.lordo) >= 0)) return null;
+      const esistente = (setup.incassatoStorico || []).find((r) => stessoMese(r.mese, a.mese));
       const netto = Math.round(Number(a.lordo) * setup.fattoreNetto);
       return {
-        label: `${esistente ? "Aggiorna" : "Registra"} incasso ${a.mese}: ${fmtN(a.lordo)} € lordo (netto ${fmtN(netto)} €)` +
+        label: `${esistente ? "Aggiorna" : "Registra"} incasso ${etichettaMese(a.mese)}: ${fmtN(a.lordo)} € lordo (netto ${fmtN(netto)} €)` +
           (esistente ? ` — era ${fmtN(esistente.lordo)} €` : ""),
         motivo: a.motivo, applicabile: true,
       };
@@ -165,25 +164,24 @@ export default function Assistente({ commesse, setCommesse, setup, setSetup }) {
       if (!descrivi(a)?.applicabile) continue;
       if (a.tipo === "registra_pagamento") {
         const importo = Number(a.importo);
-        const pagamento = { mese: a.mese, importo, nota: a.testo || "", data: new Date().toISOString().slice(0, 10) };
+        const mese = etichettaMese(a.mese);
+        const pagamento = { mese, importo, nota: a.testo || "", data: new Date().toISOString().slice(0, 10) };
         setCommesse((prev) => prev.map((c) =>
           c.id === a.id ? { ...c, pagamenti: [...(c.pagamenti || []), pagamento] } : c
         ));
-        riepilogo.push(`Pagamento ${fmtN(importo)} € da «${byId(a.id)?.cliente}» (${a.mese}) → nel dettaglio della commessa, sezione «Incassi registrati»`);
+        riepilogo.push(`Pagamento ${fmtN(importo)} € da «${byId(a.id)?.cliente}» (${mese}) → nel dettaglio della commessa, sezione «Incassi registrati»`);
         applicate++;
       } else if (a.tipo === "registra_incasso") {
         const lordo = Number(a.lordo);
-        const eMeseCorrente = a.mese.toLowerCase() === meseCorrente.toLowerCase();
-        riepilogo.push(`Totale ${a.mese}: ${fmtN(lordo)} € lordo → ${eMeseCorrente ? "nei box del mese in alto, " : ""}in «Incassato storico», nella Panoramica e nella card anno su anno`);
+        const mese = etichettaMese(a.mese);
+        const eMeseCorrente = stessoMese(mese, meseCorrente);
+        riepilogo.push(`Totale ${mese}: ${fmtN(lordo)} € lordo → ${eMeseCorrente ? "nei box del mese in alto, " : ""}in «Incassato storico», nella Panoramica e nella card anno su anno`);
         setSetup((prev) => {
           const netto = Math.round(lordo * prev.fattoreNetto);
           const rows = prev.incassatoStorico || [];
-          const idx = rows.findIndex((r) => r.mese.toLowerCase() === a.mese.toLowerCase());
-          const row = { mese: a.mese, lordo, netto };
-          return {
-            ...prev,
-            incassatoStorico: idx >= 0 ? rows.map((r, i) => (i === idx ? row : r)) : [...rows, row],
-          };
+          // Sostituisce TUTTE le righe dello stesso mese (unifica eventuali doppioni)
+          const altre = rows.filter((r) => !stessoMese(r.mese, mese));
+          return { ...prev, incassatoStorico: [...altre, { mese, lordo, netto }] };
         });
         applicate++;
       } else if (a.tipo === "aggiorna_commessa") {
