@@ -2,7 +2,7 @@
 'use strict';
 
 // ---------- Storage ----------
-const APP_VERSION = '13';
+const APP_VERSION = '14';
 const KEY = 'dieta.v1';
 const MEALS = [
   { id: 'colazione', label: 'Colazione' },
@@ -45,10 +45,10 @@ const BODY_FIELDS = [
   { k: 'muscle', label: 'Massa muscolare', unit: 'kg', step: 0.1 },
   { k: 'water', label: 'Acqua corporea', unit: '%', step: 0.1 },
   { k: 'visceral', label: 'Grasso viscerale', unit: '', step: 1 },
+  { k: 'neck', label: 'Collo', unit: 'cm', step: 0.5 },
   { k: 'waist', label: 'Vita', unit: 'cm', step: 0.5 },
   { k: 'hips', label: 'Fianchi', unit: 'cm', step: 0.5 },
   { k: 'chest', label: 'Petto', unit: 'cm', step: 0.5 },
-  { k: 'arm', label: 'Braccio', unit: 'cm', step: 0.5 },
   { k: 'thigh', label: 'Coscia', unit: 'cm', step: 0.5 },
 ];
 
@@ -1349,6 +1349,7 @@ function renderBody(v) {
   const bmi = w && p.height ? w.weight / ((p.height / 100) ** 2) : null;
   const lean = w && bf ? w.weight * (1 - bf.bodyFat / 100) : null;
   const lastWH = sorted.find(b => b.waist && b.hips);
+  const navy = navyBodyFat(p);
 
   let html = `<button class="btn" id="newBody" style="margin-bottom:12px">+ Nuova misurazione</button>`;
   html += `<div class="card"><h2>Situazione attuale</h2><div class="stats">
@@ -1358,6 +1359,7 @@ function renderBody(v) {
     <div class="stat"><div class="v">${bmi ? fmtNum(bmi) : '–'}</div><div class="k">BMI</div></div>
     ${lastWH ? `<div class="stat"><div class="v">${fmtNum(lastWH.waist / lastWH.hips, 2)}</div><div class="k">Rapporto vita/fianchi</div></div>` : ''}
     ${lastWH && p.height ? `<div class="stat"><div class="v">${fmtNum(lastWH.waist / p.height, 2)}</div><div class="k">Vita/altezza (ideale &lt; 0,5)</div></div>` : ''}
+    ${navy ? `<div class="stat" style="grid-column:1/-1"><div class="v">${fmtNum(navy.bf)}%</div><div class="k">Massa grassa stimata dalle circonferenze (metodo US Navy, ${fmtDate(navy.date, { day: 'numeric', month: 'short' })}) · ${fmtNum(navy.fatKg)} kg di grasso</div></div>` : ''}
   </div></div>`;
 
   if (hasData) {
@@ -1381,6 +1383,20 @@ function renderBody(v) {
   $$('[data-bm]', v).forEach(c => c.addEventListener('click', () => { bodyMetric = c.dataset.bm; render(); }));
   $$('[data-b]', v).forEach(li => li.addEventListener('click', () => bodyForm(li.dataset.b)));
   $('#allBody', v)?.addEventListener('click', () => { showAllBody = true; render(); });
+}
+
+// Stima della massa grassa con il metodo US Navy (circonferenze in cm)
+function navyBodyFat(p) {
+  const rec = [...db.body].sort((a, b) => b.date.localeCompare(a.date))
+    .find(b => b.neck && b.waist && (p.sex === 'm' || b.hips));
+  if (!rec || !p.height) return null;
+  const log = Math.log10;
+  const bf = p.sex === 'm'
+    ? (rec.waist > rec.neck ? 495 / (1.0324 - 0.19077 * log(rec.waist - rec.neck) + 0.15456 * log(p.height)) - 450 : null)
+    : (rec.waist + rec.hips > rec.neck ? 495 / (1.29579 - 0.35004 * log(rec.waist + rec.hips - rec.neck) + 0.221 * log(p.height)) - 450 : null);
+  if (bf == null || bf < 2 || bf > 70) return null;
+  const w = weightOn(rec.date);
+  return { bf, date: rec.date, fatKg: w ? w * bf / 100 : null };
 }
 
 function bodyForm(date, newDate) {
