@@ -5,82 +5,64 @@
 // dell'utente: qui non si scrive mai nulla.
 //
 // Due modalità, come nell'app dieta:
-//  - veloce (default): modello lite, risposta in ~1-2 s
-//  - preciso: modello pieno con un po' di ragionamento, per casi ambigui
-// Se un modello è sovraccarico o non disponibile si passa da soli al
-// successivo della catena (fino ai 2.5 come rete di sicurezza).
+//  - veloce (default): modello lite, risposta in pochi secondi
+//  - preciso: modello pieno, per casi ambigui
+//
+// Massima compatibilità tra generazioni di modelli:
+//  - niente responseSchema (le generazioni nuove lo rifiutano): JSON forzato
+//    con responseMimeType + contratto descritto nel prompt, validato poi qui
+//    e nel client prima di applicare qualunque modifica
+//  - cascata di config "thinking" per modello (budget → level → nessuna)
+//  - timeout per chiamata e tetto complessivo; su errore si passa al
+//    modello successivo, con gli alias -latest come paracadute
+//  - in caso di fallimento totale, l'errore riporta la risposta esatta di
+//    Google per ogni modello provato
 
 const CATENE = {
-  veloce: ['gemini-3.5-flash-lite', 'gemini-3.5-flash', 'gemini-2.5-flash-lite', 'gemini-2.5-flash'],
-  preciso: ['gemini-3.5-flash', 'gemini-3.5-flash-lite', 'gemini-2.5-flash', 'gemini-2.5-flash-lite'],
+  veloce: ['gemini-3.5-flash-lite', 'gemini-flash-lite-latest', 'gemini-3.5-flash', 'gemini-flash-latest'],
+  preciso: ['gemini-3.5-flash', 'gemini-flash-latest', 'gemini-3.5-flash-lite', 'gemini-flash-lite-latest'],
 }
-// Timeout per singola chiamata: un modello che "ragiona" troppo o è appeso
-// viene abortito e si passa al successivo della catena.
-const TIMEOUT_CALL_MS = { veloce: 12000, preciso: 25000 }
-// Tetto complessivo: oltre questo non si provano altri modelli (le funzioni
-// Vercel hanno comunque una durata massima).
+// Config thinking da provare in ordine sullo stesso modello: prima il
+// parametro dei 2.5 (thinkingBudget), poi quello delle generazioni nuove
+// (thinkingLevel), infine nessuna. Un 400 su "thinking" costa ~0 e passa
+// subito al tentativo successivo.
+const CONFIG_THINKING = {
+  veloce: [{ thinkingBudget: 0 }, { thinkingLevel: 'minimal' }, { thinkingLevel: 'low' }, null],
+  preciso: [{ thinkingBudget: 512 }, { thinkingLevel: 'low' }, null],
+}
+// Timeout per singola chiamata: un modello appeso o che ragiona troppo viene
+// abortito e si passa al successivo della catena.
+const TIMEOUT_CALL_MS = { veloce: 15000, preciso: 30000 }
+// Tetto complessivo (le funzioni Vercel hanno comunque una durata massima).
 const DEADLINE_MS = 45000
-
-// Schema della risposta JSON (subset OpenAPI supportato da Gemini)
-const RESPONSE_SCHEMA = {
-  type: 'OBJECT',
-  properties: {
-    spiegazione: {
-      type: 'STRING',
-      description: 'Spiegazione breve e chiara, in italiano, di cosa proponi e perché.',
-    },
-    azioni: {
-      type: 'ARRAY',
-      items: {
-        type: 'OBJECT',
-        properties: {
-          tipo: {
-            type: 'STRING',
-            enum: ['registra_incasso', 'aggiorna_commessa', 'aggiungi_nota', 'nessuna_azione'],
-          },
-          mese: { type: 'STRING', description: 'Per registra_incasso: mese in italiano con anno, es. "Settembre 2026".' },
-          lordo: { type: 'NUMBER', description: 'Per registra_incasso: totale lordo REALE incassato in quel mese (tutti i clienti).' },
-          id: { type: 'NUMBER', description: 'Per aggiorna_commessa/aggiungi_nota: id della commessa.' },
-          campi: {
-            type: 'OBJECT',
-            description: 'Per aggiorna_commessa: solo i campi da cambiare.',
-            properties: {
-              lordoMensile: { type: 'NUMBER' },
-              lordoProgetto: { type: 'NUMBER' },
-              oreMensili: { type: 'NUMBER' },
-              upsellTarget: { type: 'NUMBER' },
-              stato: { type: 'STRING' },
-              tipo: { type: 'STRING' },
-              inizio: { type: 'STRING', description: 'YYYY-MM-DD' },
-              fine: { type: 'STRING', description: 'YYYY-MM-DD' },
-              splitMezzoMese: { type: 'BOOLEAN' },
-              priorita: { type: 'STRING' },
-              servizio: { type: 'STRING' },
-              note: { type: 'STRING' },
-            },
-          },
-          testo: { type: 'STRING', description: 'Per aggiungi_nota: testo della nota da aggiungere alla commessa.' },
-          motivo: { type: 'STRING', description: 'Motivazione sintetica di questa azione.' },
-        },
-        required: ['tipo'],
-      },
-    },
-  },
-  required: ['spiegazione', 'azioni'],
-}
 
 function systemPrompt(ctx) {
   return `Sei l'assistente della Freelance Dashboard di un freelance italiano (SEO/Ads).
-Interpreti richieste in linguaggio naturale e rispondi SOLO con il JSON richiesto (spiegazione + azioni).
+Interpreti richieste in linguaggio naturale e rispondi ESCLUSIVAMENTE con un oggetto JSON valido, senza testo prima o dopo e senza blocchi markdown.
+
+FORMATO DELLA RISPOSTA (JSON)
+{
+  "spiegazione": "spiegazione breve e chiara, in italiano, di cosa proponi e perché",
+  "azioni": [
+    // una o più azioni, ciascuna con "tipo" tra:
+    // 1) registra_incasso — { "tipo": "registra_incasso", "mese": "Settembre 2026", "lordo": 4100, "motivo": "..." }
+    //    "mese" in italiano con anno; "lordo" = totale lordo REALE incassato in quel mese (tutti i clienti).
+    // 2) aggiorna_commessa — { "tipo": "aggiorna_commessa", "id": 3, "campi": { ... }, "motivo": "..." }
+    //    "campi" contiene SOLO i campi da cambiare tra: lordoMensile, lordoProgetto, oreMensili,
+    //    upsellTarget, stato, tipo, inizio (YYYY-MM-DD), fine (YYYY-MM-DD), splitMezzoMese, priorita, servizio, note.
+    // 3) aggiungi_nota — { "tipo": "aggiungi_nota", "id": 3, "testo": "...", "motivo": "..." }
+    // 4) nessuna_azione — { "tipo": "nessuna_azione", "motivo": "cosa manca o perché non agire" }
+  ]
+}
 
 REGOLE DI DOMINIO
 - "incassatoStorico" registra il TOTALE lordo incassato per mese (tutti i clienti insieme); il netto lo calcola l'app (fattore ${Math.round((ctx.fattoreNetto ?? 0.7) * 100)}%). Per registra_incasso indica sempre il totale mese, non il singolo pagamento: se un cliente ha pagato una cifra diversa dal previsto, parti dalla stima o dal valore già registrato del mese e applica la differenza.
 - Pagamento insolito UNA TANTUM (acconto, sconto, cifra concordata diversa per questo mese): NON cambiare la fee della commessa; proponi registra_incasso col totale reale del mese + aggiungi_nota sulla commessa per tenerne traccia.
 - Cambio DURATURO di accordo (nuova fee mensile, rinnovo, chiusura): proponi aggiorna_commessa (es. lordoMensile, fine, stato).
 - Stati validi commessa: "In corso", "In scadenza", "Da chiarire", "Sospeso", "Concluso", "Perso".
-- Mesi in italiano con anno, es. "Settembre 2026". Date campi in formato YYYY-MM-DD. Oggi è ${ctx.oggi}.
+- Mesi in italiano con anno, es. "Settembre 2026". Oggi è ${ctx.oggi}.
 - Se la richiesta è ambigua o mancano dati per agire in sicurezza, usa nessuna_azione e spiega nel campo motivo cosa manca. Meglio chiedere che sbagliare su dati economici.
-- Non inventare importi: usa i numeri della richiesta e del contesto.
+- Non inventare importi: usa i numeri della richiesta e del contesto. Sii diretto, niente premesse.
 
 CONTESTO ATTUALE (JSON)
 ${JSON.stringify(ctx, null, 1)}`
@@ -89,7 +71,6 @@ ${JSON.stringify(ctx, null, 1)}`
 async function chiamaModello(apiKey, model, system, istruzione, thinkingConfig, timeoutMs) {
   const generationConfig = {
     responseMimeType: 'application/json',
-    responseSchema: RESPONSE_SCHEMA,
     // Ampio: sui modelli con "thinking" i token di ragionamento contano nel
     // limite di output, e un limite basso tronca il JSON finale.
     maxOutputTokens: 8000,
@@ -138,6 +119,11 @@ function estrai(data) {
   return null
 }
 
+// Compatta il corpo d'errore di Google in una riga leggibile
+function dettaglio(text) {
+  return String(text || '').replace(/\s+/g, ' ').slice(0, 160)
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
@@ -157,14 +143,6 @@ export default async function handler(req, res) {
   const modalita = modalitaRaw === 'preciso' ? 'preciso' : 'veloce'
   const system = systemPrompt(contesto || {})
 
-  // Configurazioni thinking da provare in ordine sullo stesso modello: prima il
-  // parametro dei 2.5 (thinkingBudget), poi quello delle generazioni nuove
-  // (thinkingLevel), infine nessuna config. Un 400 su "thinking" costa
-  // pochissimo e passa subito al tentativo successivo.
-  const configThinking = modalita === 'veloce'
-    ? [{ thinkingBudget: 0 }, { thinkingLevel: 'low' }, null]
-    : [{ thinkingBudget: 512 }, null]
-
   const t0 = Date.now()
   const errori = []
   const catena = CATENE[modalita]
@@ -176,14 +154,14 @@ export default async function handler(req, res) {
     const model = catena[i]
     try {
       let r = null
-      for (const cfg of configThinking) {
+      for (const cfg of CONFIG_THINKING[modalita]) {
         r = await chiamaModello(apiKey, model, system, istruzione, cfg, TIMEOUT_CALL_MS[modalita])
         // Config thinking non supportata da questo modello → prova la successiva
         if (!r.ok && r.status === 400 && /thinking/i.test(r.text || '')) continue
         break
       }
       if (!r.ok) {
-        errori.push(`${model}: ${r.status ? `HTTP ${r.status}` : r.text}`)
+        errori.push(`${model}: ${r.status ? `HTTP ${r.status} — ${dettaglio(r.text)}` : dettaglio(r.text)}`)
         continue // sovraccarico (429/503), modello non disponibile (404), timeout, ecc. → prossimo
       }
       const parsed = estrai(r.data)
