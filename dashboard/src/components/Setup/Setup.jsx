@@ -4,6 +4,7 @@ import Icon from "../Icon";
 import styles from "./Setup.module.css";
 import { exportData } from "../../lib/backup";
 import { syncToSupabase } from "../../lib/supabase";
+import { decifraBackup, isBackupCifrato } from "../../lib/backupCrypto";
 
 const nf = new Intl.NumberFormat("it-IT");
 const fmtN = (n) => nf.format(Math.round(n ?? 0));
@@ -515,30 +516,67 @@ export default function Setup({ setup, setSetup }) {
 function BackupSection() {
   const fileRef = useRef(null)
   const [importMsg, setImportMsg] = useState("")
+  const [cifrato, setCifrato] = useState(null) // { nome, bytes } in attesa di password
+  const [password, setPassword] = useState("")
+  const [decifrando, setDecifrando] = useState(false)
 
-  function handleImport(e) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = (ev) => {
-      try {
-        const json = JSON.parse(ev.target.result)
-        const data = json.data || json
-        const KEYS = ["commesse", "setup", "network"]
-        KEYS.forEach(k => {
-          if (data[k] !== undefined) {
-            localStorage.setItem(k, JSON.stringify(data[k]))
-            syncToSupabase(k, data[k])
-          }
-        })
-        setImportMsg("Backup importato. La pagina si ricaricherà...")
-        setTimeout(() => window.location.reload(), 1500)
-      } catch {
-        setImportMsg("File non valido.")
-      }
+  function importaTesto(testo) {
+    let json
+    try {
+      json = JSON.parse(testo)
+    } catch {
+      setImportMsg("File non valido.")
+      return
     }
-    reader.readAsText(file)
+    const data = json.data || json
+    const KEYS = ["commesse", "setup", "network"]
+    if (!KEYS.some((k) => data[k] !== undefined)) {
+      setImportMsg("File non valido: non contiene dati della dashboard.")
+      return
+    }
+    const quando = json.exported_at ? new Date(json.exported_at).toLocaleString("it-IT") : "data sconosciuta"
+    if (!confirm(`Sostituire i dati attuali con il backup del ${quando}? L'operazione non si può annullare.`)) {
+      setImportMsg("")
+      return
+    }
+    KEYS.forEach(k => {
+      if (data[k] !== undefined) {
+        localStorage.setItem(k, JSON.stringify(data[k]))
+        syncToSupabase(k, data[k])
+      }
+    })
+    setImportMsg("Backup importato. La pagina si ricaricherà...")
+    setTimeout(() => window.location.reload(), 1500)
+  }
+
+  async function handleImport(e) {
+    const file = e.target.files?.[0]
     e.target.value = ""
+    if (!file) return
+    setImportMsg("")
+    const bytes = new Uint8Array(await file.arrayBuffer())
+    if (isBackupCifrato(bytes)) {
+      setCifrato({ nome: file.name, bytes })
+      setPassword("")
+      return
+    }
+    importaTesto(new TextDecoder().decode(bytes))
+  }
+
+  async function handleDecifra(e) {
+    e.preventDefault()
+    if (!password || !cifrato) return
+    setDecifrando(true)
+    try {
+      const testo = await decifraBackup(cifrato.bytes, password)
+      setCifrato(null)
+      setPassword("")
+      importaTesto(testo)
+    } catch (err) {
+      setImportMsg(err.message)
+    } finally {
+      setDecifrando(false)
+    }
   }
 
   return (
@@ -561,13 +599,33 @@ function BackupSection() {
           <button className="btn btn-ghost" onClick={() => fileRef.current?.click()}>
             <Icon name="upload" size={15} /> Importa backup
           </button>
-          <input ref={fileRef} type="file" accept=".json" style={{ display: "none" }} onChange={handleImport} />
+          <input ref={fileRef} type="file" accept=".json,.enc" style={{ display: "none" }} onChange={handleImport} />
           {importMsg && (
-            <span style={{ fontSize: 12.5, color: importMsg.includes("valido") ? "var(--danger)" : "var(--pos-ink)" }}>
+            <span style={{ fontSize: 12.5, color: /valido|errata|danneggiato/.test(importMsg) ? "var(--danger)" : "var(--pos-ink)" }}>
               {importMsg}
             </span>
           )}
         </div>
+        {cifrato && (
+          <form onSubmit={handleDecifra} style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "flex-end" }}>
+            <div style={{ flex: 1, minWidth: 220 }}>
+              <label className="field-label">Password del backup cifrato «{cifrato.nome}»</label>
+              <input
+                className="input"
+                type="password"
+                autoFocus
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <span className="field-note">è la password BACKUP_PASSWORD impostata su GitHub; la decifratura avviene solo sul tuo dispositivo</span>
+            </div>
+            <button type="submit" className="btn btn-primary" disabled={!password || decifrando}>
+              {decifrando ? "Decifro…" : "Decifra e importa"}
+            </button>
+            <button type="button" className="btn btn-quiet" onClick={() => { setCifrato(null); setPassword("") }}>Annulla</button>
+          </form>
+        )}
       </div>
     </section>
   )
