@@ -314,8 +314,7 @@ a[style*="background:var(--gold)"]:hover, button[style*="background:var(--gold)"
 .has-mega:hover .mega, .has-mega:focus-within .mega, .has-mega.open .mega { visibility: visible; opacity: 1; transform: none; transition: opacity .25s, transform .3s cubic-bezier(.2,.7,.1,1), visibility 0s; }
 .mega-inner { max-width: 1200px; margin: 0 auto; padding: 30px clamp(16px, 4vw, 48px) 34px; display: grid; grid-template-columns: repeat(var(--cols, 2), minmax(0, 1fr)) minmax(0, .9fr); gap: 28px; }
 .mega-wide .mega-inner { --cols: 4; grid-template-columns: repeat(4, minmax(0, 1fr)) minmax(0, .95fr); }
-.mega:not(.mega-wide) .mega-inner { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); max-width: 900px; }
-.mega:not(.mega-wide) .mega-col ul { display: grid; grid-template-columns: 1fr 1fr; column-gap: 24px; }
+.mega:not(.mega-wide) .mega-inner { grid-template-columns: repeat(2, minmax(0, 1fr)) minmax(0, .9fr); max-width: 1000px; }
 .mega-h { margin: 0 0 12px !important; font: 500 12.5px/1.4 "Geist", Arial, sans-serif !important; color: #8A6F4E !important; letter-spacing: .01em; }
 .mega-col ul { list-style: none; margin: 0; padding: 0; }
 .mega-col a { display: block; padding: 8px 0; text-decoration: none; }

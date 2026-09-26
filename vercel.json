@@ -146,6 +146,21 @@
       "source": "/:lang(en|pt|es)/blog-come-migliorare-vendite-e-conversione-in-aziende-b2b",
       "destination": "/:lang/blog-consulenza-sales-per-migliorare-pipeline-conversione-e-processo-commerciale",
       "permanent": true
+    },
+    {
+      "source": "/:lang(en|pt|es)/blog-consulente-marketing-per-posizionamento-acquisition-ed-execution",
+      "destination": "/:lang/servizi-marketing",
+      "permanent": true
+    },
+    {
+      "source": "/:lang(en|pt|es)/blog-consulenza-marketing-per-aziende-che-vogliono-crescere-meglio",
+      "destination": "/:lang/servizi-marketing",
+      "permanent": true
+    },
+    {
+      "source": "/:lang(en|pt|es)/blog-strategia-marketing-per-pmi-e-aziende-in-fase-di-crescita",
+      "destination": "/:lang/servizi-marketing",
+      "permanent": true
     }
   ]
 }
