@@ -2,7 +2,7 @@
 'use strict';
 
 // ---------- Storage ----------
-const APP_VERSION = '16';
+const APP_VERSION = '17';
 const KEY = 'dieta.v1';
 const MEALS = [
   { id: 'colazione', label: 'Colazione' },
@@ -170,6 +170,7 @@ function dayBurn(d) {
   const p = db.profile, w = weightOn(d);
   if (!w) return null;
   const bmr = 10 * w + 6.25 * p.height - 5 * p.age + (p.sex === 'm' ? 5 : -161);
+  if (db.goals.deficitRef === 'goal') return dayBudget(d); // obiettivo del giorno (+ sport)
   if (db.goals.deficitRef === 'bmr') return bmr;
   return bmr * (p.lifestyle || 1.2) + (p.baseActivity || 0) + dayExerciseKcal(d);
 }
@@ -319,7 +320,7 @@ function drawCalendar(s) {
       <div class="stat"><div class="v">${green}<span class="muted" style="font-size:15px">/${past.length}</span></div><div class="k">giorni verdi nel mese</div></div>
       <div class="stat"><div class="v">${signed(dW, 'kg')}</div><div class="k">peso nel mese</div></div>
       <div class="stat"><div class="v">${r0(avg)}</div><div class="k">kcal medie (${logged.length} giorni registrati)</div></div>
-      ${(() => { const mb = monthBalance(calMonth); return mb.days || mb.start ? `<div class="stat" style="grid-column:1/-1"><div class="v">${fmtBalance(mb.total)}</div><div class="k">bilancio del mese ≈ ${fatKg(mb.total)} kg di grasso ${mb.total <= 0 ? 'persi' : 'in più'}</div></div>` : ''; })()}
+      ${(() => { const mb = monthBalance(calMonth); return mb.days || mb.start ? `<div class="stat" style="grid-column:1/-1"><div class="v">${fmtBalance(mb.total)}</div><div class="k">${db.goals.deficitRef === 'goal' ? `rispetto all'obiettivo nel mese` : `bilancio del mese ≈ ${fatKg(mb.total)} kg di grasso ${mb.total <= 0 ? 'persi' : 'in più'}`}</div></div>` : ''; })()}
     </div>
     <div class="btn-row" style="margin-top:12px"><button class="btn secondary" id="calClose">Chiudi</button><button class="btn" id="calToday">Vai a oggi</button></div>`;
   $('#calPrev', box).addEventListener('click', () => { calMonth = ymd(new Date(y, m - 2, 1)).slice(0, 7); drawCalendar(s); });
@@ -388,7 +389,8 @@ function renderToday(v) {
     ${(() => {
       const mb = monthBalance(today().slice(0, 7));
       if (!mb.days && !mb.start) return '';
-      return `<button class="balance-line" id="balanceLine"><span>Bilancio del mese</span><b class="${mb.total <= 0 ? 'good' : 'bad'}">${fmtBalance(mb.total)}</b><span>≈ ${fatKg(mb.total)} kg di grasso ${mb.total <= 0 ? 'persi' : 'in più'}</span></button>`;
+      const vsGoal = db.goals.deficitRef === 'goal';
+      return `<button class="balance-line" id="balanceLine"><span>${vsGoal ? 'Rispetto all\'obiettivo, nel mese' : 'Bilancio del mese'}</span><b class="${mb.total <= 0 ? 'good' : 'bad'}">${fmtBalance(mb.total)}</b><span>${vsGoal ? (mb.total <= 0 ? 'sotto l\'obiettivo' : 'sopra l\'obiettivo') : `≈ ${fatKg(mb.total)} kg di grasso ${mb.total <= 0 ? 'persi' : 'in più'}`}</span></button>`;
     })()}
   </div>`;
 
@@ -1260,27 +1262,33 @@ function balanceCard() {
   const month = today().slice(0, 7);
   const mb = monthBalance(month);
   const name = parseYmd(today()).toLocaleDateString('it-IT', { month: 'long' });
-  const ref = db.goals.deficitRef === 'bmr' ? 'bmr' : 'tdee';
+  const ref = ['bmr', 'goal'].includes(db.goals.deficitRef) ? db.goals.deficitRef : 'tdee';
   if (!weightOn(today())) return `<div class="card"><h2>Bilancio calorico di ${name}</h2><p class="small muted">Registra il tuo peso in <b>Corpo</b> per calcolare le calorie consumate.</p></div>`;
   const proj = mb.avg != null && mb.daysLeft ? mb.total + mb.avg * mb.daysLeft : null;
   return `<div class="card">
     <h2>Bilancio calorico di ${name}</h2>
     <div class="balance-big ${mb.total <= 0 ? 'good' : 'bad'}">${fmtBalance(mb.total)}</div>
-    <div class="center" style="margin-bottom:10px">≈ <b>${fatKg(mb.total)} kg di grasso</b> ${mb.total <= 0 ? 'persi' : 'accumulati'} <span class="muted small">(7.700 kcal ≈ 1 kg)</span></div>
+    ${ref === 'goal'
+      ? `<div class="center" style="margin-bottom:10px">${mb.total <= 0 ? 'sotto' : 'sopra'} l'obiettivo calorico <span class="muted small">(per i kg di grasso scegli "Fabbisogno")</span></div>`
+      : `<div class="center" style="margin-bottom:10px">≈ <b>${fatKg(mb.total)} kg di grasso</b> ${mb.total <= 0 ? 'persi' : 'accumulati'} <span class="muted small">(7.700 kcal ≈ 1 kg)</span></div>`}
     <div class="calc-rows">
       ${mb.start ? `<div><span>Valore iniziale fino al ${fmtDate(addDays(mb.start.until, -1), { day: 'numeric', month: 'short' })}</span><b>${fmtBalance(-mb.start.kcal)}</b></div>` : ''}
       <div><span>Giorni registrati da ${fmtDate(mb.from, { day: 'numeric', month: 'short' })}${mb.days ? ` (${mb.days})` : ''}</span><b>${fmtBalance(mb.total - (mb.start ? -mb.start.kcal : 0))}</b></div>
       ${mb.avg != null ? `<div><span>Media al giorno</span><b>${fmtBalance(mb.avg)}</b></div>` : ''}
       ${mb.todayVal != null ? `<div><span>Oggi (in corso, si somma a fine giornata)</span><b>${fmtBalance(mb.todayVal)}</b></div>` : ''}
-      ${proj != null ? `<div class="sum"><span>A fine mese, di questo passo</span><b>${fmtBalance(proj)} · ${fatKg(proj)} kg</b></div>` : ''}
+      ${proj != null ? `<div class="sum"><span>A fine mese, di questo passo</span><b>${fmtBalance(proj)}${ref === 'goal' ? '' : ` · ${fatKg(proj)} kg`}</b></div>` : ''}
     </div>
-    <div class="seg" style="margin-top:10px">
-      <button data-ref="tdee" class="${ref === 'tdee' ? 'on' : ''}">Fabbisogno totale</button>
-      <button data-ref="bmr" class="${ref === 'bmr' ? 'on' : ''}">Solo metabolismo basale</button>
+    <p class="small muted" style="margin:10px 0 4px">Calcola rispetto a:</p>
+    <div class="seg seg3">
+      <button data-ref="tdee" class="${ref === 'tdee' ? 'on' : ''}">Fabbisogno</button>
+      <button data-ref="goal" class="${ref === 'goal' ? 'on' : ''}">Obiettivo</button>
+      <button data-ref="bmr" class="${ref === 'bmr' ? 'on' : ''}">Metabolismo basale</button>
     </div>
     <p class="small muted" style="margin-top:-4px">${ref === 'tdee'
-      ? 'Calorie mangiate − (metabolismo basale + giornata tipo + attività fissa + allenamenti).'
-      : 'Calorie mangiate − metabolismo basale (senza contare movimento e sport).'} Contano solo i giorni in cui hai registrato i pasti.${mb.missing ? ' Alcuni giorni non hanno un peso di riferimento.' : ''}</p>
+      ? `Calorie mangiate − calorie consumate (metabolismo basale + giornata tipo + attività fissa + allenamenti, oggi circa ${r0(dayBurn(today()) ?? 0)} kcal). È il deficit reale che fa perdere grasso.`
+      : ref === 'goal'
+        ? `Calorie mangiate − obiettivo del giorno (${r0(db.goals.kcal)} kcal + eventuale sport). Dice quanto stai sotto o sopra il piano; l'obiettivo contiene già un deficit.`
+        : 'Calorie mangiate − metabolismo basale (senza contare movimento e sport).'} Contano solo i giorni in cui hai registrato i pasti. Il valore iniziale va calcolato con lo stesso criterio.${mb.missing ? ' Alcuni giorni non hanno un peso di riferimento.' : ''}</p>
     <button class="btn secondary" id="editStart">${mb.start ? 'Modifica valore iniziale' : 'Inserisci valore iniziale del mese'}</button>
   </div>`;
 }

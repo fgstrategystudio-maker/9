@@ -363,3 +363,4 @@ label.check input { width: 20px; height: 20px; accent-color: var(--accent); }
 .measure-fig .mline.on .lead { stroke: var(--accent); opacity: 1; }
 .circ-field .hint { display: none; font-size: 12px; color: var(--accent); margin-top: 4px; }
 .circ-field .hint.show { display: block; }
+.seg3 button { font-size: 13px; padding: 8px 2px; }
