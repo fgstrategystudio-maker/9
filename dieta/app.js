@@ -2,7 +2,7 @@
 'use strict';
 
 // ---------- Storage ----------
-const APP_VERSION = '17';
+const APP_VERSION = '18';
 const KEY = 'dieta.v1';
 const MEALS = [
   { id: 'colazione', label: 'Colazione' },
@@ -194,6 +194,24 @@ function monthBalance(month) {
   const avg = days ? (total - (start ? -start.kcal : 0)) / days : null;
   return { total, days, todayVal, start, from, avg, daysLeft, missing };
 }
+// Mesi dall'inizio delle misurazioni (primo mese con pasti registrati o con un valore iniziale) a oggi
+function trackedMonths() {
+  const months = [...Object.keys(db.entries).filter(d => db.entries[d]?.length).map(d => d.slice(0, 7)), ...Object.keys(db.deficitStart || {})];
+  if (!months.length) return [];
+  const cur = today().slice(0, 7);
+  let m = months.sort()[0];
+  const out = [];
+  while (m <= cur) { out.push(m); const [y, mm] = m.split('-').map(Number); m = ymd(new Date(y, mm, 1)).slice(0, 7); }
+  return out;
+}
+const monthName = (m, withYear = false) => parseYmd(m + '-01').toLocaleDateString('it-IT', withYear ? { month: 'long', year: 'numeric' } : { month: 'long' });
+const cap = t => t.charAt(0).toUpperCase() + t.slice(1);
+function balanceHistory() {
+  const months = trackedMonths();
+  const rows = months.map(m => ({ m, ...monthBalance(m), closed: m < today().slice(0, 7) }));
+  return { rows, total: rows.reduce((a, r) => a + r.total, 0), since: months[0] ? (db.deficitStart?.[months[0]] ? months[0] + '-01' : rows[0] && Object.keys(db.entries).filter(d => d.startsWith(months[0]) && db.entries[d].length).sort()[0]) : null };
+}
+
 const fmtBalance = k => `${k > 0 ? '+' : k < 0 ? '−' : ''}${Math.abs(r0(k)).toLocaleString('it-IT')} kcal`;
 const fatKg = k => fmtNum(Math.abs(k) / KCAL_PER_KG_FAT, 2);
 
@@ -364,6 +382,18 @@ function renderToday(v) {
   const yesterday = addDays(curDate, -1);
 
   let html = '';
+  // Nei primi giorni del mese: riepilogo del mese appena chiuso
+  const prevMonth = ymd(new Date(parseYmd(today()).getFullYear(), parseYmd(today()).getMonth() - 1, 1)).slice(0, 7);
+  if (curDate === today() && +today().slice(8) <= 5 && db.settings.closedSeen !== prevMonth && trackedMonths().includes(prevMonth)) {
+    const pm = monthBalance(prevMonth), h = balanceHistory(), vsGoal = db.goals.deficitRef === 'goal';
+    html += `<div class="card month-closed">
+      <h2>🏁 ${cap(monthName(prevMonth))} chiuso</h2>
+      <div class="balance-big ${pm.total <= 0 ? 'good' : 'bad'}">${fmtBalance(pm.total)}</div>
+      ${vsGoal ? `<p class="center">${pm.total <= 0 ? 'sotto' : 'sopra'} l'obiettivo nel mese</p>` : `<p class="center">≈ <b>${fatKg(pm.total)} kg di grasso</b> ${pm.total <= 0 ? 'persi' : 'in più'}</p>`}
+      ${h.rows.length > 2 ? `<p class="center small muted">Totale dall'inizio: <b>${fmtBalance(h.total - (h.rows.at(-1)?.total || 0))}</b>${vsGoal ? '' : ` ≈ ${fatKg(h.total - (h.rows.at(-1)?.total || 0))} kg`}</p>` : ''}
+      <div class="btn-row"><button class="btn secondary" id="closedDetail">Storico</button><button class="btn" id="closedOk">Ok</button></div>
+    </div>`;
+  }
   if (curDate !== today()) {
     html += `<div class="banner row between"><span>Stai vedendo <b>${fmtDate(curDate, { weekday: 'long', day: 'numeric', month: 'long' })}</b>: puoi aggiungere e modificare.</span><button class="add-mini" id="backToday">Oggi</button></div>`;
   }
@@ -461,6 +491,8 @@ function renderToday(v) {
   $('#addExercise', v).addEventListener('click', () => exerciseForm());
   $('#backToday', v)?.addEventListener('click', () => { curDate = today(); render(); });
   $('#balanceLine', v)?.addEventListener('click', () => go('progress'));
+  $('#closedOk', v)?.addEventListener('click', () => { db.settings.closedSeen = prevMonth; save(); render(); });
+  $('#closedDetail', v)?.addEventListener('click', () => { db.settings.closedSeen = prevMonth; save(); go('progress'); });
   $$('[data-ex]', v).forEach(li => li.addEventListener('click', () => exerciseForm(li.dataset.ex)));
 }
 
@@ -1290,6 +1322,27 @@ function balanceCard() {
         ? `Calorie mangiate − obiettivo del giorno (${r0(db.goals.kcal)} kcal + eventuale sport). Dice quanto stai sotto o sopra il piano; l'obiettivo contiene già un deficit.`
         : 'Calorie mangiate − metabolismo basale (senza contare movimento e sport).'} Contano solo i giorni in cui hai registrato i pasti. Il valore iniziale va calcolato con lo stesso criterio.${mb.missing ? ' Alcuni giorni non hanno un peso di riferimento.' : ''}</p>
     <button class="btn secondary" id="editStart">${mb.start ? 'Modifica valore iniziale' : 'Inserisci valore iniziale del mese'}</button>
+  </div>
+  ${historyCard()}`;
+}
+
+function historyCard() {
+  const h = balanceHistory();
+  if (!h.rows.length) return '';
+  const vsGoal = db.goals.deficitRef === 'goal';
+  return `<div class="card">
+    <h2>Storico mese per mese</h2>
+    <div class="hist">
+      ${[...h.rows].reverse().map(r => `<div class="hrow">
+        <span><b>${cap(monthName(r.m, true))}</b><br><small class="muted">${r.closed ? 'chiuso' : 'in corso'}${r.start ? ' · con valore iniziale' : ''}</small></span>
+        <span class="${r.total <= 0 ? 'good' : 'bad'}"><b>${fmtBalance(r.total)}</b>${vsGoal ? '' : `<br><small>≈ ${fatKg(r.total)} kg</small>`}</span>
+      </div>`).join('')}
+      <div class="hrow tot">
+        <span><b>Totale</b><br><small class="muted">dal ${h.since ? fmtDate(h.since, { day: 'numeric', month: 'long', year: 'numeric' }) : 'inizio'}</small></span>
+        <span class="${h.total <= 0 ? 'good' : 'bad'}"><b>${fmtBalance(h.total)}</b>${vsGoal ? '' : `<br><small>≈ ${fatKg(h.total)} kg di grasso ${h.total <= 0 ? 'persi' : 'in più'}</small>`}</span>
+      </div>
+    </div>
+    <p class="small muted" style="margin-bottom:0">Calcolato rispetto a: ${vsGoal ? 'obiettivo' : db.goals.deficitRef === 'bmr' ? 'metabolismo basale' : 'fabbisogno'} (si cambia nel riquadro sopra). Il mese in corso non include oggi.</p>
   </div>`;
 }
 
