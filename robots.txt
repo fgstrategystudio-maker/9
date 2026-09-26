@@ -4,8 +4,9 @@ Disallow: /grazie.html
 Disallow: /grazie
 Disallow: /en/grazie
 Disallow: /pt/grazie
+Disallow: /es/grazie
+Disallow: /es/grazie.html
 Disallow: /en/grazie.html
 Disallow: /pt/grazie.html
-Disallow: /es/
 
 Sitemap: https://francescogizzi.com/sitemap.xml
