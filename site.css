@@ -347,3 +347,5 @@ a[style*="background:var(--gold)"]:hover, button[style*="background:var(--gold)"
 .tb-links .mega .mega-cta { color: #F7F6F2 !important; }
 .tb-links .mega .mega-all { color: #121212 !important; }
 @media (max-width: 1080px) { .topbar.open .tb-panel { max-height: calc(100vh - 72px); max-height: calc(100dvh - 72px); overflow-y: auto; overscroll-behavior: contain; } }
+.article .article-cover { width: 100%; height: auto; aspect-ratio: 16 / 10; object-fit: cover; display: block; margin: 0 0 28px; border-radius: 8px; }
+.article .related-services { margin-top: 34px; padding-top: 22px; border-top: 1px solid var(--av-line); font-size: 15px; }
