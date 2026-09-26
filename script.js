@@ -313,7 +313,7 @@ document.addEventListener('DOMContentLoaded', function(){
   if(!main) return;
   if(!main.id) main.id = 'main-content';
   var lang = document.documentElement.getAttribute('lang')||'it';
-  var label = lang==='en' ? 'Skip to content' : lang==='pt' ? 'Ir para o conteúdo' : 'Vai al contenuto';
+  var label = lang==='en' ? 'Skip to content' : lang==='pt' ? 'Ir para o conteúdo' : lang==='es' ? 'Ir al contenido' : 'Vai al contenuto';
   var skip = document.createElement('a');
   skip.href = '#main-content';
   skip.className = 'skip-link';
@@ -327,7 +327,8 @@ document.addEventListener('DOMContentLoaded', function(){
   var lang = 'it';
   if(path.startsWith('/en')) lang = 'en';
   else if(path.startsWith('/pt')) lang = 'pt';
-  var page = path.replace(/^\/(en|pt)(\/|$)/, '/').replace(/\/$/, '') || '/';
+  else if(path.startsWith('/es')) lang = 'es';
+  var page = path.replace(/^\/(en|pt|es)(\/|$)/, '/').replace(/\/$/, '') || '/';
 
   var isBlogArticle = /\/blog-[^/]+$/.test(page);
   var isBlogList = page === '/blog';
@@ -337,11 +338,12 @@ document.addEventListener('DOMContentLoaded', function(){
   var main = document.querySelector('main');
   if(!main) return;
 
-  var base = lang==='en' ? '/en' : lang==='pt' ? '/pt' : '';
+  var base = lang==='it' ? '' : '/' + lang;
   var T = {
     it:{home:'Home',blog:'Blog',services:'Servizi'},
     en:{home:'Home',blog:'Blog',services:'Services'},
-    pt:{home:'Home',blog:'Blog',services:'Serviços'}
+    pt:{home:'Início',blog:'Blog',services:'Serviços'},
+    es:{home:'Inicio',blog:'Blog',services:'Servicios'}
   };
   var t = T[lang];
 
@@ -569,43 +571,15 @@ document.addEventListener("DOMContentLoaded", function () {
   var currentFile = location.pathname.split("/").pop() || "";
   if (!currentFile.startsWith("blog-") || currentFile === "blog.html") return;
 
-  var arts = [
-    {c:"Marketing",f:"blog-consulenza-marketing-per-aziende-che-vogliono-crescere-meglio.html",t:"Consulenza marketing per aziende che vogliono crescere davvero"},
-    {c:"Marketing",f:"blog-audit-marketing-per-capire-cosa-sta-bloccando-la-crescita.html",t:"Audit marketing per capire cosa sta bloccando la crescita"},
-    {c:"Marketing",f:"blog-come-costruire-un-marketing-piu-chiaro-misurabile-e-sostenibile.html",t:"Come costruire un marketing più chiaro, misurabile e sostenibile"},
-    {c:"Marketing",f:"blog-consulente-marketing-per-posizionamento-acquisition-ed-execution.html",t:"Consulente marketing per posizionamento, acquisition ed execution"},
-    {c:"Marketing",f:"blog-strategia-marketing-per-pmi-e-aziende-in-fase-di-crescita.html",t:"Strategia marketing per PMI e aziende in fase di crescita"},
-    {c:"Data",f:"blog-kpi-e-dashboard-per-aziende-che-vogliono-decidere-meglio.html",t:"KPI e dashboard per aziende che vogliono decidere meglio"},
-    {c:"Data",f:"blog-tracking-dashboard-e-reportistica-per-aziende-in-crescita.html",t:"Tracking, dashboard e reportistica per aziende in crescita"},
-    {c:"Data",f:"blog-dati-e-reporting-per-una-crescita-piu-leggibile-e-sostenibile.html",t:"Dati e reporting per una crescita più leggibile e sostenibile"},
-    {c:"Data",f:"blog-consulenza-data-driven-per-kpi-dashboard-e-decisioni-migliori.html",t:"Consulenza data driven per KPI, dashboard e decisioni migliori"},
-    {c:"Data",f:"blog-come-leggere-i-kpi-giusti-senza-fare-reporting-inutile.html",t:"Come leggere i KPI giusti senza fare reporting inutile"},
-    {c:"Sales",f:"blog-business-development-e-sales-strategy-per-la-crescita-aziendale.html",t:"Business development e sales strategy per la crescita aziendale"},
-    {c:"Sales",f:"blog-come-migliorare-vendite-e-conversione-in-aziende-b2b.html",t:"Come migliorare vendite e conversione in aziende B2B"},
-    {c:"Sales",f:"blog-come-strutturare-un-processo-sales-piu-chiaro-e-piu-efficace.html",t:"Come strutturare un processo sales più chiaro e più efficace"},
-    {c:"Sales",f:"blog-consulenza-sales-per-migliorare-pipeline-conversione-e-processo-commerciale.html",t:"Consulenza sales per migliorare pipeline, conversione e processo commerciale"},
-    {c:"Sales",f:"blog-sales-enablement-per-aziende-che-vogliono-crescere-con-piu-ordine.html",t:"Sales enablement per aziende che vogliono crescere con più ordine"},
-    {c:"Strategy",f:"blog-come-costruire-una-roadmap-strategica-utile-alla-crescita-aziendale.html",t:"Come costruire una roadmap strategica utile alla crescita aziendale"},
-    {c:"Strategy",f:"blog-consulenza-per-sviluppo-del-business-partnership-e-crescita-sostenibile.html",t:"Consulenza per sviluppo del business, partnership e crescita sostenibile"},
-    {c:"Strategy",f:"blog-consulenza-strategica-per-aziende-che-vogliono-crescere-con-piu-direzione.html",t:"Consulenza strategica per aziende che vogliono crescere con più direzione"},
-    {c:"Strategy",f:"blog-strategy-per-allineare-marketing-sales-dati-e-obiettivi-di-business.html",t:"Strategy per allineare marketing, sales, dati e obiettivi di business"},
-    {c:"Strategy",f:"blog-sviluppo-del-business-per-aziende-che-vogliono-aprire-nuove-opportunita.html",t:"Sviluppo del business per aziende che vogliono aprire nuove opportunità"},
-    {c:"Controllo di gestione",f:"blog-come-impostare-un-controllo-di-gestione-utile-al-management.html",t:"Come impostare un controllo di gestione utile al management"},
-    {c:"Controllo di gestione",f:"blog-come-leggere-numeri-e-marginalita-senza-decidere-a-sensazione.html",t:"Come leggere numeri e marginalità senza decidere a sensazione"},
-    {c:"Controllo di gestione",f:"blog-controllo-di-gestione-per-capire-margini-costi-e-priorita.html",t:"Controllo di gestione per capire margini, costi e priorità"},
-    {c:"Controllo di gestione",f:"blog-controllo-di-gestione-per-pmi-e-aziende-in-fase-di-crescita.html",t:"Controllo di gestione per PMI e aziende in fase di crescita"},
-    {c:"Controllo di gestione",f:"blog-margini-costi-e-sostenibilita-il-valore-del-controllo-di-gestione.html",t:"Margini, costi e sostenibilità: il valore del controllo di gestione"},
-    {c:"Redazione articoli SEO",f:"blog-articoli-seo-per-migliorare-posizionamento-e-autorevolezza.html",t:"Articoli SEO per migliorare posizionamento e autorevolezza"},
-    {c:"Redazione articoli SEO",f:"blog-come-scrivere-articoli-seo-che-portano-traffico-qualificato.html",t:"Come scrivere articoli SEO che portano traffico qualificato"},
-    {c:"Redazione articoli SEO",f:"blog-piano-editoriale-e-redazione-articoli-per-la-crescita-organica.html",t:"Piano editoriale e redazione articoli per la crescita organica"},
-    {c:"Redazione articoli SEO",f:"blog-redazione-articoli-seo-per-aziende-che-vogliono-crescere.html",t:"Redazione articoli SEO per aziende che vogliono crescere"},
-    {c:"Redazione articoli SEO",f:"blog-servizio-di-redazione-articoli-per-blog-aziendali-b2b.html",t:"Servizio di redazione articoli per blog aziendali B2B"}
-  ];
+  var ARTS = {"en": [{"c": "Management control", "s": "blog-audit-dei-processi-aziendali-cosa-analizzare-e-come-farlo", "t": "Business process audit: what to analyze and how to do it"}, {"c": "Marketing", "s": "blog-audit-marketing-per-capire-cosa-sta-bloccando-la-crescita", "t": "Marketing audit: how to find out what is holding back growth"}, {"c": "Sales", "s": "blog-business-development-e-sales-strategy-per-la-crescita-aziendale", "t": "B2B sales strategy: how to build one that works"}, {"c": "Marketing", "s": "blog-come-costruire-un-marketing-piu-chiaro-misurabile-e-sostenibile", "t": "Measurable marketing strategy: how to build it step by step"}, {"c": "Strategy", "s": "blog-come-costruire-una-roadmap-strategica-utile-alla-crescita-aziendale", "t": "Strategic business roadmap: how to build one step by step"}, {"c": "Data", "s": "blog-come-leggere-i-kpi-giusti-senza-fare-reporting-inutile", "t": "How to choose the right business KPIs and cut useless reports"}, {"c": "Management control", "s": "blog-come-leggere-numeri-e-marginalita-senza-decidere-a-sensazione", "t": "Business profitability: how to read the numbers and decide better"}, {"c": "Strategy", "s": "blog-come-scegliere-un-consulente-aziendale-a-roma", "t": "How to choose a business consultant in Rome"}, {"c": "SEO writing", "s": "blog-come-scrivere-articoli-seo-che-portano-traffico-qualificato", "t": "SEO articles for businesses: how to write them to win customers"}, {"c": "Sales", "s": "blog-come-strutturare-un-processo-sales-piu-chiaro-e-piu-efficace", "t": "B2B sales process: how to structure it and make it repeatable"}, {"c": "Sales", "s": "blog-consulenza-sales-per-migliorare-pipeline-conversione-e-processo-commerciale", "t": "How to increase B2B sales by improving your pipeline"}, {"c": "Strategy", "s": "blog-consulenza-strategica-per-aziende-che-vogliono-crescere-con-piu-direzione", "t": "Strategic consulting for companies that want to grow with more direction"}, {"c": "Management control", "s": "blog-controllo-di-gestione-per-pmi-e-aziende-in-fase-di-crescita", "t": "Management control for SMEs and growing companies"}, {"c": "Data", "s": "blog-kpi-e-dashboard-per-aziende-che-vogliono-decidere-meglio", "t": "KPIs and dashboards for companies that want to decide better"}, {"c": "SEO writing", "s": "blog-piano-editoriale-e-redazione-articoli-per-la-crescita-organica", "t": "Editorial plan and content writing for organic growth"}, {"c": "Sales", "s": "blog-sales-enablement-per-aziende-che-vogliono-crescere-con-piu-ordine", "t": "Sales enablement for companies that want to grow with more order"}, {"c": "Strategy", "s": "blog-strategy-per-allineare-marketing-sales-dati-e-obiettivi-di-business", "t": "Strategy per allineare marketing, sales, dati e obiettivi di business"}, {"c": "Strategy", "s": "blog-sviluppo-del-business-per-aziende-che-vogliono-aprire-nuove-opportunita", "t": "Business development for companies that want to open new opportunities"}], "pt": [{"c": "Controle de gestão", "s": "blog-audit-dei-processi-aziendali-cosa-analizzare-e-come-farlo", "t": "Auditoria de processos empresariais: o que analisar e como fazer"}, {"c": "Marketing", "s": "blog-audit-marketing-per-capire-cosa-sta-bloccando-la-crescita", "t": "Auditoria de marketing: como entender o que está travando o crescimento"}, {"c": "Vendas", "s": "blog-business-development-e-sales-strategy-per-la-crescita-aziendale", "t": "Estratégia comercial B2B: como construir uma estratégia de vendas"}, {"c": "Marketing", "s": "blog-come-costruire-un-marketing-piu-chiaro-misurabile-e-sostenibile", "t": "Estratégia de marketing mensurável: como construir passo a passo"}, {"c": "Estratégia", "s": "blog-come-costruire-una-roadmap-strategica-utile-alla-crescita-aziendale", "t": "Roadmap estratégico empresarial: como construir passo a passo"}, {"c": "Dados", "s": "blog-come-leggere-i-kpi-giusti-senza-fare-reporting-inutile", "t": "Como escolher os KPIs empresariais certos e eliminar relatórios inúteis"}, {"c": "Controle de gestão", "s": "blog-come-leggere-numeri-e-marginalita-senza-decidere-a-sensazione", "t": "Margem de lucro da empresa: como ler os números e decidir melhor"}, {"c": "Redação SEO", "s": "blog-come-scrivere-articoli-seo-che-portano-traffico-qualificato", "t": "Como escrever artigos de SEO que trazem tráfego qualificado"}, {"c": "Vendas", "s": "blog-come-strutturare-un-processo-sales-piu-chiaro-e-piu-efficace", "t": "Como estruturar um processo de vendas mais claro e mais eficaz"}, {"c": "Vendas", "s": "blog-consulenza-sales-per-migliorare-pipeline-conversione-e-processo-commerciale", "t": "Consultoria de vendas para melhorar pipeline, conversão e o processo comercial"}, {"c": "Estratégia", "s": "blog-consulenza-strategica-per-aziende-che-vogliono-crescere-con-piu-direzione", "t": "Consultoria estratégica para empresas que querem crescer com mais direção"}, {"c": "Controle de gestão", "s": "blog-controllo-di-gestione-per-pmi-e-aziende-in-fase-di-crescita", "t": "Controladoria para PMEs e empresas em fase de crescimento"}, {"c": "Dados", "s": "blog-kpi-e-dashboard-per-aziende-che-vogliono-decidere-meglio", "t": "KPIs e dashboards para empresas que querem decidir melhor"}, {"c": "Redação SEO", "s": "blog-piano-editoriale-e-redazione-articoli-per-la-crescita-organica", "t": "Plano editorial e redação de artigos para o crescimento orgânico"}, {"c": "Vendas", "s": "blog-sales-enablement-per-aziende-che-vogliono-crescere-con-piu-ordine", "t": "Sales enablement para empresas que querem crescer com mais ordem"}, {"c": "Estratégia", "s": "blog-strategy-per-allineare-marketing-sales-dati-e-obiettivi-di-business", "t": "Estratégia para alinhar marketing, sales, dados e objetivos de negócio"}, {"c": "Estratégia", "s": "blog-sviluppo-del-business-per-aziende-che-vogliono-aprire-nuove-opportunita", "t": "Desenvolvimento de negócios para empresas que querem abrir novas oportunidades"}], "es": [{"c": "Control de gestión", "s": "blog-audit-dei-processi-aziendali-cosa-analizzare-e-come-farlo", "t": "Auditoría de procesos empresariales: qué analizar y cómo hacerla"}, {"c": "Marketing", "s": "blog-audit-marketing-per-capire-cosa-sta-bloccando-la-crescita", "t": "Auditoría de marketing: cómo entender qué está frenando el crecimiento"}, {"c": "Ventas", "s": "blog-business-development-e-sales-strategy-per-la-crescita-aziendale", "t": "Estrategia comercial B2B: cómo construir una estrategia de ventas"}, {"c": "Marketing", "s": "blog-come-costruire-un-marketing-piu-chiaro-misurabile-e-sostenibile", "t": "Estrategia de marketing medible: cómo construirla paso a paso"}, {"c": "Estrategia", "s": "blog-come-costruire-una-roadmap-strategica-utile-alla-crescita-aziendale", "t": "Hoja de ruta estratégica para empresas: cómo construirla paso a paso"}, {"c": "Datos", "s": "blog-come-leggere-i-kpi-giusti-senza-fare-reporting-inutile", "t": "Cómo elegir los KPI adecuados para tu empresa y eliminar los informes inútiles"}, {"c": "Control de gestión", "s": "blog-come-leggere-numeri-e-marginalita-senza-decidere-a-sensazione", "t": "Márgenes de la empresa: cómo leer las cifras y decidir mejor"}, {"c": "Redacción SEO", "s": "blog-come-scrivere-articoli-seo-che-portano-traffico-qualificato", "t": "Cómo escribir artículos SEO que atraigan tráfico cualificado"}, {"c": "Ventas", "s": "blog-come-strutturare-un-processo-sales-piu-chiaro-e-piu-efficace", "t": "Cómo estructurar un proceso sales más claro y más eficaz"}, {"c": "Ventas", "s": "blog-consulenza-sales-per-migliorare-pipeline-conversione-e-processo-commerciale", "t": "Consulenza sales per migliorare pipeline, conversione e processo commerciale"}, {"c": "Estrategia", "s": "blog-consulenza-strategica-per-aziende-che-vogliono-crescere-con-piu-direzione", "t": "Consulenza strategica per aziende che vogliono crescere con più direzione"}, {"c": "Control de gestión", "s": "blog-controllo-di-gestione-per-pmi-e-aziende-in-fase-di-crescita", "t": "Controllo di gestione per PMI e aziende in fase di crescita"}, {"c": "Datos", "s": "blog-kpi-e-dashboard-per-aziende-che-vogliono-decidere-meglio", "t": "KPI y dashboards para empresas que quieren tomar mejores decisiones"}, {"c": "Redacción SEO", "s": "blog-piano-editoriale-e-redazione-articoli-per-la-crescita-organica", "t": "Plan editorial y redacción de artículos para el crecimiento orgánico"}, {"c": "Ventas", "s": "blog-sales-enablement-per-aziende-che-vogliono-crescere-con-piu-ordine", "t": "Sales enablement para empresas que quieren crecer con más orden"}, {"c": "Estrategia", "s": "blog-strategy-per-allineare-marketing-sales-dati-e-obiettivi-di-business", "t": "Strategy per allineare marketing, sales, dati e obiettivi di business"}, {"c": "Estrategia", "s": "blog-sviluppo-del-business-per-aziende-che-vogliono-aprire-nuove-opportunita", "t": "Sviluppo del business per aziende che vogliono aprire nuove opportunità"}]};
+  var LANG = (location.pathname.match(/^\/(en|pt|es)(\/|$)/) || [])[1] || 'en';
+  var arts = (ARTS[LANG] || []).map(function (a) { return { c: a.c, f: '/' + LANG + '/' + a.s, s: a.s, t: a.t }; });
+  currentFile = currentFile.replace(/\.html$/, '');
 
   var currentCat = "";
-  arts.forEach(function(a) { if (a.f === currentFile) currentCat = a.c; });
+  arts.forEach(function(a) { if (a.s === currentFile) currentCat = a.c; });
 
-  var others = arts.filter(function(a) { return a.f !== currentFile; });
+  var others = arts.filter(function(a) { return a.s !== currentFile; });
 
   // One random article per category, reshuffled on every page load
   var byCategory = {};
@@ -620,7 +594,7 @@ document.addEventListener("DOMContentLoaded", function () {
   picks.sort(function() { return Math.random() - 0.5; });
   if (!picks.length) return;
 
-  var html = '<aside class="article-sidebar"><div class="sidebar-widget"><span class="sidebar-label">Leggi anche</span>';
+  var html = '<aside class="article-sidebar"><div class="sidebar-widget"><span class="sidebar-label">' + ({en: 'Read also', pt: 'Leia também', es: 'Lee también'}[LANG] || 'Read also') + '</span>';
   picks.forEach(function(a) {
     html += '<a class="sidebar-article-link" href="' + a.f + '"><span class="sidebar-article-cat">' + a.c + '</span>' + a.t + '</a>';
   });
