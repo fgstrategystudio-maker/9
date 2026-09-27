@@ -369,3 +369,8 @@ label.check input { width: 20px; height: 20px; accent-color: var(--accent); }
 .hist .hrow span:last-child { text-align: right; white-space: nowrap; }
 .hist .hrow.tot { border-top: 2px solid var(--line); }
 .month-closed { border: 2px solid var(--accent); }
+.add-mini.star { padding: 6px 9px; }
+.freq .frow { padding: 8px 0; border-top: 1px solid var(--line); }
+.freq .frow:first-child { border-top: 0; }
+.freq .ftop { display: flex; justify-content: space-between; font-size: 15px; }
+.freq .bar { margin: 5px 0 3px; }

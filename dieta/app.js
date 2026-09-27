@@ -2,7 +2,7 @@
 'use strict';
 
 // ---------- Storage ----------
-const APP_VERSION = '18';
+const APP_VERSION = '19';
 const KEY = 'dieta.v1';
 const MEALS = [
   { id: 'colazione', label: 'Colazione' },
@@ -69,6 +69,7 @@ const DEFAULT_DB = {
   water: {},     // { 'YYYY-MM-DD': ml }
   body: [],      // [{ date, weight, bodyFat, ... }]
   recent: [],
+  savedMeals: [], // [{ id, name, meal, items: [{ name, grams, per100 }] }]
   settings: {
     provider: 'gemini',
     geminiKey: '', geminiModel: GEMINI_DEFAULT_MODEL, geminiModels: [],
@@ -443,7 +444,7 @@ function renderToday(v) {
     html += `<div class="card">
       <div class="meal-head">
         <h2>${m.label} ${list.length ? `<small>${r0(mt.kcal)} kcal</small>` : ''}</h2>
-        <button class="add-mini" data-add="${m.id}">+ Aggiungi</button>
+        <span class="row" style="gap:6px">${list.length ? `<button class="add-mini star" data-save="${m.id}" aria-label="Salva pasto">⭐</button>` : ''}<button class="add-mini" data-add="${m.id}">+ Aggiungi</button></span>
       </div>`;
     if (list.length) {
       html += `<ul class="items">${list.map(e => {
@@ -475,6 +476,7 @@ function renderToday(v) {
   v.innerHTML = html;
 
   $$('[data-add]', v).forEach(b => b.addEventListener('click', () => { addMeal = b.dataset.add; go('add'); }));
+  $$('[data-save]', v).forEach(b => b.addEventListener('click', () => saveMealForm(dayEntries(curDate).filter(e => e.meal === b.dataset.save), b.dataset.save)));
   $$('[data-entry]', v).forEach(li => li.addEventListener('click', () => editEntry(li.dataset.entry)));
   $$('[data-copy]', v).forEach(b => b.addEventListener('click', () => {
     const src = dayEntries(yesterday).filter(e => e.meal === b.dataset.copy);
@@ -588,6 +590,12 @@ function renderAdd(v) {
       <button class="big-action" id="scanCode"><span class="ic">▥</span>Codice a barre</button>
     </div>
     <div class="card">
+      <h2>Pasti salvati <small>${db.savedMeals.length || ''}</small></h2>
+      ${db.savedMeals.length ? `<ul class="search-results">${db.savedMeals.map((sm, i) => `<li><button data-sm="${i}"><span class="grow"><span class="name">⭐ ${esc(sm.name)}</span><br><span class="small muted">${sm.items.length} alimenti · ${r0(sumNutr(sm.items).kcal)} kcal</span></span><span class="add-mini">+</span></button></li>`).join('')}</ul>`
+        : `<p class="small muted" style="margin:0">Nel Diario tocca ⭐ accanto a un pasto per salvarlo e rimetterlo con un tocco.</p>`}
+      <button class="btn secondary" id="pastMeals" style="margin-top:10px">↺ Ripeti un pasto passato</button>
+    </div>
+    <div class="card">
       <h2>Descrivi cosa hai mangiato</h2>
       <textarea id="foodText" placeholder="es. 80 g di pasta al pomodoro con parmigiano, un'insalata con un cucchiaio d'olio e uno yogurt greco Fage 0%"></textarea>
       <button class="btn" id="analyzeText" style="margin-top:10px">✨ Calcola calorie e macro</button>
@@ -606,9 +614,22 @@ function renderAdd(v) {
   $('#analyzeText', v).addEventListener('click', () => {
     const text = $('#foodText', v).value.trim();
     if (!text) { toast('Scrivi cosa hai mangiato'); return; }
+    // "pranzo del 22 settembre", "cena di ieri": si recupera dal diario, senza AI
+    const ref = parseMealRef(text);
+    if (ref) {
+      const items = dayEntries(ref.date).filter(e => e.meal === ref.meal);
+      if (items.length) { mealPreview({ title: `${MEALS.find(m => m.id === ref.meal).label} di ${fmtDate(ref.date, { weekday: 'long', day: 'numeric', month: 'long' })}`, items, meal: addMeal }); return; }
+      toast(`Niente registrato a ${MEALS.find(m => m.id === ref.meal).label.toLowerCase()} il ${fmtDate(ref.date, { day: 'numeric', month: 'long' })}`);
+      return;
+    }
     if (!requireKey()) return;
     runAnalysis({ text });
   });
+  $$('[data-sm]', v).forEach(b => b.addEventListener('click', () => {
+    const sm = db.savedMeals[+b.dataset.sm];
+    mealPreview({ title: sm.name, items: sm.items, meal: addMeal, saved: sm });
+  }));
+  $('#pastMeals', v).addEventListener('click', () => pastMealsSheet());
   const si = $('#foodSearch', v);
   const row = (x, i, attr) => `<li><button ${attr}="${i}"><span class="grow"><span class="name">${esc(x.name)}</span><br><span class="small muted">${r0(x.grams)} g · ${r0(x.per100.kcal * x.grams / 100)} kcal</span></span><span class="add-mini">+</span></button></li>`;
   let brandTimer, brandSeq = 0;
@@ -755,6 +776,119 @@ async function lookupBarcode(code) {
     openSheet(`<h3>Nessuna connessione</h3><p>Per cercare i prodotti col codice a barre serve internet.</p><button class="btn" id="nfOk">Ok</button>`,
       s => $('#nfOk', s).addEventListener('click', closeSheet));
   }
+}
+
+// ---------- Pasti salvati e pasti passati ----------
+const cloneItems = items => items.map(e => ({ name: e.name, grams: e.grams, per100: { ...e.per100 } }));
+
+function saveMealForm(items, meal) {
+  if (!items.length) return;
+  const label = MEALS.find(m => m.id === meal)?.label || 'Pasto';
+  const guess = `${label}: ${items.slice(0, 2).map(e => e.name).join(', ')}${items.length > 2 ? '…' : ''}`;
+  openSheet(`<h3>⭐ Salva pasto</h3>
+    <label class="field"><span>Nome</span><input type="text" id="smName" value="${esc(guess)}" maxlength="60"></label>
+    <ul class="items">${items.map(e => `<li><div class="grow"><div class="name">${esc(e.name)}</div><div class="sub">${r0(e.grams)} g</div></div><div class="kc">${r0(nutrients(e).kcal)}</div></li>`).join('')}</ul>
+    <div class="totals" style="margin-bottom:12px"><span>Totale</span><span>${r0(sumNutr(items).kcal)} kcal</span></div>
+    <button class="btn" id="smSave">Salva</button>`, s => {
+    $('#smSave', s).addEventListener('click', () => {
+      const name = $('#smName', s).value.trim() || guess;
+      db.savedMeals = [{ id: uid(), name, meal, items: cloneItems(items) }, ...db.savedMeals.filter(x => x.name.toLowerCase() !== name.toLowerCase())];
+      save(); closeSheet(); render(); toast(`Salvato: ${name}`);
+    });
+  });
+}
+
+// Anteprima modificabile di un gruppo di alimenti da aggiungere (pasto salvato o passato)
+function mealPreview({ title, items: src, meal, saved }) {
+  const items = cloneItems(src);
+  let target = meal || addMeal;
+  const draw = s => {
+    $('#mpItems', s).innerHTML = items.map((it, i) => `<div class="res-item">
+      <div class="line1"><b class="grow">${esc(it.name)}</b><button class="x-btn" data-rm="${i}" aria-label="Togli">×</button></div>
+      <div class="grams"><button class="step" data-dec="${i}">−</button><input type="number" inputmode="decimal" data-g="${i}" value="${r0(it.grams)}"><span class="muted small">g · ${r0(nutrients(it).kcal)} kcal</span><button class="step" data-inc="${i}" style="margin-left:auto">+</button></div>
+    </div>`).join('') || '<p class="muted">Nessun alimento.</p>';
+    const t = sumNutr(items);
+    $('#mpTot', s).innerHTML = `<span>Totale</span><span>${r0(t.kcal)} kcal · P ${r0(t.p)} · C ${r0(t.c)} · G ${r0(t.f)}</span>`;
+    $$('[data-rm]', s).forEach(b => b.addEventListener('click', () => { items.splice(+b.dataset.rm, 1); draw(s); }));
+    $$('[data-g]', s).forEach(inp => inp.addEventListener('change', () => { items[+inp.dataset.g].grams = num(inp.value) || 0; draw(s); }));
+    $$('[data-dec]', s).forEach(b => b.addEventListener('click', () => { const it = items[+b.dataset.dec]; it.grams = Math.max(0, it.grams - 10); draw(s); }));
+    $$('[data-inc]', s).forEach(b => b.addEventListener('click', () => { items[+b.dataset.inc].grams += 10; draw(s); }));
+  };
+  openSheet(`<h3>${esc(title)}</h3>
+    <div id="mpItems"></div>
+    <div class="totals" id="mpTot"></div>
+    <p class="small muted">Aggiungi a ${curDate === today() ? 'oggi' : fmtDate(curDate, { weekday: 'long', day: 'numeric', month: 'long' })}:</p>
+    <div class="meal-pick">${MEALS.map(m => `<button class="chip ${m.id === target ? 'on' : ''}" data-m="${m.id}">${m.label}</button>`).join('')}</div>
+    <div class="btn-row">${saved ? '<button class="btn danger" id="mpDel">Elimina</button>' : '<button class="btn secondary" id="mpStar">⭐ Salva</button>'}<button class="btn" id="mpAdd">Aggiungi</button></div>`, s => {
+    draw(s);
+    $$('[data-m]', s).forEach(c => c.addEventListener('click', () => { target = c.dataset.m; $$('[data-m]', s).forEach(x => x.classList.toggle('on', x === c)); }));
+    $('#mpAdd', s).addEventListener('click', () => {
+      const valid = items.filter(i => i.grams > 0);
+      if (!valid.length) { toast('Nessun alimento da aggiungere'); return; }
+      addEntries(cloneItems(valid), target); addMeal = target;
+      closeSheet(); toast(`Aggiunti ${valid.length} alimenti`); go('today');
+    });
+    $('#mpDel', s)?.addEventListener('click', () => {
+      if (!confirm(`Eliminare il pasto salvato "${saved.name}"?`)) return;
+      db.savedMeals = db.savedMeals.filter(x => x.id !== saved.id); save(); closeSheet(); render(); toast('Pasto salvato eliminato');
+    });
+    $('#mpStar', s)?.addEventListener('click', () => saveMealForm(items, target));
+  });
+}
+
+function pastMealsSheet(filter = 'all') {
+  const days = Object.keys(db.entries).filter(d => d < today() || d === today()).sort().reverse().slice(0, 90);
+  const rows = [];
+  for (const d of days) for (const m of MEALS) {
+    if (filter !== 'all' && filter !== m.id) continue;
+    const items = dayEntries(d).filter(e => e.meal === m.id);
+    if (items.length) rows.push({ d, m, items });
+  }
+  openSheet(`<h3>↺ Ripeti un pasto passato</h3>
+    <div class="meal-pick"><button class="chip ${filter === 'all' ? 'on' : ''}" data-f="all">Tutti</button>${MEALS.map(m => `<button class="chip ${filter === m.id ? 'on' : ''}" data-f="${m.id}">${m.label}</button>`).join('')}</div>
+    ${rows.length ? `<ul class="search-results">${rows.slice(0, 80).map((r, i) => `<li><button data-pm="${i}"><span class="grow"><span class="name">${r.m.label} · ${fmtDate(r.d)}</span><br><span class="small muted">${esc(r.items.map(e => e.name).join(', ')).slice(0, 90)}</span></span><span class="kc">${r0(sumNutr(r.items).kcal)}</span></button></li>`).join('')}</ul>`
+      : '<p class="muted">Nessun pasto registrato.</p>'}
+    <p class="small muted">Suggerimento: puoi anche scrivere "pranzo del 22 settembre" o "cena di ieri" nel box di testo.</p>`, s => {
+    $$('[data-f]', s).forEach(c => c.addEventListener('click', () => pastMealsSheet(c.dataset.f)));
+    $$('[data-pm]', s).forEach(b => b.addEventListener('click', () => {
+      const r = rows[+b.dataset.pm];
+      mealPreview({ title: `${r.m.label} di ${fmtDate(r.d, { weekday: 'long', day: 'numeric', month: 'long' })}`, items: r.items, meal: filter === 'all' ? addMeal : r.m.id });
+    }));
+  });
+}
+
+// Riconosce frasi come "pranzo del 22 settembre", "come la cena di ieri", "colazione del 3/9", "cena di lunedì"
+const MESI = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'];
+const GIORNI = ['domenica', 'lunedi', 'martedi', 'mercoledi', 'giovedi', 'venerdi', 'sabato'];
+function parseMealRef(text) {
+  const t = text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[’']/g, ' ').trim();
+  if (t.length > 70) return null;
+  const mm = t.match(/\b(colazione|pranzo|cena|spuntin[oi]|merenda)\b/);
+  if (!mm) return null;
+  const meal = { colazione: 'colazione', pranzo: 'pranzo', cena: 'cena', merenda: 'spuntini' }[mm[1]] || 'spuntini';
+  const rest = t.slice(mm.index + mm[0].length);
+  const now = parseYmd(today());
+  let d = null, x;
+  if (/\b(l )?altro ieri|avantieri\b/.test(rest)) d = addDays(today(), -2);
+  else if (/\bieri\b/.test(rest)) d = addDays(today(), -1);
+  else if (/\boggi\b/.test(rest)) d = today();
+  else if ((x = rest.match(/\b(\d{1,2})\s*[\/.-]\s*(\d{1,2})(?:\s*[\/.-]\s*(\d{2,4}))?\b/))) {
+    const y = x[3] ? (x[3].length === 2 ? 2000 + +x[3] : +x[3]) : now.getFullYear();
+    d = ymd(new Date(y, +x[2] - 1, +x[1]));
+  } else if ((x = rest.match(new RegExp('\\b(\\d{1,2})\\s+(' + MESI.join('|') + ')\\b')))) {
+    d = ymd(new Date(now.getFullYear(), MESI.indexOf(x[2]), +x[1]));
+  } else if ((x = rest.match(/\b(?:del|di|il)\s+(\d{1,2})\b/))) {
+    d = ymd(new Date(now.getFullYear(), now.getMonth(), +x[1]));
+    if (d > today()) d = ymd(new Date(now.getFullYear(), now.getMonth() - 1, +x[1]));
+  } else if ((x = rest.match(new RegExp('\\b(' + GIORNI.join('|') + ')\\b')))) {
+    const back = (now.getDay() - GIORNI.indexOf(x[1]) + 7) % 7 || 7;
+    d = addDays(today(), -back);
+  }
+  if (!d) return null;
+  if (d > today()) d = ymd(new Date(parseYmd(d).getFullYear() - 1, parseYmd(d).getMonth(), parseYmd(d).getDate()));
+  // se oltre al riferimento ci sono altri cibi (es. "pranzo di ieri e una mela") lascia fare all'AI
+  if (/\b(e|con|piu|\+)\s+(un|una|uno|del|della|dei|delle|\d)/.test(t.replace(mm[0], ''))) return null;
+  return { meal, date: d };
 }
 
 function requireKey() {
@@ -1128,6 +1262,7 @@ function reviewResult(items, notes, preview) {
     ${notes ? `<p class="small muted">${esc(notes)}</p>` : ''}
     <p class="small muted">Correggi nomi e grammi se serve: calorie e macro si aggiornano da soli.</p>
     <div class="meal-pick">${MEALS.map(m => `<button class="chip ${m.id === meal ? 'on' : ''}" data-m="${m.id}">${m.label}</button>`).join('')}</div>
+    <label class="check"><input type="checkbox" id="rStar"> ⭐ Salva anche come pasto, per rimetterlo con un tocco</label>
     <div class="btn-row"><button class="btn secondary" id="rCancel">Annulla</button><button class="btn" id="rSave">Aggiungi al diario</button></div>`, s => {
     draw(s);
     $$('[data-m]', s).forEach(c => c.addEventListener('click', () => { meal = c.dataset.m; $$('[data-m]', s).forEach(x => x.classList.toggle('on', x === c)); }));
@@ -1135,8 +1270,10 @@ function reviewResult(items, notes, preview) {
     $('#rSave', s).addEventListener('click', () => {
       const valid = items.filter(i => i.grams > 0 && i.name.trim());
       if (!valid.length) { toast('Nessun alimento da aggiungere'); return; }
-      addEntries(valid.map(i => ({ name: i.name.trim(), grams: i.grams, per100: i.per100 })), meal);
+      const toAdd = valid.map(i => ({ name: i.name.trim(), grams: i.grams, per100: i.per100 }));
+      addEntries(toAdd, meal);
       addMeal = meal;
+      if ($('#rStar', s).checked) { saveMealForm(toAdd, meal); go('today'); return; }
       closeSheet(); toast(`Aggiunti ${valid.length} alimenti`); go('today');
     });
   });
@@ -1283,9 +1420,14 @@ function renderProgress(v) {
   html += `</div>`;
 
   html += weightGoalCard();
+  html += freqCard();
   v.innerHTML = html;
   $$('[data-r]', v).forEach(b => b.addEventListener('click', () => { progressRange = +b.dataset.r; render(); }));
   $('#openCal', v).addEventListener('click', openCalendar);
+  $('#freqPrev', v)?.addEventListener('click', () => { freqMonth = shiftMonth(freqMonth, -1); render(); });
+  $('#freqNext', v)?.addEventListener('click', () => { if (freqMonth < today().slice(0, 7)) { freqMonth = shiftMonth(freqMonth, 1); render(); } });
+  $$('[data-fv]', v).forEach(b => b.addEventListener('click', () => { freqView = b.dataset.fv; freqAll = false; render(); }));
+  $('#freqAll', v)?.addEventListener('click', () => { freqAll = true; render(); });
   $('#editStart', v)?.addEventListener('click', startForm);
   $$('[data-ref]', v).forEach(b => b.addEventListener('click', () => { db.goals.deficitRef = b.dataset.ref; save(); render(); }));
 }
@@ -1366,6 +1508,58 @@ function startForm() {
       delete db.deficitStart[month]; save(); closeSheet(); render();
     });
   });
+}
+
+// ---------- Cosa mangi di più ----------
+let freqMonth = null, freqView = 'ing', freqAll = false;
+const shiftMonth = (m, n) => { const [y, mm] = m.split('-').map(Number); return ymd(new Date(y, mm - 1 + n, 1)).slice(0, 7); };
+const INGREDIENTS = [
+  ['Pollo', /pollo/], ['Tacchino', /tacchin/], ['Manzo', /manzo|bistecc|hamburger|macinat|vitell|roast/], ['Maiale', /maiale|lonza|salsicc|braciol|porchett/],
+  ['Prosciutto', /prosciutt/], ['Bresaola', /bresaol/], ['Salumi', /salame|mortadell|speck|cotechin/],
+  ['Salmone', /salmone/], ['Tonno', /tonno/], ['Pesce', /merluzz|nasell|orata|branzin|pesce|gamber|calamar|polpo|sgombr|alici|acciug|cozze|vongol/],
+  ['Uova', /\buov[oa]|albume|frittata/], ['Pasta', /pasta|spaghett|penne|fusilli|rigaton|linguin|lasagn|gnocch|tortellin|ravioli/], ['Riso', /\briso|risotto|basmati/],
+  ['Pane', /\bpane|toast|panino|piadin|fette biscottate|cracker|grissin|focacc/], ['Pizza', /pizza/], ['Patate', /patat/], ['Avena e cereali', /avena|porridge|cereali|muesli|granola|cornflakes/],
+  ['Yogurt', /yogurt|skyr/], ['Latte', /\blatte\b|cappuccin|latte macchiato/], ['Formaggi', /formagg|parmigian|grana|mozzarell|ricotta|fiocchi di latte|feta|scamorz|stracchin|philadelphia/],
+  ['Legumi', /ceci|lenticch|fagiol|piselli|legumi|edamame|tofu|soia/], ['Verdure', /insalat|zucchin|broccol|spinac|carot|pomodor|verdur|melanzan|peperon|cavol|finocch|lattuga|rucola|funghi|asparag|cetriol/],
+  ['Frutta', /\bmela|banana|arancia|mandarin|fragol|kiwi|\bpera\b|pesca|albicocc|uva\b|frutta|frutti|mirtill|ananas|anguria|melone/], ['Frutta secca', /mandorl|\bnoci\b|nocciol|arachid|anacard|pistacch|frutta secca|burro d arachidi/],
+  ['Olio', /\bolio\b/], ['Dolci', /biscott|cioccolat|torta|gelato|dolce|cornett|brioche|merendin|crostat|nutella|tiramisu|marmellat|miele/],
+  ['Proteine in polvere', /proteine|whey|protein/], ['Alcol', /birra|vino|spritz|prosecco|cocktail|amaro/], ['Caffè', /caff/],
+];
+function foodFrequency(month) {
+  const byName = {}, byIng = {};
+  for (const [d, list] of Object.entries(db.entries)) {
+    if (!d.startsWith(month)) continue;
+    for (const e of list) {
+      const key = e.name.trim().toLowerCase();
+      const n = nutrients(e);
+      const add = (map, k, label) => { const o = map[k] ||= { label, count: 0, grams: 0, kcal: 0, days: new Set() }; o.count++; o.grams += e.grams || 0; o.kcal += n.kcal; o.days.add(d); };
+      add(byName, key, e.name.trim());
+      const norm = key.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[’']/g, ' ');
+      for (const [label, re] of INGREDIENTS) if (re.test(norm)) add(byIng, label, label);
+    }
+  }
+  const sort = m => Object.values(m).sort((a, b) => b.count - a.count || b.kcal - a.kcal);
+  return { ing: sort(byIng), food: sort(byName) };
+}
+function freqCard() {
+  freqMonth ||= today().slice(0, 7);
+  const f = foodFrequency(freqMonth);
+  const list = freqView === 'ing' ? f.ing : f.food;
+  const shown = freqAll ? list : list.slice(0, 12);
+  const max = list[0]?.count || 1;
+  const kg = g => g >= 1000 ? `${fmtNum(g / 1000, 1)} kg` : `${r0(g)} g`;
+  return `<div class="card">
+    <div class="cal-head"><button class="icon-btn" id="freqPrev" aria-label="Mese precedente">‹</button><h3 style="font-size:17px">Cosa hai mangiato · ${monthName(freqMonth)}</h3><button class="icon-btn" id="freqNext" aria-label="Mese successivo" ${freqMonth >= today().slice(0, 7) ? 'disabled style="opacity:.35"' : ''}>›</button></div>
+    <div class="seg"><button data-fv="ing" class="${freqView === 'ing' ? 'on' : ''}">Per ingrediente</button><button data-fv="food" class="${freqView === 'food' ? 'on' : ''}">Per alimento</button></div>
+    ${list.length ? `<div class="freq">${shown.map(x => `<div class="frow">
+        <div class="ftop"><b>${esc(x.label)}</b><span><b>${x.count}</b> ${x.count === 1 ? 'volta' : 'volte'}</span></div>
+        <div class="bar"><i style="width:${(x.count / max) * 100}%;background:var(--accent)"></i></div>
+        <div class="small muted">${x.days.size} ${x.days.size === 1 ? 'giorno' : 'giorni'} · ${kg(x.grams)} · ${fmtNum(x.kcal, 0)} kcal</div>
+      </div>`).join('')}</div>
+      ${!freqAll && list.length > 12 ? `<button class="btn ghost" id="freqAll">Mostra tutti (${list.length})</button>` : ''}`
+      : `<p class="small muted">${freqView === 'ing' ? 'Nessun ingrediente riconosciuto' : 'Nessun alimento registrato'} in questo mese.</p>`}
+    ${freqView === 'ing' ? '<p class="small muted" style="margin-bottom:0">Raggruppa alimenti simili (es. "petto di pollo" e "pollo arrosto" contano come Pollo).</p>' : ''}
+  </div>`;
 }
 
 function weightTrend() {
