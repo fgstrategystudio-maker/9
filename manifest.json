@@ -4,14 +4,26 @@
   "description": "Consulenza operativa per aziende che vogliono crescere allineando marketing, dati, sales e direzione strategica.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#fdfcfa",
-  "theme_color": "#d8b86a",
+  "background_color": "#F7F6F2",
+  "theme_color": "#121212",
   "lang": "it",
   "icons": [
     {
       "src": "/favicon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/brand/fg-icona-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/brand/fg-apple-touch-180.png",
+      "sizes": "180x180",
+      "type": "image/png",
       "purpose": "any"
     },
     {

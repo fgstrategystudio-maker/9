@@ -36,7 +36,8 @@ h1, h2, h3 { margin: 0; text-wrap: balance; font-weight: 300; letter-spacing: -.
 .nav { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; transition: background-color .35s, box-shadow .35s; }
 .nav.scrolled { background: rgba(247, 246, 242, .84); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); box-shadow: 0 1px 0 var(--line); }
 .nav .wrap { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding-block: 20px; }
-.brand { font: 500 16px/1 var(--sans); text-decoration: none; letter-spacing: -.01em; white-space: nowrap; }
+.brand { display: inline-flex; align-items: center; gap: 9px; font: 500 16px/1 var(--sans); text-decoration: none; letter-spacing: -.01em; white-space: nowrap; }
+.brand img { height: 24px; width: auto; display: block; }
 .nav nav { display: flex; align-items: center; gap: 28px; font-size: 14px; }
 .nav nav a { text-decoration: none; color: var(--muted); position: relative; transition: color .25s; }
 .nav nav .links a::after { content: ""; position: absolute; left: 0; right: 0; bottom: -4px; height: 1px; background: var(--ink); transform: scaleX(0); transform-origin: right; transition: transform .35s var(--ease); }

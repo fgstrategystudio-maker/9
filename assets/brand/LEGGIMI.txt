@@ -1,0 +1,30 @@
+FRANCESCO GIZZI — MARCHIO (variante 2b "Radice")
+Allineare per crescere
+
+L'IDEA
+Due linee salgono dal basso, si incontrano in un punto e da lì proseguono
+come una sola linea verticale, più spessa. Il bronzo è riservato alla
+crescita: la parte che sale.
+
+FILE
+  fg-logo-orizzontale      uso primario: header sito, firma email, documenti
+  fg-logo-verticale        formati stretti: social, roll-up
+  fg-simbolo               dove il nome è già presente
+  fg-icona-scura/chiara    favicon, avatar, app icon
+  -negativo                per fondi scuri (bronzo già schiarito)
+
+Usa gli SVG dove puoi. I testi sono convertiti in tracciati: non serve il font.
+
+COLORI
+  Inchiostro     #121212
+  Bronzo         #8A6F4E   (su chiaro)
+  Avorio         #F4F1EA   (su scuro)
+  Bronzo chiaro  #C2A276   (su scuro)
+  Grigio payoff  #8A867E   (su chiaro) / #A39E94 (su scuro)
+  Fondo sito     #F7F6F2
+
+TIPOGRAFIA
+Schibsted Grotesk Medium (Google Fonts, gratuito).
+
+NON FARE
+Non ricolorare il simbolo, non stirarlo, niente ombre o sfumature.
