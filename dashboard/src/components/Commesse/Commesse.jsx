@@ -10,6 +10,10 @@ import {
   getRicavoOrario,
   getAvatarColorByIndex,
   getInitials,
+  totalePagamentiCommessa,
+  annoFromMese,
+  statPagamentiCommessa,
+  chiaveMese,
 } from "../../utils/helpers";
 import CommessaModal from "../CommessaModal/CommessaModal";
 import Icon from "../Icon";
@@ -192,6 +196,12 @@ export default function Commesse({ commesse, setCommesse, setup }) {
           setup={setup}
           onEdit={() => handleEdit(selected)}
           onDelete={() => handleDelete(selected.id)}
+          onRemovePagamento={(idx) => {
+            if (!confirm("Rimuovere questo pagamento dalla commessa? Lo storico mensile non viene toccato.")) return;
+            setCommesse((prev) => prev.map((c) =>
+              c.id === selected.id ? { ...c, pagamenti: (c.pagamenti || []).filter((_, i) => i !== idx) } : c
+            ));
+          }}
         />
       )}
 
@@ -286,7 +296,7 @@ function CommesseTable({ rows, colorById, setup, selectedId, setSelectedId, arch
   );
 }
 
-function CommessaDetail({ commessa: c, color, setup, onEdit, onDelete }) {
+function CommessaDetail({ commessa: c, color, setup, onEdit, onDelete, onRemovePagamento }) {
   const lordo = getCommessaLordoMensile(c);
   const netto = calcNetto(lordo, setup.fattoreNetto);
   const nettoProgetto = calcNetto(c.lordoProgetto, setup.fattoreNetto);
@@ -353,6 +363,8 @@ function CommessaDetail({ commessa: c, color, setup, onEdit, onDelete }) {
         )}
       </div>
 
+      <PagamentiCommessa commessa={c} onRemove={onRemovePagamento} />
+
       {c.note && (
         <div className={styles.detailNote}>
           <div className={styles.noteLabel}>Note</div>
@@ -360,6 +372,63 @@ function CommessaDetail({ commessa: c, color, setup, onEdit, onDelete }) {
         </div>
       )}
     </section>
+  );
+}
+
+function PagamentiCommessa({ commessa: c, onRemove }) {
+  const lista = (c.pagamenti || [])
+    .map((p, idx) => ({ ...p, idx }))
+    .sort((a, b) => (chiaveMese(b.mese) || "").localeCompare(chiaveMese(a.mese) || ""));
+  const anno = new Date().getFullYear();
+  const totAnno = totalePagamentiCommessa(c, anno);
+  const totTutto = totalePagamentiCommessa(c);
+  const stat = statPagamentiCommessa(c, anno);
+  return (
+    <div className={styles.detailNote}>
+      {stat && stat.fee > 0 && (
+        <div style={{
+          display: "flex", flexWrap: "wrap", gap: "4px 18px", alignItems: "baseline",
+          padding: "10px 12px", marginBottom: 10, borderRadius: "var(--r-sm)",
+          background: stat.diff < 0 ? "var(--warn-wash)" : "var(--pos-wash)",
+          border: `1px solid color-mix(in oklab, ${stat.diff < 0 ? "var(--warn)" : "var(--pos)"} 25%, var(--hair))`,
+        }}>
+          <span style={{ fontSize: 13.5, color: "var(--ink)" }}>
+            Incassato {anno}: <b className="num">{fmtN(stat.reale)} €</b> su <b className="num">{fmtN(stat.previsto)} €</b> previsti
+          </span>
+          <span className="num" style={{ fontSize: 13.5, fontWeight: 700, color: stat.diff < 0 ? "var(--warn)" : stat.diff > 0 ? "var(--pos-ink)" : "var(--ink-2)" }}>
+            {stat.diff === 0 ? "in linea con la fee" : `${stat.diff > 0 ? "+" : "−"}${fmtN(Math.abs(stat.diff))} €`}
+          </span>
+          <span style={{ fontSize: 11.5, color: "var(--ink-3)", width: "100%" }}>
+            fee {fmtN(stat.fee)} € × {stat.mesi} {stat.mesi === 1 ? "mese" : "mesi"} con pagamenti registrati · media reale {fmtN(stat.mediaMensile)} €/mese
+          </span>
+        </div>
+      )}
+      <div className={styles.noteLabel} style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+        <span>Incassi registrati</span>
+        {lista.length > 0 && (
+          <span style={{ textTransform: "none", letterSpacing: 0 }}>
+            {anno}: <b className="num">{fmtN(totAnno)} €</b>
+            {totTutto !== totAnno && <> · totale: <b className="num">{fmtN(totTutto)} €</b></>}
+          </span>
+        )}
+      </div>
+      {lista.length === 0 ? (
+        <p className={styles.noteText}>
+          Nessun pagamento registrato. Dillo all&apos;assistente in Dashboard, es. «{c.cliente} mi ha pagato 1.000 € a {new Date().toLocaleDateString("it-IT", { month: "long" })}».
+        </p>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 4 }}>
+          {lista.map((p) => (
+            <div key={p.idx} style={{ display: "grid", gridTemplateColumns: "130px auto 1fr 28px", gap: 10, alignItems: "center", fontSize: 13.5 }}>
+              <span style={{ color: "var(--ink-2)", fontWeight: 600 }}>{p.mese}</span>
+              <span className="num" style={{ fontWeight: 600, color: annoFromMese(p.mese) === anno ? "var(--ink)" : "var(--ink-3)" }}>{fmtN(p.importo)} €</span>
+              <span style={{ color: "var(--ink-3)", fontSize: 12.5 }}>{p.nota}</span>
+              <button className="btn-quiet btn" style={{ padding: 4 }} title="Rimuovi pagamento" onClick={() => onRemove(p.idx)}>✕</button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
