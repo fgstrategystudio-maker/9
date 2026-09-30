@@ -15,7 +15,7 @@ SNIPPET = (
     'q.q=[];w.oaiq=q;var j=d.createElement(s);j.async=1;j.src=u;'
     'var f=d.getElementsByTagName(s)[0];f.parentNode.insertBefore(j,f)}'
     '(window,document,"script","https://bzrcdn.openai.com/sdk/oaiq.min.js");'
-    'oaiq("init",{pixelId:"' + PIXEL_ID + '",debug:true});</script>'
+    'oaiq("init",{pixelId:"' + PIXEL_ID + '"});</script>'
 )
 
 SKIP = {"firma-email.html", "google643280b504548f64.html"}

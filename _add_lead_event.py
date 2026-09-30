@@ -6,7 +6,7 @@ quindi gli eventi scattano al caricamento di /grazie: contano solo gli invii
 andati a buon fine. I due eventi stanno in tag separati, cosi' un errore in
 uno non impedisce all'altro di partire. Idempotente.
 """
-PIXEL_TAG_END = 'oaiq("init",{pixelId:"TPh7S38n3afeCFQCzq5nxM",debug:true});</script>'
+PIXEL_TAG_END = 'oaiq("init",{pixelId:"TPh7S38n3afeCFQCzq5nxM"});</script>'
 OAI_EVENT = '  <script>oaiq("measure","lead_created",{type:"customer_action"});</script>'
 
 PAGES = {
