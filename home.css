@@ -361,3 +361,13 @@ footer.foot a:hover { color: var(--ink); }
 .nav .links { align-items: center; }
 .nav nav .links .mega .mega-cta { color: #F7F6F2; }
 @media (max-width: 1080px) { .nav.open .nav-panel { max-height: calc(100vh - 72px); max-height: calc(100dvh - 72px); overflow-y: auto; overscroll-behavior: contain; } }
+
+/* Settori: una riga di tag sotto la griglia clienti. Dicono a chi arriva
+   "ho gia' lavorato nel tuo mondo" e portano in pagina i termini che la
+   gente cerca davvero, che i quattro esempi nel paragrafo non coprivano. */
+.sectors { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 28px; }
+.sector { border: 1px solid var(--line); border-radius: 999px; padding: 7px 15px;
+  font: 400 13px/1 var(--sans); color: var(--muted); background: var(--bg-2); }
+.sectors .more { border-color: transparent; background: none; color: var(--accent); text-decoration: none; }
+.sectors .more:hover { text-decoration: underline; }
+@media (max-width: 640px) { .sector { font-size: 12.5px; padding: 6px 13px; } }
