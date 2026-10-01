@@ -9,9 +9,21 @@
   "lang": "it",
   "icons": [
     {
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon",
+      "purpose": "any"
+    },
+    {
       "src": "/favicon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/brand/fg-icona-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
       "purpose": "any"
     },
     {
@@ -24,12 +36,6 @@
       "src": "/assets/brand/fg-apple-touch-180.png",
       "sizes": "180x180",
       "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/og-image.jpg",
-      "sizes": "1200x630",
-      "type": "image/jpeg",
       "purpose": "any"
     }
   ]
