@@ -72,7 +72,21 @@ CHIARO = dict(BG="#F7F6F2", INK="#121212", BRONZE="#8A6F4E", FAINT="#8A867E",
               LOGO="fg-logo-orizzontale.svg", SIMB="fg-simbolo.svg")
 SCURO = dict(BG="#121212", INK="#F4F1EA", BRONZE="#C2A276", FAINT="#8C8880",
              SOP="0.14", HALO="rgba(255,255,255,.05)",
-             LOGO="fg-logo-orizzontale-negativo.svg", SIMB="fg-simbolo-negativo.svg")
+             LOGO="fg-logo-negativo-t.svg", SIMB="fg-simbolo-negativo-t.svg")
+
+
+# Tre fondi alternativi all'avorio, tutti coerenti con la palette del sito.
+# Il criterio non e' solo estetico: un fondo di tono medio tiene l'esposizione
+# della webcam sul viso, mentre il quasi-bianco la fa chiudere e scurisce chi parla.
+SABBIA = dict(BG="#E8DFD2", INK="#121212", BRONZE="#7A5F3F", FAINT="#786F61",
+              SOP="0.12", HALO="rgba(255,255,255,.45)",
+              LOGO="fg-logo-orizzontale.svg", SIMB="fg-simbolo.svg")
+TORTORA = dict(BG="#B5A795", INK="#161310", BRONZE="#4C3A24", FAINT="#564E42",
+               SOP="0.14", HALO="rgba(255,255,255,.30)",
+               LOGO="fg-logo-orizzontale.svg", SIMB="fg-simbolo.svg")
+FUMO = dict(BG="#3A3833", INK="#F4F1EA", BRONZE="#CDAE82", FAINT="#A79E90",
+            SOP="0.16", HALO="rgba(255,255,255,.07)",
+            LOGO="fg-logo-negativo-t.svg", SIMB="fg-simbolo-negativo-t.svg")
 
 VARIANTI = {
     "meet-avorio":          (CHIARO, MARCHIO),
@@ -81,6 +95,12 @@ VARIANTI = {
     "meet-inchiostro-firma":(SCURO,  MARCHIO + FIRMA),
     "meet-avorio-payoff":    (CHIARO, SIMBOLO + PAYOFF),
     "meet-inchiostro-payoff":(SCURO,  SIMBOLO + PAYOFF),
+    "meet-sabbia":           (SABBIA,  MARCHIO),
+    "meet-sabbia-payoff":    (SABBIA,  SIMBOLO + PAYOFF),
+    "meet-tortora":          (TORTORA, MARCHIO),
+    "meet-tortora-payoff":   (TORTORA, SIMBOLO + PAYOFF),
+    "meet-fumo":             (FUMO,    MARCHIO),
+    "meet-fumo-payoff":      (FUMO,    SIMBOLO + PAYOFF),
 }
 
 for nome, (pal, contenuto) in VARIANTI.items():
