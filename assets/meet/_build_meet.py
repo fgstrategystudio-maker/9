@@ -32,6 +32,7 @@ body{{background:{BG};font-family:SG,system-ui,sans-serif;-webkit-font-smoothing
 
 .marchio{{position:absolute;left:96px;top:84px;display:flex;align-items:center;gap:26px}}
 .marchio img{{height:84px;width:auto;display:block}}
+.marchio img.solo{{height:76px}}
 
 .firma{{position:absolute;left:96px;bottom:150px}}
 .firma{{max-width:460px}}
@@ -56,6 +57,11 @@ body{{background:{BG};font-family:SG,system-ui,sans-serif;-webkit-font-smoothing
 </body></html>"""
 
 MARCHIO = '<div class="marchio"><img src="{LOGO}" alt=""></div>'
+SIMBOLO = '<div class="marchio"><img class="solo" src="{SIMB}" alt=""></div>'
+PAYOFF = ('<div class="filo"></div><div class="firma">'
+          '<div class="nome">Francesco Gizzi</div>'
+          '<div class="ruolo">Allineare per crescere</div>'
+          '<div class="sito">francescogizzi.com</div></div>')
 FIRMA = ('<div class="filo"></div><div class="firma">'
          '<div class="nome">Francesco Gizzi</div>'
          '<div class="ruolo">Marketing · Dati<br>Sales · Strategia</div>'
@@ -63,19 +69,21 @@ FIRMA = ('<div class="filo"></div><div class="firma">'
 
 CHIARO = dict(BG="#F7F6F2", INK="#121212", BRONZE="#8A6F4E", FAINT="#8A867E",
               SOP="0.10", HALO="rgba(255,255,255,.75)",
-              LOGO="fg-logo-orizzontale.svg")
+              LOGO="fg-logo-orizzontale.svg", SIMB="fg-simbolo.svg")
 SCURO = dict(BG="#121212", INK="#F4F1EA", BRONZE="#C2A276", FAINT="#8C8880",
              SOP="0.14", HALO="rgba(255,255,255,.05)",
-             LOGO="fg-logo-orizzontale-negativo.svg")
+             LOGO="fg-logo-orizzontale-negativo.svg", SIMB="fg-simbolo-negativo.svg")
 
 VARIANTI = {
     "meet-avorio":          (CHIARO, MARCHIO),
     "meet-inchiostro":      (SCURO,  MARCHIO),
     "meet-avorio-firma":    (CHIARO, MARCHIO + FIRMA),
     "meet-inchiostro-firma":(SCURO,  MARCHIO + FIRMA),
+    "meet-avorio-payoff":    (CHIARO, SIMBOLO + PAYOFF),
+    "meet-inchiostro-payoff":(SCURO,  SIMBOLO + PAYOFF),
 }
 
 for nome, (pal, contenuto) in VARIANTI.items():
-    html = TPL.format(CONTENUTO=contenuto.format(LOGO=pal["LOGO"]), **pal)
+    html = TPL.format(CONTENUTO=contenuto.format(LOGO=pal["LOGO"], SIMB=pal["SIMB"]), **pal)
     open(f"{nome}.html", "w", encoding="utf-8").write(html)
     print("scritto", nome)
