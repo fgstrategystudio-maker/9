@@ -374,3 +374,6 @@ label.check input { width: 20px; height: 20px; accent-color: var(--accent); }
 .freq .frow:first-child { border-top: 0; }
 .freq .ftop { display: flex; justify-content: space-between; font-size: 15px; }
 .freq .bar { margin: 5px 0 3px; }
+.search-results mark { background: var(--accent-soft); color: var(--text); border-radius: 4px; padding: 0 2px; font-weight: 600; }
+.ring .big.good { color: var(--ok); }
+.ring .big.bad { color: var(--danger); }

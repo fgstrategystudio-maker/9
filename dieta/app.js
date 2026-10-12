@@ -2,7 +2,7 @@
 'use strict';
 
 // ---------- Storage ----------
-const APP_VERSION = '19';
+const APP_VERSION = '20';
 const KEY = 'dieta.v1';
 const MEALS = [
   { id: 'colazione', label: 'Colazione' },
@@ -353,7 +353,7 @@ function drawCalendar(s) {
 function ringSvg(value, goal, color, size = 132, stroke = 12) {
   const r = (size - stroke) / 2, c = 2 * Math.PI * r;
   const pct = goal > 0 ? Math.min(value / goal, 1) : 0;
-  const over = goal > 0 && value > goal * 1.05;
+  const over = goal > 0 && value > goal;
   return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
     <circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke="var(--line)" stroke-width="${stroke}"/>
     <circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke="${over ? 'var(--danger)' : color}" stroke-width="${stroke}"
@@ -403,8 +403,8 @@ function renderToday(v) {
   }
   html += `<div class="card">
     <div class="summary">
-      <div class="ring">${ringSvg(tot.kcal, budget, 'var(--kcal)')}
-        <div class="ring-label"><span class="big">${r0(Math.abs(left))}</span><span class="lbl">${left >= 0 ? 'kcal rimaste' : 'kcal in più'}</span></div>
+      <div class="ring">${ringSvg(tot.kcal, budget, 'var(--ok)')}
+        <div class="ring-label"><span class="big ${left >= 0 ? 'good' : 'bad'}">${r0(Math.abs(left))}</span><span class="lbl">${left >= 0 ? 'kcal rimaste' : 'kcal in più'}</span></div>
       </div>
       <div class="macros">
         ${macroBar('Calorie', tot.kcal, budget, 'var(--kcal)', 'kcal')}
@@ -836,24 +836,39 @@ function mealPreview({ title, items: src, meal, saved }) {
   });
 }
 
-function pastMealsSheet(filter = 'all') {
-  const days = Object.keys(db.entries).filter(d => d < today() || d === today()).sort().reverse().slice(0, 90);
-  const rows = [];
+function pastMealsSheet(filter = 'all', query = '') {
+  const norm = t => t.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  const days = Object.keys(db.entries).filter(d => d <= today()).sort().reverse().slice(0, 365);
+  const all = [];
   for (const d of days) for (const m of MEALS) {
-    if (filter !== 'all' && filter !== m.id) continue;
     const items = dayEntries(d).filter(e => e.meal === m.id);
-    if (items.length) rows.push({ d, m, items });
+    if (items.length) all.push({ d, m, items, text: norm(items.map(e => e.name).join(' | ')) });
   }
+  let rows = [];
   openSheet(`<h3>↺ Ripeti un pasto passato</h3>
+    <input type="search" id="pmSearch" placeholder="Cerca un ingrediente, es. salmone" value="${esc(query)}" autocomplete="off" style="margin-bottom:10px">
     <div class="meal-pick"><button class="chip ${filter === 'all' ? 'on' : ''}" data-f="all">Tutti</button>${MEALS.map(m => `<button class="chip ${filter === m.id ? 'on' : ''}" data-f="${m.id}">${m.label}</button>`).join('')}</div>
-    ${rows.length ? `<ul class="search-results">${rows.slice(0, 80).map((r, i) => `<li><button data-pm="${i}"><span class="grow"><span class="name">${r.m.label} · ${fmtDate(r.d)}</span><br><span class="small muted">${esc(r.items.map(e => e.name).join(', ')).slice(0, 90)}</span></span><span class="kc">${r0(sumNutr(r.items).kcal)}</span></button></li>`).join('')}</ul>`
-      : '<p class="muted">Nessun pasto registrato.</p>'}
+    <div id="pmList"></div>
     <p class="small muted">Suggerimento: puoi anche scrivere "pranzo del 22 settembre" o "cena di ieri" nel box di testo.</p>`, s => {
-    $$('[data-f]', s).forEach(c => c.addEventListener('click', () => pastMealsSheet(c.dataset.f)));
-    $$('[data-pm]', s).forEach(b => b.addEventListener('click', () => {
-      const r = rows[+b.dataset.pm];
-      mealPreview({ title: `${r.m.label} di ${fmtDate(r.d, { weekday: 'long', day: 'numeric', month: 'long' })}`, items: r.items, meal: filter === 'all' ? addMeal : r.m.id });
-    }));
+    const draw = () => {
+      const words = norm($('#pmSearch', s).value.trim()).split(/\s+/).filter(Boolean);
+      rows = all.filter(r => (filter === 'all' || r.m.id === filter) && words.every(w => r.text.includes(w)));
+      // evidenzia gli alimenti che corrispondono alla ricerca
+      const label = r => r.items.map(e => {
+        const hit = words.some(w => norm(e.name).includes(w));
+        return hit ? `<mark>${esc(e.name)}</mark>` : esc(e.name);
+      }).join(', ');
+      $('#pmList', s).innerHTML = rows.length
+        ? `<p class="small muted" style="margin:0 0 4px">${rows.length} ${rows.length === 1 ? 'pasto' : 'pasti'}</p><ul class="search-results">${rows.slice(0, 80).map((r, i) => `<li><button data-pm="${i}"><span class="grow"><span class="name">${r.m.label} · ${fmtDate(r.d)}</span><br><span class="small muted">${label(r)}</span></span><span class="kc">${r0(sumNutr(r.items).kcal)}</span></button></li>`).join('')}</ul>`
+        : `<p class="muted">${words.length ? 'Nessun pasto con questo ingrediente.' : 'Nessun pasto registrato.'}</p>`;
+      $$('[data-pm]', s).forEach(b => b.addEventListener('click', () => {
+        const r = rows[+b.dataset.pm];
+        mealPreview({ title: `${r.m.label} di ${fmtDate(r.d, { weekday: 'long', day: 'numeric', month: 'long' })}`, items: r.items, meal: filter === 'all' ? addMeal : r.m.id });
+      }));
+    };
+    draw();
+    $('#pmSearch', s).addEventListener('input', draw);
+    $$('[data-f]', s).forEach(c => c.addEventListener('click', () => pastMealsSheet(c.dataset.f, $('#pmSearch', s).value)));
   });
 }
 
