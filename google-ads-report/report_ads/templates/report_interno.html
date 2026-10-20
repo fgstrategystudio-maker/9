@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Report interno Google Ads · {{ periodi.titolo }}</title>
+<style>
+  body { margin:0; padding:0; background:#f4f5f8; font-family:Helvetica, Arial, sans-serif; color:#1c2840; }
+  .wrap { max-width:900px; margin:0 auto; padding:24px 16px; }
+  .card { background:#fff; border-radius:10px; padding:20px 22px; margin-bottom:16px; border:1px solid #e3e7ef; }
+  h1 { font-size:22px; margin:4px 0; }
+  h2 { font-size:19px; margin:0 0 6px; }
+  h3 { font-size:13px; margin:22px 0 10px; color:{{ agenzia.colore }}; text-transform:uppercase; letter-spacing:.05em; }
+  p, li { font-size:14px; line-height:1.55; }
+  table.dati { width:100%; border-collapse:collapse; font-size:12.5px; }
+  table.dati th { text-align:left; color:#5e687d; font-weight:600; border-bottom:1px solid #e3e7ef; padding:7px 6px; }
+  table.dati td { border-bottom:1px solid #f0f2f6; padding:7px 6px; vertical-align:top; }
+  .num { text-align:right !important; white-space:nowrap; }
+  .muted { color:#5e687d; font-size:12px; }
+  .tag { display:inline-block; font-size:11px; font-weight:700; padding:2px 7px; border-radius:10px; text-transform:uppercase; }
+</style>
+</head>
+<body>
+{% set colori_stato = {'rosso': '#dc2626', 'giallo': '#d97706', 'verde': '#16a34a'} %}
+{% set colori_gravita = {'alta': ('#fee2e2', '#991b1b'), 'media': ('#fef3c7', '#92400e'), 'bassa': ('#e0e7ff', '#3730a3')} %}
+<div class="wrap">
+
+  <div class="card" style="background:#1c2840; color:#fff; border:0;">
+    <div style="font-size:12px; letter-spacing:.08em; text-transform:uppercase; opacity:.75;">Report interno · solo per te</div>
+    <h1>{{ periodi.titolo }}</h1>
+    <div style="font-size:13px; opacity:.8;">
+      Confronto con {{ periodi.precedente.etichetta() }}{% if periodi.anno_prec %} e {{ periodi.anno_prec.etichetta() }}{% endif %}
+      · {{ analisi | length }} account{% if errori %} · {{ errori | length }} in errore{% endif %}
+      {% if demo %} · <strong>DATI DEMO</strong>{% endif %}
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Portafoglio</h2>
+    <table class="dati">
+      <tr>
+        <th></th><th>Cliente</th><th class="num">Investimento</th><th class="num">Budget</th>
+        <th class="num">Conv.</th><th class="num">Δ conv.</th><th class="num">CPA / ROAS</th><th class="num">Priorità</th>
+      </tr>
+      {% for a in analisi %}
+      {% set k = a.kpi_per_chiave %}
+      <tr>
+        <td><span style="display:inline-block; width:11px; height:11px; border-radius:50%; background:{{ colori_stato[a.stato] }};"></span></td>
+        <td><a href="#c{{ loop.index }}" style="color:#1c2840;">{{ a.cliente.nome }}</a></td>
+        <td class="num">{{ a.dati.corrente.totale.costo | valuta(0) }}</td>
+        <td class="num">
+          {% if a.pacing %}{{ a.pacing.quota_spesa | perc(0) }}{% if not periodi.mese_chiuso %}<br><span class="muted">proiez. {{ (a.pacing.scostamento) | variazione }}</span>{% endif %}{% else %}–{% endif %}
+        </td>
+        <td class="num">{{ a.dati.corrente.totale.conversioni | numero(1) }}</td>
+        <td class="num" style="color:{{ k['conversioni'].delta | colore_delta('su') }};">{{ k['conversioni'].delta | variazione }}</td>
+        <td class="num">
+          {% if a.cliente.ecommerce %}{{ a.dati.corrente.totale.roas | numero(2) }}{% if a.cliente.roas_target %} <span class="muted">/ {{ a.cliente.roas_target | numero(2) }}</span>{% endif %}
+          {% else %}{{ a.dati.corrente.totale.cpa | valuta(0) }}{% if a.cliente.cpa_target %} <span class="muted">/ {{ a.cliente.cpa_target | valuta(0) }}</span>{% endif %}{% endif %}
+        </td>
+        <td class="num">
+          {% set alte = a.punti | rejectattr('opportunita') | selectattr('gravita', 'equalto', 'alta') | list | length %}
+          {% set medie = a.punti | rejectattr('opportunita') | selectattr('gravita', 'equalto', 'media') | list | length %}
+          {% if alte %}<span class="tag" style="background:#fee2e2; color:#991b1b;">{{ alte }} alta</span>{% endif %}
+          {% if medie %}<span class="tag" style="background:#fef3c7; color:#92400e;">{{ medie }} media</span>{% endif %}
+          {% if not alte and not medie %}<span class="muted">ok</span>{% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+
+  {% for nome, errore in errori %}
+  <div class="card" style="border-color:#fecaca;">
+    <h2 style="color:#991b1b;">{{ nome }}: dati non scaricati</h2>
+    <p class="muted" style="font-family:monospace;">{{ errore }}</p>
+  </div>
+  {% endfor %}
+
+  {% for a in analisi %}
+  {% set g = periodi.corrente.giorni %}{% set gp = periodi.precedente.giorni %}
+  <div class="card" id="c{{ loop.index }}">
+    <h2><span style="display:inline-block; width:12px; height:12px; border-radius:50%; background:{{ colori_stato[a.stato] }};"></span> {{ a.cliente.nome }}</h2>
+    <div class="muted">{{ a.dati.nome }} · ID {{ a.cliente.customer_id }}{% if a.dati.punteggio_ottimizzazione is not none %} · punteggio ottimizzazione {{ a.dati.punteggio_ottimizzazione | perc(0) }}{% endif %}{% if a.commento_ai %} · commento AI{% endif %}</div>
+
+    <p style="margin-top:12px;">{{ a.sintesi_interna }}</p>
+
+    <h3>Punti di attenzione</h3>
+    {% if a.punti %}
+    <table class="dati">
+      {% for pt in a.punti %}
+      {% set c = colori_gravita[pt.gravita] if not pt.opportunita else ('#dcfce7', '#166534') %}
+      <tr>
+        <td style="width:90px;"><span class="tag" style="background:{{ c[0] }}; color:{{ c[1] }};">{{ 'opportunità' if pt.opportunita else pt.gravita }}</span></td>
+        <td>
+          <strong>{{ pt.titolo }}</strong> <span class="muted">· {{ pt.area }}</span><br>
+          {{ pt.dettaglio }}<br>
+          <span style="color:#5e687d;">→ {{ pt.azione }}</span>
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+    {% else %}
+    <p class="muted">Nessun punto di attenzione dalle regole.</p>
+    {% endif %}
+
+    <h3>Cosa è cambiato</h3>
+    {% if a.cosa_e_cambiato %}<ul style="padding-left:18px; margin:0 0 12px;">{% for x in a.cosa_e_cambiato %}<li>{{ x }}</li>{% endfor %}</ul>{% endif %}
+    <table class="dati">
+      <tr><th>KPI</th><th class="num">Periodo</th><th class="num">Precedente</th><th class="num">Δ</th>{% if periodi.anno_prec %}<th class="num">Δ anno</th>{% endif %}</tr>
+      {% for k in a.kpi %}
+      <tr>
+        <td>{{ k.nome }}</td>
+        <td class="num"><strong>{{ k | kpi }}</strong></td>
+        <td class="num">{{ k.prec | formatta(k.formato) }}</td>
+        <td class="num" style="color:{{ k.delta | colore_delta(k.meglio) }};">{{ k.delta | variazione }}</td>
+        {% if periodi.anno_prec %}<td class="num" style="color:{{ k.delta_ap | colore_delta(k.meglio) }};">{{ k.delta_ap | variazione }}</td>{% endif %}
+      </tr>
+      {% endfor %}
+    </table>
+
+    <h3>Campagne</h3>
+    <table class="dati">
+      <tr>
+        <th>Campagna</th><th class="num">Costo</th><th class="num">Δ costo</th><th class="num">Conv.</th><th class="num">Δ conv.</th>
+        <th class="num">{{ 'ROAS' if a.cliente.ecommerce else 'CPA' }}</th><th class="num">Persa budget</th><th class="num">Persa ranking</th>
+      </tr>
+      {% for r in a.campagne %}
+      {% set dc = r.delta('costo', g, gp) %}{% set dv = r.delta('conversioni', g, gp) %}
+      <tr>
+        <td>{{ r.nome }}<br><span class="muted">{{ r.tipo | replace('_', ' ') | lower }}{% if r.budget_giornaliero %} · {{ r.budget_giornaliero | valuta(0) }}/g{% endif %}</span></td>
+        <td class="num">{{ r.m.costo | valuta(0) }}</td>
+        <td class="num">{{ dc | variazione }}</td>
+        <td class="num">{{ r.m.conversioni | numero(1) }}</td>
+        <td class="num" style="color:{{ dv | colore_delta('su') }};">{{ dv | variazione }}</td>
+        <td class="num">{% if a.cliente.ecommerce %}{{ r.m.roas | numero(2) }}{% else %}{{ r.m.cpa | valuta(0) }}{% endif %}</td>
+        <td class="num">{{ r.m.persa_budget | perc(0) }}</td>
+        <td class="num">{{ r.m.persa_ranking | perc(0) }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+
+    <h3>Cosa migliorare</h3>
+    {% if a.cosa_migliorare %}<ol style="padding-left:18px; margin:0;">{% for x in a.cosa_migliorare %}<li>{{ x }}</li>{% endfor %}</ol>{% else %}<p class="muted">Niente da segnalare.</p>{% endif %}
+
+    {% if a.sprechi %}
+    <h3>Candidati keyword negative · {{ a.spreco_totale | valuta(0) }} senza conversioni</h3>
+    <table class="dati">
+      <tr><th>Termine di ricerca</th><th>Campagna / gruppo</th><th class="num">Clic</th><th class="num">Costo</th></tr>
+      {% for t in a.sprechi %}
+      <tr><td>{{ t.termine }}</td><td class="muted">{{ t.campagna }} / {{ t.gruppo }}</td><td class="num">{{ t.clic | numero }}</td><td class="num">{{ t.costo | valuta }}</td></tr>
+      {% endfor %}
+    </table>
+    {% endif %}
+
+    {% if a.keyword_qs_bassa %}
+    <h3>Keyword con punteggio di qualità basso</h3>
+    <table class="dati">
+      <tr><th>Keyword</th><th>Campagna / gruppo</th><th class="num">QS</th><th class="num">Costo</th><th class="num">Conv.</th></tr>
+      {% for kw in a.keyword_qs_bassa %}
+      <tr><td>{{ kw.testo }}</td><td class="muted">{{ kw.campagna }} / {{ kw.gruppo }}</td><td class="num">{{ kw.punteggio_qualita }}</td><td class="num">{{ kw.costo | valuta }}</td><td class="num">{{ kw.conversioni | numero(1) }}</td></tr>
+      {% endfor %}
+    </table>
+    {% endif %}
+
+    <h3>Modifiche all'account nel periodo</h3>
+    {% if a.modifiche %}
+    <p class="muted">{% for tipo, n in a.modifiche_per_tipo %}{{ tipo | replace('_', ' ') | lower }}: {{ n }}{% if not loop.last %} · {% endif %}{% endfor %}</p>
+    <table class="dati">
+      <tr><th>Quando</th><th>Chi</th><th>Cosa</th><th>Campagna</th></tr>
+      {% for m in a.modifiche %}
+      <tr>
+        <td class="num" style="text-align:left !important;">{{ m.quando.strftime('%d/%m %H:%M') }}</td>
+        <td class="muted">{{ m.utente }}</td>
+        <td>{{ m.operazione | lower }} {{ m.risorsa | replace('_', ' ') | lower }}{% if m.campi %}<br><span class="muted">{{ m.campi[:4] | join(', ') }}</span>{% endif %}</td>
+        <td>{{ m.campagna or '–' }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+    {% else %}
+    <p class="muted">Nessuna modifica registrata (la cronologia via API copre al massimo gli ultimi 30 giorni).</p>
+    {% endif %}
+  </div>
+  {% endfor %}
+
+  <p class="muted" style="text-align:center;">Generato il {{ generato.strftime('%d/%m/%Y alle %H:%M') }} · dati fino al {{ periodi.corrente.fine.strftime('%d/%m/%Y') }}</p>
+</div>
+</body>
+</html>

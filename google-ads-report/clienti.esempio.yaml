@@ -1,0 +1,41 @@
+# Configurazione dei clienti.
+#
+# ATTENZIONE: il repository è pubblico. NON inserire qui nomi, ID o email reali.
+# Copia questo file in "clienti.yaml" (ignorato da git) per le prove in locale e,
+# per GitHub Actions, incolla il contenuto completo nel Secret CLIENTI_YAML.
+
+agenzia:
+  nome: Francesco Gizzi
+  sito: https://francescogizzi.com
+  email_interna: tu@esempio.it   # dove arrivano report interno e report da inoltrare
+  colore: "#173b7a"              # colore dell'intestazione del report cliente
+
+clienti:
+  # Il tuo account: solo report interno (report_cliente vuoto).
+  - nome: Francesco Gizzi – lead generation
+    customer_id: "111-111-1111"
+    obiettivo: lead
+    budget_mensile: 600
+    cpa_target: 40
+    report_cliente: []
+
+  # Cliente lead generation: report cliente a inizio mese, inviato a te da inoltrare.
+  - nome: Studio Esempio
+    customer_id: "222-222-2222"
+    obiettivo: lead              # lead | ecommerce
+    budget_mensile: 1500         # se assente, viene stimato dai budget giornalieri delle campagne
+    cpa_target: 35
+    email: [titolare@esempio.it]
+    invio_automatico: false      # true = il report parte direttamente al cliente (tu in copia nascosta)
+    report_cliente: [inizio]     # momenti in cui ricevere il report: inizio, meta, fine
+    note: Picco stagionale a settembre; il lead più prezioso è la richiesta di preventivo.
+
+  # Cliente e-commerce: report cliente a inizio e metà mese.
+  - nome: Negozio Esempio
+    customer_id: "333-333-3333"
+    obiettivo: ecommerce
+    budget_mensile: 4000
+    roas_target: 5
+    email: [marketing@esempio.it, titolare@esempio.it]
+    invio_automatico: false
+    report_cliente: [inizio, meta]
