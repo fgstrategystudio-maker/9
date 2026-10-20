@@ -106,8 +106,10 @@ def _verso(d: float | None, su: str, giu: str, fermo: str) -> str:
 
 
 def azioni(m: Metriche) -> float:
-    """Le "conversioni" di Google: per i locali sono azioni ad alto intento (indicazioni, contatti...)."""
-    return m.conversioni_google if m.conversioni_google is not None else m.conversioni
+    """Azioni ad alto intento (indicazioni, contatti, ordini...): le Conversioni di Google
+    senza le visite al negozio, che si contano a parte."""
+    conv = m.conversioni_google if m.conversioni_google is not None else m.conversioni
+    return conv - m.visite_in_conversioni
 
 
 # ---------------------------------------------------------------- strutture per il template
@@ -729,6 +731,8 @@ def _compenso(vg: VistaGruppo, gruppo: Gruppo, analisi: list[Analisi], locali: l
                 Riga("Profitto netto attribuito", [f"{eur(marg, 0)} − {eur(x.spesa + comp.importo, 0)}", eur(profitto, 0)], forte=True),
             ]
             vg.compenso_riquadri = [
-                ("ROI sul margine", pct(roi, 0), f"{mese_prec} {pct(roi_p, 0)}" if roi_p is not None else ""),
-                ("ROAS", f"{num(roas, 1)} ×", f"{mese_prec} {num(roas_p, 1)} ×" if roas_p is not None else ""),
+                ("ROI sul margine", pct(roi, 0), "profitto netto ÷ (spesa Google Ads + compenso)"
+                 + (f" · {mese_prec} {pct(roi_p, 0)}" if roi_p is not None else "")),
+                ("ROAS", f"{num(roas, 1)} ×", "fatturato attribuibile ÷ (spesa Google Ads + compenso)"
+                 + (f" · {mese_prec} {num(roas_p, 1)} ×" if roas_p is not None else "")),
             ]

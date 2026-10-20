@@ -31,6 +31,9 @@ class Cliente:
     # Obiettivo "negozio": se Google non misura le visite al negozio, si stimano
     # come questa quota delle indicazioni stradali.
     quota_visite_indicazioni: float = 0.27
+    # Visite: "auto" usa quelle misurate da Google se ci sono, altrimenti la stima;
+    # "stimate" forza la stima (per esempio se il tracciamento è partito da poco ed è incompleto).
+    visite: str = "auto"  # auto | rilevate | stimate
     # Report dei locali: descrizione sotto il nome, fasce orarie di servizio e
     # parametri per il fatturato attribuibile (visite × coperti × scontrino).
     descrizione: str = ""
@@ -135,6 +138,8 @@ def _cliente(dati: dict, ereditati: dict, posizione: str) -> Cliente:
         c["email"] = [c["email"]]
     cliente = Cliente(**c)
     cliente.customer_id = str(cliente.customer_id)
+    if cliente.visite not in ("auto", "rilevate", "stimate"):
+        raise ValueError(f"{cliente.nome}: visite deve essere 'auto', 'rilevate' o 'stimate'")
     if cliente.obiettivo not in ("lead", "ecommerce", "negozio"):
         raise ValueError(f"{cliente.nome}: obiettivo deve essere 'lead', 'ecommerce' o 'negozio'")
     sconosciuti = set(cliente.report_cliente) - set(MOMENTI)
