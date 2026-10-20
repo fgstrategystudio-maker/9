@@ -38,6 +38,10 @@ class Cliente:
     # parametri per il fatturato attribuibile (visite × coperti × scontrino).
     descrizione: str = ""
     fasce: list[list[int]] = field(default_factory=lambda: [[12, 14], [18, 20]])
+    # Layout Grano: fasce della tabella "Giorni e orari", come [nome, dalle, alle].
+    fasce_tabella: list = field(default_factory=lambda: [
+        ["Mattina (fino alle 10)", 0, 10], ["Pranzo (dalle 11 alle 15)", 11, 15],
+        ["Pomeriggio (dalle 16 alle 18)", 16, 18], ["Sera (dalle 19 in poi)", 19, 23]])
     coperti_per_visita: float | None = None
     scontrino_medio: float | None = None
     # Contratto del locale: le visite contano per la fee da `contratto_dal` (AAAA-MM-GG);
@@ -79,7 +83,10 @@ class Gruppo:
     nome: str
     locali: list[Cliente]
     sottotitolo: str = ""
+    # Impostazione del report cliente: "advisory" (una sezione per locale) o "grano" (sezioni numerate).
+    layout: str = "advisory"
     colore: str = ""
+    colore_titoletti: str = ""  # layout grano: colore dei sottotitoli (es. rosso chiaro, ocra)
     report_cliente: list[str] = field(default_factory=lambda: ["inizio"])
     email: list[str] = field(default_factory=list)
     invio_automatico: bool = False
@@ -92,6 +99,8 @@ class Gruppo:
     # Testi del mese scritti da te: cosa è stato fatto e prossimi passi aggiuntivi.
     fatto: str = ""
     prossimi_passi: list[str] = field(default_factory=list)
+    focus: str = ""  # "Focus del mese" in copertina
+    sezioni: list[dict] = field(default_factory=list)  # sezioni libere: [{titolo, testo}]
 
     @property
     def negozio(self) -> bool:
@@ -170,7 +179,10 @@ def carica(percorso: str | Path) -> Configurazione:
         sconosciuti = set(voce) - CAMPI_CLIENTE - CAMPI_GRUPPO - {"nome"}
         if sconosciuti:
             raise ValueError(f"Cliente n. {i}: campi sconosciuti {sorted(sconosciuti)}")
-        gruppi.append(Gruppo(nome=voce["nome"], locali=locali, compenso=compenso, **extra))
+        gruppo = Gruppo(nome=voce["nome"], locali=locali, compenso=compenso, **extra)
+        if gruppo.layout not in ("advisory", "grano"):
+            raise ValueError(f"Cliente n. {i}: layout deve essere 'advisory' o 'grano'")
+        gruppi.append(gruppo)
     if not gruppi:
         raise ValueError("Nessun cliente configurato")
     return Configurazione(agenzia, gruppi)
@@ -181,11 +193,11 @@ def applica_note(conf: Configurazione, percorso: str | Path, mese: str) -> list[
 
     Formato:
         mese: "2026-10"            # il mese di cui parla il report (quello del 1° novembre è ottobre)
-        Domò Group:                # nome del cliente: testi della sintesi finale
+        Gruppo Esempio:            # nome del cliente: testi della sintesi finale
           fatto: Pulizia dei termini e nuovi temi di ricerca su tutte le insegne.
           prossimi_passi:
             - "Difesa del brand: attivare campagne sul nome dei locali."
-        Legame:                    # nome di un locale: "Cosa abbiamo fatto" nella sua sezione
+        Locale Uno:                # nome di un locale: "Cosa abbiamo fatto" nella sua sezione
           fatto: Nuovi temi di ricerca in francese e spagnolo.
 
     Le note di un altro mese vengono ignorate, così non finiscono per sbaglio nel report sbagliato.
@@ -210,6 +222,10 @@ def applica_note(conf: Configurazione, percorso: str | Path, mese: str) -> list[
             g = gruppi[nome]
             g.fatto = str(testi.get("fatto", g.fatto) or "")
             g.prossimi_passi = list(testi.get("prossimi_passi", g.prossimi_passi) or [])
+            g.focus = str(testi.get("focus", g.focus) or "")
+            sezioni = testi.get("sezioni") or []
+            g.sezioni = [{"titolo": str(x.get("titolo", "")), "testo": str(x.get("testo", ""))}
+                         for x in sezioni if isinstance(x, dict) and x.get("titolo")]
         elif nome in locali:
             locali[nome].nota_mese = str(testi.get("fatto", "") or "")
         else:

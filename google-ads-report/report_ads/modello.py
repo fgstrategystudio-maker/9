@@ -127,6 +127,12 @@ class Dettaglio:
     # Media giornaliera di conversioni per giorno della settimana (lun..dom).
     giorni_corrente: list[float] = field(default_factory=lambda: [0.0] * 7)
     giorni_precedente: list[float] = field(default_factory=lambda: [0.0] * 7)
+    # Totali del mese per giorno della settimana e spesa per ora (tabelle "Giorni e orari").
+    conversioni_giorno_totale: list[float] = field(default_factory=lambda: [0.0] * 7)
+    spesa_per_giorno: list[float] = field(default_factory=lambda: [0.0] * 7)
+    spesa_per_ora: list[float] = field(default_factory=lambda: [0.0] * 24)
+    # Canali del mese precedente, per il confronto tra mesi.
+    canali_precedente: list[Canale] = field(default_factory=list)
 
 
 @dataclass

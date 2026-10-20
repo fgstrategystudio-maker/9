@@ -42,12 +42,17 @@ clienti:
 
   # Locale fisico (ristorante, negozio): il risultato sono le visite al negozio.
   # Se Google non le misura sull'account, vengono stimate dalle indicazioni stradali.
-  # Il report cliente è un PDF nel layout "Advisory" (una sezione per locale).
+  # Il report cliente è un PDF: layout "advisory" (predefinito) o "grano".
   - nome: Ristorante Esempio
     customer_id: "444-444-4444"
     obiettivo: negozio
     descrizione: Via Roma 1, Roma          # sotto il nome del locale
-    colore: "#8b1a1a"                      # colore del cliente nel PDF
+    layout: grano                          # copertina centrata e sezioni numerate
+    colore: "#8b1a1a"                      # titoli e intestazioni delle tabelle
+    colore_titoletti: "#c0392b"            # sottotitoli (solo layout grano)
+    fasce_tabella:                         # fasce della tabella orari (solo layout grano)
+      - ["Pranzo (dalle 11 alle 15)", 11, 15]
+      - ["Sera (dalle 19 alle 23)", 19, 23]
     quota_visite_indicazioni: 0.27         # visite stimate = 27% delle indicazioni stradali
     fasce: [[12, 14], [19, 22]]            # fasce di servizio evidenziate nel grafico orario
     coperti_per_visita: 2.5

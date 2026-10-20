@@ -83,6 +83,10 @@ def report_cliente(a: Analisi, agenzia: Agenzia) -> str:
     return _env.get_template("report_cliente.html").render(a=a, agenzia=agenzia, generato=datetime.now())
 
 
+def report_grano(vista) -> str:
+    return _env.get_template("report_grano.html").render(v=vista)
+
+
 def report_locali(vista) -> str:
     return _env.get_template("report_locali.html").render(v=vista)
 
