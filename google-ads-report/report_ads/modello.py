@@ -19,6 +19,12 @@ class Metriche:
     quota_impr: float | None = None
     persa_budget: float | None = None
     persa_ranking: float | None = None
+    # Azioni locali (tutte le conversioni, anche secondarie). Servono all'obiettivo "negozio".
+    indicazioni: float = 0.0  # clic su indicazioni stradali
+    visite_reali: float = 0.0  # visite al negozio misurate da Google
+    # Per l'obiettivo "negozio" `conversioni` diventa il numero di visite (reali o stimate):
+    # qui resta il valore originale delle conversioni Google Ads.
+    conversioni_google: float | None = None
 
     @property
     def ctr(self) -> float | None:
@@ -66,6 +72,7 @@ class TermineRicerca:
     costo: float
     clic: int
     conversioni: float
+    conversioni_tutte: float = 0.0  # include le azioni secondarie (es. indicazioni stradali)
 
 
 @dataclass
@@ -76,6 +83,7 @@ class Keyword:
     punteggio_qualita: int | None
     costo: float
     conversioni: float
+    conversioni_tutte: float = 0.0
 
 
 @dataclass
@@ -99,3 +107,4 @@ class DatiAccount:
     termini_ricerca: list[TermineRicerca]
     keyword: list[Keyword]
     modifiche: list[Modifica]
+    visite_stimate: bool = False  # obiettivo negozio: visite ricavate dalle indicazioni stradali

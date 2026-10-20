@@ -105,6 +105,8 @@ class FonteGoogleAds:
                 budget_giornaliero=budget, metriche=_metriche(row.metrics),
             )
 
+        self._azioni_locali(cid, intervallo, totale, campagne)
+
         giornaliero = []
         if con_giornaliero:
             q = f"""
@@ -118,6 +120,29 @@ class FonteGoogleAds:
                     row.metrics.conversions,
                 ))
         return DatiPeriodo(totale, campagne, giornaliero)
+
+    def _azioni_locali(self, cid: str, intervallo: Intervallo, totale: Metriche,
+                       campagne: dict[str, Campagna]) -> None:
+        """Indicazioni stradali e visite al negozio, da "tutte le conversioni"
+        (spesso sono azioni secondarie, escluse dalla colonna Conversioni)."""
+        campi = {"GET_DIRECTIONS": "indicazioni", "STORE_VISIT": "visite_reali"}
+        q = f"""
+            SELECT segments.conversion_action_category, metrics.all_conversions
+            FROM customer WHERE {intervallo.gaql()}
+        """
+        for row in self._query(cid, q):
+            campo = campi.get(row.segments.conversion_action_category.name)
+            if campo:
+                setattr(totale, campo, getattr(totale, campo) + row.metrics.all_conversions)
+        q = f"""
+            SELECT campaign.id, segments.conversion_action_category, metrics.all_conversions
+            FROM campaign WHERE {intervallo.gaql()} AND campaign.status != 'REMOVED'
+        """
+        for row in self._query(cid, q):
+            campo = campi.get(row.segments.conversion_action_category.name)
+            c = campagne.get(str(row.campaign.id))
+            if campo and c:
+                setattr(c.metriche, campo, getattr(c.metriche, campo) + row.metrics.all_conversions)
 
     def scarica(self, customer_id: str, periodi: Periodi) -> DatiAccount:
         cid = pulisci_id(customer_id)
@@ -136,7 +161,7 @@ class FonteGoogleAds:
         termini = []
         q = f"""
             SELECT search_term_view.search_term, campaign.name, ad_group.name,
-                   metrics.cost_micros, metrics.clicks, metrics.conversions
+                   metrics.cost_micros, metrics.clicks, metrics.conversions, metrics.all_conversions
             FROM search_term_view
             WHERE {periodi.corrente.gaql()} AND metrics.cost_micros > 0
             ORDER BY metrics.cost_micros DESC
@@ -147,12 +172,14 @@ class FonteGoogleAds:
                 termine=row.search_term_view.search_term, campagna=row.campaign.name,
                 gruppo=row.ad_group.name, costo=row.metrics.cost_micros / MICRO,
                 clic=row.metrics.clicks, conversioni=row.metrics.conversions,
+                conversioni_tutte=row.metrics.all_conversions,
             ))
 
         keyword = []
         q = f"""
             SELECT ad_group_criterion.keyword.text, ad_group_criterion.quality_info.quality_score,
-                   campaign.name, ad_group.name, metrics.cost_micros, metrics.conversions
+                   campaign.name, ad_group.name, metrics.cost_micros, metrics.conversions,
+                   metrics.all_conversions
             FROM keyword_view
             WHERE {periodi.corrente.gaql()} AND ad_group_criterion.status = 'ENABLED'
               AND metrics.cost_micros > 0
@@ -165,6 +192,7 @@ class FonteGoogleAds:
                 testo=crit.keyword.text, campagna=row.campaign.name, gruppo=row.ad_group.name,
                 punteggio_qualita=_opzionale(crit.quality_info, "quality_score"),
                 costo=row.metrics.cost_micros / MICRO, conversioni=row.metrics.conversions,
+                conversioni_tutte=row.metrics.all_conversions,
             ))
 
         modifiche = self._modifiche(cid, periodi, corrente.campagne)

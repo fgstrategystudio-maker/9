@@ -26,6 +26,14 @@ MIN_CONVERSIONI_SIGNIFICATIVE = 5
 
 ORDINE_GRAVITA = {"alta": 0, "media": 1, "bassa": 2}
 
+# Come si chiama il "risultato" nei testi: conversioni, oppure visite al negozio per i locali.
+ETICHETTE = {
+    False: {"risultati": "conversioni", "Risultati": "Conversioni", "breve": "Conv.",
+            "singolare": "conversione", "costo": "CPA", "costo_lungo": "Costo per conversione"},
+    True: {"risultati": "visite al negozio", "Risultati": "Visite al negozio", "breve": "Visite",
+           "singolare": "visita", "costo": "costo per visita", "costo_lungo": "Costo per visita"},
+}
+
 
 @dataclass
 class Kpi:
@@ -116,11 +124,15 @@ class Analisi:
         return "rosso" if "alta" in gravita else "giallo" if "media" in gravita else "verde"
 
     @property
+    def etichette(self) -> dict[str, str]:
+        return ETICHETTE[self.cliente.negozio]
+
+    @property
     def kpi_per_chiave(self) -> dict[str, Kpi]:
         return {k.chiave: k for k in self.kpi}
 
 
-VOLUMI = {"costo", "impressioni", "clic", "conversioni", "valore_conv"}
+VOLUMI = {"costo", "impressioni", "clic", "conversioni", "valore_conv", "indicazioni"}
 
 
 def variazione(attuale, precedente, giorni=1, giorni_prec=1) -> float | None:
@@ -134,6 +146,29 @@ def variazione(attuale, precedente, giorni=1, giorni_prec=1) -> float | None:
     return a / p - 1
 
 
+def prepara_negozio(cliente: Cliente, dati: DatiAccount) -> None:
+    """Obiettivo negozio: il risultato diventa la visita al negozio.
+
+    Se Google misura le visite sull'account si usano quelle; altrimenti si stimano
+    come quota delle indicazioni stradali (27% salvo diversa configurazione).
+    La scelta vale per tutti i periodi, così i confronti restano omogenei.
+    """
+    reali = dati.corrente.totale.visite_reali > 0
+    dati.visite_stimate = not reali
+    quota = cliente.quota_visite_indicazioni
+    periodi = [dati.corrente, dati.precedente] + ([dati.anno_prec] if dati.anno_prec else [])
+    for periodo in periodi:
+        for m in [periodo.totale] + [c.metriche for c in periodo.campagne.values()]:
+            m.conversioni_google = m.conversioni
+            m.conversioni = m.visite_reali if reali else m.indicazioni * quota
+    # I termini di ricerca non hanno il dettaglio per categoria: si usano tutte le conversioni,
+    # che includono le indicazioni stradali.
+    for t in dati.termini_ricerca:
+        t.conversioni = t.conversioni_tutte
+    for kw in dati.keyword:
+        kw.conversioni = kw.conversioni_tutte
+
+
 def _kpi(cliente: Cliente, dati: DatiAccount, periodi: Periodi) -> list[Kpi]:
     definizioni = [
         ("costo", "Investimento", "valuta", None),
@@ -141,10 +176,20 @@ def _kpi(cliente: Cliente, dati: DatiAccount, periodi: Periodi) -> list[Kpi]:
         ("clic", "Clic", "numero", "su"),
         ("ctr", "CTR", "percentuale", "su"),
         ("cpc", "CPC medio", "valuta", "giu"),
-        ("conversioni", "Conversioni", "decimale", "su"),
-        ("tasso_conv", "Tasso di conversione", "percentuale", "su"),
-        ("cpa", "Costo per conversione", "valuta", "giu"),
     ]
+    if cliente.negozio:
+        stima = " (stimate)" if dati.visite_stimate else ""
+        definizioni += [
+            ("indicazioni", "Indicazioni stradali", "numero", "su"),
+            ("conversioni", f"Visite al negozio{stima}", "numero", "su"),
+            ("cpa", "Costo per visita", "valuta", "giu"),
+        ]
+    else:
+        definizioni += [
+            ("conversioni", "Conversioni", "decimale", "su"),
+            ("tasso_conv", "Tasso di conversione", "percentuale", "su"),
+            ("cpa", "Costo per conversione", "valuta", "giu"),
+        ]
     if cliente.ecommerce:
         definizioni += [
             ("valore_conv", "Valore conversioni", "valuta", "su"),
@@ -194,6 +239,9 @@ def _perc(x: float) -> str:
 
 
 def analizza(cliente: Cliente, dati: DatiAccount, periodi: Periodi) -> Analisi:
+    if cliente.negozio:
+        prepara_negozio(cliente, dati)
+    e = ETICHETTE[cliente.negozio]
     cor, pre = dati.corrente.totale, dati.precedente.totale
     g, gp = periodi.corrente.giorni, periodi.precedente.giorni
     kpi = _kpi(cliente, dati, periodi)
@@ -201,12 +249,14 @@ def analizza(cliente: Cliente, dati: DatiAccount, periodi: Periodi) -> Analisi:
     pacing = _pacing(cliente, dati.corrente, periodi)
     punti: list[Punto] = []
 
-    # 1. Tracciamento: spesa senza conversioni quando prima ce n'erano.
+    # 1. Tracciamento: spesa senza risultati quando prima ce n'erano.
     if cor.costo > 0 and cor.conversioni == 0 and pre.conversioni >= 3:
         punti.append(Punto(
-            "alta", "Tracciamento", "Nessuna conversione registrata",
-            f"Nel periodo sono stati spesi {_euro(cor.costo)} senza conversioni, "
+            "alta", "Tracciamento", f"Nessuna {e['singolare']} registrata",
+            f"Nel periodo sono stati spesi {_euro(cor.costo)} senza {e['risultati']}, "
             f"contro {pre.conversioni:.0f} nel periodo precedente.",
+            "Verifica il collegamento al Profilo dell'attività su Google e le azioni di conversione locali "
+            "(indicazioni stradali, visite)." if cliente.negozio else
             "Verifica subito tag di conversione, Google Tag Manager e le azioni di conversione in Google Ads.",
         ))
 
@@ -244,7 +294,7 @@ def analizza(cliente: Cliente, dati: DatiAccount, periodi: Periodi) -> Analisi:
                 "media", "Budget", "Budget sotto-utilizzato",
                 f"Proiezione a fine mese {_euro(pacing.proiezione)} su {_euro(pacing.budget)}{fonte} "
                 f"({_perc(pacing.scostamento)}).",
-                "Valuta di aumentare budget o offerte sulle campagne che convertono a CPA in target.",
+                f"Valuta di aumentare budget o offerte sulle campagne con {e['costo']} in target.",
             ))
 
     # 4. Efficienza rispetto ai target.
@@ -252,9 +302,9 @@ def analizza(cliente: Cliente, dati: DatiAccount, periodi: Periodi) -> Analisi:
         r = cor.cpa / cliente.cpa_target
         if r > 1.0:
             punti.append(Punto(
-                "alta" if r > 1.2 else "media", "Efficienza", "CPA sopra il target",
-                f"CPA {_euro(cor.cpa)} contro un target di {_euro(cliente.cpa_target)} ({_perc(r - 1)}).",
-                "Sposta budget verso le campagne con CPA migliore e aggiungi keyword negative sui termini che non convertono.",
+                "alta" if r > 1.2 else "media", "Efficienza", f"{e['costo_lungo']} sopra il target",
+                f"{e['costo_lungo']} {_euro(cor.cpa)} contro un target di {_euro(cliente.cpa_target)} ({_perc(r - 1)}).",
+                f"Sposta budget verso le campagne con {e['costo']} migliore e aggiungi keyword negative sui termini che non portano risultati.",
             ))
     if cliente.ecommerce and cliente.roas_target and cor.roas is not None:
         r = cor.roas / cliente.roas_target
@@ -269,9 +319,9 @@ def analizza(cliente: Cliente, dati: DatiAccount, periodi: Periodi) -> Analisi:
     dconv = k["conversioni"].delta
     if dconv is not None and pre.conversioni >= MIN_CONVERSIONI_SIGNIFICATIVE and dconv < -SOGLIA_CALO_CONVERSIONI:
         punti.append(Punto(
-            "alta" if dconv < -0.4 else "media", "Risultati", "Conversioni in calo",
-            f"Conversioni {_perc(dconv)} (media giornaliera) rispetto a {periodi.precedente.etichetta()}.",
-            "Incrocia il calo con le modifiche recenti e con le campagne che hanno perso più conversioni.",
+            "alta" if dconv < -0.4 else "media", "Risultati", f"{e['Risultati']} in calo",
+            f"{e['Risultati']} {_perc(dconv)} (media giornaliera) rispetto a {periodi.precedente.etichetta()}.",
+            f"Incrocia il calo con le modifiche recenti e con le campagne che hanno perso più {e['risultati']}.",
         ))
     dctr = k["ctr"].delta
     if dctr is not None and dctr < -SOGLIA_CALO_CTR and cor.impressioni > 1000:
@@ -301,23 +351,23 @@ def analizza(cliente: Cliente, dati: DatiAccount, periodi: Periodi) -> Analisi:
         m = r.m
         if m.costo >= soglia_costo and m.conversioni == 0:
             punti.append(Punto(
-                "media", "Campagne", f"«{r.nome}» spende senza convertire",
-                f"{_euro(m.costo)} spesi e nessuna conversione nel periodo.",
+                "media", "Campagne", f"«{r.nome}» spende senza {e['risultati']}",
+                f"{_euro(m.costo)} spesi e nessuna {e['singolare']} nel periodo.",
                 "Rivedi targeting, keyword e pagina di destinazione, oppure riduci il budget.",
             ))
         elif cliente.cpa_target and m.cpa and m.cpa > cliente.cpa_target * 1.5 and m.costo >= soglia_costo:
             punti.append(Punto(
-                "media", "Campagne", f"«{r.nome}» con CPA molto alto",
-                f"CPA {_euro(m.cpa)} (target {_euro(cliente.cpa_target)}).",
+                "media", "Campagne", f"«{r.nome}» con {e['costo']} molto alto",
+                f"{e['costo_lungo']} {_euro(m.cpa)} (target {_euro(cliente.cpa_target)}).",
                 "Abbassa le offerte o restringi il targeting su questa campagna.",
             ))
         efficiente = m.conversioni > 0 and (not cliente.cpa_target or (m.cpa or 0) <= cliente.cpa_target)
         if m.persa_budget is not None and m.persa_budget > SOGLIA_PERSA_BUDGET and efficiente:
             punti.append(Punto(
                 "bassa", "Crescita", f"«{r.nome}» è limitata dal budget",
-                f"Perde il {m.persa_budget * 100:.0f}% delle impressioni per budget pur convertendo a CPA "
-                f"{_euro(m.cpa)}.",
-                "Aumenta il budget di questa campagna: è il modo più sicuro per ottenere più conversioni.",
+                f"Perde il {m.persa_budget * 100:.0f}% delle impressioni per budget con {e['costo']} "
+                f"di {_euro(m.cpa)}.",
+                f"Aumenta il budget di questa campagna: è il modo più sicuro per ottenere più {e['risultati']}.",
                 opportunita=True,
             ))
         if m.persa_ranking is not None and m.persa_ranking > SOGLIA_PERSA_RANKING and m.costo >= soglia_costo:
@@ -335,8 +385,9 @@ def analizza(cliente: Cliente, dati: DatiAccount, periodi: Periodi) -> Analisi:
         quota = spreco_totale / cor.costo if cor.costo else 0
         punti.append(Punto(
             "media" if quota > 0.05 else "bassa", "Keyword negative",
-            f"{len(sprechi)} termin{'e' if len(sprechi) == 1 else 'i'} di ricerca senza conversioni",
-            f"Hanno speso {_euro(spreco_totale)} ({quota * 100:.0f}% della spesa) senza conversioni.",
+            f"{len(sprechi)} termin{'e' if len(sprechi) == 1 else 'i'} di ricerca senza risultati",
+            f"Hanno speso {_euro(spreco_totale)} ({quota * 100:.0f}% della spesa) senza "
+            f"{'conversioni né azioni locali' if cliente.negozio else 'conversioni'}.",
             "Valuta i termini nella tabella dedicata e aggiungi come negative quelli non pertinenti.",
         ))
 

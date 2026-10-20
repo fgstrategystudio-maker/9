@@ -47,7 +47,10 @@
       </tr>
       {% endfor %}
     </table>
-    <div class="muted" style="margin-top:6px;">Le variazioni di investimento, clic, impressioni e conversioni sono calcolate sulla media giornaliera, per confrontare periodi di lunghezza diversa.</div>
+    {% if a.cliente.negozio and a.dati.visite_stimate %}
+    <div class="muted" style="margin-top:6px;">Le visite al negozio sono stimate come il {{ (a.cliente.quota_visite_indicazioni * 100) | round(0) | int }}% delle indicazioni stradali, perché Google non le misura su questo account.</div>
+    {% endif %}
+    <div class="muted" style="margin-top:6px;">Le variazioni di investimento, clic, impressioni e {{ a.etichette.risultati }} sono calcolate sulla media giornaliera, per confrontare periodi di lunghezza diversa.</div>
   </div>
 
   {% if a.pacing %}
@@ -96,9 +99,9 @@
     <h2>Campagne</h2>
     <table class="dati">
       <tr>
-        <th>Campagna</th><th class="num">Investimento</th><th class="num">Clic</th><th class="num">Conv.</th>
-        {% if a.cliente.ecommerce %}<th class="num">ROAS</th>{% else %}<th class="num">Costo/conv.</th>{% endif %}
-        <th class="num">Conv. vs prec.</th>
+        <th>Campagna</th><th class="num">Investimento</th><th class="num">Clic</th>{% if a.cliente.negozio %}<th class="num">Indicazioni</th>{% endif %}<th class="num">{{ a.etichette.breve }}</th>
+        {% if a.cliente.ecommerce %}<th class="num">ROAS</th>{% elif a.cliente.negozio %}<th class="num">Costo/visita</th>{% else %}<th class="num">Costo/conv.</th>{% endif %}
+        <th class="num">{{ a.etichette.breve }} vs prec.</th>
       </tr>
       {% for r in a.campagne %}
       {% set d = r.delta('conversioni', a.periodi.corrente.giorni, a.periodi.precedente.giorni) %}
@@ -106,6 +109,7 @@
         <td>{{ r.nome }}</td>
         <td class="num">{{ r.m.costo | valuta(0) }}</td>
         <td class="num">{{ r.m.clic | numero }}</td>
+        {% if a.cliente.negozio %}<td class="num">{{ r.m.indicazioni | numero(1) }}</td>{% endif %}
         <td class="num">{{ r.m.conversioni | numero(1) }}</td>
         {% if a.cliente.ecommerce %}<td class="num">{{ r.m.roas | numero(2) }}</td>{% else %}<td class="num">{{ r.m.cpa | valuta }}</td>{% endif %}
         <td class="num" style="color:{{ d | colore_delta('su') }};">{{ d | variazione }}</td>

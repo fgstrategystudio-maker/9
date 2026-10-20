@@ -38,6 +38,8 @@ def _fmt(k: Kpi) -> str:
 def _var(d: float | None) -> str:
     if d is None:
         return ""
+    if abs(d) < 0.005:
+        return " (stabile)"
     return f" ({d * 100:+.0f}%)".replace(".", ",")
 
 
@@ -48,7 +50,7 @@ def _var(d: float | None) -> str:
 PASSI_CLIENTE = {
     "Budget": "Riallineare la spesa giornaliera al budget mensile concordato.",
     "Efficienza": "Concentrare il budget sulle campagne che portano risultati al costo più basso.",
-    "Risultati": "Analizzare le campagne che hanno perso conversioni e intervenire su offerte e annunci.",
+    "Risultati": "Analizzare le campagne che hanno perso risultati e intervenire su offerte e annunci.",
     "Annunci": "Aggiornare i testi degli annunci per renderli più pertinenti e aumentare i clic.",
     "Costi": "Rivedere la strategia di offerta per contenere il costo per clic.",
     "Campagne": "Ottimizzare o ridimensionare le campagne meno efficienti.",
@@ -69,15 +71,24 @@ def commento_regole(a: Analisi) -> None:
     k = a.kpi_per_chiave
     p = a.periodi
     risultato = "valore delle conversioni" if a.cliente.ecommerce else "conversioni"
+    e = a.etichette
     frasi = [
         f"Nel periodo {p.corrente.etichetta()} l'investimento in Google Ads è stato di "
-        f"{_fmt(k['costo'])}, con {_fmt(k['clic'])} clic e {_fmt(k['conversioni'])} conversioni"
+        f"{_fmt(k['costo'])}, con {_fmt(k['clic'])} clic e {_fmt(k['conversioni'])} {e['risultati']}"
         + (f" a un costo medio di {_fmt(k['cpa'])} ciascuna." if k["cpa"].valore else ".")
     ]
+    if a.cliente.negozio:
+        frasi.append(
+            f"Le persone che hanno chiesto le indicazioni stradali per raggiungere il locale sono state "
+            f"{_fmt(k['indicazioni'])}{_var(k['indicazioni'].delta)}."
+            + (f" Le visite sono stimate come il {a.cliente.quota_visite_indicazioni * 100:.0f}% delle "
+               "indicazioni stradali." if a.dati.visite_stimate else " Le visite sono misurate da Google.")
+        )
     if k["conversioni"].delta is not None:
-        frase = f"Rispetto al periodo precedente ({p.precedente.etichetta()}) le conversioni giornaliere sono {_andamento(k['conversioni'].delta)}"
+        frase = (f"Rispetto al periodo precedente ({p.precedente.etichetta()}) le {e['risultati']} giornaliere "
+                 f"sono {_andamento(k['conversioni'].delta)}")
         if k["cpa"].delta is not None:
-            frase += f" e il costo per conversione è {_andamento(k['cpa'].delta, 'salito', 'sceso', 'stabile')}"
+            frase += f" e il {e['costo_lungo'].lower()} è {_andamento(k['cpa'].delta, 'salito', 'sceso', 'stabile')}"
         frasi.append(frase + ".")
     if a.cliente.ecommerce and k.get("roas") and k["roas"].valore:
         frasi.append(f"Il ROAS è {_fmt(k['roas'])}{_var(k['roas'].delta)}, misurato sul {risultato}.")
@@ -134,7 +145,9 @@ sintesi_interna: 2-4 frasi sullo stato dell'account e la priorità numero uno. c
 cosa si è mosso e perché, collegando le variazioni dei numeri alle modifiche registrate quando \
 plausibile. cosa_migliorare: azioni specifiche e ordinate per impatto (campagna, keyword, importo).
 
-Usa solo i numeri forniti, non inventarne. Le variazioni dei volumi sono già calcolate sulla media \
+Il risultato principale è indicato in risultato_principale: per i locali sono le visite al negozio \
+(se come_si_misura indica una stima, dillo in modo chiaro ma senza sminuire il dato) e le indicazioni \
+stradali sono il segnale che le alimenta. Usa solo i numeri forniti, non inventarne. Le variazioni dei volumi sono già calcolate sulla media \
 giornaliera. Formatta importi e percentuali all'italiana (1.234,56 €; 12,5%)."""
 
 
@@ -143,6 +156,12 @@ def _contesto(a: Analisi) -> dict:
     return {
         "cliente": a.cliente.nome,
         "obiettivo": a.cliente.obiettivo,
+        "risultato_principale": a.etichette["risultati"],
+        "come_si_misura": (
+            None if not a.cliente.negozio else
+            f"stima: {a.cliente.quota_visite_indicazioni * 100:.0f}% delle indicazioni stradali"
+            if a.dati.visite_stimate else "visite al negozio misurate da Google"
+        ),
         "note_cliente": a.cliente.note,
         "target": {"budget_mensile": a.cliente.budget_mensile, "cpa": a.cliente.cpa_target,
                    "roas": a.cliente.roas_target},
@@ -157,15 +176,16 @@ def _contesto(a: Analisi) -> dict:
             "proiezione_fine_mese": round(a.pacing.proiezione), "stimato": a.pacing.budget_stimato,
         },
         "campagne": [{
-            "nome": r.nome, "tipo": r.tipo, "costo": round(r.m.costo, 2), "conversioni": round(r.m.conversioni, 1),
+            "nome": r.nome, "tipo": r.tipo, "costo": round(r.m.costo, 2), "risultati": round(r.m.conversioni, 1),
+            "indicazioni_stradali": round(r.m.indicazioni, 1) if a.cliente.negozio else None,
             "cpa": round(r.m.cpa, 2) if r.m.cpa else None, "roas": round(r.m.roas, 2) if r.m.roas else None,
             "costo_prec": round(r.prec.costo, 2) if r.prec else None,
-            "conversioni_prec": round(r.prec.conversioni, 1) if r.prec else None,
+            "risultati_prec": round(r.prec.conversioni, 1) if r.prec else None,
             "persa_budget": r.m.persa_budget, "persa_ranking": r.m.persa_ranking,
         } for r in a.campagne[:15]],
         "punti_attenzione": [{"gravita": pt.gravita, "titolo": pt.titolo, "dettaglio": pt.dettaglio,
                               "opportunita": pt.opportunita} for pt in a.punti],
-        "termini_senza_conversioni": [{"termine": t.termine, "costo": round(t.costo, 2)} for t in a.sprechi[:15]],
+        "termini_senza_risultati": [{"termine": t.termine, "costo": round(t.costo, 2)} for t in a.sprechi[:15]],
         "modifiche": [{"quando": m.quando.strftime("%Y-%m-%d"), "risorsa": m.risorsa, "operazione": m.operazione,
                        "campagna": m.campagna, "campi": m.campi[:5]} for m in a.modifiche],
     }

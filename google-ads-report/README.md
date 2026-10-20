@@ -86,7 +86,7 @@ Sull'account Gmail che invierà i report attiva la verifica in due passaggi e cr
 
 Parti da `clienti.esempio.yaml`. Per ogni cliente puoi impostare:
 
-- obiettivo: `lead` oppure `ecommerce`;
+- obiettivo: `lead`, `ecommerce` oppure `negozio`. Con `negozio` (ristoranti e locali fisici) il risultato principale sono le **visite al negozio**: se Google le misura sull'account si usano quelle, altrimenti vengono stimate come il 27% delle indicazioni stradali (la percentuale si cambia con `quota_visite_indicazioni`). Il campo `cpa_target` diventa il costo per visita target;
 - budget mensile, CPA o ROAS target;
 - email del cliente e momenti in cui ricevere il report;
 - se l'invio al cliente è automatico;

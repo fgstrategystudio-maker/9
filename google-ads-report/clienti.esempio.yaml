@@ -22,7 +22,7 @@ clienti:
   # Cliente lead generation: report cliente a inizio mese, inviato a te da inoltrare.
   - nome: Studio Esempio
     customer_id: "222-222-2222"
-    obiettivo: lead              # lead | ecommerce
+    obiettivo: lead              # lead | ecommerce | negozio
     budget_mensile: 1500         # se assente, viene stimato dai budget giornalieri delle campagne
     cpa_target: 35
     email: [titolare@esempio.it]
@@ -39,3 +39,12 @@ clienti:
     email: [marketing@esempio.it, titolare@esempio.it]
     invio_automatico: false
     report_cliente: [inizio, meta]
+
+  # Locale fisico (ristorante, negozio): il risultato sono le visite al negozio.
+  # Se Google non le misura sull'account, vengono stimate dalle indicazioni stradali.
+  - nome: Ristorante Esempio
+    customer_id: "444-444-4444"
+    obiettivo: negozio
+    quota_visite_indicazioni: 0.27   # visite stimate = 27% delle indicazioni stradali
+    cpa_target: 8                    # per i locali è il costo per visita target
+    report_cliente: [inizio]

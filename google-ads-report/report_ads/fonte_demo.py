@@ -36,6 +36,8 @@ def _rng(*chiavi) -> random.Random:
 
 class FonteDemo:
     def _periodo(self, cid: str, intervallo: Intervallo, fattore: float) -> DatiPeriodo:
+        # Circa metà degli account demo ha le visite al negozio misurate da Google.
+        con_visite = _rng(cid, "visite").random() < 0.5
         campagne: dict[str, Campagna] = {}
         giorni: dict = {}
         for id_, nome, tipo, budget, ctr, cpc, tconv in CAMPAGNE:
@@ -52,6 +54,10 @@ class FonteDemo:
                 m.impressioni += impr
                 m.conversioni += conv
                 m.valore_conv += conv * r.uniform(90, 160)
+                indicazioni = clic * r.uniform(0.03, 0.09)
+                m.indicazioni += indicazioni
+                if con_visite:
+                    m.visite_reali += indicazioni * r.uniform(0.2, 0.4)
                 c0, v0 = giorni.get(g, (0.0, 0.0))
                 giorni[g] = (c0 + costo, v0 + conv)
             if tipo == "SEARCH":
@@ -62,7 +68,7 @@ class FonteDemo:
 
         totale = Metriche()
         for c in campagne.values():
-            for campo in ("costo", "impressioni", "clic", "conversioni", "valore_conv"):
+            for campo in ("costo", "impressioni", "clic", "conversioni", "valore_conv", "indicazioni", "visite_reali"):
                 setattr(totale, campo, getattr(totale, campo) + getattr(c.metriche, campo))
         search = [c.metriche for c in campagne.values() if c.metriche.quota_impr is not None]
         if search:
@@ -83,7 +89,8 @@ class FonteDemo:
         for t in TERMINI:
             clic = r.randint(3, 40)
             conv = 0 if any(p in t for p in ("gratis", "lavoro", "stage", "cos'è", "corso")) else r.choice([0, 1, 2, 3])
-            termini.append(TermineRicerca(t, "Search | Servizi principali", "Generico", clic * r.uniform(1.5, 3.0), clic, conv))
+            termini.append(TermineRicerca(t, "Search | Servizi principali", "Generico", clic * r.uniform(1.5, 3.0), clic, conv,
+                                          conv + (0 if conv == 0 else r.choice([0, 1]))))
         termini.sort(key=lambda t: -t.costo)
 
         keyword = [

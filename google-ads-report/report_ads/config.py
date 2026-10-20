@@ -14,7 +14,7 @@ from .periodi import MOMENTI
 class Cliente:
     nome: str
     customer_id: str
-    obiettivo: str = "lead"  # lead | ecommerce
+    obiettivo: str = "lead"  # lead | ecommerce | negozio
     budget_mensile: float | None = None
     cpa_target: float | None = None
     roas_target: float | None = None
@@ -23,10 +23,17 @@ class Cliente:
     invio_automatico: bool = False
     report_cliente: list[str] = field(default_factory=lambda: ["inizio"])
     note: str = ""  # contesto per l'analisi (stagionalità, obiettivi, vincoli)
+    # Obiettivo "negozio": se Google non misura le visite al negozio, si stimano
+    # come questa quota delle indicazioni stradali.
+    quota_visite_indicazioni: float = 0.27
 
     @property
     def ecommerce(self) -> bool:
         return self.obiettivo == "ecommerce"
+
+    @property
+    def negozio(self) -> bool:
+        return self.obiettivo == "negozio"
 
 
 @dataclass
@@ -54,8 +61,8 @@ def carica(percorso: str | Path) -> Configurazione:
             c["email"] = [c["email"]]
         cliente = Cliente(**c)
         cliente.customer_id = str(cliente.customer_id)
-        if cliente.obiettivo not in ("lead", "ecommerce"):
-            raise ValueError(f"{cliente.nome}: obiettivo deve essere 'lead' o 'ecommerce'")
+        if cliente.obiettivo not in ("lead", "ecommerce", "negozio"):
+            raise ValueError(f"{cliente.nome}: obiettivo deve essere 'lead', 'ecommerce' o 'negozio'")
         sconosciuti = set(cliente.report_cliente) - set(MOMENTI)
         if sconosciuti:
             raise ValueError(f"{cliente.nome}: report_cliente contiene valori non validi {sconosciuti}")
