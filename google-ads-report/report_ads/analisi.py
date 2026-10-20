@@ -120,6 +120,7 @@ class Analisi:
     # Contratto (solo report dei locali): se il contratto parte a metà del mese su cui si
     # calcola la fee, le visite di quel mese dal giorno di inizio.
     visite_base_fee: float | None = None
+    controlli: list = field(default_factory=list)  # verifica.Controllo
     fuori_contratto: bool = False
 
     @property
@@ -157,7 +158,7 @@ def prepara_negozio(cliente: Cliente, dati: DatiAccount) -> None:
     come quota delle indicazioni stradali (27% salvo diversa configurazione).
     La scelta vale per tutti i periodi, così i confronti restano omogenei.
     """
-    reali = dati.corrente.totale.visite_reali > 0
+    reali = cliente.visite == "rilevate" or (cliente.visite == "auto" and dati.corrente.totale.visite_reali > 0)
     dati.visite_stimate = not reali
     quota = cliente.quota_visite_indicazioni
     periodi = [dati.corrente, dati.precedente] + [p for p in (dati.anno_prec, dati.due_mesi_prima) if p]

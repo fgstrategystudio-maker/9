@@ -40,7 +40,7 @@
     <table class="dati">
       <tr>
         <th></th><th>Cliente</th><th class="num">Investimento</th><th class="num">Budget</th>
-        <th class="num">Risultati</th><th class="num">Δ</th><th class="num">Costo/risultato · ROAS</th><th class="num">Priorità</th>
+        <th class="num">Risultati</th><th class="num">Δ</th><th class="num">Costo per risultato</th><th class="num">Priorità</th>
       </tr>
       {% for a in analisi %}
       {% set k = a.kpi_per_chiave %}
@@ -54,8 +54,8 @@
         <td class="num">{{ a.dati.corrente.totale.conversioni | numero(1) }}<br><span class="muted">{{ a.etichette.breve | lower }}{% if a.dati.visite_stimate %} stim.{% endif %}</span></td>
         <td class="num" style="color:{{ k['conversioni'].delta | colore_delta('su') }};">{{ k['conversioni'].delta | variazione }}</td>
         <td class="num">
-          {% if a.cliente.ecommerce %}{{ a.dati.corrente.totale.roas | numero(2) }}{% if a.cliente.roas_target %} <span class="muted">/ {{ a.cliente.roas_target | numero(2) }}</span>{% endif %}
-          {% else %}{{ a.dati.corrente.totale.cpa | valuta(0) }}{% if a.cliente.cpa_target %} <span class="muted">/ {{ a.cliente.cpa_target | valuta(0) }}</span>{% endif %}{% endif %}
+          {% if a.cliente.ecommerce %}{{ a.dati.corrente.totale.roas | numero(2) }}{% if a.cliente.roas_target %} <span class="muted">/ {{ a.cliente.roas_target | numero(2) }}</span>{% endif %}<br><span class="muted">ROAS</span>
+          {% else %}{{ a.dati.corrente.totale.cpa | valuta }}{% if a.cliente.cpa_target %} <span class="muted">/ {{ a.cliente.cpa_target | valuta }}</span>{% endif %}<br><span class="muted">per {{ a.etichette.singolare }}</span>{% endif %}
         </td>
         <td class="num">
           {% set alte = a.punti | rejectattr('opportunita') | selectattr('gravita', 'equalto', 'alta') | list | length %}
@@ -179,6 +179,16 @@
     </table>
     {% else %}
     <p class="muted">Nessuna modifica registrata (la cronologia via API copre al massimo gli ultimi 30 giorni).</p>
+    {% endif %}
+
+    {% if a.controlli %}
+    {% set falliti = a.controlli | rejectattr('ok') | list %}
+    <h3>Controlli sui dati · {{ a.controlli | length - falliti | length }}/{{ a.controlli | length }} superati</h3>
+    <table class="dati">
+      {% for c in a.controlli %}
+      <tr><td style="width:22px; color:{{ '#16a34a' if c.ok else '#dc2626' }}; font-weight:700;">{{ '✓' if c.ok else '✗' }}</td><td>{{ c.nome }}</td><td class="muted">{{ c.dettaglio }}</td></tr>
+      {% endfor %}
+    </table>
     {% endif %}
   </div>
   {% endfor %}

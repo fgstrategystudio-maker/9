@@ -25,6 +25,7 @@ from .periodi import MOMENTI, Intervallo, calcola_periodi, momento_automatico
 from .pdf import html_a_pdf
 from .render import report_cliente, report_interno, report_locali
 from .report_locali import vista_gruppo
+from .verifica import controlla
 
 log = logging.getLogger("report_ads")
 
@@ -134,10 +135,14 @@ def main(argv: list[str] | None = None) -> int:
                 continue
             if dettaglio and cliente.contratto_dal:
                 _prepara_contratto(fonte, a, gruppo)
+            a.controlli = controlla(a)
             analisi.append(a)
             analisi_gruppo.append(a)
-            log.info("Account %d/%d: ok (%d punti di attenzione, commento %s)",
-                     n, totale, len(a.punti), "AI" if a.commento_ai else "automatico")
+            superati = sum(c.ok for c in a.controlli)
+            log.info("Account %d/%d: ok (%d punti di attenzione, commento %s, controlli %d/%d%s)",
+                     n, totale, len(a.punti), "AI" if a.commento_ai else "automatico", superati,
+                     len(a.controlli), "" if superati == len(a.controlli) else
+                     " · non superati: " + ", ".join(c.nome for c in a.controlli if not c.ok))
         if not report_gruppo:
             continue
         if len(analisi_gruppo) < len(gruppo.locali):

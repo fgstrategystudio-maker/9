@@ -146,19 +146,22 @@ class FonteGoogleAds:
                        campagne: dict[str, Campagna]) -> None:
         """Azioni per categoria: indicazioni stradali, contatti, ordini e visite al negozio.
 
-        Indicazioni, contatti e ordini vengono dalla colonna Conversioni (se un'azione
-        è secondaria si ripiega su "tutte le conversioni"); le visite al negozio sono
-        quasi sempre secondarie e si leggono da "tutte le conversioni".
+        Come la colonna "Risultati" di Google Ads: si usa la colonna Conversioni e si ripiega su
+        "tutte le conversioni" solo se un'azione è secondaria (in Conversioni vale zero).
+        Le visite al negozio contate tra le Conversioni vanno poi tolte dalle azioni (vedi
+        `visite_in_conversioni`), perché le azioni sono solo indicazioni, contatti e ordini.
         """
         def accumula(m: Metriche, categoria: str, conv: float, tutte: float, secondarie: dict) -> None:
             if categoria == "STORE_VISIT":
-                m.visite_reali += tutte
+                m.visite_in_conversioni += conv
+                secondarie["visite_reali"] = secondarie.get("visite_reali", 0.0) + tutte
             elif categoria in CATEGORIE:
                 campo = CATEGORIE[categoria]
                 setattr(m, campo, getattr(m, campo) + conv)
                 secondarie[campo] = secondarie.get(campo, 0.0) + tutte
 
         def chiudi(m: Metriche, secondarie: dict) -> None:
+            m.visite_reali = m.visite_in_conversioni
             for campo, tutte in secondarie.items():
                 if getattr(m, campo) == 0:
                     setattr(m, campo, tutte)
@@ -216,13 +219,20 @@ class FonteGoogleAds:
             m.costo += row.metrics.cost_micros / MICRO
             m.conversioni += row.metrics.conversions
         q = f"""
-            SELECT segments.ad_network_type, segments.conversion_action_category, metrics.all_conversions
+            SELECT segments.ad_network_type, segments.conversion_action_category, metrics.conversions,
+                   metrics.all_conversions
             FROM campaign WHERE {cor.gaql()} AND campaign.status != 'REMOVED'
         """
+        visite_tutte: dict[str, float] = {}
         for row in self._query(cid, q):
             if row.segments.conversion_action_category.name == "STORE_VISIT":
                 nome = CANALI.get(row.segments.ad_network_type.name, ALTRI_CANALI)
-                canali.setdefault(nome, Metriche()).visite_reali += row.metrics.all_conversions
+                canali.setdefault(nome, Metriche()).visite_in_conversioni += row.metrics.conversions
+                visite_tutte[nome] = visite_tutte.get(nome, 0.0) + row.metrics.all_conversions
+        usa_conversioni = any(m.visite_in_conversioni for m in canali.values())
+        for nome, m in canali.items():
+            m.visite_reali = m.visite_in_conversioni if usa_conversioni else visite_tutte.get(nome, 0.0)
+            m.conversioni -= m.visite_in_conversioni  # azioni senza le visite
         ordine = ["Rete di Ricerca", "Google Maps", ALTRI_CANALI]
         d.canali = [Canale(n, canali[n]) for n in ordine if n in canali]
 
@@ -249,24 +259,44 @@ class FonteGoogleAds:
             g = gruppi.get(row.asset_group.name)
             if g:
                 g.conversioni_prec = (g.conversioni_prec or 0.0) + row.metrics.conversions
+        # Le visite al negozio contate tra le Conversioni non sono azioni.
+        for intervallo, corrente in ((cor, True), (pre, False)):
+            q = f"""
+                SELECT asset_group.name, segments.conversion_action_category, metrics.conversions
+                FROM asset_group WHERE {intervallo.gaql()} AND asset_group.status != 'REMOVED'
+            """
+            for row in self._query(cid, q):
+                g = gruppi.get(row.asset_group.name)
+                if g and row.segments.conversion_action_category.name == "STORE_VISIT":
+                    if corrente:
+                        g.metriche.conversioni -= row.metrics.conversions
+                    elif g.conversioni_prec is not None:
+                        g.conversioni_prec -= row.metrics.conversions
         d.gruppi_asset = sorted((g for g in gruppi.values() if g.metriche.impressioni),
                                 key=lambda g: -g.metriche.conversioni)
 
     def _orari(self, cid: str, periodi: Periodi, d: Dettaglio) -> None:
         cor, pre = periodi.corrente, periodi.precedente
         # Quando converte: per ora e per giorno della settimana (media al giorno).
-        q = f"SELECT segments.hour, metrics.conversions FROM customer WHERE {cor.gaql()}"
+        q = f"""
+            SELECT segments.hour, segments.conversion_action_category, metrics.conversions
+            FROM customer WHERE {cor.gaql()}
+        """
         for row in self._query(cid, q):
-            d.conversioni_per_ora[row.segments.hour] += row.metrics.conversions
+            if row.segments.conversion_action_category.name != "STORE_VISIT":
+                d.conversioni_per_ora[row.segments.hour] += row.metrics.conversions
         d.giorni_corrente = self._per_giorno(cid, cor)
         d.giorni_precedente = self._per_giorno(cid, pre)
 
     def _per_giorno(self, cid: str, intervallo: Intervallo) -> list[float]:
         totali = [0.0] * 7
-        q = f"SELECT segments.day_of_week, metrics.conversions FROM customer WHERE {intervallo.gaql()}"
+        q = f"""
+            SELECT segments.day_of_week, segments.conversion_action_category, metrics.conversions
+            FROM customer WHERE {intervallo.gaql()}
+        """
         for row in self._query(cid, q):
             nome = row.segments.day_of_week.name
-            if nome in GIORNI:
+            if nome in GIORNI and row.segments.conversion_action_category.name != "STORE_VISIT":
                 totali[GIORNI.index(nome)] += row.metrics.conversions
         conteggio = [0] * 7
         for i in range(intervallo.giorni):
@@ -275,7 +305,7 @@ class FonteGoogleAds:
 
     def visite_intervallo(self, customer_id: str, intervallo: Intervallo) -> tuple[float, float]:
         """(visite al negozio misurate, indicazioni stradali) in un intervallo qualsiasi."""
-        visite = ind = ind_tutte = 0.0
+        visite = visite_tutte = ind = ind_tutte = 0.0
         q = f"""
             SELECT segments.conversion_action_category, metrics.conversions, metrics.all_conversions
             FROM customer WHERE {intervallo.gaql()}
@@ -283,11 +313,12 @@ class FonteGoogleAds:
         for row in self._query(pulisci_id(customer_id), q):
             categoria = row.segments.conversion_action_category.name
             if categoria == "STORE_VISIT":
-                visite += row.metrics.all_conversions
+                visite += row.metrics.conversions
+                visite_tutte += row.metrics.all_conversions
             elif categoria == "GET_DIRECTIONS":
                 ind += row.metrics.conversions
                 ind_tutte += row.metrics.all_conversions
-        return visite, ind or ind_tutte
+        return visite or visite_tutte, ind or ind_tutte
 
     def scarica(self, customer_id: str, periodi: Periodi, dettaglio: bool = False) -> DatiAccount:
         cid = pulisci_id(customer_id)

@@ -24,6 +24,9 @@ class Metriche:
     visite_reali: float = 0.0  # visite al negozio misurate da Google
     contatti: float = 0.0  # chiamate e contatti
     ordini: float = 0.0  # ordini e prenotazioni avviati
+    # Visite al negozio già incluse nella colonna Conversioni (quando sono un obiettivo principale):
+    # vanno tolte per ottenere le azioni ad alto intento.
+    visite_in_conversioni: float = 0.0
     # Per l'obiettivo "negozio" `conversioni` diventa il numero di visite (reali o stimate):
     # qui resta il valore originale delle conversioni Google Ads.
     conversioni_google: float | None = None
