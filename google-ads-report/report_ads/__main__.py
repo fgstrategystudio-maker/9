@@ -11,7 +11,9 @@ import argparse
 import logging
 import os
 import re
+from html import escape
 import sys
+import unicodedata
 from datetime import date
 from pathlib import Path
 
@@ -19,14 +21,17 @@ from . import config as cfg
 from .analisi import analizza
 from .commento import scrivi_commenti
 from .invio import Mittente
-from .periodi import MOMENTI, calcola_periodi, momento_automatico
-from .render import report_cliente, report_interno
+from .periodi import MOMENTI, Intervallo, calcola_periodi, momento_automatico
+from .pdf import html_a_pdf
+from .render import report_cliente, report_interno, report_locali
+from .report_locali import vista_gruppo
 
 log = logging.getLogger("report_ads")
 
 
 def _slug(testo: str) -> str:
-    return re.sub(r"[^a-z0-9]+", "-", testo.lower()).strip("-") or "cliente"
+    ascii_ = unicodedata.normalize("NFKD", testo).encode("ascii", "ignore").decode()
+    return re.sub(r"[^a-z0-9]+", "-", ascii_.lower()).strip("-") or "cliente"
 
 
 def _descrivi_errore(e: Exception) -> str:
@@ -37,6 +42,32 @@ def _descrivi_errore(e: Exception) -> str:
     if GoogleAdsException and isinstance(e, GoogleAdsException):
         return "; ".join(err.message for err in e.failure.errors) + f" (request_id {e.request_id})"
     return f"{type(e).__name__}: {e}"[:600]
+
+
+def _prepara_contratto(fonte, a, gruppo) -> None:
+    """Visite dall'inizio del contratto del locale (obiettivo e fee del primo mese)."""
+    c, per = a.cliente, a.periodi
+    try:
+        dal = date.fromisoformat(c.contratto_dal)
+    except ValueError:
+        log.error("contratto_dal non valido: usa il formato AAAA-MM-GG")
+        return
+
+    def visite(intervallo: Intervallo) -> float:
+        reali, indicazioni = fonte.visite_intervallo(c.customer_id, intervallo)
+        return indicazioni * c.quota_visite_indicazioni if a.dati.visite_stimate else reali
+
+    try:
+        if dal <= per.corrente.fine:
+            a.visite_contratto = visite(Intervallo(dal, per.corrente.fine))
+        base_prec = gruppo.compenso is not None and gruppo.compenso.base == "mese_precedente"
+        base = per.precedente if base_prec else per.corrente
+        if dal > base.fine:
+            a.fuori_contratto = True
+        elif dal > base.inizio:
+            a.visite_base_fee = visite(Intervallo(dal, base.fine))
+    except Exception as e:  # noqa: BLE001
+        log.warning("Visite dall'inizio del contratto non disponibili (%s)", type(e).__name__)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -53,6 +84,8 @@ def main(argv: list[str] | None = None) -> int:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
     logging.getLogger("httpx").setLevel(logging.WARNING)
     logging.getLogger("httpx2").setLevel(logging.WARNING)
+    logging.getLogger("fontTools").setLevel(logging.WARNING)
+    logging.getLogger("weasyprint").setLevel(logging.ERROR)
     oggi = date.fromisoformat(args.data) if args.data else date.today()
     momento = momento_automatico(oggi) if args.momento == "auto" else args.momento
     if momento is None:
@@ -83,22 +116,50 @@ def main(argv: list[str] | None = None) -> int:
     log.info("Report '%s' per %d account, periodo %s", momento, totale, periodi.corrente.etichetta())
 
     analisi, errori, per_cliente = [], [], []
-    for i, cliente in enumerate(configurazione.clienti, start=1):
-        try:
-            dati = fonte.scarica(cliente.customer_id, periodi)
-            a = analizza(cliente, dati, periodi)
-            scrivi_commenti(a)
-        except Exception as e:  # un account in errore non deve bloccare gli altri
-            log.error("Account %d/%d: errore (%s)", i, totale, type(e).__name__)
-            errori.append((cliente.nome, _descrivi_errore(e)))
+    n = 0
+    for gruppo in configurazione.gruppi:
+        report_gruppo = momento in gruppo.report_cliente
+        dettaglio = report_gruppo and gruppo.negozio
+        analisi_gruppo = []
+        for cliente in gruppo.locali:
+            n += 1
+            try:
+                dati = fonte.scarica(cliente.customer_id, periodi, dettaglio=dettaglio)
+                a = analizza(cliente, dati, periodi)
+                scrivi_commenti(a)
+            except Exception as e:  # un account in errore non deve bloccare gli altri
+                log.error("Account %d/%d: errore (%s)", n, totale, type(e).__name__)
+                errori.append((cliente.nome, _descrivi_errore(e)))
+                continue
+            if dettaglio and cliente.contratto_dal:
+                _prepara_contratto(fonte, a, gruppo)
+            analisi.append(a)
+            analisi_gruppo.append(a)
+            log.info("Account %d/%d: ok (%d punti di attenzione, commento %s)",
+                     n, totale, len(a.punti), "AI" if a.commento_ai else "automatico")
+        if not report_gruppo:
             continue
-        analisi.append(a)
-        log.info("Account %d/%d: ok (%d punti di attenzione, commento %s)",
-                 i, totale, len(a.punti), "AI" if a.commento_ai else "automatico")
-        if momento in cliente.report_cliente:
-            percorso = cartella / f"cliente-{_slug(cliente.nome)}-{suffisso}.html"
-            percorso.write_text(report_cliente(a, agenzia), encoding="utf-8")
-            per_cliente.append((a, percorso))
+        if len(analisi_gruppo) < len(gruppo.locali):
+            log.error("Report cliente %d non generato: uno o più account del gruppo sono in errore", len(per_cliente) + 1)
+            continue
+        if gruppo.negozio:
+            # Ristoranti e locali: un unico report PDF per il cliente, anche con più locali.
+            try:
+                html = report_locali(vista_gruppo(gruppo, analisi_gruppo, agenzia))
+            except Exception as e:
+                log.error("Report cliente non generato (%s)", type(e).__name__)
+                errori.append((gruppo.nome, "Report cliente: " + _descrivi_errore(e)))
+                continue
+            base = cartella / f"cliente-{_slug(gruppo.nome)}-{suffisso}"
+            base.with_suffix(".html").write_text(html, encoding="utf-8")
+            pdf = base.with_suffix(".pdf")
+            percorso = pdf if html_a_pdf(html, pdf) else base.with_suffix(".html")
+            per_cliente.append((gruppo, percorso, None))
+        else:
+            for a in analisi_gruppo:
+                percorso = cartella / f"cliente-{_slug(a.cliente.nome)}-{suffisso}.html"
+                percorso.write_text(report_cliente(a, agenzia), encoding="utf-8")
+                per_cliente.append((gruppo, percorso, a))
 
     interno = cartella / f"interno-{suffisso}.html"
     interno.write_text(report_interno(analisi, errori, periodi, agenzia, args.demo), encoding="utf-8")
@@ -112,11 +173,18 @@ def main(argv: list[str] | None = None) -> int:
         demo = "[DEMO] " if args.demo else ""
         mittente.invia([email_interna], f"{demo}Google Ads · report interno · {periodi.titolo}",
                        interno.read_text(encoding="utf-8"))
-        for a, percorso in per_cliente:
-            oggetto = f"Report Google Ads · {a.cliente.nome} · {periodi.corrente.etichetta()}"
-            html = percorso.read_text(encoding="utf-8")
-            if a.cliente.invio_automatico and a.cliente.email and not args.demo:
-                mittente.invia(a.cliente.email, oggetto, html, allegato=percorso, ccn=[email_interna])
+        for gruppo, percorso, a in per_cliente:
+            nome = a.cliente.nome if a else gruppo.nome
+            destinatari = (a.cliente.email if a else gruppo.email) or []
+            automatico = a.cliente.invio_automatico if a else gruppo.invio_automatico
+            oggetto = f"Report Google Ads · {nome} · {periodi.corrente.etichetta()}"
+            if percorso.suffix == ".pdf":
+                html = (f"<p>Report Google Ads di <strong>{escape(nome)}</strong>, {periodi.titolo}.</p>"
+                        "<p>Il report completo è nel PDF allegato.</p>")
+            else:
+                html = percorso.read_text(encoding="utf-8")
+            if automatico and destinatari and not args.demo:
+                mittente.invia(destinatari, oggetto, html, allegato=percorso, ccn=[email_interna])
             else:
                 mittente.invia([email_interna], f"{demo}[Da inoltrare] {oggetto}", html, allegato=percorso)
         log.info("Email inviate: 1 interna, %d report cliente", len(per_cliente))

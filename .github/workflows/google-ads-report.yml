@@ -54,7 +54,11 @@ jobs:
           cache-dependency-path: google-ads-report/requirements.txt
 
       - name: Installa dipendenze
-        run: pip install -r requirements.txt
+        run: |
+          # Librerie di sistema per creare i PDF (WeasyPrint); di solito sono già presenti.
+          sudo apt-get install -y --no-install-recommends libpango-1.0-0 libpangoft2-1.0-0 \
+            || (sudo apt-get update && sudo apt-get install -y --no-install-recommends libpango-1.0-0 libpangoft2-1.0-0)
+          pip install -r requirements.txt
 
       - name: Configurazione clienti dal Secret
         env:

@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>{{ v.titolo }} · Report Google Ads</title>
+<style>
+  @import url("https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap");
+  @page {
+    size: A4;
+    margin: 20mm 19mm 22mm 19mm;
+    @bottom-center {
+      content: "{{ v.piede_css }} · " counter(page);
+      font-family: "Source Serif 4", Georgia, serif; font-size: 7.5pt; color: #8a8a8a; white-space: pre;
+    }
+  }
+  @page :first { @bottom-center { content: none; } }
+  :root { --oro: {{ v.colore }}; --blu: #1f3a68; --nero: #1c1c1c; --grigio: #6b6b6b; --linea: #dcdcdc; --carta: #f4f2ed; }
+  body { font-family: "Source Serif 4", Georgia, serif; color: var(--nero); font-size: 10.5pt; line-height: 1.5; margin: 0; }
+  .marchio { font-size: 15pt; font-weight: 700; border-bottom: 1.5px solid var(--oro); padding-bottom: 8pt; margin-bottom: 34pt; }
+  .marchio span { color: var(--oro); font-weight: 600; }
+  .occhiello { color: var(--oro); font-size: 8pt; letter-spacing: .22em; text-transform: uppercase; font-weight: 700; }
+  h1.titolo { font-size: 40pt; line-height: 1.05; margin: 8pt 0 10pt; }
+  .sottotitolo { font-size: 12pt; color: #333; margin-bottom: 22pt; }
+  .meta { display: flex; gap: 0; margin-bottom: 26pt; }
+  .meta div { flex: 1; }
+  .meta .k { color: var(--oro); font-size: 7pt; letter-spacing: .15em; text-transform: uppercase; font-weight: 700; }
+  .meta .v { font-weight: 700; font-size: 9.5pt; }
+  table { width: 100%; border-collapse: collapse; font-size: 9.2pt; }
+  table.indice td { border-bottom: 1px solid var(--linea); padding: 6pt 0; }
+  table.indice td.sez { text-align: right; color: var(--grigio); font-size: 7pt; letter-spacing: .15em; text-transform: uppercase; }
+  table.dati th { text-align: left; font-weight: 600; color: var(--grigio); font-size: 8pt; border-bottom: 1.5px solid var(--nero); padding: 5pt 4pt; }
+  table.dati td { border-bottom: 1px solid var(--linea); padding: 5pt 4pt; }
+  table.dati .n { text-align: right; white-space: nowrap; }
+  table.dati tr.forte td:first-child, table.dati tr.forte td.forte { font-weight: 700; }
+  table.dati tr.totale td { font-weight: 700; color: var(--blu); border-top: 1.5px solid var(--nero); }
+  .verde { color: #2e7d32; font-weight: 700; } .blu { color: var(--blu); font-weight: 700; } .rosso { color: #b23a3a; font-weight: 700; }
+  .richiamo { background: var(--carta); border-left: 3.5px solid var(--oro); padding: 9pt 12pt; margin: 12pt 0; font-size: 9.6pt; break-inside: avoid; }
+  .richiamo.blu-bordo { border-left-color: var(--blu); }
+  .sezione { break-before: page; }
+  .testata { display: flex; align-items: flex-end; border-bottom: 2px solid var(--nero); padding-bottom: 4pt; margin-bottom: 14pt; }
+  .testata h2 { font-size: 22pt; margin: 0; flex: 1; }
+  .testata h2 small { color: var(--oro); font-size: 11pt; margin-right: 6pt; }
+  .testata .desc { text-align: right; font-size: 7.8pt; color: var(--grigio); }
+  h3 { font-size: 13pt; margin: 20pt 0 2pt; break-after: avoid; }
+  .nota { font-size: 8pt; color: var(--grigio); margin: 0 0 8pt; }
+  .tiles { display: flex; border: 1px solid var(--linea); margin: 12pt 0 0; break-inside: avoid; }
+  .tiles + .tiles { margin-top: 10pt; }
+  .tile { flex: 1; padding: 9pt 10pt; border-left: 1px solid var(--linea); }
+  .tile:first-child { border-left: 0; }
+  .tile .val { font-size: 19pt; font-weight: 700; line-height: 1.15; }
+  .tile .lab { font-size: 7.6pt; color: var(--grigio); font-weight: 600; }
+  .tile .extra { font-size: 7.6pt; color: var(--oro); font-weight: 600; }
+  .tile.scuro { background: var(--nero); color: #fff; } .tile.scuro .lab { color: #ddd; }
+  .blocco { break-inside: avoid; }
+  .passi .passo { display: flex; border-bottom: 1px solid var(--linea); padding: 7pt 0; break-inside: avoid; }
+  .passi .num { color: var(--oro); font-weight: 700; flex: 0 0 28pt; font-size: 10pt; }
+  .passi .t { font-weight: 700; font-size: 10.5pt; }
+  .passi .d { color: var(--grigio); font-size: 8.8pt; }
+  .riquadri { display: flex; gap: 12pt; margin-top: 12pt; }
+  .riquadri > div { flex: 1; border: 1px solid var(--linea); text-align: center; padding: 10pt; }
+  .riquadri .val { font-size: 24pt; font-weight: 700; color: var(--blu); }
+  .legenda { font-size: 7.5pt; color: var(--grigio); }
+  .legenda i { display: inline-block; width: 8pt; height: 8pt; margin: 0 3pt -1pt 8pt; }
+</style>
+</head>
+<body>
+{% macro tabella(colonne, righe, ultima_testo=False) %}
+<table class="dati">
+  <tr>{% for c in colonne %}<th class="{{ '' if loop.first or (loop.last and ultima_testo) else 'n' }}">{{ c }}</th>{% endfor %}</tr>
+  {% for r in righe %}
+  <tr class="{{ 'totale' if r.forte and r.etichetta.startswith('Totale') else ('forte' if r.forte else '') }}">
+    <td>{{ r.etichetta }}</td>
+    {% for x in r.valori %}<td class="{{ '' if loop.last and ultima_testo else 'n' }}">{{ x }}</td>{% endfor %}
+    {% if r.variazione %}<td class="n {{ r.colore }}">{{ r.variazione }}</td>{% endif %}
+  </tr>
+  {% endfor %}
+</table>
+{% endmacro %}
+
+<div class="marchio">{{ v.agenzia.nome }} <span>· Advisory</span></div>
+<div class="occhiello">Report gestione &amp; ottimizzazione &nbsp;·&nbsp; Google Ads</div>
+<h1 class="titolo">{{ v.titolo }}</h1>
+<div class="sottotitolo">{{ v.sottotitolo }}</div>
+<div class="meta">{% for k, val in v.meta %}<div><div class="k">{{ k }}</div><div class="v">{{ val }}</div></div>{% endfor %}</div>
+<table class="indice">
+  {% for l in v.locali %}<tr><td style="width:42%"><strong>{{ l.nome }}</strong></td><td style="color:#6b6b6b">{{ l.descrizione }}</td><td class="sez">Sezione {{ '%02d' % l.numero }}</td></tr>{% endfor %}
+  {% if v.locali|length > 1 %}<tr><td><strong>Il gruppo</strong></td><td style="color:#6b6b6b">Sintesi, valore attribuibile e priorità</td><td class="sez">Sezione {{ '%02d' % (v.locali|length + 1) }}</td></tr>{% endif %}
+</table>
+{% if v.nota_attribuzione %}<div class="richiamo blu-bordo" style="margin-top:22pt">{{ v.nota_attribuzione }}</div>{% endif %}
+
+{% for l in v.locali %}
+<div class="sezione">
+  <div class="testata">
+    <h2><small>{{ '%02d' % l.numero }}</small>{{ l.nome }}</h2>
+    <div class="desc">{{ l.descrizione }}{% if l.campagna %}<br>Campagna “{{ l.campagna }}”{% endif %}</div>
+  </div>
+  <p>{{ l.intro }}</p>
+
+  <div class="tiles">
+    {% for val, lab, extra in l.tiles_principali %}
+    <div class="tile {{ 'scuro' if loop.first else '' }}"><div class="val">{{ val }}</div><div class="lab">{{ lab }}</div>{% if extra %}<div class="extra">{{ extra }}</div>{% endif %}</div>
+    {% endfor %}
+  </div>
+  <div class="tiles">
+    {% for val, lab in l.tiles_secondari %}<div class="tile"><div class="val">{{ val }}</div><div class="lab">{{ lab }}</div></div>{% endfor %}
+  </div>
+  <div class="richiamo">{{ l.lettura_conversioni }}</div>
+
+  <div class="blocco">
+    <h3>{{ l.mesi | join(', ') | replace(', ' ~ l.mesi[-1], ' e ' ~ l.mesi[-1]) }} a confronto</h3>
+    <p class="nota">Totali del mese. La variazione è calcolata sulla media al giorno, per confrontare mesi di lunghezza diversa.</p>
+    {{ tabella(["Metrica"] + l.mesi + ["Variazione"], l.confronto) }}
+  </div>
+  <div class="richiamo blu-bordo">{{ l.lettura_numeri }}</div>
+
+  {% if l.canali %}
+  <div class="blocco">
+    <h3>Canali</h3>
+    {% if l.sottotitolo_canali %}<p class="nota">{{ l.sottotitolo_canali }}</p>{% endif %}
+    {{ tabella(l.canali_colonne, l.canali) }}
+  </div>
+  {% endif %}
+  {% if l.costo_visita %}<div class="richiamo">{{ l.costo_visita }}</div>{% endif %}
+  {% if l.obiettivo %}<div class="richiamo blu-bordo">{{ l.obiettivo }}</div>{% endif %}
+
+  {% if l.lingue %}
+  <div class="blocco">
+    <h3>{{ l.titolo_lingue }}</h3>
+    {% if l.sottotitolo_lingue %}<p class="nota">{{ l.sottotitolo_lingue }}</p>{% endif %}
+    {{ tabella(['Lingua' if l.titolo_lingue == 'Lingue' else 'Gruppo di asset', "Clic", "CTR", "Spesa", "Azioni", "Costo/az."], l.lingue) }}
+  </div>
+  {% if l.lettura_lingue %}<div class="richiamo">{{ l.lettura_lingue }}</div>{% endif %}
+  {% endif %}
+
+  {% set massimo = (l.ore | map(attribute=1) | max) or 1 %}
+  {% if massimo > 1 %}
+  <div class="blocco">
+    <h3>Quando converte</h3>
+    <p>{{ l.testo_ore }}</p>
+    <svg width="100%" viewBox="0 0 480 130" xmlns="http://www.w3.org/2000/svg" font-family="Source Serif 4, Georgia, serif">
+      {% for h, val, fascia in l.ore %}
+      {% set alt = (val / massimo * 92) %}
+      <rect x="{{ 6 + h * 19.6 }}" y="{{ 108 - alt }}" width="15" height="{{ alt }}" fill="{{ v.colore if fascia else '#c9ced8' }}"/>
+      <text x="{{ 13.5 + h * 19.6 }}" y="{{ 105 - alt }}" font-size="5.5" text-anchor="middle" fill="#555" font-weight="{{ 'bold' if val == massimo else 'normal' }}">{{ val | round | int }}</text>
+      {% if h % 2 == 0 %}<text x="{{ 13.5 + h * 19.6 }}" y="118" font-size="6" text-anchor="middle" fill="#555">{{ '%02d' % h }}</text>{% endif %}
+      {% endfor %}
+      <line x1="4" y1="108.5" x2="476" y2="108.5" stroke="#bbb" stroke-width="0.5"/>
+    </svg>
+    <div class="legenda">{% if l.legenda_ore %}<i style="background:{{ v.colore }};margin-left:0"></i>{{ l.legenda_ore }}{% endif %}<i style="background:#c9ced8"></i>Resto della giornata</div>
+  </div>
+  {% endif %}
+
+  {% if l.giorni %}
+  <div class="blocco">
+    <h3>Conversioni per giorno della settimana</h3>
+    <p class="nota">{{ l.sottotitolo_giorni }}</p>
+    {{ tabella(["Giorno", "Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"], l.giorni) }}
+  </div>
+  {% endif %}
+
+  <div class="blocco">
+    <h3>Budget e prossimi passi</h3>
+    <p>{{ l.budget }}</p>
+    {% if l.richiamo_budget %}<div class="richiamo blu-bordo">{{ l.richiamo_budget }}</div>{% endif %}
+  </div>
+  <div class="blocco">
+    {% if l.fatto %}<div class="richiamo">{{ l.fatto }}</div>{% endif %}
+    <h3 style="font-size:11.5pt">Prossimi passi</h3>
+    <div class="passi">
+      {% for p in l.passi %}<div class="passo"><div class="num">{{ '%02d' % loop.index }}</div><div><div class="t">{{ p.titolo }}</div><div class="d">{{ p.dettaglio }}</div></div></div>{% endfor %}
+    </div>
+  </div>
+</div>
+{% endfor %}
+
+{% if v.locali|length > 1 or v.compenso or v.priorita %}
+<div class="sezione">
+  <div class="testata">
+    <h2>{% if v.locali|length > 1 %}<small>{{ '%02d' % (v.locali|length + 1) }}</small>Il gruppo a {{ v.meta[1][1].split('·')[-1].strip() | lower }}{% else %}Valore e priorità{% endif %}</h2>
+    <div class="desc">Sintesi, valore attribuibile e fee<br>{{ v.meta[0][1] }}</div>
+  </div>
+  {% if v.intro_gruppo %}<p>{{ v.intro_gruppo }}</p>{% endif %}
+  {% if v.insegne %}
+  <div class="blocco">
+    <h3>Le insegne a confronto</h3>
+    <p class="nota">{{ v.nota_insegne }}</p>
+    {{ tabella(["Insegna", "Spesa", "Azioni", "Costo/az.", "Visite", "Costo/visita", "Stato"], v.insegne, ultima_testo=True) }}
+  </div>
+  {% endif %}
+  {% if v.confronto_gruppo %}
+  <div class="blocco">
+    <h3>Il gruppo, {{ v.mesi_gruppo | join(' verso ') | lower }} (media al giorno)</h3>
+    {{ tabella(["Metrica"] + v.mesi_gruppo + ["Variazione"], v.confronto_gruppo) }}
+  </div>
+  {% endif %}
+  {% if v.compenso %}
+  <div class="blocco">
+    <h3>{{ v.compenso_titolo }}</h3>
+    <p class="nota">{{ v.compenso_sottotitolo }}</p>
+    {{ tabella(v.compenso_colonne, v.compenso) }}
+  </div>
+  {% if v.compenso_riquadri %}
+  <div class="riquadri">{% for k, val, sotto in v.compenso_riquadri %}<div><div class="lab" style="font-weight:700">{{ k }}</div><div class="val">{{ val }}</div><div class="nota" style="margin:0">{{ sotto }}</div></div>{% endfor %}</div>
+  {% endif %}
+  {% if v.compenso_nota %}<div class="richiamo">{{ v.compenso_nota }}</div>{% endif %}
+  {% endif %}
+  {% if v.fatto %}<div class="richiamo">{{ v.fatto }}</div>{% endif %}
+  {% if v.priorita %}
+  <div class="blocco">
+    <h3>Le priorità del prossimo mese</h3>
+    <div class="passi">
+      {% for p in v.priorita %}<div class="passo"><div class="num">{{ '%02d' % loop.index }}</div><div><div class="t">{{ p.titolo }}</div><div class="d">{{ p.dettaglio }}</div></div></div>{% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+</body>
+</html>

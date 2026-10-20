@@ -117,6 +117,11 @@ class Analisi:
     cosa_e_cambiato: list[str] = field(default_factory=list)
     cosa_migliorare: list[str] = field(default_factory=list)
     commento_ai: bool = False
+    # Contratto (solo report dei locali): visite dall'inizio del contratto a oggi e, se il
+    # contratto parte a metà del mese su cui si calcola la fee, le visite di quel mese da quel giorno.
+    visite_contratto: float | None = None
+    visite_base_fee: float | None = None
+    fuori_contratto: bool = False
 
     @property
     def stato(self) -> str:
@@ -156,7 +161,7 @@ def prepara_negozio(cliente: Cliente, dati: DatiAccount) -> None:
     reali = dati.corrente.totale.visite_reali > 0
     dati.visite_stimate = not reali
     quota = cliente.quota_visite_indicazioni
-    periodi = [dati.corrente, dati.precedente] + ([dati.anno_prec] if dati.anno_prec else [])
+    periodi = [dati.corrente, dati.precedente] + [p for p in (dati.anno_prec, dati.due_mesi_prima) if p]
     for periodo in periodi:
         for m in [periodo.totale] + [c.metriche for c in periodo.campagne.values()]:
             m.conversioni_google = m.conversioni

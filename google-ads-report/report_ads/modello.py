@@ -22,6 +22,8 @@ class Metriche:
     # Azioni locali (tutte le conversioni, anche secondarie). Servono all'obiettivo "negozio".
     indicazioni: float = 0.0  # clic su indicazioni stradali
     visite_reali: float = 0.0  # visite al negozio misurate da Google
+    contatti: float = 0.0  # chiamate e contatti
+    ordini: float = 0.0  # ordini e prenotazioni avviati
     # Per l'obiettivo "negozio" `conversioni` diventa il numero di visite (reali o stimate):
     # qui resta il valore originale delle conversioni Google Ads.
     conversioni_google: float | None = None
@@ -55,6 +57,9 @@ class Campagna:
     tipo: str  # SEARCH, PERFORMANCE_MAX, DISPLAY, ...
     budget_giornaliero: float | None
     metriche: Metriche = field(default_factory=Metriche)
+    # Stato secondo Google (es. LIMITED / LEARNING) e motivi (es. BUDGET_CONSTRAINED).
+    stato_primario: str = ""
+    motivi_stato: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -97,6 +102,31 @@ class Modifica:
 
 
 @dataclass
+class Canale:
+    nome: str  # Rete di Ricerca, Google Maps, YouTube e altro
+    metriche: Metriche
+
+
+@dataclass
+class GruppoAsset:
+    """Gruppo di asset Performance Max (nei tuoi account: uno per lingua)."""
+    nome: str
+    metriche: Metriche
+    conversioni_prec: float | None = None
+
+
+@dataclass
+class Dettaglio:
+    """Dati aggiuntivi per il report dei locali (solo obiettivo negozio)."""
+    canali: list[Canale] = field(default_factory=list)
+    gruppi_asset: list[GruppoAsset] = field(default_factory=list)
+    conversioni_per_ora: list[float] = field(default_factory=lambda: [0.0] * 24)
+    # Media giornaliera di conversioni per giorno della settimana (lun..dom).
+    giorni_corrente: list[float] = field(default_factory=lambda: [0.0] * 7)
+    giorni_precedente: list[float] = field(default_factory=lambda: [0.0] * 7)
+
+
+@dataclass
 class DatiAccount:
     nome: str
     valuta: str
@@ -108,3 +138,5 @@ class DatiAccount:
     keyword: list[Keyword]
     modifiche: list[Modifica]
     visite_stimate: bool = False  # obiettivo negozio: visite ricavate dalle indicazioni stradali
+    due_mesi_prima: DatiPeriodo | None = None  # solo report di chiusura mese
+    dettaglio: Dettaglio | None = None

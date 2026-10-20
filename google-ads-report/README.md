@@ -16,6 +16,18 @@ Per ogni esecuzione vengono prodotti:
   - cosa migliorare;
   - candidati keyword negative e keyword con punteggio di qualità basso.
 - **Report cliente**: un report classico con i numeri principali, il budget, un commento in linguaggio semplice, la tabella delle campagne e i prossimi passi. Per ogni cliente scegli in quali momenti riceverlo. Il report arriva a te da inoltrare oppure parte direttamente al cliente.
+- **Report cliente per ristoranti e locali** (obiettivo `negozio`): un PDF nel layout "Advisory", con una sezione per locale. Ogni sezione contiene:
+  - visite al negozio (rilevate o stimate) e la stima consolidata;
+  - azioni ad alto intento: indicazioni stradali, contatti, ordini;
+  - confronto con i due mesi precedenti;
+  - canali (Ricerca, Maps, YouTube) e lingue (gruppi di asset);
+  - orari e giorni di conversione;
+  - stato della campagna ("Limitato dal budget", "In apprendimento") e prossimi passi.
+
+  Più locali dello stesso cliente (`locali:`) finiscono in un unico report, con la sintesi del gruppo e il calcolo del fatturato attribuibile e del compenso (fee in percentuale oppure compenso fisso con ROI e ROAS). Non sono disponibili via API, e vanno aggiunti a mano se servono:
+  - aste e concorrenza (TheFork, JustEat);
+  - fasce d'età delle campagne Performance Max;
+  - temi di ricerca "incrementali".
 
 Tutto gira gratis su GitHub Actions con le API ufficiali. L'unico costo facoltativo è il commento scritto da Claude (vedi [Costi](#costi)).
 

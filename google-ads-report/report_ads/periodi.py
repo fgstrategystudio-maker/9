@@ -59,6 +59,7 @@ class Periodi:
     precedente: Intervallo
     anno_prec: Intervallo | None
     giorni_mese: int  # giorni del mese a cui si riferisce il budget
+    due_mesi_prima: Intervallo | None = None  # solo chiusura mese: terzo mese di confronto
 
     @property
     def mese_chiuso(self) -> bool:
@@ -119,7 +120,9 @@ def calcola_periodi(momento: str, oggi: date) -> Periodi:
         except ValueError:  # non succede col giorno 1, ma per sicurezza
             ap = primo.replace(year=primo.year - 1, day=28)
         anno_prec = Intervallo(ap, ap.replace(day=giorni_nel_mese(ap)))
-        return Periodi(momento, oggi, corrente, precedente, anno_prec, giorni_nel_mese(primo))
+        terzo = _mese_precedente(prima)
+        due_mesi_prima = Intervallo(terzo, terzo.replace(day=giorni_nel_mese(terzo)))
+        return Periodi(momento, oggi, corrente, precedente, anno_prec, giorni_nel_mese(primo), due_mesi_prima)
 
     if oggi.day == 1:
         raise ValueError("Il report di metà/fine mese richiede almeno un giorno di dati nel mese.")
