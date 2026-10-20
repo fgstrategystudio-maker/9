@@ -1,0 +1,85 @@
+name: Report Google Ads
+
+# Report automatici Google Ads (vedi google-ads-report/README.md).
+#
+# Gira ogni mattina dei giorni 1, 15 e 28-31: il programma decide da solo se
+# oggi è giorno di report (1 = chiusura mese, 15 = metà mese, ultimo giorno
+# del mese = pre-chiusura) e negli altri giorni termina senza fare nulla.
+#
+# Il repository è pubblico: dati e nomi dei clienti stanno solo nei Secrets e
+# nelle email, mai nei log o negli artifact.
+
+on:
+  schedule:
+    # 05:23 UTC = 7:23 in Italia (6:23 con l'ora solare). Minuto :23 per
+    # evitare il picco dell'ora tonda, quando GitHub ritarda di più i cron.
+    - cron: "23 5 1,15,28-31 * *"
+  workflow_dispatch:
+    inputs:
+      momento:
+        description: "Quale report (auto = in base alla data di oggi)"
+        type: choice
+        options: [auto, inizio, meta, fine]
+        default: auto
+      demo:
+        description: "Usa dati di esempio (prova senza Google Ads)"
+        type: boolean
+        default: false
+      invia:
+        description: "Invia le email"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: google-ads-report
+  cancel-in-progress: false
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: google-ads-report
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: google-ads-report/requirements.txt
+
+      - name: Installa dipendenze
+        run: pip install -r requirements.txt
+
+      - name: Configurazione clienti dal Secret
+        env:
+          CLIENTI_YAML: ${{ secrets.CLIENTI_YAML }}
+        run: |
+          if [ -z "$CLIENTI_YAML" ]; then
+            echo "::error::Secret CLIENTI_YAML mancante: vedi google-ads-report/README.md"
+            exit 1
+          fi
+          printf '%s\n' "$CLIENTI_YAML" > clienti.yaml
+
+      - name: Genera e invia i report
+        env:
+          GOOGLE_ADS_CLIENT_ID: ${{ secrets.GOOGLE_ADS_CLIENT_ID }}
+          GOOGLE_ADS_CLIENT_SECRET: ${{ secrets.GOOGLE_ADS_CLIENT_SECRET }}
+          GOOGLE_ADS_REFRESH_TOKEN: ${{ secrets.GOOGLE_ADS_REFRESH_TOKEN }}
+          GOOGLE_ADS_LOGIN_CUSTOMER_ID: ${{ secrets.GOOGLE_ADS_LOGIN_CUSTOMER_ID }}
+          # Facoltativo: senza questa chiave i commenti sono generati da regole (costo zero).
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          SMTP_FROM_NAME: ${{ vars.SMTP_FROM_NAME }}
+          REPORT_EMAIL_INTERNA: ${{ secrets.REPORT_EMAIL_INTERNA }}
+          TZ: Europe/Rome
+          MOMENTO: ${{ inputs.momento || 'auto' }}
+          DEMO: ${{ inputs.demo && '--demo' || '' }}
+          INVIA: ${{ (github.event_name == 'schedule' || inputs.invia) && '--invia' || '' }}
+        run: python -m report_ads --config clienti.yaml --momento "$MOMENTO" $DEMO $INVIA

@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Report Google Ads · {{ a.cliente.nome }} · {{ a.periodi.corrente.etichetta() }}</title>
+<style>
+  body { margin:0; padding:0; background:#f4f5f8; font-family:Helvetica, Arial, sans-serif; color:#1c2840; }
+  .wrap { max-width:720px; margin:0 auto; padding:24px 16px; }
+  .card { background:#fff; border-radius:10px; padding:24px; margin-bottom:16px; border:1px solid #e3e7ef; }
+  h1 { font-size:22px; margin:6px 0 4px; }
+  h2 { font-size:16px; margin:0 0 14px; color:{{ agenzia.colore }}; text-transform:uppercase; letter-spacing:.04em; }
+  p { font-size:15px; line-height:1.6; margin:0 0 12px; }
+  table.dati { width:100%; border-collapse:collapse; font-size:13px; }
+  table.dati th { text-align:left; color:#5e687d; font-weight:600; border-bottom:1px solid #e3e7ef; padding:8px 6px; }
+  table.dati td { border-bottom:1px solid #f0f2f6; padding:8px 6px; }
+  .num { text-align:right !important; white-space:nowrap; }
+  .muted { color:#5e687d; font-size:12px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="card" style="background:{{ agenzia.colore }}; color:#fff; border:0;">
+    <div style="font-size:12px; letter-spacing:.08em; text-transform:uppercase; opacity:.8;">{{ agenzia.nome }} · Report Google Ads</div>
+    <h1>{{ a.cliente.nome }}</h1>
+    <div style="font-size:15px; opacity:.9;">{{ a.periodi.titolo }}</div>
+    <div style="font-size:12px; opacity:.75; margin-top:6px;">Confronto con {{ a.periodi.precedente.etichetta() }}{% if a.periodi.anno_prec %} e con {{ a.periodi.anno_prec.etichetta() }}{% endif %}</div>
+  </div>
+
+  <div class="card">
+    <h2>I numeri del periodo</h2>
+    <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:separate; border-spacing:8px;">
+      {% for riga in a.kpi | batch(3) %}
+      <tr>
+        {% for k in riga %}
+        <td width="33%" valign="top" style="background:#f7f8fb; border-radius:8px; padding:12px;">
+          <div class="muted">{{ k.nome }}</div>
+          <div style="font-size:20px; font-weight:700; margin:4px 0;">{{ k | kpi }}</div>
+          <div style="font-size:12px; color:{{ k.delta | colore_delta(k.meglio) }};">{{ k.delta | variazione }} <span class="muted">vs prec.</span></div>
+          {% if a.periodi.anno_prec %}
+          <div style="font-size:12px; color:{{ k.delta_ap | colore_delta(k.meglio) }};">{{ k.delta_ap | variazione }} <span class="muted">vs anno prec.</span></div>
+          {% endif %}
+        </td>
+        {% endfor %}
+        {% for _ in range(3 - riga | length) %}<td width="33%"></td>{% endfor %}
+      </tr>
+      {% endfor %}
+    </table>
+    {% if a.cliente.negozio and a.dati.visite_stimate %}
+    <div class="muted" style="margin-top:6px;">Le visite al negozio sono stimate come il {{ (a.cliente.quota_visite_indicazioni * 100) | round(0) | int }}% delle indicazioni stradali, perché Google non le misura su questo account.</div>
+    {% endif %}
+    <div class="muted" style="margin-top:6px;">Le variazioni di investimento, clic, impressioni e {{ a.etichette.risultati }} sono calcolate sulla media giornaliera, per confrontare periodi di lunghezza diversa.</div>
+  </div>
+
+  {% if a.pacing %}
+  <div class="card">
+    <h2>Budget del mese</h2>
+    {% set quota = [a.pacing.quota_spesa, 1] | min %}
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#eef1f6; border-radius:6px;">
+      <tr><td style="height:14px; width:{{ (quota * 100) | round(0) }}%; background:{{ agenzia.colore }}; border-radius:6px;"></td><td></td></tr>
+    </table>
+    <p style="margin-top:12px;">
+      Speso <strong>{{ a.pacing.speso | valuta(0) }}</strong> su un budget di {{ a.pacing.budget | valuta(0) }}
+      ({{ a.pacing.quota_spesa | perc(0) }}).
+      {% if not a.periodi.mese_chiuso %}
+      Al ritmo attuale la spesa a fine mese sarà di circa <strong>{{ a.pacing.proiezione | valuta(0) }}</strong>.
+      {% endif %}
+    </p>
+  </div>
+  {% endif %}
+
+  <div class="card">
+    <h2>Il commento</h2>
+    {% for par in a.commento_cliente | paragrafi %}<p>{{ par }}</p>{% endfor %}
+  </div>
+
+  {% if a.dati.corrente.giornaliero %}
+  {% set massimo = a.dati.corrente.giornaliero | map(attribute=1) | max %}
+  <div class="card">
+    <h2>Andamento giornaliero dell'investimento</h2>
+    <table width="100%" cellpadding="0" cellspacing="1" style="table-layout:fixed;">
+      <tr>
+        {% for giorno, costo, conv in a.dati.corrente.giornaliero %}
+        <td valign="bottom" style="height:90px;" title="{{ giorno.strftime('%d/%m') }}: {{ costo | valuta }} · {{ conv | numero(1) }} conv.">
+          <div style="background:{{ agenzia.colore }}; opacity:.85; height:{{ ((costo / massimo * 86) if massimo else 0) | round(0) | int }}px; border-radius:2px 2px 0 0;"></div>
+        </td>
+        {% endfor %}
+      </tr>
+    </table>
+    <table width="100%" class="muted"><tr>
+      <td>{{ a.dati.corrente.giornaliero[0][0].strftime('%d/%m') }}</td>
+      <td style="text-align:right;">{{ a.dati.corrente.giornaliero[-1][0].strftime('%d/%m') }}</td>
+    </tr></table>
+  </div>
+  {% endif %}
+
+  <div class="card">
+    <h2>Campagne</h2>
+    <table class="dati">
+      <tr>
+        <th>Campagna</th><th class="num">Investimento</th><th class="num">Clic</th>{% if a.cliente.negozio %}<th class="num">Indicazioni</th>{% endif %}<th class="num">{{ a.etichette.breve }}</th>
+        {% if a.cliente.ecommerce %}<th class="num">ROAS</th>{% elif a.cliente.negozio %}<th class="num">Costo/visita</th>{% else %}<th class="num">Costo/conv.</th>{% endif %}
+        <th class="num">{{ a.etichette.breve }} vs prec.</th>
+      </tr>
+      {% for r in a.campagne %}
+      {% set d = r.delta('conversioni', a.periodi.corrente.giorni, a.periodi.precedente.giorni) %}
+      <tr>
+        <td>{{ r.nome }}</td>
+        <td class="num">{{ r.m.costo | valuta(0) }}</td>
+        <td class="num">{{ r.m.clic | numero }}</td>
+        {% if a.cliente.negozio %}<td class="num">{{ r.m.indicazioni | numero(1) }}</td>{% endif %}
+        <td class="num">{{ r.m.conversioni | numero(1) }}</td>
+        {% if a.cliente.ecommerce %}<td class="num">{{ r.m.roas | numero(2) }}</td>{% else %}<td class="num">{{ r.m.cpa | valuta }}</td>{% endif %}
+        <td class="num" style="color:{{ d | colore_delta('su') }};">{{ d | variazione }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+
+  {% if a.prossimi_passi %}
+  <div class="card">
+    <h2>Prossimi passi</h2>
+    <ol style="margin:0; padding-left:20px; font-size:15px; line-height:1.6;">
+      {% for passo in a.prossimi_passi %}<li style="margin-bottom:6px;">{{ passo }}</li>{% endfor %}
+    </ol>
+  </div>
+  {% endif %}
+
+  <p class="muted" style="text-align:center;">
+    {{ agenzia.nome }}{% if agenzia.sito %} · <a href="{{ agenzia.sito }}" style="color:#5e687d;">{{ agenzia.sito | replace('https://', '') }}</a>{% endif %}
+    · Dati Google Ads fino al {{ a.periodi.corrente.fine.strftime('%d/%m/%Y') }}
+  </p>
+</div>
+</body>
+</html>

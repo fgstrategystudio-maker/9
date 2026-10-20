@@ -1,3 +1,6 @@
 articoli_temp/
 dashboard/node_modules/
 dist/
+google-ads-report/clienti.yaml
+google-ads-report/output/
+__pycache__/
