@@ -117,9 +117,8 @@ class Analisi:
     cosa_e_cambiato: list[str] = field(default_factory=list)
     cosa_migliorare: list[str] = field(default_factory=list)
     commento_ai: bool = False
-    # Contratto (solo report dei locali): visite dall'inizio del contratto a oggi e, se il
-    # contratto parte a metà del mese su cui si calcola la fee, le visite di quel mese da quel giorno.
-    visite_contratto: float | None = None
+    # Contratto (solo report dei locali): se il contratto parte a metà del mese su cui si
+    # calcola la fee, le visite di quel mese dal giorno di inizio.
     visite_base_fee: float | None = None
     fuori_contratto: bool = False
 

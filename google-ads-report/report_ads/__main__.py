@@ -45,7 +45,7 @@ def _descrivi_errore(e: Exception) -> str:
 
 
 def _prepara_contratto(fonte, a, gruppo) -> None:
-    """Visite dall'inizio del contratto del locale (obiettivo e fee del primo mese)."""
+    """Fee del primo mese: le visite contano dal giorno di inizio del contratto."""
     c, per = a.cliente, a.periodi
     try:
         dal = date.fromisoformat(c.contratto_dal)
@@ -58,8 +58,6 @@ def _prepara_contratto(fonte, a, gruppo) -> None:
         return indicazioni * c.quota_visite_indicazioni if a.dati.visite_stimate else reali
 
     try:
-        if dal <= per.corrente.fine:
-            a.visite_contratto = visite(Intervallo(dal, per.corrente.fine))
         base_prec = gruppo.compenso is not None and gruppo.compenso.base == "mese_precedente"
         base = per.precedente if base_prec else per.corrente
         if dal > base.fine:
