@@ -18,6 +18,7 @@ from datetime import date
 from pathlib import Path
 
 from . import config as cfg
+from . import stato as memoria
 from .analisi import analizza
 from .commento import scrivi_commenti
 from .invio import Mittente
@@ -26,7 +27,7 @@ from .pdf import html_a_pdf
 from .render import report_cliente, report_grano, report_interno, report_locali
 from .report_grano import vista_grano
 from .report_locali import vista_gruppo
-from .testi_ai import testi_grano, testi_gruppo
+from .testi_ai import testi_grano, testi_gruppo, testi_scritti
 from .verifica import controlla
 
 log = logging.getLogger("report_ads")
@@ -99,6 +100,42 @@ def _prepara_attribuzione(fonte, a) -> None:
     a.attribuzione = (comunicate, oggi)
 
 
+def _applica_memoria(conf, stato: dict, mese_report: str) -> None:
+    """Visite scritte nei report già inviati e testi degli ultimi report, dalla memoria salvata.
+
+    La memoria vince sulle visite scritte a mano in CONTESTO_CLIENTI (che restano per i mesi
+    precedenti all'automazione)."""
+    for gruppo in conf.gruppi:
+        mesi = {m: r for m, r in memoria.mesi(stato, gruppo.nome).items() if m < mese_report}
+        for mese, rep in mesi.items():
+            for loc in gruppo.locali:
+                voce = rep.get("locali", {}).get(loc.nome)
+                if voce and voce.get("visite") is not None:
+                    loc.visite_comunicate[mese] = float(voce["visite"])
+        gruppo.memoria = [dict(rep, mese=m) for m, rep in sorted(mesi.items())[-3:]]
+
+
+def _da_ricordare(gruppo, analisi_gruppo, vista, periodi) -> dict:
+    """Numeri e testi del report appena creato, da salvare dopo l'invio."""
+    from .report_locali import azioni
+
+    locali = {}
+    for a in analisi_gruppo:
+        m = a.dati.corrente.totale
+        locali[a.cliente.nome] = {
+            "visite": round(m.conversioni, 1), "stimate": a.dati.visite_stimate, "azioni": round(azioni(m), 1),
+            "indicazioni": round(m.indicazioni, 1), "spesa": round(m.costo, 2),
+            "campagne": {c.nome: {"tipo": c.tipo, "spesa": round(c.metriche.costo, 2),
+                                  "visite": round(c.metriche.conversioni, 1)}
+                         for c in a.dati.corrente.campagne.values() if c.metriche.costo > 0},
+        }
+    testi = testi_scritti(vista)
+    while testi and sum(len(t) for t in testi) > 8000:
+        testi.pop()
+    return {"numero": gruppo.numero_report(periodi.corrente.inizio.year, periodi.corrente.inizio.month),
+            "periodo": periodi.corrente.etichetta(), "locali": locali, "testi": testi}
+
+
 def _testi_ai(funzione, vista, analisi) -> bool:
     """Testi scritti da Claude; un errore qui non deve mai bloccare il report."""
     try:
@@ -119,6 +156,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--output", default="output", help="cartella dove salvare i report HTML")
     parser.add_argument("--note", default="note.yaml", help="testi del mese (se il file esiste)")
     parser.add_argument("--contesto", default="contesto.yaml", help="storia e strategia dei clienti (se il file esiste)")
+    parser.add_argument("--stato", default="stato.enc", help="memoria cifrata dei report già inviati")
     args = parser.parse_args(argv)
 
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
@@ -137,6 +175,9 @@ def main(argv: list[str] | None = None) -> int:
         log.warning(avviso)
     for avviso in cfg.applica_contesto(configurazione, args.contesto):
         log.warning(avviso)
+    stato = memoria.carica(args.stato)
+    _applica_memoria(configurazione, stato, f"{periodi.corrente.inizio:%Y-%m}")
+    da_ricordare = []
     agenzia = configurazione.agenzia
     email_interna = os.environ.get("REPORT_EMAIL_INTERNA") or agenzia.email_interna
 
@@ -213,6 +254,9 @@ def main(argv: list[str] | None = None) -> int:
             pdf = base.with_suffix(".pdf")
             percorso = pdf if html_a_pdf(html, pdf) else base.with_suffix(".html")
             per_cliente.append((gruppo, percorso, None))
+            if periodi.mese_chiuso:
+                da_ricordare.append((gruppo.nome, f"{periodi.corrente.inizio:%Y-%m}",
+                                     _da_ricordare(gruppo, analisi_gruppo, vista, periodi)))
         else:
             for a in analisi_gruppo:
                 percorso = cartella / f"cliente-{_slug(a.cliente.nome)}-{suffisso}.html"
@@ -246,6 +290,12 @@ def main(argv: list[str] | None = None) -> int:
             else:
                 mittente.invia([email_interna], f"{demo}[Da inoltrare] {oggetto}", html, allegato=percorso)
         log.info("Email inviate: 1 interna, %d report cliente", len(per_cliente))
+        if da_ricordare and not args.demo:
+            for nome, mese, dati in da_ricordare:
+                memoria.registra(stato, nome, mese, dati)
+            if memoria.salva(args.stato, stato):
+                Path(args.stato).with_suffix(".aggiornato").write_text("1")
+                log.info("Memoria dei report aggiornata: %d report", len(da_ricordare))
 
     # Un errore su un account fa fallire il workflow, così GitHub ti avvisa.
     return 1 if errori else 0

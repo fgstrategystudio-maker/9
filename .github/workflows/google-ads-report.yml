@@ -31,7 +31,8 @@ on:
         default: true
 
 permissions:
-  contents: read
+  # write serve solo per salvare la memoria cifrata dei report sul ramo stato-report.
+  contents: write
 
 concurrency:
   group: google-ads-report
@@ -80,12 +81,23 @@ jobs:
           CONTESTO_CLIENTI: ${{ secrets.CONTESTO_CLIENTI }}
         run: printf '%s\n' "$CONTESTO_CLIENTI" > contesto.yaml
 
+      - name: Memoria dei report già inviati
+        # File cifrato sul ramo stato-report: visite e testi dei report dei mesi scorsi.
+        run: |
+          if git fetch -q --depth=1 origin stato-report 2>/dev/null; then
+            git show FETCH_HEAD:stato.enc > stato.enc
+          else
+            echo "Nessuna memoria salvata finora"
+          fi
+
       - name: Genera e invia i report
         env:
           GOOGLE_ADS_CLIENT_ID: ${{ secrets.GOOGLE_ADS_CLIENT_ID }}
           GOOGLE_ADS_CLIENT_SECRET: ${{ secrets.GOOGLE_ADS_CLIENT_SECRET }}
           GOOGLE_ADS_REFRESH_TOKEN: ${{ secrets.GOOGLE_ADS_REFRESH_TOKEN }}
           GOOGLE_ADS_LOGIN_CUSTOMER_ID: ${{ secrets.GOOGLE_ADS_LOGIN_CUSTOMER_ID }}
+          # Facoltativo: chiave della memoria cifrata (altrimenti ricavata da GOOGLE_ADS_CLIENT_SECRET).
+          STATO_CHIAVE: ${{ secrets.STATO_CHIAVE }}
           # Facoltativo: senza questa chiave i commenti sono generati da regole (costo zero).
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           SMTP_USER: ${{ secrets.SMTP_USER }}
@@ -97,3 +109,20 @@ jobs:
           DEMO: ${{ inputs.demo && '--demo' || '' }}
           INVIA: ${{ (github.event_name == 'schedule' || inputs.invia) && '--invia' || '' }}
         run: python -m report_ads --config clienti.yaml --momento "$MOMENTO" $DEMO $INVIA
+
+      - name: Salva la memoria dei report
+        # Solo dopo l'invio dei report del 1° del mese; anche se un account era in errore.
+        if: ${{ always() && hashFiles('google-ads-report/stato.aggiornato') != '' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          dir="$RUNNER_TEMP/stato"
+          rm -rf "$dir" && mkdir -p "$dir" && cp stato.enc "$dir/"
+          cd "$dir"
+          # Il repository pubblica anche il sito su Vercel: su questo ramo niente deploy.
+          echo '{"git": {"deploymentEnabled": false}, "ignoreCommand": "exit 0"}' > vercel.json
+          git init -q -b stato-report
+          git add stato.enc vercel.json
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -q -m "Memoria dei report (cifrata)"
+          git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" stato-report

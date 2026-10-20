@@ -181,7 +181,15 @@ Locale Uno:
     Tracking visite attivo da agosto, limitato dal budget.
 ```
 
-Con `visite_comunicate` il report del mese dopo mostra l'attribuzione a 30 giorni, cioè le visite scritte nel report precedente confrontate con quelle consolidate di oggi. Con la fee in percentuale sulle visite del mese (`base: mese`), calcola anche il conguaglio. Dopo ogni report aggiungi il numero del mese appena inviato.
+`visite_comunicate` serve solo per i report inviati prima dell'automazione. Da lì in poi il programma ricorda da solo cosa ha scritto (vedi sotto). Con questi numeri il report del mese dopo mostra l'attribuzione a 30 giorni, cioè le visite scritte nel report precedente confrontate con quelle consolidate di oggi. Con la fee in percentuale sulle visite del mese (`base: mese`), calcola anche il conguaglio.
+
+## Memoria dei report inviati (automatica)
+
+Dopo l'invio dei report del 1° del mese il programma salva, per ogni locale, le visite e i numeri scritti nel report e i testi. Il mese dopo li usa per l'attribuzione a 30 giorni e il conguaglio, e li passa a Claude per dare continuità ai testi. Non devi fare nulla.
+
+- Il file è cifrato (`stato.enc`) e sta sul ramo `stato-report` del repository, che contiene solo quel file. Senza la chiave non si legge.
+- La chiave è ricavata dal Secret `GOOGLE_ADS_CLIENT_SECRET`. Se preferisci una chiave separata, crea il Secret `STATO_CHIAVE`; cambiando chiave la memoria riparte da zero.
+- I numeri scritti a mano in `visite_comunicate` valgono solo per i mesi che la memoria non ha.
 
 Per tenere fuori dal fatturato attribuibile le visite di alcune campagne, per esempio le Search sul nome del locale, aggiungi `escludi: [SEARCH]` al `compenso` del cliente.
 
