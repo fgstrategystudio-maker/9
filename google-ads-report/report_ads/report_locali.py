@@ -156,7 +156,6 @@ class VistaLocale:
     sottotitolo_giorni: str
     budget: Markup
     richiamo_budget: Markup | None
-    obiettivo: Markup | None
     fatto: Markup | None
     passi: list[Passo]
     stati: list[str]
@@ -239,25 +238,6 @@ def _data(iso: str | None) -> str:
         return ""
     a, m, g = (int(x) for x in iso.split("-"))
     return f"{g} {MESI[m - 1]} {a}"
-
-
-def _obiettivo(a: Analisi, gruppo: Gruppo) -> Markup | None:
-    """Avanzamento verso l'obiettivo di visite del contratto."""
-    c = a.cliente
-    if not c.obiettivo_visite or not c.contratto_dal:
-        return None
-    fino = f" entro il {_data(c.obiettivo_fino)}" if c.obiettivo_fino else ""
-    limite = (f", a un costo per visita massimo di {eur(gruppo.target_costo_visita)}"
-              if gruppo.target_costo_visita else "")
-    if a.visite_contratto is None:
-        return md(f"**Obiettivo del contratto.** Dal {_data(c.contratto_dal)}: almeno "
-                  f"{num(c.obiettivo_visite)} visite registrate{fino}{limite}.")
-    quota = a.visite_contratto / c.obiettivo_visite
-    tipo = "stimate" if a.dati.visite_stimate else "registrate"
-    return md(f"**Obiettivo del contratto: {num(a.visite_contratto)} visite su {num(c.obiettivo_visite)} "
-              f"({_it(quota * 100, 0)}%).** Visite {tipo} dal {_data(c.contratto_dal)} a oggi; l'obiettivo è "
-              f"di almeno {num(c.obiettivo_visite)} visite{fino}{limite}. A finestra chiusa il dato crescerà, "
-              "perché Google registra le visite fino a 30 giorni dopo il clic.")
 
 
 def _vista_locale(n: int, a: Analisi, gruppo: Gruppo) -> VistaLocale:
@@ -545,8 +525,7 @@ def _vista_locale(n: int, a: Analisi, gruppo: Gruppo) -> VistaLocale:
         canali=canali, canali_colonne=colonne, sottotitolo_canali=sottotitolo_canali, costo_visita=costo_visita,
         titolo_lingue=titolo_lingue, sottotitolo_lingue=sottotitolo_lingue, lingue=lingue, lettura_lingue=lettura_lingue,
         ore=ore, testo_ore=testo_ore, legenda_ore=legenda, giorni=giorni_righe, sottotitolo_giorni=sott_giorni,
-        budget=budget, richiamo_budget=richiamo, obiettivo=_obiettivo(a, gruppo), fatto=fatto, passi=passi,
-        stati=stati,
+        budget=budget, richiamo_budget=richiamo, fatto=fatto, passi=passi, stati=stati,
         spesa=m.costo, n_azioni=az, visite=visite, m=m, p=p,
     )
 
@@ -703,10 +682,10 @@ def _compenso(vg: VistaGruppo, gruppo: Gruppo, analisi: list[Analisi], locali: l
         for a in analisi:
             c = a.cliente
             if c.compenso_fisso and (not c.contratto_dal or date.fromisoformat(c.contratto_dal) <= per.corrente.fine):
-                fissi.append(f"{c.nome} {eur(c.compenso_fisso, 0)}")
+                inps = f" + {_it(c.inps_fisso * 100, 0)}% INPS" if c.inps_fisso else ""
+                fissi.append(f"{c.nome} {eur(c.compenso_fisso, 0)}{inps}")
         if fissi:
-            vg.compenso_nota = md(f"**Compenso fisso di {mese}:** {elenco(fissi)} (oneri previdenziali esclusi), "
-                                  "da sommare alla fee.")
+            vg.compenso_nota = md(f"**Compenso fisso di {mese}:** {elenco(fissi)}, da sommare alla fee.")
         if not base_prec and len(analisi) == 1:
             x = locali[0]
             vg.compenso_nota = md(f"**Conguaglio.** Le visite di {mese_prec} risultano oggi {num(x.p.conversioni)} a dato "

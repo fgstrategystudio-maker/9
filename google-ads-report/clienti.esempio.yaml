@@ -81,7 +81,6 @@ clienti:
         fasce: [[18, 23]]
         coperti_per_visita: 2.5
         scontrino_medio: 30
-        contratto_dal: "2026-10-17"     # le visite contano da questa data (fee e obiettivo)
-        obiettivo_visite: 600           # obiettivo del contratto...
-        obiettivo_fino: "2026-12-31"    # ...entro questa data
-        compenso_fisso: 650             # fisso mensile, oneri esclusi, da sommare alla fee
+        contratto_dal: "2026-10-17"     # per la fee le visite contano da questa data
+        compenso_fisso: 325             # fisso mensile, da sommare alla fee
+        inps_fisso: 0.04                # + 4% INPS sul fisso
