@@ -77,6 +77,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--demo", action="store_true", help="usa dati di esempio invece della Google Ads API")
     parser.add_argument("--invia", action="store_true", help="invia i report via email")
     parser.add_argument("--output", default="output", help="cartella dove salvare i report HTML")
+    parser.add_argument("--note", default="note.yaml", help="testi del mese (se il file esiste)")
     args = parser.parse_args(argv)
 
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
@@ -91,6 +92,8 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     periodi = calcola_periodi(momento, oggi)
     configurazione = cfg.carica(args.config)
+    for avviso in cfg.applica_note(configurazione, args.note, f"{periodi.corrente.inizio:%Y-%m}"):
+        log.warning(avviso)
     agenzia = configurazione.agenzia
     email_interna = os.environ.get("REPORT_EMAIL_INTERNA") or agenzia.email_interna
 

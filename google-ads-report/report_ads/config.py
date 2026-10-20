@@ -42,6 +42,8 @@ class Cliente:
     contratto_dal: str | None = None
     compenso_fisso: float | None = None
     inps_fisso: float = 0.0
+    # Testo libero del mese per questo locale (dalle note del mese): "Cosa abbiamo fatto".
+    nota_mese: str = ""
 
     @property
     def ecommerce(self) -> bool:
@@ -167,3 +169,44 @@ def carica(percorso: str | Path) -> Configurazione:
     if not gruppi:
         raise ValueError("Nessun cliente configurato")
     return Configurazione(agenzia, gruppi)
+
+
+def applica_note(conf: Configurazione, percorso: str | Path, mese: str) -> list[str]:
+    """Aggiunge i testi del mese (Secret NOTE_MESE) ai clienti e ai locali.
+
+    Formato:
+        mese: "2026-10"            # il mese di cui parla il report (quello del 1° novembre è ottobre)
+        Domò Group:                # nome del cliente: testi della sintesi finale
+          fatto: Pulizia dei termini e nuovi temi di ricerca su tutte le insegne.
+          prossimi_passi:
+            - "Difesa del brand: attivare campagne sul nome dei locali."
+        Legame:                    # nome di un locale: "Cosa abbiamo fatto" nella sua sezione
+          fatto: Nuovi temi di ricerca in francese e spagnolo.
+
+    Le note di un altro mese vengono ignorate, così non finiscono per sbaglio nel report sbagliato.
+    Restituisce gli avvisi (senza nomi dei clienti, perché i log sono pubblici).
+    """
+    file = Path(percorso)
+    if not file.exists() or not file.read_text(encoding="utf-8").strip():
+        return []
+    dati = yaml.safe_load(file.read_text(encoding="utf-8")) or {}
+    if str(dati.get("mese", "")) != mese:
+        return [f"Note del mese ignorate: sono per '{dati.get('mese', '?')}', il report è su {mese}"]
+    avvisi = []
+    gruppi = {g.nome: g for g in conf.gruppi}
+    locali = {loc.nome: loc for g in conf.gruppi for loc in g.locali if len(g.locali) > 1}
+    for nome, testi in dati.items():
+        if nome == "mese":
+            continue
+        testi = testi or {}
+        if isinstance(testi.get("prossimi_passi"), str):
+            testi["prossimi_passi"] = [testi["prossimi_passi"]]
+        if nome in gruppi:
+            g = gruppi[nome]
+            g.fatto = str(testi.get("fatto", g.fatto) or "")
+            g.prossimi_passi = list(testi.get("prossimi_passi", g.prossimi_passi) or [])
+        elif nome in locali:
+            locali[nome].nota_mese = str(testi.get("fatto", "") or "")
+        else:
+            avvisi.append("Note del mese: un nome non corrisponde a nessun cliente o locale")
+    return avvisi
