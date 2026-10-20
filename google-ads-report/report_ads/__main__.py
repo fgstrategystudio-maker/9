@@ -71,6 +71,15 @@ def _prepara_contratto(fonte, a, gruppo) -> None:
         log.warning("Visite dall'inizio del contratto non disponibili (%s)", type(e).__name__)
 
 
+def _testi_ai(funzione, vista, analisi) -> bool:
+    """Testi scritti da Claude; un errore qui non deve mai bloccare il report."""
+    try:
+        return funzione(vista, analisi)
+    except Exception as e:
+        log.warning("Testi AI non applicati (%s): uso i testi automatici", type(e).__name__)
+        return False
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="report_ads", description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -155,11 +164,11 @@ def main(argv: list[str] | None = None) -> int:
             try:
                 if gruppo.layout == "grano" and len(analisi_gruppo) == 1:
                     vista = vista_grano(gruppo, analisi_gruppo[0], agenzia)
-                    ai = testi_grano(vista, analisi_gruppo[0])
+                    ai = _testi_ai(testi_grano, vista, analisi_gruppo[0])
                     html = report_grano(vista)
                 else:
                     vista = vista_gruppo(gruppo, analisi_gruppo, agenzia)
-                    ai = testi_gruppo(vista, analisi_gruppo)
+                    ai = _testi_ai(testi_gruppo, vista, analisi_gruppo)
                     html = report_locali(vista)
                 log.info("Report cliente %d: testi %s", len(per_cliente) + 1, "AI" if ai else "automatici")
             except Exception as e:

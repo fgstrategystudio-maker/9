@@ -64,7 +64,8 @@ def _chiama(contesto: dict, slot: dict) -> dict | None:
 
     contesto = dict(contesto, testi_da_scrivere=slot)
     try:
-        risposta = anthropic.Anthropic().beta.messages.create(
+        # In streaming: con risposte lunghe la libreria non accetta la chiamata semplice.
+        with anthropic.Anthropic().beta.messages.stream(
             model=os.environ.get("CLAUDE_MODEL", MODELLO_PREDEFINITO),
             max_tokens=32000,
             betas=["server-side-fallback-2026-07-01"],
@@ -73,12 +74,16 @@ def _chiama(contesto: dict, slot: dict) -> dict | None:
                            "format": {"type": "json_schema", "schema": _schema(slot)}},
             system=ISTRUZIONI,
             messages=[{"role": "user", "content": json.dumps(contesto, ensure_ascii=False, default=str)}],
-        )
+        ) as flusso:
+            risposta = flusso.get_final_message()
     except anthropic.APIStatusError as e:
         log.warning("Testi AI del report non disponibili (HTTP %s): uso i testi automatici", e.status_code)
         return None
     except anthropic.APIConnectionError:
         log.warning("Testi AI del report non disponibili (connessione): uso i testi automatici")
+        return None
+    except Exception as e:  # qualunque altro errore: il report parte con i testi automatici
+        log.warning("Testi AI del report non disponibili (%s): uso i testi automatici", type(e).__name__)
         return None
     if risposta.stop_reason != "end_turn":
         log.warning("Testi AI del report interrotti (%s): uso i testi automatici", risposta.stop_reason)
