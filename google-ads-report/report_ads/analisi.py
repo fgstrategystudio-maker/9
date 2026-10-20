@@ -122,6 +122,8 @@ class Analisi:
     visite_base_fee: float | None = None
     controlli: list = field(default_factory=list)  # verifica.Controllo
     fuori_contratto: bool = False
+    # Attribuzione a 30 giorni del mese precedente: (visite scritte nel report precedente, visite oggi).
+    attribuzione: tuple[float, float] | None = None
 
     @property
     def stato(self) -> str:
@@ -166,6 +168,10 @@ def prepara_negozio(cliente: Cliente, dati: DatiAccount) -> None:
         for m in [periodo.totale] + [c.metriche for c in periodo.campagne.values()]:
             m.conversioni_google = m.conversioni
             m.conversioni = m.visite_reali if reali else m.indicazioni * quota
+    for mese in dati.storico:
+        m = mese.metriche
+        m.conversioni_google = m.conversioni
+        m.conversioni = m.visite_reali if reali else m.indicazioni * quota
     # I termini di ricerca non hanno il dettaglio per categoria: si usano tutte le conversioni,
     # che includono le indicazioni stradali.
     for t in dati.termini_ricerca:

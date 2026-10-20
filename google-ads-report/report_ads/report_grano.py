@@ -16,7 +16,8 @@ from .config import Agenzia, Gruppo
 from .modello import Metriche
 from .periodi import MESI, Intervallo
 from .report_locali import (
-    GIORNI_LUNGHI, LINGUE_NOTE, _it, _mese, _stato, a_mese, azioni, elenco, eur, md, num, pct, var,
+    GIORNI_LUNGHI, LINGUE_NOTE, _it, _mese, _stato, a_mese, azioni, elenco, eur, md, nota_campagne, num, pct,
+    righe_campagne_locale, var,
 )
 
 GIORNI_TABELLA = ["Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato", "Domenica"]
@@ -233,12 +234,27 @@ def vista_grano(gruppo: Gruppo, a: Analisi, agenzia: Agenzia) -> VistaGrano:
     riga("Spesa", "spesa", lambda x: eur(x, 0), None, verde_riga=False)
     riga("Impressioni", "impressioni", lambda x: num(x), None, verde_riga=False)
     s2.tabella(Tabella(colonne, righe, evid))
+    if a.attribuzione and per.mese_chiuso:
+        prima, oggi = a.attribuzione
+        s2.nota(f"Le visite di {mese_prec} a 30 giorni",
+                f"Nel report del mese scorso le visite di {mese_prec} erano **{num(prima)}**; oggi, a dato consolidato, "
+                f"sono **{num(oggi)}** ({var(oggi / prima - 1 if prima else None)}). Google attribuisce le visite "
+                f"fino a 30 giorni dopo il clic: anche il dato di {mese} crescerà nelle prossime settimane.")
     if prev:
         d_impr = (m.impressioni / p.impressioni - 1) if p.impressioni else None
         s2.p(f"**La lettura.** Rispetto {a_mese(mese_prec)} le conversioni sono {_verso(d_az)}, le indicazioni "
              f"{_verso(d_ind)} e le visite {_verso(d_vis)}, con impressioni {_verso(d_impr)}"
              + (" e un costo per conversione in calo." if cur["costo_conversione"] and prev["costo_conversione"]
                 and cur["costo_conversione"] < prev["costo_conversione"] else "."))
+
+    # --- Campagne (se oltre alla Performance Max ce n'è un'altra, es. Search brand)
+    righe_c = righe_campagne_locale(d.corrente, gruppo)
+    if righe_c:
+        sc = nuova("Le campagne")
+        sc.p(nota_campagne(d.corrente, gruppo, stimate), fisso=True)
+        sc.tabella(Tabella(["Campagna", "Spesa", "Azioni", "Costo per azione", "Visite", "Costo per visita"],
+                           [[Cella(r.etichetta, "forte")] + [Cella(v, "forte" if r.forte else "") for v in r.valori]
+                            for r in righe_c], ["verde" if r.forte else "" for r in righe_c]))
 
     # --- 3. Canali
     if det and det.canali:
@@ -472,13 +488,24 @@ def _sezione_compenso(nuova, gruppo: Gruppo, a: Analisi, mese: str, mese_prec: s
             [Cella(f"COMPENSO ({_it(comp.percentuale * 100, 0)}%)", "forte"),
              Cella(f"{eur(fatt, 0)} × {_it(comp.percentuale * 100, 0)}%", "tenue"), Cella(eur(fee), "forte")],
         ]
-        s.tabella(Tabella(["Voce", "Operazione", "Valore"], righe, ["", "", "verde", "grigio"]))
+        evid = ["", "", "verde", "grigio"]
+        if comp.base == "mese" and a.attribuzione:
+            prima, oggi = a.attribuzione
+            delta = oggi - prima
+            fee_cong = delta * c.coperti_per_visita * c.scontrino_medio * comp.percentuale
+            righe.insert(-1, [Cella(f"Conguaglio {mese_prec}: visite consolidate"),
+                              Cella(f"{num(oggi)} oggi − {num(prima)} già fatturate = {num(delta)}", "tenue"),
+                              Cella(eur(fee_cong), "forte")])
+            evid.insert(-1, "")
+            righe[-1] = [Cella("COMPENSO DI QUESTA FATTURA", "forte"),
+                         Cella(f"{eur(fee)} + {eur(fee_cong)}", "tenue"), Cella(eur(fee + fee_cong), "forte")]
+        s.tabella(Tabella(["Voce", "Operazione", "Valore"], righe, evid))
         if comp.base == "mese":
             s.nota("Nota sulla fatturazione",
                    "Google continua a registrare le visite in negozio fino a circa 30 giorni dopo il contatto con "
                    f"l'annuncio. Sono incluse solo le visite già registrate a oggi; quelle di {mese} che verranno registrate "
                    f"nei prossimi 30 giorni saranno conteggiate a conguaglio. Le visite di {mese_prec} risultano oggi "
-                   f"{num(p.conversioni)} a dato consolidato.")
+                   f"{num(a.attribuzione[1] if a.attribuzione else p.conversioni)} a dato consolidato.")
 
 
 def _verso(d: float | None) -> str:

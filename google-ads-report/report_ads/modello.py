@@ -136,6 +136,14 @@ class Dettaglio:
 
 
 @dataclass
+class MeseStorico:
+    """Totali di un mese, per lo storico dall'inizio della gestione."""
+    mese: date  # primo giorno del mese
+    giorni: int  # giorni del mese letti (l'ultimo mese può essere parziale)
+    metriche: Metriche
+
+
+@dataclass
 class DatiAccount:
     nome: str
     valuta: str
@@ -149,3 +157,4 @@ class DatiAccount:
     visite_stimate: bool = False  # obiettivo negozio: visite ricavate dalle indicazioni stradali
     due_mesi_prima: DatiPeriodo | None = None  # solo report di chiusura mese
     dettaglio: Dettaglio | None = None
+    storico: list[MeseStorico] = field(default_factory=list)  # mesi più vecchi prima

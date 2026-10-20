@@ -7,10 +7,11 @@ gli stessi numeri.
 from __future__ import annotations
 
 import random
-from datetime import datetime, timedelta
+from dataclasses import replace
+from datetime import date, datetime, timedelta
 
 from .modello import (
-    Campagna, Canale, DatiAccount, DatiPeriodo, Dettaglio, GruppoAsset, Keyword, Metriche, Modifica,
+    Campagna, Canale, DatiAccount, DatiPeriodo, Dettaglio, GruppoAsset, Keyword, MeseStorico, Metriche, Modifica,
     TermineRicerca,
 )
 from .periodi import Intervallo, Periodi
@@ -116,11 +117,21 @@ class FonteDemo:
         stato, motivi = ("LIMITED", ["BUDGET_CONSTRAINED"]) if base.random() < 0.6 else ("ELIGIBLE", [])
         if base.random() < 0.3:
             stato, motivi = "LEARNING", ["BIDDING_STRATEGY_LEARNING", "BUDGET_CONSTRAINED"]
-        c = Campagna("2001", f"Performance Max | {cid[-4:]}", "ENABLED", "PERFORMANCE_MAX", float(budget), m,
-                     stato_primario=stato, motivi_stato=motivi)
-        totale = Metriche(**{k: getattr(m, k) for k in ("costo", "impressioni", "clic", "conversioni",
-                                                         "indicazioni", "visite_reali", "contatti")})
-        return DatiPeriodo(totale, {c.id: c}, giornaliero)
+        chiavi = ("costo", "impressioni", "clic", "conversioni", "indicazioni", "visite_reali", "contatti")
+        totale = Metriche(**{k: getattr(m, k) for k in chiavi})
+        campagne = {}
+        # Da ottobre 2026 metà degli account demo ha anche una campagna Search sul nome del locale.
+        if intervallo.inizio >= date(2026, 10, 1) and base.random() < 0.5:
+            quota = r.uniform(0.06, 0.12)
+            brand = Metriche(**{k: (getattr(m, k) * quota if k == "costo" else round(getattr(m, k) * quota)) for k in chiavi})
+            brand.conversioni = brand.indicazioni + brand.contatti
+            for k in chiavi:
+                setattr(m, k, getattr(m, k) - getattr(brand, k))
+            campagne["2002"] = Campagna("2002", f"Search brand | {cid[-4:]}", "ENABLED", "SEARCH", 5.0, brand,
+                                        stato_primario="ELIGIBLE")
+        campagne["2001"] = Campagna("2001", f"Performance Max | {cid[-4:]}", "ENABLED", "PERFORMANCE_MAX",
+                                    float(budget), m, stato_primario=stato, motivi_stato=motivi)
+        return DatiPeriodo(totale, campagne, giornaliero)
 
     def _dettaglio(self, cid: str, dati: DatiAccount) -> Dettaglio:
         """Ripartizioni coerenti con i totali (canali, lingue, ore e giorni sommano al totale)."""
@@ -150,11 +161,12 @@ class FonteDemo:
         d.canali = canali(dati.corrente.totale, "cor")
         d.canali_precedente = canali(dati.precedente.totale, "pre")
         t = dati.corrente.totale
+        pm = dati.corrente.campagne["2001"].metriche  # le lingue sono i gruppi di asset della Performance Max
         pesi = [r.uniform(0.5, 2) for _ in LINGUE]
-        conv = ripartisci(pesi, t.conversioni)
-        clic = ripartisci([p * r.uniform(0.9, 1.1) for p in pesi], t.clic)
-        impr = ripartisci([p * r.uniform(0.8, 1.2) for p in pesi], t.impressioni)
-        costo = ripartisci(pesi, t.costo, False)
+        conv = ripartisci(pesi, pm.conversioni)
+        clic = ripartisci([p * r.uniform(0.9, 1.1) for p in pesi], pm.clic)
+        impr = ripartisci([p * r.uniform(0.8, 1.2) for p in pesi], pm.impressioni)
+        costo = ripartisci(pesi, pm.costo, False)
         for i, nome in enumerate(LINGUE):
             m = Metriche(impressioni=impr[i], clic=clic[i], costo=costo[i], conversioni=conv[i])
             d.gruppi_asset.append(GruppoAsset(nome, m, round(conv[i] * r.uniform(0.6, 1.1))))
@@ -170,6 +182,10 @@ class FonteDemo:
         d.giorni_corrente = [v / c if c else 0.0 for v, c in zip(d.conversioni_giorno_totale, conteggio)]
         d.giorni_precedente = [x * r.uniform(0.7, 0.95) for x in d.giorni_corrente]
         return d
+
+    def visite_intervallo(self, customer_id: str, intervallo: Intervallo) -> tuple[float, float]:
+        m = self._periodo_locale(str(customer_id), intervallo, 1.0).totale
+        return m.visite_reali, m.indicazioni
 
     def scarica(self, customer_id: str, periodi: Periodi, dettaglio: bool = False) -> DatiAccount:
         cid = str(customer_id)
@@ -228,4 +244,14 @@ class FonteDemo:
             termini_ricerca=termini, keyword=[], modifiche=modifiche, due_mesi_prima=due,
         )
         dati.dettaglio = self._dettaglio(cid, dati)
+        # Storico: sei mesi prima del mese del report, poi i mesi già calcolati.
+        storico = []
+        for n in range(6, 0, -1):
+            anno, mese = divmod(periodi.corrente.inizio.year * 12 + periodi.corrente.inizio.month - 1 - n, 12)
+            inizio = date(anno, mese + 1, 1)
+            fine = (inizio.replace(day=28) + timedelta(days=4)).replace(day=1) - timedelta(days=1)
+            m = self._periodo_locale(cid, Intervallo(inizio, fine), 0.5 + n * 0.05).totale
+            storico.append(MeseStorico(inizio, fine.day, m))
+        storico.append(MeseStorico(periodi.corrente.inizio, periodi.corrente.giorni, replace(corrente.totale)))
+        dati.storico = storico
         return dati

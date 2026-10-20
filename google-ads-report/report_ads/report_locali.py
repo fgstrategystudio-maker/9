@@ -14,7 +14,7 @@ from markupsafe import Markup, escape
 
 from .analisi import Analisi
 from .config import Agenzia, Gruppo
-from .modello import Metriche
+from .modello import Campagna, DatiPeriodo, Metriche
 from .periodi import MESI, Intervallo, Periodi
 
 GIORNI_BREVI = ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"]
@@ -158,6 +158,8 @@ class VistaLocale:
     sottotitolo_giorni: str
     budget: Markup
     richiamo_budget: Markup | None
+    campagne: list[Riga]  # Performance Max, Search brand e totale, se le campagne sono più di una
+    nota_campagne: str
     fatto: Markup | None
     passi: list[Passo]
     stati: list[str]
@@ -192,6 +194,10 @@ class VistaGruppo:
     compenso: list[Riga] = field(default_factory=list)
     compenso_riquadri: list[tuple[str, str, str]] = field(default_factory=list)
     compenso_nota: Markup | None = None
+    attribuzione_titolo: str = ""
+    attribuzione_colonne: list[str] = field(default_factory=list)
+    attribuzione: list[Riga] = field(default_factory=list)
+    attribuzione_nota: Markup | None = None
     fatto: Markup | None = None
     priorita: list[Passo] = field(default_factory=list)
     generato: datetime = field(default_factory=datetime.now)
@@ -201,6 +207,57 @@ class VistaGruppo:
         """Piè di pagina dentro una stringa CSS: niente escape HTML, niente doppi apici."""
         testo = f"{self.agenzia.nome} Advisory  ·  Marketing · Data · Strategy        {self.piede}"
         return Markup(testo.replace("\\", "").replace('"', "'"))
+
+
+# ---------------------------------------------------------------- campagne del locale
+
+TIPI_CAMPAGNA = {"PERFORMANCE_MAX": "Performance Max", "SEARCH": "Rete di Ricerca", "DISPLAY": "Display",
+                 "VIDEO": "Video", "LOCAL": "Locale", "SMART": "Smart"}
+
+
+def nome_campagna(c: Campagna, gruppo: Gruppo | None = None) -> str:
+    """Etichetta leggibile: le campagne Search sul nome del locale diventano "Search brand"."""
+    escluse = {t.upper() for t in (gruppo.compenso.escludi if gruppo and gruppo.compenso else [])}
+    if c.tipo == "SEARCH" and ("brand" in c.nome.lower() or "SEARCH" in escluse):
+        return "Search brand"
+    return TIPI_CAMPAGNA.get(c.tipo, c.tipo.title())
+
+
+def escluse_dal_compenso(periodo: DatiPeriodo, gruppo: Gruppo) -> float:
+    """Visite delle campagne che restano fuori dal fatturato attribuibile (es. Search brand)."""
+    tipi = {t.upper() for t in (gruppo.compenso.escludi if gruppo.compenso else [])}
+    return sum(c.metriche.conversioni for c in periodo.campagne.values() if c.tipo in tipi)
+
+
+def righe_campagne_locale(periodo: DatiPeriodo, gruppo: Gruppo) -> list[Riga]:
+    """Una riga per campagna e il totale, solo se le campagne con spesa sono più di una."""
+    attive = sorted((c for c in periodo.campagne.values() if c.metriche.costo > 0), key=lambda c: -c.metriche.costo)
+    if len(attive) < 2:
+        return []
+    righe = []
+    for c in attive:
+        m = c.metriche
+        a_ = azioni(m)
+        righe.append(Riga(nome_campagna(c, gruppo), [eur(m.costo), num(a_), eur(m.costo / a_ if a_ else None),
+                                             num(m.conversioni), eur(m.costo / m.conversioni if m.conversioni else None)]))
+    t = periodo.totale
+    a_ = azioni(t)
+    righe.append(Riga("Totale locale", [eur(t.costo), num(a_), eur(t.costo / a_ if a_ else None), num(t.conversioni),
+                                        eur(t.costo / t.conversioni if t.conversioni else None)], forte=True))
+    return righe
+
+
+def nota_campagne(periodo: DatiPeriodo, gruppo: Gruppo, stimate: bool) -> str:
+    attive = [c for c in periodo.campagne.values() if c.metriche.costo > 0]
+    if len(attive) < 2:
+        return ""
+    testo = ("La Performance Max cerca clienti nuovi su Ricerca e Maps; la campagna sul nome del locale protegge chi "
+             "ci cerca già. Il risultato da guardare è il totale del locale.")
+    if escluse_dal_compenso(periodo, gruppo) and gruppo.compenso and gruppo.compenso.tipo == "percentuale":
+        testo += " Le visite della campagna sul nome del locale restano fuori dal fatturato attribuibile."
+    if stimate:
+        testo += " Visite stimate dalle indicazioni stradali."
+    return testo
 
 
 # ---------------------------------------------------------------- un locale
@@ -252,8 +309,10 @@ def _vista_locale(n: int, a: Analisi, gruppo: Gruppo) -> VistaLocale:
     mese, mese_prec = _mese(per.corrente), _mese(per.precedente)
     chiuso = per.mese_chiuso
     apprendimento, budget_limitato, budget_g = _stato(a)
-    campagne_attive = sorted(d.corrente.campagne.values(), key=lambda x: -x.metriche.costo)
-    campagna = campagne_attive[0].nome if campagne_attive else ""
+    campagne_attive = [x for x in sorted(d.corrente.campagne.values(), key=lambda x: -x.metriche.costo)
+                       if x.metriche.costo > 0] or sorted(d.corrente.campagne.values(), key=lambda x: -x.metriche.costo)[:1]
+    campagna = "” e “".join(x.nome for x in campagne_attive)
+    righe_campagne = righe_campagne_locale(d.corrente, gruppo)
 
     az, az_p = azioni(m), azioni(p)
     costo_az = m.costo / az if az else None
@@ -530,6 +589,7 @@ def _vista_locale(n: int, a: Analisi, gruppo: Gruppo) -> VistaLocale:
         titolo_lingue=titolo_lingue, sottotitolo_lingue=sottotitolo_lingue, lingue=lingue, lettura_lingue=lettura_lingue,
         ore=ore, testo_ore=testo_ore, legenda_ore=legenda, giorni=giorni_righe, sottotitolo_giorni=sott_giorni,
         budget=budget, richiamo_budget=richiamo, fatto=fatto, passi=passi, stati=stati,
+        campagne=righe_campagne, nota_campagne=nota_campagne(d.corrente, gruppo, stimate),
         spesa=m.costo, n_azioni=az, visite=visite, m=m, p=p,
     )
 
@@ -616,6 +676,23 @@ def vista_gruppo(gruppo: Gruppo, analisi: list[Analisi], agenzia: Agenzia) -> Vi
                 + (f" e visite al giorno {_verso(d_vis, 'in crescita', 'in calo', 'stabili')}" if d_vis is not None else "")
                 + f", con il costo per azione da {eur(p_spesa / p_az if p_az else None)} a **{eur(tot_spesa / tot_az if tot_az else None)}**.")
 
+    # --- attribuzione a 30 giorni del mese precedente
+    if chiuso and any(a.attribuzione for a in analisi):
+        rif = f"Report N.{numero - 1}" if numero and numero > 1 else f"Report di {mese_prec}"
+        vg.attribuzione_titolo = f"Attribuzione di {mese_prec} a 30 giorni"
+        vg.attribuzione_colonne = ["Insegna", rif, "Oggi, consolidato", "Variazione"]
+        for a, x in zip(analisi, locali):
+            if not a.attribuzione:
+                continue
+            prima, oggi = a.attribuzione
+            base = f" (stima {_it(a.cliente.quota_visite_indicazioni * 100, 0)}%)" if x.stimate else " (rilevate)"
+            d_ = oggi / prima - 1 if prima else None
+            vg.attribuzione.append(Riga(x.nome, [num(prima) + base, num(oggi) + base], var(d_),
+                                        "verde" if d_ is not None and d_ > 0.005 else ""))
+        vg.attribuzione_nota = md(
+            f"Visite di {mese_prec} come risultavano nel report del mese scorso e come risultano oggi, a 30 giorni "
+            "dal clic: Google le attribuisce con ritardo, quindi il dato del mese appena chiuso cresce sempre.")
+
     # --- compenso (solo report di chiusura mese)
     if chiuso and gruppo.compenso:
         _compenso(vg, gruppo, analisi, locali)
@@ -660,7 +737,9 @@ def _compenso(vg: VistaGruppo, gruppo: Gruppo, analisi: list[Analisi], locali: l
             + ("Come concordato, l'attribuibile si calcola 30 giorni dopo la fine del mese, a dati consolidati."
                if base_prec else
                f"Sono incluse le visite registrate a oggi; quelle che Google registrerà nei prossimi 30 giorni "
-               f"saranno conteggiate a conguaglio nel report successivo."))
+               f"saranno conteggiate a conguaglio nel report successivo.")
+            + (" Le visite delle campagne sul nome del locale (Search brand) restano fuori dall'attribuibile."
+               if comp.escludi else ""))
         vg.compenso_colonne = ["Locale", "Visite", "Base", "Coperti", "Scontrino", "Fatturato attrib.",
                                f"Fee {_it(comp.percentuale * 100, 0)}%"]
         tot_v = tot_f = tot_fee = 0.0
@@ -671,12 +750,16 @@ def _compenso(vg: VistaGruppo, gruppo: Gruppo, analisi: list[Analisi], locali: l
             visite = (x.p.conversioni if base_prec else x.visite)
             if a.visite_base_fee is not None:
                 visite = a.visite_base_fee
+            senza_brand = escluse_dal_compenso(a.dati.precedente if base_prec else a.dati.corrente, gruppo)
+            visite = max(visite - senza_brand, 0.0)
             coperti = visite * c.coperti_per_visita
             fatturato = coperti * c.scontrino_medio
             fee = fatturato * comp.percentuale
             base = f"stima {_it(c.quota_visite_indicazioni * 100, 0)}%" if x.stimate else "rilevate"
             if a.visite_base_fee is not None:
                 base += f" dal {_data(c.contratto_dal).rsplit(' ', 1)[0]}"
+            if senza_brand:
+                base += ", senza brand"
             vg.compenso.append(Riga(c.nome, [num(visite), base, f"{num(coperti, 1)} (×{_it(c.coperti_per_visita, 1)})",
                                              eur(c.scontrino_medio), eur(fatturato), eur(fee)]))
             tot_v, tot_f, tot_fee = tot_v + visite, tot_f + fatturato, tot_fee + fee

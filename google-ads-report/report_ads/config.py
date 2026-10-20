@@ -52,6 +52,10 @@ class Cliente:
     # Testo libero del mese per questo locale (dalle note del mese): "Cosa abbiamo fatto".
     nota_mese: str = ""
     contesto: str = ""  # storia e strategia del locale (Secret CONTESTO_CLIENTI)
+    contesto_gruppo: str = ""  # storia del cliente a cui appartiene il locale
+    # Visite scritte nei report già inviati, per mese ("2026-09": 1215): il report successivo le confronta
+    # con il dato consolidato (attribuzione a 30 giorni) e calcola l'eventuale conguaglio.
+    visite_comunicate: dict = field(default_factory=dict)
 
     @property
     def ecommerce(self) -> bool:
@@ -242,11 +246,14 @@ def applica_note(conf: Configurazione, percorso: str | Path, mese: str) -> list[
 def applica_contesto(conf: Configurazione, percorso: str | Path) -> list[str]:
     """Aggiunge la storia e la strategia dei clienti (Secret CONTESTO_CLIENTI), valide finché non le cambi.
 
-    Formato: nome del cliente o del locale, poi il testo (anche lungo, con | per andare a capo):
+    Formato: nome del cliente o del locale, poi il testo (anche lungo, con | per andare a capo).
+    Per un locale si possono indicare anche le visite scritte nei report già inviati:
         Gruppo Esempio: |
           Da luglio una Performance Max per locale; da ottobre anche una campagna sul nome del locale...
-        Locale Uno: |
-          In apprendimento, budget minimo.
+        Locale Uno:
+          visite_comunicate: {"2026-09": 1215}
+          testo: |
+            In apprendimento, budget minimo.
 
     Il testo serve solo a Claude per ragionare sui numeri: non viene stampato nei report.
     """
@@ -259,11 +266,17 @@ def applica_contesto(conf: Configurazione, percorso: str | Path) -> list[str]:
     avvisi = []
     gruppi = {g.nome: g for g in conf.gruppi}
     locali = {loc.nome: loc for g in conf.gruppi for loc in g.locali}
-    for nome, testo in dati.items():
+    for nome, voce in dati.items():
+        testo, visite = (voce.get("testo", ""), voce.get("visite_comunicate") or {}) if isinstance(voce, dict) else (voce, {})
         if nome in gruppi:
             gruppi[nome].contesto = str(testo or "")
+            for loc in gruppi[nome].locali:
+                loc.contesto_gruppo = gruppi[nome].contesto
+            if len(gruppi[nome].locali) == 1:
+                gruppi[nome].locali[0].visite_comunicate = {str(k): float(v) for k, v in visite.items()}
         elif nome in locali:
             locali[nome].contesto = str(testo or "")
+            locali[nome].visite_comunicate = {str(k): float(v) for k, v in visite.items()}
         else:
             avvisi.append("Contesto clienti: un nome non corrisponde a nessun cliente o locale")
     return avvisi
