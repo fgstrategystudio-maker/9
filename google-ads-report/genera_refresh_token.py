@@ -9,14 +9,15 @@ account amministratore (MCC) e stampa il refresh token da salvare nel Secret
 GOOGLE_ADS_REFRESH_TOKEN.
 """
 
-from getpass import getpass
-
 from google_auth_oauthlib.flow import InstalledAppFlow
 
 SCOPE = ["https://www.googleapis.com/auth/adwords"]
 
 client_id = input("Client ID: ").strip()
-client_secret = getpass("Client Secret (non viene mostrato): ").strip()
+# Visibile di proposito: su Windows incollare in un campo nascosto spesso non funziona.
+client_secret = input("Client Secret (inizia con GOCSPX-): ").strip()
+if not client_secret.startswith("GOCSPX-"):
+    print("Attenzione: il Client Secret di solito inizia con GOCSPX-. Controlla di aver incollato quello giusto.")
 
 flow = InstalledAppFlow.from_client_config(
     {"installed": {
