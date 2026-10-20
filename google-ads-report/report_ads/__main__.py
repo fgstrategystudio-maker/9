@@ -23,8 +23,10 @@ from .commento import scrivi_commenti
 from .invio import Mittente
 from .periodi import MOMENTI, Intervallo, calcola_periodi, momento_automatico
 from .pdf import html_a_pdf
-from .render import report_cliente, report_interno, report_locali
+from .render import report_cliente, report_grano, report_interno, report_locali
+from .report_grano import vista_grano
 from .report_locali import vista_gruppo
+from .testi_ai import testi_grano, testi_gruppo
 from .verifica import controlla
 
 log = logging.getLogger("report_ads")
@@ -100,7 +102,7 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.demo:
         from .fonte_demo import FonteDemo
-        fonte = FonteDemo()
+        fonte = FonteDemo(locali={c.customer_id for c in configurazione.clienti if c.negozio})
     else:
         from .fonte_google_ads import FonteGoogleAds
         try:
@@ -151,7 +153,15 @@ def main(argv: list[str] | None = None) -> int:
         if gruppo.negozio:
             # Ristoranti e locali: un unico report PDF per il cliente, anche con più locali.
             try:
-                html = report_locali(vista_gruppo(gruppo, analisi_gruppo, agenzia))
+                if gruppo.layout == "grano" and len(analisi_gruppo) == 1:
+                    vista = vista_grano(gruppo, analisi_gruppo[0], agenzia)
+                    ai = testi_grano(vista, analisi_gruppo[0])
+                    html = report_grano(vista)
+                else:
+                    vista = vista_gruppo(gruppo, analisi_gruppo, agenzia)
+                    ai = testi_gruppo(vista, analisi_gruppo)
+                    html = report_locali(vista)
+                log.info("Report cliente %d: testi %s", len(per_cliente) + 1, "AI" if ai else "automatici")
             except Exception as e:
                 log.error("Report cliente non generato (%s)", type(e).__name__)
                 errori.append((gruppo.nome, "Report cliente: " + _descrivi_errore(e)))

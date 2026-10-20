@@ -16,7 +16,11 @@ Per ogni esecuzione vengono prodotti:
   - cosa migliorare;
   - candidati keyword negative e keyword con punteggio di qualità basso.
 - **Report cliente**: un report classico con i numeri principali, il budget, un commento in linguaggio semplice, la tabella delle campagne e i prossimi passi. Per ogni cliente scegli in quali momenti riceverlo. Il report arriva a te da inoltrare oppure parte direttamente al cliente.
-- **Report cliente per ristoranti e locali** (obiettivo `negozio`): un PDF nel layout "Advisory", con una sezione per locale. Ogni sezione contiene:
+- **Report cliente per ristoranti e locali** (obiettivo `negozio`): un PDF in uno di due layout, scelto per cliente con `layout:`:
+  - `advisory` (predefinito): una sezione per locale, adatto ai gruppi con più insegne;
+  - `grano`: copertina centrata e sezioni numerate (sintesi, tre mesi a confronto, canali, lingue, giorni e orari, ritorno economico, prossimi passi), con `colore` per titoli e tabelle e `colore_titoletti` per i sottotitoli.
+
+  Ogni report contiene:
   - visite al negozio (rilevate o stimate) e la stima consolidata;
   - azioni ad alto intento: indicazioni stradali, contatti, ordini;
   - confronto con i due mesi precedenti;
@@ -118,7 +122,7 @@ Vai in **Settings → Secrets and variables → Actions → New repository secre
 | `SMTP_USER` / `SMTP_PASSWORD` | indirizzo Gmail e password per le app (passo 5) |
 | `REPORT_EMAIL_INTERNA` | dove ricevi il report interno e i report da inoltrare |
 | `CLIENTI_YAML` | il contenuto completo del tuo file clienti |
-| `ANTHROPIC_API_KEY` | *facoltativo*: attiva il commento scritto da Claude |
+| `ANTHROPIC_API_KEY` | *facoltativo*: Claude scrive i testi dei report ragionando su risultati e storico |
 
 Facoltativo, sotto la scheda **Variables**: `SMTP_FROM_NAME`, il nome del mittente (es. "Francesco Gizzi").
 
@@ -137,14 +141,14 @@ Le azioni fatte nel mese e le priorità che vuoi scrivere tu vanno nel Secret **
 
 ```yaml
 mese: "2026-10"            # il mese di cui parla il report (quello del 1° novembre è ottobre)
-Domò Group:                # nome del cliente: compare nella sintesi finale
+Gruppo Esempio:            # nome del cliente: compare nella sintesi finale
   fatto: Pulizia dei termini di ricerca e nuovi temi per lingua su tutte le insegne.
   prossimi_passi:
     - "Difesa del brand: attivare campagne sul nome dei locali."
     - "Gestire le recensioni: risposte regolari su tutti i profili."
-Legame:                    # nome di un locale del gruppo: "Cosa abbiamo fatto" nella sua sezione
+Locale Uno:                # nome di un locale del gruppo: "Cosa abbiamo fatto" nella sua sezione
   fatto: Nuovi temi di ricerca in francese e spagnolo.
-Grano Trattoria:
+Ristorante Esempio:
   fatto: Aggiornati 24 temi in tedesco e 18 in spagnolo.
 ```
 
@@ -153,6 +157,20 @@ Grano Trattoria:
 - Se scrivi le note di un locale, sostituiscono il testo automatico ricavato dalla cronologia delle modifiche.
 - Se il `mese` non corrisponde al report, le note vengono ignorate: così quelle vecchie non finiscono nel report sbagliato.
 - Se dimentichi di aggiornarle, il report parte comunque, con i soli testi automatici.
+- Per un cliente puoi aggiungere anche `focus` (riga in copertina) e `sezioni`, sezioni libere con titolo e testo per ciò che l'API non fornisce (aste e concorrenza, fasce d'età, temi di ricerca):
+
+```yaml
+Ristorante Esempio:
+  focus: lingue e temi di ricerca
+  sezioni:
+    - titolo: La concorrenza
+      testo: |
+        TheFork resta il primo concorrente nelle aste, con una quota di impressioni del 45%.
+```
+
+## Testi scritti da Claude
+
+Con il Secret `ANTHROPIC_API_KEY` i testi dei report PDF (letture delle tabelle, sintesi, prossimi passi) e il commento interno sono scritti da Claude ogni volta, partendo dai numeri del report, dai mesi precedenti, dallo stesso mese dell'anno prima, dallo stato delle campagne e dalle note del mese. Tabelle, numeri e testi delle note restano quelli calcolati. Se la chiamata non riesce, il report parte con i testi automatici; il log dice quali testi sono stati usati.
 
 ## Prova in locale
 

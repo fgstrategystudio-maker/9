@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>{{ v.nome }} · Report Google Ads</title>
+<style>
+  @import url("https://fonts.googleapis.com/css2?family=Arimo:ital,wght@0,400;0,700;1,400&family=Gelasio:wght@600;700&display=swap");
+  @page {
+    size: A4;
+    margin: 24mm 22mm 22mm 22mm;
+    @top-right { content: "{{ v.intestazione_css }}"; font-family: Arimo, Arial, sans-serif; font-style: italic; font-size: 8pt; color: #777; }
+    @bottom-center { content: "Pagina " counter(page); font-family: Arimo, Arial, sans-serif; font-size: 8pt; color: #777; }
+  }
+  :root { --c: {{ v.colore }}; --t: {{ v.colore_titoletti }}; }
+  body { font-family: Arimo, Arial, sans-serif; font-size: 10.5pt; line-height: 1.45; color: #222; margin: 0; }
+  .copertina { height: 230mm; text-align: center; padding-top: 52mm; break-after: page; }
+  .copertina .occhiello { font-weight: 700; color: #666; font-size: 11pt; letter-spacing: .02em; }
+  .copertina h1 { font-family: Gelasio, Georgia, serif; color: var(--c); font-size: 30pt; margin: 14pt 0 6pt; }
+  .copertina .indirizzo { font-style: italic; color: #666; font-size: 12pt; }
+  .copertina .k { color: #666; margin-top: 26pt; font-size: 11pt; }
+  .copertina .periodo { font-weight: 700; font-size: 16pt; margin-top: 4pt; }
+  .copertina .confronto { font-style: italic; color: #666; margin-top: 10pt; }
+  .copertina .focus { font-style: italic; color: #666; font-size: 9pt; margin-top: 2pt; }
+  h2 { color: var(--c); font-size: 17pt; margin: 18pt 0 8pt; break-after: avoid; }
+  h3 { color: var(--t); font-size: 12.5pt; margin: 14pt 0 6pt; break-after: avoid; }
+  p { margin: 0 0 9pt; }
+  p strong { color: inherit; }
+  table { width: 100%; border-collapse: collapse; margin: 8pt 0 12pt; font-size: 9.5pt; break-inside: avoid; }
+  th { background: var(--c); color: #fff; text-align: left; padding: 6pt 7pt; font-weight: 700; border-right: 1px solid rgba(255,255,255,.35); }
+  td { padding: 6pt 7pt; border-bottom: 1px solid #ddd; border-right: 1px solid #eee; }
+  td:not(:first-child), th:not(:first-child) { text-align: center; }
+  tr.verde td { background: #e8f5e9; } tr.ocra td { background: #fdf3e1; } tr.rosa td { background: #f6e3e3; }
+  tr.grigio td { background: #e3ece8; }
+  td.forte, td.forte * { font-weight: 700; }
+  td.verde { color: #2e7d32; } td.rosso { color: var(--c); } td.ocra { color: #b26a00; } td.tenue { color: #777; }
+  .riquadri { display: flex; margin: 10pt 0; break-inside: avoid; }
+  .riquadri > div { flex: 1; text-align: center; padding: 10pt 6pt; border-left: 1px solid #c9d8cc; }
+  .riquadri > div:first-child { border-left: 0; }
+  .riquadri.verde { background: #e8f5e9; border: 1px solid #c9d8cc; }
+  .riquadri.verde .val { font-size: 25pt; font-weight: 700; color: #2e7d32; }
+  .riquadri.secondario { background: {{ v.colore_riquadro }}; border: 1px solid #d8d0d0; }
+  .riquadri.secondario .val { font-size: 17pt; font-weight: 700; color: var(--c); }
+  .riquadri .lab { font-size: 8.5pt; color: #555; margin-top: 4pt; }
+  .riquadri.roi { gap: 12pt; }
+  .riquadri.roi > div { border: 1px solid #c9d8cc; background: #e8f5e9; }
+  .riquadri.roi .lab { font-weight: 700; color: #222; font-size: 10pt; margin: 0 0 4pt; }
+  .riquadri.roi .val { font-size: 26pt; font-weight: 700; color: var(--c); }
+  .riquadri.roi .sotto { font-size: 8pt; font-style: italic; color: #555; margin-top: 4pt; }
+  ul { margin: 0 0 10pt; padding-left: 18pt; } li { margin-bottom: 4pt; }
+  .insieme { break-inside: avoid; }
+  .nota { background: #fdf3e1; border: 1px solid #ecd9b0; margin: 10pt 0; break-inside: avoid; }
+  .nota .t { color: #b26a00; font-weight: 700; font-size: 11pt; padding: 7pt 10pt; border-bottom: 1px solid #ecd9b0; }
+  .nota .c { padding: 8pt 10pt; font-size: 9.5pt; }
+</style>
+</head>
+<body>
+<div class="copertina">
+  <div class="occhiello">{{ v.occhiello }}</div>
+  <h1>{{ v.nome }}</h1>
+  {% if v.indirizzo %}<div class="indirizzo">{{ v.indirizzo }}</div>{% endif %}
+  <div class="k">Mese analizzato</div>
+  <div class="periodo">{{ v.periodo }}</div>
+  {% if v.confronto %}<div class="confronto">{{ v.confronto }}</div>{% endif %}
+  {% if v.focus %}<div class="focus">Focus del mese: {{ v.focus }}</div>{% endif %}
+</div>
+
+{% for s in v.sezioni %}
+<div class="{{ 'insieme' if s.insieme else '' }}">
+<h2>{{ s.titolo }}</h2>
+{% for tipo, x in s.blocchi %}
+  {% if tipo == "p" %}<p>{{ x }}</p>
+  {% elif tipo == "h3" %}<h3>{{ x }}</h3>
+  {% elif tipo == "elenco" %}<ul>{% for voce in x %}<li>{{ voce }}</li>{% endfor %}</ul>
+  {% elif tipo == "nota" %}<div class="nota"><div class="t">{{ x[0] }}</div><div class="c">{{ x[1] }}</div></div>
+  {% elif tipo == "riquadri" %}
+    {% set voci, stile = x %}
+    <div class="riquadri {{ stile }}">
+      {% for voce in voci %}
+        {% if stile == "roi" %}<div><div class="lab">{{ voce[1] }}</div><div class="val">{{ voce[0] }}</div><div class="sotto">{{ voce[2] }}</div></div>
+        {% else %}<div><div class="val">{{ voce[0] }}</div><div class="lab">{{ voce[1] }}</div></div>{% endif %}
+      {% endfor %}
+    </div>
+  {% elif tipo == "tabella" %}
+    <table>
+      <tr>{% for c in x.colonne %}<th>{{ c }}</th>{% endfor %}</tr>
+      {% for riga in x.righe %}
+      <tr class="{{ x.evidenzia[loop.index0] if x.evidenzia else '' }}">{% for cella in riga %}<td class="{{ cella.classe }}">{{ cella.testo }}</td>{% endfor %}</tr>
+      {% endfor %}
+    </table>
+  {% endif %}
+{% endfor %}
+</div>
+{% endfor %}
+</body>
+</html>

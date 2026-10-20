@@ -42,6 +42,10 @@ def _rng(*chiavi) -> random.Random:
 
 
 class FonteDemo:
+    def __init__(self, locali: set[str] | None = None):
+        # Account di ristoranti e locali: dati demo coerenti con l'obiettivo negozio anche a metà e fine mese.
+        self.locali = {str(x) for x in (locali or ())}
+
     def _periodo(self, cid: str, intervallo: Intervallo, fattore: float) -> DatiPeriodo:
         # Circa metà degli account demo ha le visite al negozio misurate da Google.
         con_visite = _rng(cid, "visite").random() < 0.5
@@ -119,38 +123,57 @@ class FonteDemo:
         return DatiPeriodo(totale, {c.id: c}, giornaliero)
 
     def _dettaglio(self, cid: str, dati: DatiAccount) -> Dettaglio:
+        """Ripartizioni coerenti con i totali (canali, lingue, ore e giorni sommano al totale)."""
         r = _rng(cid, "dettaglio", dati.corrente.giornaliero[0][0])
-        t = dati.corrente.totale
         d = Dettaglio()
-        quota_ricerca = r.uniform(0.35, 0.65)
-        for nome, q_impr, q_spesa in (("Rete di Ricerca", 1 - quota_ricerca, 0.62),
-                                       ("Google Maps", quota_ricerca, 0.37), ("YouTube, Discover e altro", 0.002, 0.01)):
-            m = Metriche(impressioni=round(t.impressioni * q_impr), clic=round(t.clic * q_spesa * r.uniform(0.9, 1.1)),
-                         costo=t.costo * q_spesa, conversioni=round(t.conversioni * q_spesa * r.uniform(0.85, 1.15)))
-            m.visite_reali = round(t.visite_reali * q_spesa)
-            d.canali.append(Canale(nome, m))
+
+        def ripartisci(pesi: list[float], totale: float, intero: bool = True) -> list[float]:
+            s = sum(pesi)
+            valori = [totale * p / s for p in pesi]
+            if intero:
+                valori = [round(v) for v in valori]
+                valori[0] += round(totale) - sum(valori)
+            return valori
+
+        def canali(t: Metriche, seme: str) -> list[Canale]:
+            rr = _rng(cid, "canali", seme)
+            nomi = ["Rete di Ricerca", "Google Maps", "YouTube, Discover e altro"]
+            q_ric = rr.uniform(0.35, 0.65)
+            p_impr = [1 - q_ric, q_ric, 0.003]
+            p_spesa = [rr.uniform(0.5, 0.65), rr.uniform(0.33, 0.45), 0.01]
+            p_az = [rr.uniform(0.5, 0.7), rr.uniform(0.3, 0.45), 0.005]
+            vals = {k: ripartisci(pesi, getattr(t, k), k != "costo") for k, pesi in (
+                ("impressioni", p_impr), ("clic", p_spesa), ("costo", p_spesa), ("conversioni", p_az),
+                ("indicazioni", p_az), ("visite_reali", p_spesa))}
+            return [Canale(n, Metriche(**{k: v[i] for k, v in vals.items()})) for i, n in enumerate(nomi)]
+
+        d.canali = canali(dati.corrente.totale, "cor")
+        d.canali_precedente = canali(dati.precedente.totale, "pre")
+        t = dati.corrente.totale
         pesi = [r.uniform(0.5, 2) for _ in LINGUE]
-        for nome, peso in zip(LINGUE, pesi):
-            q = peso / sum(pesi)
-            m = Metriche(impressioni=round(t.impressioni * q), clic=round(t.clic * q * r.uniform(0.85, 1.15)),
-                         costo=t.costo * q, conversioni=round(t.conversioni * q * r.uniform(0.8, 1.2)))
-            d.gruppi_asset.append(GruppoAsset(nome, m, round(m.conversioni * r.uniform(0.6, 1.1))))
+        conv = ripartisci(pesi, t.conversioni)
+        clic = ripartisci([p * r.uniform(0.9, 1.1) for p in pesi], t.clic)
+        impr = ripartisci([p * r.uniform(0.8, 1.2) for p in pesi], t.impressioni)
+        costo = ripartisci(pesi, t.costo, False)
+        for i, nome in enumerate(LINGUE):
+            m = Metriche(impressioni=impr[i], clic=clic[i], costo=costo[i], conversioni=conv[i])
+            d.gruppi_asset.append(GruppoAsset(nome, m, round(conv[i] * r.uniform(0.6, 1.1))))
         d.gruppi_asset.sort(key=lambda g: -g.metriche.conversioni)
-        tot_profilo = sum(PROFILO_ORE)
-        d.conversioni_per_ora = [round(t.conversioni * p / tot_profilo * r.uniform(0.85, 1.15)) for p in PROFILO_ORE]
-        media = t.conversioni / dati.corrente.giornaliero.__len__()
+        d.conversioni_per_ora = ripartisci([p * r.uniform(0.85, 1.15) for p in PROFILO_ORE], t.conversioni)
+        d.spesa_per_ora = ripartisci([max(p, 3) * r.uniform(0.8, 1.2) for p in PROFILO_ORE], t.costo, False)
+        conteggio = [0] * 7
+        for g, _, _ in dati.corrente.giornaliero:
+            conteggio[g.weekday()] += 1
         settimana = [0.85, 0.85, 0.9, 1.0, 1.15, 1.35, 1.1]
-        d.giorni_corrente = [media * f * r.uniform(0.95, 1.05) for f in settimana]
+        d.conversioni_giorno_totale = ripartisci([f * c for f, c in zip(settimana, conteggio)], t.conversioni)
+        d.spesa_per_giorno = ripartisci([c * r.uniform(0.9, 1.1) for c in conteggio], t.costo, False)
+        d.giorni_corrente = [v / c if c else 0.0 for v, c in zip(d.conversioni_giorno_totale, conteggio)]
         d.giorni_precedente = [x * r.uniform(0.7, 0.95) for x in d.giorni_corrente]
         return d
 
-    def visite_intervallo(self, customer_id: str, intervallo: Intervallo) -> tuple[float, float]:
-        p = self._periodo_locale(str(customer_id), intervallo, 1.0)
-        return p.totale.visite_reali, p.totale.indicazioni
-
     def scarica(self, customer_id: str, periodi: Periodi, dettaglio: bool = False) -> DatiAccount:
         cid = str(customer_id)
-        if dettaglio:
+        if dettaglio or cid in self.locali:
             return self._scarica_locale(cid, periodi)
         r = _rng(cid, periodi.corrente.inizio, "extra")
         corrente = self._periodo(cid, periodi.corrente, 1.0)

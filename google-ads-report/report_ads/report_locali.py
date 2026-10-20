@@ -1,5 +1,5 @@
-"""Report cliente per ristoranti e locali (obiettivo "negozio"), sul modello dei report
-Domò Group e Grano: una sezione per locale, la sintesi del gruppo e il compenso.
+"""Report cliente per ristoranti e locali (obiettivo "negozio").
+Layout "advisory": una sezione per locale, la sintesi del gruppo e il compenso.
 
 Qui si preparano numeri e testi; l'impaginazione è in templates/report_locali.html.
 """
@@ -695,7 +695,7 @@ def _compenso(vg: VistaGruppo, gruppo: Gruppo, analisi: list[Analisi], locali: l
             vg.compenso_nota = md(f"**Conguaglio.** Le visite di {mese_prec} risultano oggi {num(x.p.conversioni)} a dato "
                                   "consolidato: la differenza rispetto a quanto fatturato il mese scorso va a conguaglio.")
     else:
-        # Compenso fisso: ritorno economico con margine, ROI e ROAS (come il report di Grano Trattoria).
+        # Compenso fisso: ritorno economico con margine, ROI e ROAS.
         vg.compenso_titolo = "Il ritorno economico del mese"
         a, x = analisi[0], locali[0]
         c = a.cliente

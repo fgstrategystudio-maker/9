@@ -203,13 +203,16 @@ class FonteGoogleAds:
         return d
 
     def _canali(self, cid: str, periodi: Periodi, d: Dettaglio) -> None:
-        cor = periodi.corrente
-        # Canali (Performance Max: Ricerca, Maps, YouTube...), con le visite per canale.
+        d.canali = self._canali_periodo(cid, periodi.corrente)
+        d.canali_precedente = self._canali_periodo(cid, periodi.precedente)
+
+    def _canali_periodo(self, cid: str, intervallo: Intervallo) -> list[Canale]:
+        """Canali (Performance Max: Ricerca, Maps, YouTube...), con indicazioni e visite per canale."""
         canali: dict[str, Metriche] = {}
         q = f"""
             SELECT segments.ad_network_type, metrics.impressions, metrics.clicks,
                    metrics.cost_micros, metrics.conversions
-            FROM campaign WHERE {cor.gaql()} AND campaign.status != 'REMOVED'
+            FROM campaign WHERE {intervallo.gaql()} AND campaign.status != 'REMOVED'
         """
         for row in self._query(cid, q):
             nome = CANALI.get(row.segments.ad_network_type.name, ALTRI_CANALI)
@@ -221,20 +224,29 @@ class FonteGoogleAds:
         q = f"""
             SELECT segments.ad_network_type, segments.conversion_action_category, metrics.conversions,
                    metrics.all_conversions
-            FROM campaign WHERE {cor.gaql()} AND campaign.status != 'REMOVED'
+            FROM campaign WHERE {intervallo.gaql()} AND campaign.status != 'REMOVED'
         """
         visite_tutte: dict[str, float] = {}
+        indicazioni_tutte: dict[str, float] = {}
         for row in self._query(cid, q):
-            if row.segments.conversion_action_category.name == "STORE_VISIT":
-                nome = CANALI.get(row.segments.ad_network_type.name, ALTRI_CANALI)
-                canali.setdefault(nome, Metriche()).visite_in_conversioni += row.metrics.conversions
+            nome = CANALI.get(row.segments.ad_network_type.name, ALTRI_CANALI)
+            categoria = row.segments.conversion_action_category.name
+            m = canali.setdefault(nome, Metriche())
+            if categoria == "STORE_VISIT":
+                m.visite_in_conversioni += row.metrics.conversions
                 visite_tutte[nome] = visite_tutte.get(nome, 0.0) + row.metrics.all_conversions
-        usa_conversioni = any(m.visite_in_conversioni for m in canali.values())
+            elif categoria == "GET_DIRECTIONS":
+                m.indicazioni += row.metrics.conversions
+                indicazioni_tutte[nome] = indicazioni_tutte.get(nome, 0.0) + row.metrics.all_conversions
+        usa_visite_conv = any(m.visite_in_conversioni for m in canali.values())
+        usa_ind_conv = any(m.indicazioni for m in canali.values())
         for nome, m in canali.items():
-            m.visite_reali = m.visite_in_conversioni if usa_conversioni else visite_tutte.get(nome, 0.0)
+            m.visite_reali = m.visite_in_conversioni if usa_visite_conv else visite_tutte.get(nome, 0.0)
+            if not usa_ind_conv:
+                m.indicazioni = indicazioni_tutte.get(nome, 0.0)
             m.conversioni -= m.visite_in_conversioni  # azioni senza le visite
         ordine = ["Rete di Ricerca", "Google Maps", ALTRI_CANALI]
-        d.canali = [Canale(n, canali[n]) for n in ordine if n in canali]
+        return [Canale(n, canali[n]) for n in ordine if n in canali]
 
     def _gruppi_asset(self, cid: str, periodi: Periodi, d: Dettaglio) -> None:
         cor, pre = periodi.corrente, periodi.precedente
@@ -285,10 +297,18 @@ class FonteGoogleAds:
         for row in self._query(cid, q):
             if row.segments.conversion_action_category.name != "STORE_VISIT":
                 d.conversioni_per_ora[row.segments.hour] += row.metrics.conversions
-        d.giorni_corrente = self._per_giorno(cid, cor)
-        d.giorni_precedente = self._per_giorno(cid, pre)
+        q = f"SELECT segments.hour, metrics.cost_micros FROM customer WHERE {cor.gaql()}"
+        for row in self._query(cid, q):
+            d.spesa_per_ora[row.segments.hour] += row.metrics.cost_micros / MICRO
+        q = f"SELECT segments.day_of_week, metrics.cost_micros FROM customer WHERE {cor.gaql()}"
+        for row in self._query(cid, q):
+            if row.segments.day_of_week.name in GIORNI:
+                d.spesa_per_giorno[GIORNI.index(row.segments.day_of_week.name)] += row.metrics.cost_micros / MICRO
+        d.giorni_corrente, d.conversioni_giorno_totale = self._per_giorno(cid, cor)
+        d.giorni_precedente, _ = self._per_giorno(cid, pre)
 
-    def _per_giorno(self, cid: str, intervallo: Intervallo) -> list[float]:
+    def _per_giorno(self, cid: str, intervallo: Intervallo) -> tuple[list[float], list[float]]:
+        """(media al giorno, totale del periodo) delle azioni per giorno della settimana."""
         totali = [0.0] * 7
         q = f"""
             SELECT segments.day_of_week, segments.conversion_action_category, metrics.conversions
@@ -301,7 +321,7 @@ class FonteGoogleAds:
         conteggio = [0] * 7
         for i in range(intervallo.giorni):
             conteggio[(intervallo.inizio + timedelta(days=i)).weekday()] += 1
-        return [t / c if c else 0.0 for t, c in zip(totali, conteggio)]
+        return [t / c if c else 0.0 for t, c in zip(totali, conteggio)], totali
 
     def visite_intervallo(self, customer_id: str, intervallo: Intervallo) -> tuple[float, float]:
         """(visite al negozio misurate, indicazioni stradali) in un intervallo qualsiasi."""
