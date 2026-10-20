@@ -168,6 +168,23 @@ Ristorante Esempio:
         TheFork resta il primo concorrente nelle aste, con una quota di impressioni del 45%.
 ```
 
+## Storia dei clienti (Secret `CONTESTO_CLIENTI`, facoltativo)
+
+Qui scrivi una volta sola la storia di ogni cliente, e la aggiorni solo quando cambia qualcosa di importante. Va indicato quando è partita la gestione, le decisioni prese, cosa hai già detto nei report precedenti e le regole concordate. Claude la legge per dare continuità ai testi, ma non viene stampata nei report.
+
+```yaml
+Gruppo Esempio: |
+  Gestione partita a luglio. Dal 2 ottobre ogni locale ha anche una campagna Search sul proprio nome...
+Locale Uno:
+  visite_comunicate: {"2026-09": 1215}   # visite scritte nei report già inviati, per mese
+  testo: |
+    Tracking visite attivo da agosto, limitato dal budget.
+```
+
+Con `visite_comunicate` il report del mese dopo mostra l'attribuzione a 30 giorni, cioè le visite scritte nel report precedente confrontate con quelle consolidate di oggi. Con la fee in percentuale sulle visite del mese (`base: mese`), calcola anche il conguaglio. Dopo ogni report aggiungi il numero del mese appena inviato.
+
+Per tenere fuori dal fatturato attribuibile le visite di alcune campagne, per esempio le Search sul nome del locale, aggiungi `escludi: [SEARCH]` al `compenso` del cliente.
+
 ## Testi scritti da Claude
 
 Con il Secret `ANTHROPIC_API_KEY` i testi dei report PDF (letture delle tabelle, sintesi, prossimi passi) e il commento interno sono scritti da Claude ogni volta, partendo dai numeri del report, dai mesi precedenti, dallo stesso mese dell'anno prima, dallo stato delle campagne e dalle note del mese. Tabelle, numeri e testi delle note restano quelli calcolati. Se la chiamata non riesce, il report parte con i testi automatici; il log dice quali testi sono stati usati.

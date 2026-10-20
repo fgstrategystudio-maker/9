@@ -24,6 +24,21 @@ ISTRUZIONI = """Sei il consulente Google Ads che segue questi ristoranti e scriv
 report mensile per il cliente. Ricevi il report già impaginato (tabelle e riquadri con i numeri), lo storico \
 dei mesi, lo stato delle campagne, le note del consulente e i testi attuali, scritti da regole automatiche.
 
+Il report fa parte di una serie: il cliente ha già letto i report dei mesi precedenti.
+- "storia_del_cliente" (del gruppo) e "storia_del_locale" sono scritte dal consulente: quando è partita la gestione, \
+le decisioni prese, cosa abbiamo già detto al cliente nei report precedenti e con quali numeri, le regole \
+concordate. Usala per dare continuità al racconto (riprendi ciò che avevamo annunciato e dì com'è andata), per \
+spiegare le variazioni con i cambiamenti fatti e per non contraddire i report già inviati. È materiale interno: \
+non citarla come documento e non riportare al cliente considerazioni sul compenso o sui ricavi del consulente, \
+trattative o valutazioni interne, salvo ciò che è già stato detto al cliente.
+- "storico_mensile" ha i totali mese per mese dall'inizio della gestione (il primo e l'ultimo mese possono \
+essere parziali: guarda "giorni" e confronta le medie al giorno). Le visite dei mesi passati sono consolidate, \
+quelle dell'ultimo mese no.
+- "visite_mese_precedente" confronta le visite scritte nel report del mese scorso con quelle di oggi.
+- Se un locale ha più campagne (per esempio Performance Max e Search brand), il risultato da commentare è il \
+totale del locale; spiega il ruolo di ciascuna campagna e perché la Performance Max può sembrare peggiorare \
+quando le ricerche sul nome passano alla campagna brand.
+
 Riscrivi ogni testo indicato in "testi_da_scrivere", mantenendo la stessa chiave e lo stesso tipo \
 (paragrafo, elenco di punti, elenco di passi). Per ogni testo:
 - Ragiona sui numeri: spiega cosa è successo, perché (canali, lingue, giorni, budget, apprendimento, \
@@ -123,14 +138,24 @@ def _storico(a: Analisi) -> dict:
                      "conversioni_azioni": round(azioni(m), 1), "indicazioni_stradali": round(m.indicazioni, 1),
                      "visite_in_negozio": round(m.conversioni, 1), "contatti": round(m.contatti, 1)})
     campagne = [{"nome": c.nome, "tipo": c.tipo, "stato": c.stato_primario, "motivi": c.motivi_stato,
-                 "budget_giornaliero": c.budget_giornaliero, "spesa": round(c.metriche.costo, 2)}
+                 "budget_giornaliero": c.budget_giornaliero, "spesa": round(c.metriche.costo, 2),
+                 "azioni": round(azioni(c.metriche), 1), "visite": round(c.metriche.conversioni, 1)}
                 for c in d.corrente.campagne.values() if c.metriche.costo > 0]
     return {
         "locale": a.cliente.nome,
         "descrizione": a.cliente.descrizione,
         "visite": "stimate dalle indicazioni stradali" if d.visite_stimate else "misurate da Google",
         "mese_chiuso": per.mese_chiuso,
-        "storico_mesi": mesi,
+        "mesi_del_report": mesi,
+        "storico_mensile": [{
+            "mese": f"{s.mese:%Y-%m}", "giorni": s.giorni, "spesa": round(s.metriche.costo, 2),
+            "impressioni": round(s.metriche.impressioni), "clic": round(s.metriche.clic),
+            "azioni": round(azioni(s.metriche), 1), "indicazioni_stradali": round(s.metriche.indicazioni, 1),
+            "contatti": round(s.metriche.contatti, 1), "visite_in_negozio": round(s.metriche.conversioni, 1),
+        } for s in d.storico if s.metriche.costo > 0],
+        "visite_mese_precedente": None if not a.attribuzione else {
+            "scritte_nel_report_precedente": a.attribuzione[0], "oggi_consolidate": round(a.attribuzione[1], 1)},
+        "storia_del_locale": a.cliente.contesto or None,
         "campagne": campagne,
         "modifiche_del_periodo": sorted({f"{m.risorsa} {m.operazione}" for m in d.modifiche})[:20],
         "nota_del_consulente": a.cliente.nota_mese or None,
@@ -140,7 +165,8 @@ def _storico(a: Analisi) -> dict:
 
 def _note_gruppo(gruppo) -> dict:
     return {"fatto_nel_mese": gruppo.fatto or None, "prossimi_passi": list(gruppo.prossimi_passi),
-            "focus_del_mese": gruppo.focus or None}
+            "focus_del_mese": gruppo.focus or None, "storia_del_cliente": gruppo.contesto or None,
+            "visite_escluse_dal_compenso": list(gruppo.compenso.escludi) if gruppo.compenso else []}
 
 
 # ---------------------------------------------------------------- layout Grano

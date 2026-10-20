@@ -40,7 +40,7 @@ concurrency:
 jobs:
   report:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 45
     defaults:
       run:
         working-directory: google-ads-report
@@ -74,6 +74,11 @@ jobs:
         env:
           NOTE_MESE: ${{ secrets.NOTE_MESE }}
         run: printf '%s\n' "$NOTE_MESE" > note.yaml
+
+      - name: Storia dei clienti dal Secret (facoltativo)
+        env:
+          CONTESTO_CLIENTI: ${{ secrets.CONTESTO_CLIENTI }}
+        run: printf '%s\n' "$CONTESTO_CLIENTI" > contesto.yaml
 
       - name: Genera e invia i report
         env:

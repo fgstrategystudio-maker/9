@@ -51,6 +51,11 @@ class Cliente:
     inps_fisso: float = 0.0
     # Testo libero del mese per questo locale (dalle note del mese): "Cosa abbiamo fatto".
     nota_mese: str = ""
+    contesto: str = ""  # storia e strategia del locale (Secret CONTESTO_CLIENTI)
+    contesto_gruppo: str = ""  # storia del cliente a cui appartiene il locale
+    # Visite scritte nei report già inviati, per mese ("2026-09": 1215): il report successivo le confronta
+    # con il dato consolidato (attribuzione a 30 giorni) e calcola l'eventuale conguaglio.
+    visite_comunicate: dict = field(default_factory=dict)
 
     @property
     def ecommerce(self) -> bool:
@@ -75,6 +80,9 @@ class Compenso:
     base: str = "mese_precedente"  # mese_precedente | mese
     importo: float = 0.0
     margine: float | None = None
+    # Tipi di campagna le cui visite restano fuori dal fatturato attribuibile (es. [SEARCH] per le
+    # campagne sul nome del locale, che proteggono clienti già acquisiti).
+    escludi: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -101,6 +109,8 @@ class Gruppo:
     prossimi_passi: list[str] = field(default_factory=list)
     focus: str = ""  # "Focus del mese" in copertina
     sezioni: list[dict] = field(default_factory=list)  # sezioni libere: [{titolo, testo}]
+    # Storia e strategia del cliente (Secret CONTESTO_CLIENTI): la legge Claude per scrivere i testi.
+    contesto: str = ""
 
     @property
     def negozio(self) -> bool:
@@ -230,4 +240,43 @@ def applica_note(conf: Configurazione, percorso: str | Path, mese: str) -> list[
             locali[nome].nota_mese = str(testi.get("fatto", "") or "")
         else:
             avvisi.append("Note del mese: un nome non corrisponde a nessun cliente o locale")
+    return avvisi
+
+
+def applica_contesto(conf: Configurazione, percorso: str | Path) -> list[str]:
+    """Aggiunge la storia e la strategia dei clienti (Secret CONTESTO_CLIENTI), valide finché non le cambi.
+
+    Formato: nome del cliente o del locale, poi il testo (anche lungo, con | per andare a capo).
+    Per un locale si possono indicare anche le visite scritte nei report già inviati:
+        Gruppo Esempio: |
+          Da luglio una Performance Max per locale; da ottobre anche una campagna sul nome del locale...
+        Locale Uno:
+          visite_comunicate: {"2026-09": 1215}
+          testo: |
+            In apprendimento, budget minimo.
+
+    Il testo serve solo a Claude per ragionare sui numeri: non viene stampato nei report.
+    """
+    file = Path(percorso)
+    if not file.exists() or not file.read_text(encoding="utf-8").strip():
+        return []
+    dati = yaml.safe_load(file.read_text(encoding="utf-8")) or {}
+    if not isinstance(dati, dict):
+        return ["Contesto clienti ignorato: il formato non è nome: testo"]
+    avvisi = []
+    gruppi = {g.nome: g for g in conf.gruppi}
+    locali = {loc.nome: loc for g in conf.gruppi for loc in g.locali}
+    for nome, voce in dati.items():
+        testo, visite = (voce.get("testo", ""), voce.get("visite_comunicate") or {}) if isinstance(voce, dict) else (voce, {})
+        if nome in gruppi:
+            gruppi[nome].contesto = str(testo or "")
+            for loc in gruppi[nome].locali:
+                loc.contesto_gruppo = gruppi[nome].contesto
+            if len(gruppi[nome].locali) == 1:
+                gruppi[nome].locali[0].visite_comunicate = {str(k): float(v) for k, v in visite.items()}
+        elif nome in locali:
+            locali[nome].contesto = str(testo or "")
+            locali[nome].visite_comunicate = {str(k): float(v) for k, v in visite.items()}
+        else:
+            avvisi.append("Contesto clienti: un nome non corrisponde a nessun cliente o locale")
     return avvisi

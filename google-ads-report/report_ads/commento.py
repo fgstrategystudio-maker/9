@@ -145,6 +145,10 @@ sintesi_interna: 2-4 frasi sullo stato dell'account e la priorità numero uno. c
 cosa si è mosso e perché, collegando le variazioni dei numeri alle modifiche registrate quando \
 plausibile. cosa_migliorare: azioni specifiche e ordinate per impatto (campagna, keyword, importo).
 
+storia_del_cliente, se presente, è scritta dal consulente: decisioni prese, campagne aggiunte, cosa è \
+già stato detto al cliente. Usala per spiegare le variazioni (per esempio una campagna nuova o una pulizia dei \
+termini) e non attribuire a stagionalità ciò che è spiegato da un intervento.
+
 Il risultato principale è indicato in risultato_principale: per i locali sono le visite al negozio \
 (se come_si_misura indica una stima, dillo in modo chiaro ma senza sminuire il dato) e le indicazioni \
 stradali sono il segnale che le alimenta. Usa solo i numeri forniti, non inventarne. Le variazioni dei volumi sono già calcolate sulla media \
@@ -163,6 +167,7 @@ def _contesto(a: Analisi) -> dict:
             if a.dati.visite_stimate else "visite al negozio misurate da Google"
         ),
         "note_cliente": a.cliente.note,
+        "storia_del_cliente": "\n\n".join(x for x in (a.cliente.contesto_gruppo, a.cliente.contesto) if x) or None,
         "target": {"budget_mensile": a.cliente.budget_mensile, "cpa": a.cliente.cpa_target,
                    "roas": a.cliente.roas_target},
         "momento": p.titolo,

@@ -8,10 +8,10 @@ from __future__ import annotations
 
 import logging
 import os
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 
 from .modello import (
-    Campagna, Canale, DatiAccount, DatiPeriodo, Dettaglio, GruppoAsset, Keyword, Metriche, Modifica,
+    Campagna, Canale, DatiAccount, DatiPeriodo, Dettaglio, GruppoAsset, Keyword, MeseStorico, Metriche, Modifica,
     TermineRicerca,
 )
 from .periodi import Intervallo, Periodi
@@ -53,7 +53,18 @@ CATEGORIE = {
 CANALI = {"SEARCH": "Rete di Ricerca", "SEARCH_PARTNERS": "Rete di Ricerca", "MAPS": "Google Maps"}
 ALTRI_CANALI = "YouTube, Discover e altro"
 
+MESI_STORICO = 12  # mesi di storico letti per i testi (oltre al mese del report)
+
 GIORNI = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"]
+
+
+def _fine_mese(primo: date) -> date:
+    return (primo.replace(day=28) + timedelta(days=4)).replace(day=1) - timedelta(days=1)
+
+
+def _mesi_prima(primo: date, n: int) -> date:
+    anno, mese = divmod(primo.year * 12 + primo.month - 1 - n, 12)
+    return date(anno, mese + 1, 1)
 
 
 def pulisci_id(customer_id: str) -> str:
@@ -323,6 +334,47 @@ class FonteGoogleAds:
             conteggio[(intervallo.inizio + timedelta(days=i)).weekday()] += 1
         return [t / c if c else 0.0 for t, c in zip(totali, conteggio)], totali
 
+    def storico(self, cid: str, intervallo: Intervallo) -> list[MeseStorico]:
+        """Totali mese per mese, con le azioni locali come nel resto del report."""
+        mesi: dict[date, Metriche] = {}
+        q = f"""
+            SELECT segments.month, metrics.cost_micros, metrics.impressions, metrics.clicks, metrics.conversions
+            FROM customer WHERE {intervallo.gaql()}
+        """
+        for row in self._query(cid, q):
+            m = mesi.setdefault(date.fromisoformat(row.segments.month), Metriche())
+            m.costo += row.metrics.cost_micros / MICRO
+            m.impressioni += row.metrics.impressions
+            m.clic += row.metrics.clicks
+            m.conversioni += row.metrics.conversions
+        secondarie: dict[date, dict] = {}
+        q = f"""
+            SELECT segments.month, segments.conversion_action_category, metrics.conversions,
+                   metrics.all_conversions
+            FROM customer WHERE {intervallo.gaql()}
+        """
+        for row in self._query(cid, q):
+            mese = date.fromisoformat(row.segments.month)
+            m = mesi.setdefault(mese, Metriche())
+            sec = secondarie.setdefault(mese, {})
+            categoria = row.segments.conversion_action_category.name
+            if categoria == "STORE_VISIT":
+                m.visite_in_conversioni += row.metrics.conversions
+                sec["visite_reali"] = sec.get("visite_reali", 0.0) + row.metrics.all_conversions
+            elif categoria in CATEGORIE:
+                campo = CATEGORIE[categoria]
+                setattr(m, campo, getattr(m, campo) + row.metrics.conversions)
+                sec[campo] = sec.get(campo, 0.0) + row.metrics.all_conversions
+        risultato = []
+        for mese in sorted(mesi):
+            m, sec = mesi[mese], secondarie.get(mese, {})
+            m.visite_reali = m.visite_in_conversioni or sec.get("visite_reali", 0.0)
+            if m.indicazioni == 0:
+                m.indicazioni = sec.get("indicazioni", 0.0)
+            inizio, fine = max(mese, intervallo.inizio), min(_fine_mese(mese), intervallo.fine)
+            risultato.append(MeseStorico(mese, (fine - inizio).days + 1, m))
+        return risultato
+
     def visite_intervallo(self, customer_id: str, intervallo: Intervallo) -> tuple[float, float]:
         """(visite al negozio misurate, indicazioni stradali) in un intervallo qualsiasi."""
         visite = visite_tutte = ind = ind_tutte = 0.0
@@ -358,6 +410,13 @@ class FonteGoogleAds:
             if periodi.due_mesi_prima:
                 due_mesi_prima = self._periodo(cid, periodi.due_mesi_prima, con_giornaliero=False)
             det = self._dettaglio(cid, periodi)
+        storico = []
+        if dettaglio:
+            try:
+                storico = self.storico(cid, Intervallo(_mesi_prima(periodi.corrente.inizio, MESI_STORICO),
+                                                        periodi.corrente.fine))
+            except Exception as e:  # lo storico arricchisce i testi: senza, il report parte lo stesso
+                log.warning("Storico mensile non disponibile (%s)", type(e).__name__)
 
         termini = []
         q = f"""
@@ -402,7 +461,7 @@ class FonteGoogleAds:
             nome=nome, valuta=valuta, punteggio_ottimizzazione=punteggio,
             corrente=corrente, precedente=precedente, anno_prec=anno_prec,
             termini_ricerca=termini, keyword=keyword, modifiche=modifiche,
-            due_mesi_prima=due_mesi_prima, dettaglio=det,
+            due_mesi_prima=due_mesi_prima, dettaglio=det, storico=storico,
         )
 
     def _modifiche(self, cid: str, periodi: Periodi, campagne: dict[str, Campagna]) -> list[Modifica]:

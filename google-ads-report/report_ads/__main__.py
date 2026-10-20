@@ -71,6 +71,34 @@ def _prepara_contratto(fonte, a, gruppo) -> None:
         log.warning("Visite dall'inizio del contratto non disponibili (%s)", type(e).__name__)
 
 
+def _prepara_attribuzione(fonte, a) -> None:
+    """Visite del mese precedente: quelle scritte nel report già inviato e quelle di oggi, consolidate.
+
+    Se il locale è partito a metà del mese prima (es. dal 26 agosto, con il primo report fino al 30
+    settembre), il dato di oggi copre lo stesso periodo del report.
+    """
+    c, per = a.cliente, a.periodi
+    comunicate = c.visite_comunicate.get(f"{per.precedente.inizio:%Y-%m}")
+    if comunicate is None:
+        return
+    inizio = per.precedente.inizio
+    if c.contratto_dal:
+        try:
+            dal = date.fromisoformat(c.contratto_dal)
+        except ValueError:
+            dal = inizio
+        if (inizio - dal).days < 31 and dal < inizio:
+            inizio = dal
+    oggi = a.dati.precedente.totale.conversioni
+    if inizio != per.precedente.inizio:
+        try:
+            reali, indicazioni = fonte.visite_intervallo(c.customer_id, Intervallo(inizio, per.precedente.fine))
+            oggi = indicazioni * c.quota_visite_indicazioni if a.dati.visite_stimate else reali
+        except Exception as e:  # noqa: BLE001
+            log.warning("Visite consolidate dall'inizio non disponibili (%s)", type(e).__name__)
+    a.attribuzione = (comunicate, oggi)
+
+
 def _testi_ai(funzione, vista, analisi) -> bool:
     """Testi scritti da Claude; un errore qui non deve mai bloccare il report."""
     try:
@@ -90,6 +118,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--invia", action="store_true", help="invia i report via email")
     parser.add_argument("--output", default="output", help="cartella dove salvare i report HTML")
     parser.add_argument("--note", default="note.yaml", help="testi del mese (se il file esiste)")
+    parser.add_argument("--contesto", default="contesto.yaml", help="storia e strategia dei clienti (se il file esiste)")
     args = parser.parse_args(argv)
 
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
@@ -105,6 +134,8 @@ def main(argv: list[str] | None = None) -> int:
     periodi = calcola_periodi(momento, oggi)
     configurazione = cfg.carica(args.config)
     for avviso in cfg.applica_note(configurazione, args.note, f"{periodi.corrente.inizio:%Y-%m}"):
+        log.warning(avviso)
+    for avviso in cfg.applica_contesto(configurazione, args.contesto):
         log.warning(avviso)
     agenzia = configurazione.agenzia
     email_interna = os.environ.get("REPORT_EMAIL_INTERNA") or agenzia.email_interna
@@ -146,6 +177,8 @@ def main(argv: list[str] | None = None) -> int:
                 continue
             if dettaglio and cliente.contratto_dal:
                 _prepara_contratto(fonte, a, gruppo)
+            if dettaglio:
+                _prepara_attribuzione(fonte, a)
             a.controlli = controlla(a)
             analisi.append(a)
             analisi_gruppo.append(a)

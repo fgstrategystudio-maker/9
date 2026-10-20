@@ -92,7 +92,7 @@
 <div class="sezione">
   <div class="testata">
     <h2><small>{{ '%02d' % l.numero }}</small>{{ l.nome }}</h2>
-    <div class="desc">{{ l.descrizione }}{% if l.campagna %}<br>Campagna “{{ l.campagna }}”{% endif %}</div>
+    <div class="desc">{{ l.descrizione }}{% if l.campagna %}<br>{{ 'Campagne' if l.campagne else 'Campagna' }} “{{ l.campagna }}”{% endif %}</div>
   </div>
   <p>{{ l.intro }}</p>
 
@@ -112,6 +112,14 @@
     {{ tabella(["Metrica"] + l.mesi + ["Variazione"], l.confronto) }}
   </div>
   <div class="richiamo blu-bordo">{{ l.lettura_numeri }}</div>
+
+  {% if l.campagne %}
+  <div class="blocco">
+    <h3>Le campagne del locale</h3>
+    {% if l.nota_campagne %}<p class="nota">{{ l.nota_campagne }}</p>{% endif %}
+    {{ tabella(["Campagna", "Spesa", "Azioni", "Costo/az.", "Visite", "Costo/visita"], l.campagne) }}
+  </div>
+  {% endif %}
 
   {% if l.canali %}
   <div class="blocco">
@@ -190,6 +198,13 @@
   <div class="blocco">
     <h3>Il gruppo, {{ v.mesi_gruppo | join(' verso ') | lower }} (media al giorno)</h3>
     {{ tabella(["Metrica"] + v.mesi_gruppo + ["Variazione"], v.confronto_gruppo) }}
+  </div>
+  {% endif %}
+  {% if v.attribuzione %}
+  <div class="blocco">
+    <h3>{{ v.attribuzione_titolo }}</h3>
+    <p class="nota">{{ v.attribuzione_nota }}</p>
+    {{ tabella(v.attribuzione_colonne, v.attribuzione) }}
   </div>
   {% endif %}
   {% if v.compenso %}
