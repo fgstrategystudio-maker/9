@@ -48,11 +48,12 @@ def controlla(a: Analisi) -> list[Controllo]:
 
     az = azioni(t)
     parti = t.indicazioni + t.contatti + t.ordini
+    altre = az - parti
     risultati.append(Controllo(
-        "Azioni = indicazioni + contatti + ordini",
-        parti <= az + 2 and (az - parti) <= max(2.0, az * 0.05),
+        "Azioni = indicazioni + contatti + ordini (+ altre azioni principali)",
+        altre >= -2,
         f"indicazioni {_fmt(t.indicazioni)} + contatti {_fmt(t.contatti)} + ordini {_fmt(t.ordini)} "
-        f"= {_fmt(parti)} · azioni {_fmt(az)}",
+        f"+ altre {_fmt(altre)} = azioni {_fmt(az)}",
     ))
     if not d.visite_stimate:
         risultati.append(Controllo(

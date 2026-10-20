@@ -146,8 +146,9 @@ class FonteGoogleAds:
                        campagne: dict[str, Campagna]) -> None:
         """Azioni per categoria: indicazioni stradali, contatti, ordini e visite al negozio.
 
-        Come la colonna "Risultati" di Google Ads: si usa la colonna Conversioni e si ripiega su
-        "tutte le conversioni" solo se un'azione è secondaria (in Conversioni vale zero).
+        Come la colonna "Risultati" di Google Ads: si usa la colonna Conversioni, cioè solo le azioni
+        che sono obiettivi principali. Fanno eccezione le indicazioni stradali: se sono secondarie si
+        leggono da "tutte le conversioni", perché servono comunque a stimare le visite.
         Le visite al negozio contate tra le Conversioni vanno poi tolte dalle azioni (vedi
         `visite_in_conversioni`), perché le azioni sono solo indicazioni, contatti e ordini.
         """
@@ -161,10 +162,9 @@ class FonteGoogleAds:
                 secondarie[campo] = secondarie.get(campo, 0.0) + tutte
 
         def chiudi(m: Metriche, secondarie: dict) -> None:
-            m.visite_reali = m.visite_in_conversioni
-            for campo, tutte in secondarie.items():
-                if getattr(m, campo) == 0:
-                    setattr(m, campo, tutte)
+            m.visite_reali = m.visite_in_conversioni or secondarie.get("visite_reali", 0.0)
+            if m.indicazioni == 0:
+                m.indicazioni = secondarie.get("indicazioni", 0.0)
 
         sec_totale: dict = {}
         q = f"""
