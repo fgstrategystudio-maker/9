@@ -35,22 +35,37 @@ GitHub Actions (cron) ──► Google Ads API ──► analisi.py (regole) ─
 
 ## Configurazione (una volta sola)
 
+> **Novità 2026:** Google ha ritirato il *developer token* il 9 settembre 2026. Il livello di accesso
+> alla API ora dipende dal **progetto Google Cloud** con cui generi le credenziali OAuth, e si
+> richiede dalla Cloud Console, non più dal Centro API di Google Ads.
+
 ### 1. Account amministratore Google Ads (MCC)
 
-Se non lo hai già, crea un [account amministratore](https://ads.google.com/home/tools/manager-accounts/) (è gratuito). Collega gli account dei clienti e il tuo: dall'MCC invii una richiesta di collegamento e il cliente la accetta.
+Se non lo hai già, crea un [account amministratore](https://ads.google.com/home/tools/manager-accounts/) (è gratuito). Collega gli account dei clienti e il tuo: dall'MCC invii una richiesta di collegamento e il cliente la accetta. Con un MCC basta un solo accesso per leggere tutti gli account.
 
-### 2. Developer token
+### 2. Progetto Google Cloud e client OAuth (gratuito)
 
-Nell'MCC vai su **Amministrazione → Centro API**, compila il modulo e copia il *developer token*.
+1. Su [console.cloud.google.com](https://console.cloud.google.com) crea un progetto, ad esempio "report-google-ads". Poi vai in **API e servizi → Libreria** e abilita la **Google Ads API**.
+2. Vai in **API e servizi → Schermata consenso OAuth** (oggi si chiama "Google Auth Platform"):
+   - imposta il pubblico su **Esterno** e aggiungi la tua email;
+   - pubblica l'app nello stato **In produzione**. Se resta in "Test", il refresh token scade dopo 7 giorni e i report smettono di funzionare;
+   - nella scheda **Branding** inserisci nome dell'app, logo, il sito `francescogizzi.com` e i link a privacy e termini, poi avvia la **verifica del brand**. Serve per ottenere l'accesso Basic.
+3. In **Client → Crea client** scegli il tipo "App desktop" e copia Client ID e Client Secret.
 
-All'inizio il token funziona solo con gli **account di test**. Per leggere gli account reali devi richiedere un livello di accesso superiore dal Centro API. Basta descrivere l'uso: "reportistica interna per i miei clienti, sola lettura". Nel frattempo puoi provare tutto con `--demo`.
+### 3. Livello di accesso alla Google Ads API
 
-### 3. Progetto Google Cloud e client OAuth (gratuito)
+Nella Cloud Console apri la pagina **Google Ads API** (panoramica dell'API): lì vedi il livello attuale del progetto e c'è il pannello per richiedere un livello superiore ("Upgrade access level").
 
-1. Su [console.cloud.google.com](https://console.cloud.google.com) crea un progetto e abilita la **Google Ads API**.
-2. In **API e servizi → Schermata consenso OAuth** scegli il tipo "Esterno" e aggiungi la tua email.
-3. **Pubblica l'app** (stato "In produzione"). Se resta in "Test", il refresh token scade dopo 7 giorni e i report smettono di funzionare. Per uso personale non serve la verifica di Google: al momento del consenso vedrai un avviso "app non verificata", che puoi accettare.
-4. In **Credenziali → Crea credenziali → ID client OAuth** scegli il tipo "App desktop". Copia Client ID e Client Secret.
+| Livello | Account reali | Limite | Come si ottiene |
+|---|---|---|---|
+| Test | no, solo account di test | – | automatico |
+| **Explorer** | **sì** | 2.880 operazioni al giorno | richiesta dalla Cloud Console |
+| Basic | sì | 15.000 operazioni al giorno | richiesta con verifica del brand, approvazione automatica |
+| Standard | sì | illimitato | revisione manuale |
+
+**Per i report basta Explorer**: ogni esecuzione usa circa 12 richieste per cliente, quindi anche con 30 clienti resti sotto le 400 al giorno. Explorer esclude solo creazione di account, gestione utenti, fatturazione e Keyword Planner, che qui non servono. Nella richiesta descrivi l'uso: "reportistica interna in sola lettura sui miei account e su quelli dei miei clienti, gestiti tramite il mio account amministratore".
+
+Finché il progetto è al livello Test puoi provare tutto con `--demo`.
 
 ### 4. Refresh token
 
@@ -61,7 +76,7 @@ pip install google-auth-oauthlib
 python google-ads-report/genera_refresh_token.py
 ```
 
-Accedi con l'utente Google che gestisce l'MCC: lo script stampa il refresh token.
+Accedi con l'utente Google che gestisce l'MCC: lo script stampa il refresh token. Il token è legato al progetto Cloud del passo 2, ed è da quel progetto che dipende il livello di accesso.
 
 ### 5. Email (Gmail, gratuito)
 
@@ -85,8 +100,7 @@ Vai in **Settings → Secrets and variables → Actions → New repository secre
 
 | Secret | Valore |
 |---|---|
-| `GOOGLE_ADS_DEVELOPER_TOKEN` | developer token (passo 2) |
-| `GOOGLE_ADS_CLIENT_ID` / `GOOGLE_ADS_CLIENT_SECRET` | client OAuth (passo 3) |
+| `GOOGLE_ADS_CLIENT_ID` / `GOOGLE_ADS_CLIENT_SECRET` | client OAuth (passo 2) |
 | `GOOGLE_ADS_REFRESH_TOKEN` | refresh token (passo 4) |
 | `GOOGLE_ADS_LOGIN_CUSTOMER_ID` | ID dell'MCC, es. `123-456-7890` |
 | `SMTP_USER` / `SMTP_PASSWORD` | indirizzo Gmail e password per le app (passo 5) |
@@ -125,7 +139,7 @@ Opzioni:
 
 | Voce | Costo |
 |---|---|
-| Google Ads API, Google Cloud, OAuth | 0 € |
+| Google Ads API (livello Explorer o Basic), Google Cloud, OAuth | 0 € |
 | GitHub Actions | 0 €: su un repository pubblico i minuti sono illimitati, ogni esecuzione dura 1-2 minuti |
 | Invio email con Gmail | 0 € |
 | Commento AI (facoltativo) | circa 0,05-0,10 € per cliente per report con il modello predefinito (`claude-opus-5-5`, effort `medium`) |

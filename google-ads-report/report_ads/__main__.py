@@ -68,7 +68,12 @@ def main(argv: list[str] | None = None) -> int:
         fonte = FonteDemo()
     else:
         from .fonte_google_ads import FonteGoogleAds
-        fonte = FonteGoogleAds()
+        try:
+            fonte = FonteGoogleAds()
+        except Exception as e:
+            # Errori di credenziali (refresh token scaduto, client OAuth errato): nessun dato cliente nel testo.
+            log.error("Accesso a Google Ads non riuscito: %s", _descrivi_errore(e))
+            return 1
 
     cartella = Path(args.output)
     cartella.mkdir(parents=True, exist_ok=True)

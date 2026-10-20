@@ -25,10 +25,15 @@ METRICHE_GAQL = """
 """
 
 VARIABILI = {
-    "developer_token": "GOOGLE_ADS_DEVELOPER_TOKEN",
     "client_id": "GOOGLE_ADS_CLIENT_ID",
     "client_secret": "GOOGLE_ADS_CLIENT_SECRET",
     "refresh_token": "GOOGLE_ADS_REFRESH_TOKEN",
+}
+# Facoltative. Il developer token è stato ritirato da Google il 9/9/2026: l'accesso
+# dipende dal livello del progetto Google Cloud. Se lo imposti viene inviato e ignorato.
+# login_customer_id serve quando gli account si leggono tramite l'account amministratore (MCC).
+VARIABILI_FACOLTATIVE = {
+    "developer_token": "GOOGLE_ADS_DEVELOPER_TOKEN",
     "login_customer_id": "GOOGLE_ADS_LOGIN_CUSTOMER_ID",
 }
 
@@ -65,7 +70,11 @@ class FonteGoogleAds:
                 + ". Vedi google-ads-report/README.md (oppure usa --demo)."
             )
         config = {k: os.environ[v] for k, v in VARIABILI.items()}
-        config["login_customer_id"] = pulisci_id(config["login_customer_id"])
+        for k, v in VARIABILI_FACOLTATIVE.items():
+            if os.environ.get(v):
+                config[k] = os.environ[v]
+        if "login_customer_id" in config:
+            config["login_customer_id"] = pulisci_id(config["login_customer_id"])
         config["use_proto_plus"] = True
         self.client = GoogleAdsClient.load_from_dict(config)
         self.servizio = self.client.get_service("GoogleAdsService")
