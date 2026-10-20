@@ -6,13 +6,17 @@ Secrets): nessuna chiave sta nel codice o nel repository.
 
 from __future__ import annotations
 
+import logging
 import os
 from datetime import datetime, timedelta
 
 from .modello import (
-    Campagna, DatiAccount, DatiPeriodo, Keyword, Metriche, Modifica, TermineRicerca,
+    Campagna, Canale, DatiAccount, DatiPeriodo, Dettaglio, GruppoAsset, Keyword, Metriche, Modifica,
+    TermineRicerca,
 )
 from .periodi import Intervallo, Periodi
+
+log = logging.getLogger(__name__)
 
 MICRO = 1_000_000
 
@@ -36,6 +40,20 @@ VARIABILI_FACOLTATIVE = {
     "developer_token": "GOOGLE_ADS_DEVELOPER_TOKEN",
     "login_customer_id": "GOOGLE_ADS_LOGIN_CUSTOMER_ID",
 }
+
+
+# Categorie di conversione raggruppate come nei report dei locali.
+CATEGORIE = {
+    "GET_DIRECTIONS": "indicazioni",
+    "PHONE_CALL_LEAD": "contatti", "CONTACT": "contatti", "MESSAGE_LEAD": "contatti",
+    "SUBMIT_LEAD_FORM": "contatti",
+    "BEGIN_CHECKOUT": "ordini", "PURCHASE": "ordini", "BOOK_APPOINTMENT": "ordini",
+}
+
+CANALI = {"SEARCH": "Rete di Ricerca", "SEARCH_PARTNERS": "Rete di Ricerca", "MAPS": "Google Maps"}
+ALTRI_CANALI = "YouTube, Discover e altro"
+
+GIORNI = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"]
 
 
 def pulisci_id(customer_id: str) -> str:
@@ -92,6 +110,7 @@ class FonteGoogleAds:
         q = f"""
             SELECT campaign.id, campaign.name, campaign.status,
                    campaign.advertising_channel_type, campaign_budget.amount_micros,
+                   campaign.primary_status, campaign.primary_status_reasons,
                    {METRICHE_GAQL}
             FROM campaign
             WHERE {intervallo.gaql()} AND campaign.status != 'REMOVED'
@@ -103,6 +122,8 @@ class FonteGoogleAds:
                 id=str(c.id), nome=c.name, stato=c.status.name,
                 tipo=c.advertising_channel_type.name,
                 budget_giornaliero=budget, metriche=_metriche(row.metrics),
+                stato_primario=c.primary_status.name,
+                motivi_stato=[m.name for m in c.primary_status_reasons],
             )
 
         self._azioni_locali(cid, intervallo, totale, campagne)
@@ -123,28 +144,136 @@ class FonteGoogleAds:
 
     def _azioni_locali(self, cid: str, intervallo: Intervallo, totale: Metriche,
                        campagne: dict[str, Campagna]) -> None:
-        """Indicazioni stradali e visite al negozio, da "tutte le conversioni"
-        (spesso sono azioni secondarie, escluse dalla colonna Conversioni)."""
-        campi = {"GET_DIRECTIONS": "indicazioni", "STORE_VISIT": "visite_reali"}
+        """Azioni per categoria: indicazioni stradali, contatti, ordini e visite al negozio.
+
+        Indicazioni, contatti e ordini vengono dalla colonna Conversioni (se un'azione
+        è secondaria si ripiega su "tutte le conversioni"); le visite al negozio sono
+        quasi sempre secondarie e si leggono da "tutte le conversioni".
+        """
+        def accumula(m: Metriche, categoria: str, conv: float, tutte: float, secondarie: dict) -> None:
+            if categoria == "STORE_VISIT":
+                m.visite_reali += tutte
+            elif categoria in CATEGORIE:
+                campo = CATEGORIE[categoria]
+                setattr(m, campo, getattr(m, campo) + conv)
+                secondarie[campo] = secondarie.get(campo, 0.0) + tutte
+
+        def chiudi(m: Metriche, secondarie: dict) -> None:
+            for campo, tutte in secondarie.items():
+                if getattr(m, campo) == 0:
+                    setattr(m, campo, tutte)
+
+        sec_totale: dict = {}
         q = f"""
-            SELECT segments.conversion_action_category, metrics.all_conversions
+            SELECT segments.conversion_action_category, metrics.conversions, metrics.all_conversions
             FROM customer WHERE {intervallo.gaql()}
         """
         for row in self._query(cid, q):
-            campo = campi.get(row.segments.conversion_action_category.name)
-            if campo:
-                setattr(totale, campo, getattr(totale, campo) + row.metrics.all_conversions)
+            accumula(totale, row.segments.conversion_action_category.name,
+                     row.metrics.conversions, row.metrics.all_conversions, sec_totale)
+        chiudi(totale, sec_totale)
+
+        sec_campagne: dict = {}
         q = f"""
-            SELECT campaign.id, segments.conversion_action_category, metrics.all_conversions
+            SELECT campaign.id, segments.conversion_action_category, metrics.conversions,
+                   metrics.all_conversions
             FROM campaign WHERE {intervallo.gaql()} AND campaign.status != 'REMOVED'
         """
         for row in self._query(cid, q):
-            campo = campi.get(row.segments.conversion_action_category.name)
             c = campagne.get(str(row.campaign.id))
-            if campo and c:
-                setattr(c.metriche, campo, getattr(c.metriche, campo) + row.metrics.all_conversions)
+            if c:
+                accumula(c.metriche, row.segments.conversion_action_category.name,
+                         row.metrics.conversions, row.metrics.all_conversions,
+                         sec_campagne.setdefault(c.id, {}))
+        for id_, sec in sec_campagne.items():
+            chiudi(campagne[id_].metriche, sec)
 
-    def scarica(self, customer_id: str, periodi: Periodi) -> DatiAccount:
+    def _dettaglio(self, cid: str, periodi: Periodi) -> Dettaglio:
+        """Ogni blocco è indipendente: se Google rifiuta una query si perde solo quella sezione."""
+        d = Dettaglio()
+        for nome, blocco in (("canali", self._canali), ("gruppi di asset", self._gruppi_asset),
+                             ("orari", self._orari)):
+            try:
+                blocco(cid, periodi, d)
+            except Exception as e:  # noqa: BLE001
+                log.warning("Dettaglio '%s' non disponibile (%s)", nome, type(e).__name__)
+        return d
+
+    def _canali(self, cid: str, periodi: Periodi, d: Dettaglio) -> None:
+        cor = periodi.corrente
+        # Canali (Performance Max: Ricerca, Maps, YouTube...), con le visite per canale.
+        canali: dict[str, Metriche] = {}
+        q = f"""
+            SELECT segments.ad_network_type, metrics.impressions, metrics.clicks,
+                   metrics.cost_micros, metrics.conversions
+            FROM campaign WHERE {cor.gaql()} AND campaign.status != 'REMOVED'
+        """
+        for row in self._query(cid, q):
+            nome = CANALI.get(row.segments.ad_network_type.name, ALTRI_CANALI)
+            m = canali.setdefault(nome, Metriche())
+            m.impressioni += row.metrics.impressions
+            m.clic += row.metrics.clicks
+            m.costo += row.metrics.cost_micros / MICRO
+            m.conversioni += row.metrics.conversions
+        q = f"""
+            SELECT segments.ad_network_type, segments.conversion_action_category, metrics.all_conversions
+            FROM campaign WHERE {cor.gaql()} AND campaign.status != 'REMOVED'
+        """
+        for row in self._query(cid, q):
+            if row.segments.conversion_action_category.name == "STORE_VISIT":
+                nome = CANALI.get(row.segments.ad_network_type.name, ALTRI_CANALI)
+                canali.setdefault(nome, Metriche()).visite_reali += row.metrics.all_conversions
+        ordine = ["Rete di Ricerca", "Google Maps", ALTRI_CANALI]
+        d.canali = [Canale(n, canali[n]) for n in ordine if n in canali]
+
+    def _gruppi_asset(self, cid: str, periodi: Periodi, d: Dettaglio) -> None:
+        cor, pre = periodi.corrente, periodi.precedente
+        # Gruppi di asset (una lingua per gruppo), con le conversioni del mese prima.
+        gruppi: dict[str, GruppoAsset] = {}
+        q = f"""
+            SELECT asset_group.id, asset_group.name, metrics.impressions, metrics.clicks,
+                   metrics.cost_micros, metrics.conversions
+            FROM asset_group WHERE {cor.gaql()} AND asset_group.status != 'REMOVED'
+        """
+        for row in self._query(cid, q):
+            g = gruppi.setdefault(row.asset_group.name, GruppoAsset(row.asset_group.name, Metriche()))
+            g.metriche.impressioni += row.metrics.impressions
+            g.metriche.clic += row.metrics.clicks
+            g.metriche.costo += row.metrics.cost_micros / MICRO
+            g.metriche.conversioni += row.metrics.conversions
+        q = f"""
+            SELECT asset_group.name, metrics.conversions
+            FROM asset_group WHERE {pre.gaql()} AND asset_group.status != 'REMOVED'
+        """
+        for row in self._query(cid, q):
+            g = gruppi.get(row.asset_group.name)
+            if g:
+                g.conversioni_prec = (g.conversioni_prec or 0.0) + row.metrics.conversions
+        d.gruppi_asset = sorted((g for g in gruppi.values() if g.metriche.impressioni),
+                                key=lambda g: -g.metriche.conversioni)
+
+    def _orari(self, cid: str, periodi: Periodi, d: Dettaglio) -> None:
+        cor, pre = periodi.corrente, periodi.precedente
+        # Quando converte: per ora e per giorno della settimana (media al giorno).
+        q = f"SELECT segments.hour, metrics.conversions FROM customer WHERE {cor.gaql()}"
+        for row in self._query(cid, q):
+            d.conversioni_per_ora[row.segments.hour] += row.metrics.conversions
+        d.giorni_corrente = self._per_giorno(cid, cor)
+        d.giorni_precedente = self._per_giorno(cid, pre)
+
+    def _per_giorno(self, cid: str, intervallo: Intervallo) -> list[float]:
+        totali = [0.0] * 7
+        q = f"SELECT segments.day_of_week, metrics.conversions FROM customer WHERE {intervallo.gaql()}"
+        for row in self._query(cid, q):
+            nome = row.segments.day_of_week.name
+            if nome in GIORNI:
+                totali[GIORNI.index(nome)] += row.metrics.conversions
+        conteggio = [0] * 7
+        for i in range(intervallo.giorni):
+            conteggio[(intervallo.inizio + timedelta(days=i)).weekday()] += 1
+        return [t / c if c else 0.0 for t, c in zip(totali, conteggio)]
+
+    def scarica(self, customer_id: str, periodi: Periodi, dettaglio: bool = False) -> DatiAccount:
         cid = pulisci_id(customer_id)
 
         nome, valuta, punteggio = cid, "EUR", None
@@ -157,6 +286,11 @@ class FonteGoogleAds:
         corrente = self._periodo(cid, periodi.corrente, con_giornaliero=True)
         precedente = self._periodo(cid, periodi.precedente, con_giornaliero=False)
         anno_prec = self._periodo(cid, periodi.anno_prec, con_giornaliero=False) if periodi.anno_prec else None
+        due_mesi_prima = det = None
+        if dettaglio:
+            if periodi.due_mesi_prima:
+                due_mesi_prima = self._periodo(cid, periodi.due_mesi_prima, con_giornaliero=False)
+            det = self._dettaglio(cid, periodi)
 
         termini = []
         q = f"""
@@ -201,6 +335,7 @@ class FonteGoogleAds:
             nome=nome, valuta=valuta, punteggio_ottimizzazione=punteggio,
             corrente=corrente, precedente=precedente, anno_prec=anno_prec,
             termini_ricerca=termini, keyword=keyword, modifiche=modifiche,
+            due_mesi_prima=due_mesi_prima, dettaglio=det,
         )
 
     def _modifiche(self, cid: str, periodi: Periodi, campagne: dict[str, Campagna]) -> list[Modifica]:

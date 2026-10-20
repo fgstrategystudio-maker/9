@@ -156,7 +156,7 @@ def prepara_negozio(cliente: Cliente, dati: DatiAccount) -> None:
     reali = dati.corrente.totale.visite_reali > 0
     dati.visite_stimate = not reali
     quota = cliente.quota_visite_indicazioni
-    periodi = [dati.corrente, dati.precedente] + ([dati.anno_prec] if dati.anno_prec else [])
+    periodi = [dati.corrente, dati.precedente] + [p for p in (dati.anno_prec, dati.due_mesi_prima) if p]
     for periodo in periodi:
         for m in [periodo.totale] + [c.metriche for c in periodo.campagne.values()]:
             m.conversioni_google = m.conversioni

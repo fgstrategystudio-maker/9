@@ -83,6 +83,10 @@ def report_cliente(a: Analisi, agenzia: Agenzia) -> str:
     return _env.get_template("report_cliente.html").render(a=a, agenzia=agenzia, generato=datetime.now())
 
 
+def report_locali(vista) -> str:
+    return _env.get_template("report_locali.html").render(v=vista)
+
+
 def report_interno(analisi: list[Analisi], errori: list[tuple[str, str]], periodi: Periodi,
                    agenzia: Agenzia, demo: bool) -> str:
     return _env.get_template("report_interno.html").render(

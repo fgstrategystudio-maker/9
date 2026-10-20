@@ -29,7 +29,8 @@ class Mittente:
         msg.set_content("Questo report è in formato HTML: aprilo con un client email che lo supporta.")
         msg.add_alternative(html, subtype="html")
         if allegato:
-            msg.add_attachment(allegato.read_bytes(), maintype="text", subtype="html", filename=allegato.name)
+            tipo = ("application", "pdf") if allegato.suffix == ".pdf" else ("text", "html")
+            msg.add_attachment(allegato.read_bytes(), maintype=tipo[0], subtype=tipo[1], filename=allegato.name)
         destinatari = a + (ccn or [])
         with smtplib.SMTP_SSL(self.host, self.porta, timeout=60) as s:
             s.login(self.utente, self.password)
