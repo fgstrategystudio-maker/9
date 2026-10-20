@@ -131,6 +131,29 @@ Vai in **Actions → Report Google Ads → Run workflow**:
 
 Da quel momento parte da solo nei giorni 1, 15 e a fine mese, verso le 7 del mattino. Se un account non si scarica, il report interno lo segnala e il workflow risulta in errore, quindi GitHub ti avvisa via email.
 
+## Testi del mese nei report (Secret `NOTE_MESE`)
+
+Le azioni fatte nel mese e le priorità che vuoi scrivere tu vanno nel Secret **`NOTE_MESE`**: non serve toccare `CLIENTI_YAML`. Prima del report del 1° del mese aggiorna il Secret con un testo come questo:
+
+```yaml
+mese: "2026-10"            # il mese di cui parla il report (quello del 1° novembre è ottobre)
+Domò Group:                # nome del cliente: compare nella sintesi finale
+  fatto: Pulizia dei termini di ricerca e nuovi temi per lingua su tutte le insegne.
+  prossimi_passi:
+    - "Difesa del brand: attivare campagne sul nome dei locali."
+    - "Gestire le recensioni: risposte regolari su tutti i profili."
+Legame:                    # nome di un locale del gruppo: "Cosa abbiamo fatto" nella sua sezione
+  fatto: Nuovi temi di ricerca in francese e spagnolo.
+Grano Trattoria:
+  fatto: Aggiornati 24 temi in tedesco e 18 in spagnolo.
+```
+
+- I nomi devono essere identici a quelli di `CLIENTI_YAML`.
+- In `prossimi_passi`, il testo prima dei due punti diventa il titolo e quello dopo la descrizione.
+- Se scrivi le note di un locale, sostituiscono il testo automatico ricavato dalla cronologia delle modifiche.
+- Se il `mese` non corrisponde al report, le note vengono ignorate: così quelle vecchie non finiscono nel report sbagliato.
+- Se dimentichi di aggiornarle, il report parte comunque, con i soli testi automatici.
+
 ## Prova in locale
 
 ```bash

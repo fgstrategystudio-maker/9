@@ -506,7 +506,9 @@ def _vista_locale(n: int, a: Analisi, gruppo: Gruppo) -> VistaLocale:
         voce = MODIFICHE.get(mod.risorsa)
         if voce and voce not in tipi:
             tipi.append(voce)
-    if tipi:
+    if c.nota_mese:
+        fatto = md(f"**Cosa abbiamo fatto {a_mese(mese)}.** {c.nota_mese}")
+    elif tipi:
         fatto = md(f"**Cosa abbiamo fatto {a_mese(mese)}.** Interventi su " + ", ".join(tipi[:-1])
                    + (" e " if len(tipi) > 1 else "") + tipi[-1] + f" ({len(d.modifiche)} modifiche registrate).")
 
