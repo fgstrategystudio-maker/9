@@ -34,6 +34,8 @@ trattative o valutazioni interne, salvo ciò che è già stato detto al cliente.
 - "storico_mensile" ha i totali mese per mese dall'inizio della gestione (il primo e l'ultimo mese possono \
 essere parziali: guarda "giorni" e confronta le medie al giorno). Le visite dei mesi passati sono consolidate, \
 quelle dell'ultimo mese no.
+- "report_precedenti" contiene i numeri e i testi dei report inviati nei mesi scorsi: riprendi il filo \
+(cosa avevamo annunciato, cosa è successo dopo) senza ripetere le stesse frasi.
 - "visite_mese_precedente" confronta le visite scritte nel report del mese scorso con quelle di oggi.
 - Se un locale ha più campagne (per esempio Performance Max e Search brand), il risultato da commentare è il \
 totale del locale; spiega il ruolo di ciascuna campagna e perché la Performance Max può sembrare peggiorare \
@@ -166,7 +168,8 @@ def _storico(a: Analisi) -> dict:
 def _note_gruppo(gruppo) -> dict:
     return {"fatto_nel_mese": gruppo.fatto or None, "prossimi_passi": list(gruppo.prossimi_passi),
             "focus_del_mese": gruppo.focus or None, "storia_del_cliente": gruppo.contesto or None,
-            "visite_escluse_dal_compenso": list(gruppo.compenso.escludi) if gruppo.compenso else []}
+            "visite_escluse_dal_compenso": list(gruppo.compenso.escludi) if gruppo.compenso else [],
+            "report_precedenti": gruppo.memoria or None}
 
 
 # ---------------------------------------------------------------- layout Grano
@@ -272,3 +275,29 @@ def testi_gruppo(vg: VistaGruppo, analisi: list[Analisi]) -> bool:
     return True
 
 
+
+
+# ---------------------------------------------------------------- memoria dei report inviati
+
+def testi_scritti(vista) -> list[str]:
+    """I testi del report (non le tabelle), da ricordare per il mese dopo."""
+    testi = []
+    if isinstance(vista, VistaGruppo):
+        for l in vista.locali:
+            for campo in CAMPI_LOCALE + ("fatto",):
+                x = getattr(l, campo)
+                if x:
+                    testi.append(f"{l.nome}: {_testo(x)}")
+            testi += [f"{l.nome}, prossimo passo: {p.titolo}. {p.dettaglio}" for p in l.passi]
+        for x in (vista.intro_gruppo, vista.fatto):
+            if x:
+                testi.append(_testo(x))
+        testi += [f"Priorità: {p.titolo}. {p.dettaglio}" for p in vista.priorita]
+    else:
+        for s in vista.sezioni:
+            for tipo, x in s.blocchi:
+                if tipo == "p":
+                    testi.append(f"{s.titolo}: {_testo(x)}")
+                elif tipo == "elenco":
+                    testi += [f"{s.titolo}: {_testo(v)}" for v in x]
+    return testi

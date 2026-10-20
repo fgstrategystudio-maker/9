@@ -111,6 +111,8 @@ class Gruppo:
     sezioni: list[dict] = field(default_factory=list)  # sezioni libere: [{titolo, testo}]
     # Storia e strategia del cliente (Secret CONTESTO_CLIENTI): la legge Claude per scrivere i testi.
     contesto: str = ""
+    # Report già inviati (dalla memoria salvata dopo ogni invio): numeri e testi, per la continuità dei testi.
+    memoria: list = field(default_factory=list)
 
     @property
     def negozio(self) -> bool:

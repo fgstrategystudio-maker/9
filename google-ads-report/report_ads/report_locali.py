@@ -46,7 +46,9 @@ def _it(x: float, dec: int) -> str:
 
 
 def eur(x: float | None, dec: int = 2) -> str:
-    return "–" if x is None else f"€{_it(x, dec)}"
+    if x is None:
+        return "–"
+    return f"−€{_it(-x, dec)}" if x < 0 and round(x, dec) != 0 else f"€{_it(abs(x) if round(x, dec) == 0 else x, dec)}"
 
 
 def num(x: float | None, dec: int = 0) -> str:
