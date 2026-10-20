@@ -273,6 +273,22 @@ class FonteGoogleAds:
             conteggio[(intervallo.inizio + timedelta(days=i)).weekday()] += 1
         return [t / c if c else 0.0 for t, c in zip(totali, conteggio)]
 
+    def visite_intervallo(self, customer_id: str, intervallo: Intervallo) -> tuple[float, float]:
+        """(visite al negozio misurate, indicazioni stradali) in un intervallo qualsiasi."""
+        visite = ind = ind_tutte = 0.0
+        q = f"""
+            SELECT segments.conversion_action_category, metrics.conversions, metrics.all_conversions
+            FROM customer WHERE {intervallo.gaql()}
+        """
+        for row in self._query(pulisci_id(customer_id), q):
+            categoria = row.segments.conversion_action_category.name
+            if categoria == "STORE_VISIT":
+                visite += row.metrics.all_conversions
+            elif categoria == "GET_DIRECTIONS":
+                ind += row.metrics.conversions
+                ind_tutte += row.metrics.all_conversions
+        return visite, ind or ind_tutte
+
     def scarica(self, customer_id: str, periodi: Periodi, dettaglio: bool = False) -> DatiAccount:
         cid = pulisci_id(customer_id)
 

@@ -37,6 +37,12 @@ class Cliente:
     fasce: list[list[int]] = field(default_factory=lambda: [[12, 14], [18, 20]])
     coperti_per_visita: float | None = None
     scontrino_medio: float | None = None
+    # Contratto del locale: le visite contano da `contratto_dal` (AAAA-MM-GG); obiettivo di
+    # visite da raggiungere entro `obiettivo_fino`; compenso fisso mensile (oneri esclusi).
+    contratto_dal: str | None = None
+    obiettivo_visite: int | None = None
+    obiettivo_fino: str | None = None
+    compenso_fisso: float | None = None
 
     @property
     def ecommerce(self) -> bool:

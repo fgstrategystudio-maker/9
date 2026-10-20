@@ -21,7 +21,7 @@ from . import config as cfg
 from .analisi import analizza
 from .commento import scrivi_commenti
 from .invio import Mittente
-from .periodi import MOMENTI, calcola_periodi, momento_automatico
+from .periodi import MOMENTI, Intervallo, calcola_periodi, momento_automatico
 from .pdf import html_a_pdf
 from .render import report_cliente, report_interno, report_locali
 from .report_locali import vista_gruppo
@@ -42,6 +42,32 @@ def _descrivi_errore(e: Exception) -> str:
     if GoogleAdsException and isinstance(e, GoogleAdsException):
         return "; ".join(err.message for err in e.failure.errors) + f" (request_id {e.request_id})"
     return f"{type(e).__name__}: {e}"[:600]
+
+
+def _prepara_contratto(fonte, a, gruppo) -> None:
+    """Visite dall'inizio del contratto del locale (obiettivo e fee del primo mese)."""
+    c, per = a.cliente, a.periodi
+    try:
+        dal = date.fromisoformat(c.contratto_dal)
+    except ValueError:
+        log.error("contratto_dal non valido: usa il formato AAAA-MM-GG")
+        return
+
+    def visite(intervallo: Intervallo) -> float:
+        reali, indicazioni = fonte.visite_intervallo(c.customer_id, intervallo)
+        return indicazioni * c.quota_visite_indicazioni if a.dati.visite_stimate else reali
+
+    try:
+        if dal <= per.corrente.fine:
+            a.visite_contratto = visite(Intervallo(dal, per.corrente.fine))
+        base_prec = gruppo.compenso is not None and gruppo.compenso.base == "mese_precedente"
+        base = per.precedente if base_prec else per.corrente
+        if dal > base.fine:
+            a.fuori_contratto = True
+        elif dal > base.inizio:
+            a.visite_base_fee = visite(Intervallo(dal, base.fine))
+    except Exception as e:  # noqa: BLE001
+        log.warning("Visite dall'inizio del contratto non disponibili (%s)", type(e).__name__)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -105,6 +131,8 @@ def main(argv: list[str] | None = None) -> int:
                 log.error("Account %d/%d: errore (%s)", n, totale, type(e).__name__)
                 errori.append((cliente.nome, _descrivi_errore(e)))
                 continue
+            if dettaglio and cliente.contratto_dal:
+                _prepara_contratto(fonte, a, gruppo)
             analisi.append(a)
             analisi_gruppo.append(a)
             log.info("Account %d/%d: ok (%d punti di attenzione, commento %s)",

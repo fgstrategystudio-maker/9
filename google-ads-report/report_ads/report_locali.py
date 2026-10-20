@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import date, datetime
 
 from markupsafe import Markup, escape
 
@@ -63,6 +63,12 @@ def var(x: float | None) -> str:
     if abs(x) < 0.005:
         return "0%"
     return f"{'+' if x >= 0 else '−'}{_it(abs(x) * 100, 0)}%"
+
+
+def _art_pct(x: float) -> str:
+    """Articolo davanti a una percentuale: "l'1%", "l'8%", "l'11%", "il 10%"."""
+    n = _it(x * 100, 0)
+    return "l'" if n in ("1", "11", "18") or n.startswith("8") else "il "
 
 
 def elenco(nomi: list[str]) -> str:
@@ -150,6 +156,7 @@ class VistaLocale:
     sottotitolo_giorni: str
     budget: Markup
     richiamo_budget: Markup | None
+    obiettivo: Markup | None
     fatto: Markup | None
     passi: list[Passo]
     stati: list[str]
@@ -225,6 +232,32 @@ def _riga_confronto(etichetta: str, serie: list[float | None], giorni: list[int]
             buono = delta > 0 if meglio == "su" else delta < 0
             colore = ("verde" if meglio == "su" else "blu") if buono else "rosso"
     return Riga(etichetta, valori, variazione, colore, forte)
+
+
+def _data(iso: str | None) -> str:
+    if not iso:
+        return ""
+    a, m, g = (int(x) for x in iso.split("-"))
+    return f"{g} {MESI[m - 1]} {a}"
+
+
+def _obiettivo(a: Analisi, gruppo: Gruppo) -> Markup | None:
+    """Avanzamento verso l'obiettivo di visite del contratto."""
+    c = a.cliente
+    if not c.obiettivo_visite or not c.contratto_dal:
+        return None
+    fino = f" entro il {_data(c.obiettivo_fino)}" if c.obiettivo_fino else ""
+    limite = (f", a un costo per visita massimo di {eur(gruppo.target_costo_visita)}"
+              if gruppo.target_costo_visita else "")
+    if a.visite_contratto is None:
+        return md(f"**Obiettivo del contratto.** Dal {_data(c.contratto_dal)}: almeno "
+                  f"{num(c.obiettivo_visite)} visite registrate{fino}{limite}.")
+    quota = a.visite_contratto / c.obiettivo_visite
+    tipo = "stimate" if a.dati.visite_stimate else "registrate"
+    return md(f"**Obiettivo del contratto: {num(a.visite_contratto)} visite su {num(c.obiettivo_visite)} "
+              f"({_it(quota * 100, 0)}%).** Visite {tipo} dal {_data(c.contratto_dal)} a oggi; l'obiettivo è "
+              f"di almeno {num(c.obiettivo_visite)} visite{fino}{limite}. A finestra chiusa il dato crescerà, "
+              "perché Google registra le visite fino a 30 giorni dopo il clic.")
 
 
 def _vista_locale(n: int, a: Analisi, gruppo: Gruppo) -> VistaLocale:
@@ -512,7 +545,8 @@ def _vista_locale(n: int, a: Analisi, gruppo: Gruppo) -> VistaLocale:
         canali=canali, canali_colonne=colonne, sottotitolo_canali=sottotitolo_canali, costo_visita=costo_visita,
         titolo_lingue=titolo_lingue, sottotitolo_lingue=sottotitolo_lingue, lingue=lingue, lettura_lingue=lettura_lingue,
         ore=ore, testo_ore=testo_ore, legenda_ore=legenda, giorni=giorni_righe, sottotitolo_giorni=sott_giorni,
-        budget=budget, richiamo_budget=richiamo, fatto=fatto, passi=passi, stati=stati,
+        budget=budget, richiamo_budget=richiamo, obiettivo=_obiettivo(a, gruppo), fatto=fatto, passi=passi,
+        stati=stati,
         spesa=m.costo, n_azioni=az, visite=visite, m=m, p=p,
     )
 
@@ -638,8 +672,8 @@ def _compenso(vg: VistaGruppo, gruppo: Gruppo, analisi: list[Analisi], locali: l
         mese_base = mese_prec if base_prec else mese
         vg.compenso_titolo = f"Fatturato attribuibile e fee di {mese_base}"
         vg.compenso_sottotitolo = (
-            f"Modello: fatturato attribuibile = visite × coperti × scontrino medio del locale; la fee è il "
-            f"{_it(comp.percentuale * 100, 0)}% di quel valore. "
+            f"Modello: fatturato attribuibile = visite × coperti × scontrino medio del locale; la fee è "
+            f"{_art_pct(comp.percentuale)}{_it(comp.percentuale * 100, 0)}% di quel valore. "
             + ("Come concordato, l'attribuibile si calcola 30 giorni dopo la fine del mese, a dati consolidati."
                if base_prec else
                f"Sono incluse le visite registrate a oggi; quelle che Google registrerà nei prossimi 30 giorni "
@@ -649,18 +683,30 @@ def _compenso(vg: VistaGruppo, gruppo: Gruppo, analisi: list[Analisi], locali: l
         tot_v = tot_f = tot_fee = 0.0
         for a, x in zip(analisi, locali):
             c = a.cliente
-            if not (c.coperti_per_visita and c.scontrino_medio):
+            if not (c.coperti_per_visita and c.scontrino_medio) or a.fuori_contratto:
                 continue
             visite = (x.p.conversioni if base_prec else x.visite)
+            if a.visite_base_fee is not None:
+                visite = a.visite_base_fee
             coperti = visite * c.coperti_per_visita
             fatturato = coperti * c.scontrino_medio
             fee = fatturato * comp.percentuale
             base = f"stima {_it(c.quota_visite_indicazioni * 100, 0)}%" if x.stimate else "rilevate"
+            if a.visite_base_fee is not None:
+                base += f" dal {_data(c.contratto_dal).rsplit(' ', 1)[0]}"
             vg.compenso.append(Riga(c.nome, [num(visite), base, f"{num(coperti, 1)} (×{_it(c.coperti_per_visita, 1)})",
                                              eur(c.scontrino_medio), eur(fatturato), eur(fee)]))
             tot_v, tot_f, tot_fee = tot_v + visite, tot_f + fatturato, tot_fee + fee
         if vg.compenso:
             vg.compenso.append(Riga(f"Totale {mese_base}", [num(tot_v), "", "", "", eur(tot_f), eur(tot_fee)], forte=True))
+        fissi = []
+        for a in analisi:
+            c = a.cliente
+            if c.compenso_fisso and (not c.contratto_dal or date.fromisoformat(c.contratto_dal) <= per.corrente.fine):
+                fissi.append(f"{c.nome} {eur(c.compenso_fisso, 0)}")
+        if fissi:
+            vg.compenso_nota = md(f"**Compenso fisso di {mese}:** {elenco(fissi)} (oneri previdenziali esclusi), "
+                                  "da sommare alla fee.")
         if not base_prec and len(analisi) == 1:
             x = locali[0]
             vg.compenso_nota = md(f"**Conguaglio.** Le visite di {mese_prec} risultano oggi {num(x.p.conversioni)} a dato "

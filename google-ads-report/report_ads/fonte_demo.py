@@ -144,6 +144,10 @@ class FonteDemo:
         d.giorni_precedente = [x * r.uniform(0.7, 0.95) for x in d.giorni_corrente]
         return d
 
+    def visite_intervallo(self, customer_id: str, intervallo: Intervallo) -> tuple[float, float]:
+        p = self._periodo_locale(str(customer_id), intervallo, 1.0)
+        return p.totale.visite_reali, p.totale.indicazioni
+
     def scarica(self, customer_id: str, periodi: Periodi, dettaglio: bool = False) -> DatiAccount:
         cid = str(customer_id)
         if dettaglio:
