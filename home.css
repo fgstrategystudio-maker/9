@@ -382,35 +382,56 @@ footer.foot a:hover { color: var(--ink); }
 .sectors .more:hover { text-decoration: underline; }
 @media (max-width: 640px) { .sector { font-size: 12.5px; padding: 6px 13px; } }
 
-/* ---------- Animazioni guidate dallo scorrimento (home italiana) ----------
-   Senza JavaScript o con "riduci movimento" le sezioni restano ferme e complete.
-   motion.js aggiunge .live e muove tutto in base a quanto si è scorso. */
-
-/* Quattro aree che convergono in una sola direzione */
-.leve { position: relative; }
-.leve.live { height: 170vh; }
-.leve-pin { padding-block: clamp(56px, 7vw, 96px); }
-.leve.live .leve-pin { position: sticky; top: 0; height: 100vh; height: 100svh; display: flex; align-items: center; padding-block: 72px 24px; overflow: hidden; }
-.leve-pin > .wrap { width: 100%; }
-.leve-head { text-align: center; }
+/* ---------- Il metodo: la strategia al centro accende le altre aree ----------
+   Visibile e completa di base. Quando entra nello schermo home.js aggiunge .in
+   e parte una sequenza breve, solo CSS: Strategy, poi il tronco in bronzo,
+   poi i rami che accendono Marketing, Data e Sales. */
+.leve-head { text-align: center; margin-bottom: clamp(36px, 5vw, 64px); }
 .leve-head .eyebrow::after { content: ""; width: 22px; height: 1px; background: currentColor; }
-.leve-head h2 { margin-top: 16px; font-size: clamp(32px, 4.6vw, 60px); line-height: 1.04; }
+.leve-head h2 { margin-top: 18px; font-size: clamp(36px, 4.8vw, 64px); line-height: 1.02; }
 .leve-head h2 em { font-style: normal; color: var(--accent); }
-.leve-head h2 .w { display: inline-block; overflow: hidden; vertical-align: top; padding-bottom: .08em; margin-bottom: -.08em; }
-.leve-head h2 .w > span { display: inline-block; }
-.leve-map { position: relative; height: clamp(340px, 56vh, 560px); margin-top: clamp(16px, 3vh, 36px); display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; column-gap: 34%; }
-.leve-map svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
-.leve-map .lv-line { fill: none; stroke: var(--ink); stroke-width: 1.4; stroke-linecap: round; }
-.leve-map .lv-stem { fill: none; stroke: var(--accent); stroke-width: 4; stroke-linecap: round; }
-.leve-map .lv-dot { fill: var(--accent); }
-.lv { position: relative; z-index: 1; align-self: start; text-decoration: none; display: block; max-width: 17em; }
-.lv:nth-of-type(odd) { justify-self: end; text-align: right; }
-.lv:nth-of-type(n+3) { align-self: end; }
-.lv small { display: block; font: 500 12px/1 var(--sans); letter-spacing: .2em; color: var(--accent); margin-bottom: 10px; }
-.lv b { display: block; font-weight: 300; font-size: clamp(30px, 4.2vw, 58px); line-height: 1; letter-spacing: -.045em; transition: color .3s; }
-.lv span { display: block; margin-top: 10px; color: var(--muted); font-size: 15px; line-height: 1.45; }
-.lv:hover b { color: var(--accent); }
+
+.leve-map { --t: .5s; display: grid; justify-items: center; }
+.lv-core { display: grid; justify-items: center; text-align: center; text-decoration: none; max-width: 30em; }
+.lv-core small { font: 500 11px/1 var(--sans); letter-spacing: .26em; text-transform: uppercase; color: var(--accent); }
+.lv-core b { margin-top: 14px; font-weight: 300; font-size: clamp(48px, 6.4vw, 88px); line-height: .95; letter-spacing: -.05em; color: var(--accent); }
+.lv-core span { margin-top: 14px; color: var(--muted); font-size: 15.5px; }
+.lv-trunk { width: 2px; height: clamp(40px, 5vw, 64px); margin-top: 26px; background: var(--accent); transform-origin: top; }
+
+.lv-areas { position: relative; width: 100%; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+/* ramo orizzontale: dal centro della prima al centro dell'ultima colonna */
+.lv-areas::before { content: ""; position: absolute; top: 0; left: calc(100% / 6); right: calc(100% / 6); height: 2px; background: var(--accent); }
+.lv { position: relative; display: grid; justify-items: center; text-align: center; gap: 8px; padding: 58px 18px 8px; text-decoration: none; }
+.lv::before { content: ""; position: absolute; top: 0; left: calc(50% - .5px); width: 1px; height: 34px; background: var(--ink); transform-origin: top; }
+.lv::after { content: ""; position: absolute; top: 30px; left: calc(50% - 4px); width: 8px; height: 8px; border-radius: 50%; background: var(--ink); }
+.lv b { font-weight: 300; font-size: clamp(30px, 3.2vw, 44px); line-height: 1; letter-spacing: -.045em; transition: color .3s; }
+.lv span { color: var(--muted); font-size: 15px; line-height: 1.45; max-width: 16em; }
+.lv:hover b, .lv-core:hover b { color: var(--ink); }
+.lv:hover::after { background: var(--accent); }
+
+.in.leve-map .lv-core { animation: fadeUp .6s var(--ease) both; }
+.in.leve-map .lv-trunk { animation: growY .35s .3s cubic-bezier(.6, 0, .3, 1) both; }
+.in.leve-map .lv-areas::before { animation: growX .4s .6s cubic-bezier(.3, 0, .2, 1) both; }
+.in.leve-map .lv::before { animation: growY .25s calc(.9s + var(--i) * .08s) ease-out both; }
+.in.leve-map .lv::after { animation: dotOn .35s calc(1s + var(--i) * .08s) var(--ease) both; }
+.in.leve-map .lv > * { animation: areaOn .55s calc(1.02s + var(--i) * .08s) var(--ease) both; }
+@keyframes growY { from { transform: scaleY(0); } }
+@keyframes growX { from { transform: scaleX(0); } }
+@keyframes dotOn { from { transform: scale(0); background: var(--accent); } }
+@keyframes areaOn { from { opacity: .18; transform: translateY(10px); } }
+
 @media (max-width: 780px) {
-  .leve-map { column-gap: 18%; height: clamp(380px, 62vh, 520px); }
-  .lv span { font-size: 13px; }
+  .leve-head { text-align: left; }
+  .leve-head .eyebrow::after { display: none; }
+  .leve-map { justify-items: start; }
+  .lv-core { justify-items: start; text-align: left; }
+  .lv-trunk { margin-left: 4px; height: 28px; }
+  /* su telefono il ramo diventa una colonna verticale a sinistra */
+  .lv-areas { grid-template-columns: minmax(0, 1fr); padding-left: 36px; }
+  .lv-areas::before { top: 0; bottom: 30px; left: 4px; right: auto; width: 2px; height: auto; transform-origin: top; }
+  .in.leve-map .lv-areas::before { animation-name: growY; }
+  .lv { justify-items: start; text-align: left; padding: 18px 0; gap: 6px; }
+  .lv::before { top: 31px; left: -32px; width: 24px; height: 1px; transform-origin: left; }
+  .lv::after { top: 27px; left: -12px; }
+  .in.leve-map .lv::before { animation-name: growX; }
 }
