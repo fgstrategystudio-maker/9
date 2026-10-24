@@ -2,7 +2,7 @@
 'use strict';
 
 // ---------- Storage ----------
-const APP_VERSION = '20';
+const APP_VERSION = '22';
 const KEY = 'dieta.v1';
 const MEALS = [
   { id: 'colazione', label: 'Colazione' },
@@ -70,6 +70,8 @@ const DEFAULT_DB = {
   body: [],      // [{ date, weight, bodyFat, ... }]
   recent: [],
   savedMeals: [], // [{ id, name, meal, items: [{ name, grams, per100 }] }]
+  foodInfo: {},   // { nome normalizzato: { veg, sug, sat, salt, ca, fe, kk, vc } } micronutrienti per 100 g completati dall'AI
+  achievements: {}, // traguardi già festeggiati
   settings: {
     provider: 'gemini',
     geminiKey: '', geminiModel: GEMINI_DEFAULT_MODEL, geminiModels: [],
@@ -261,7 +263,9 @@ let bodyMetric = 'weight';
 let showAllBody = false;
 
 const TITLES = { today: 'Diario', add: 'Aggiungi', progress: 'Progressi', body: 'Corpo', goals: 'Obiettivi' };
-function go(t) {
+const navStack = []; // schermate precedenti, per il tasto indietro del telefono
+function go(t, push = true) {
+  if (push && t !== tab) { navStack.push({ tab, curDate }); if (navStack.length > 30) navStack.shift(); }
   tab = t;
   $$('.tabbar button').forEach(b => b.classList.toggle('active', b.dataset.tab === t));
   render();
@@ -288,6 +292,7 @@ function render() {
   }
   const v = $('#view');
   ({ today: renderToday, add: renderAdd, progress: renderProgress, body: renderBody, goals: renderGoals })[tab](v);
+  animateView(v);
 }
 
 // ---------- Calendario ----------
@@ -350,14 +355,17 @@ function drawCalendar(s) {
 }
 
 // ---------- Today ----------
-function ringSvg(value, goal, color, size = 132, stroke = 12) {
+const ringPrev = {};
+function ringSvg(value, goal, color, size = 132, stroke = 12, key = 'kcal') {
   const r = (size - stroke) / 2, c = 2 * Math.PI * r;
   const pct = goal > 0 ? Math.min(value / goal, 1) : 0;
   const over = goal > 0 && value > goal;
+  const from = ringPrev[key] ?? 0;
+  ringPrev[key] = pct;
   return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
     <circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke="var(--line)" stroke-width="${stroke}"/>
-    <circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke="${over ? 'var(--danger)' : color}" stroke-width="${stroke}"
-      stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${c * (1 - pct)}"/>
+    <circle class="ring-prog" data-to="${c * (1 - pct)}" cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke="${over ? 'var(--danger)' : color}" stroke-width="${stroke}"
+      stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${c * (1 - from)}"/>
   </svg>`;
 }
 function macroBar(label, val, goal, color, unit = 'g') {
@@ -494,6 +502,10 @@ function renderToday(v) {
   $('#backToday', v)?.addEventListener('click', () => { curDate = today(); render(); });
   $('#balanceLine', v)?.addEventListener('click', () => go('progress'));
   $('#closedOk', v)?.addEventListener('click', () => { db.settings.closedSeen = prevMonth; save(); render(); });
+  if ($('.month-closed', v) && !db.achievements[`closed-${prevMonth}`]) {
+    db.achievements[`closed-${prevMonth}`] = today(); save();
+    if (monthBalance(prevMonth).total < 0) setTimeout(() => confetti(), 300);
+  }
   $('#closedDetail', v)?.addEventListener('click', () => { db.settings.closedSeen = prevMonth; save(); go('progress'); });
   $$('[data-ex]', v).forEach(li => li.addEventListener('click', () => exerciseForm(li.dataset.ex)));
 }
@@ -608,8 +620,8 @@ function renderAdd(v) {
       <button class="btn ghost" id="manualAdd" style="margin-top:6px">Inserisci valori a mano</button>
     </div>`;
   $$('[data-m]', v).forEach(c => c.addEventListener('click', () => { addMeal = c.dataset.m; $$('[data-m]', v).forEach(x => x.classList.toggle('on', x === c)); }));
-  $('#takePhoto', v).addEventListener('click', () => requireKey() && $('#photoInput').click());
-  $('#pickPhoto', v).addEventListener('click', () => requireKey() && $('#galleryInput').click());
+  $('#takePhoto', v).addEventListener('click', () => { photoQueue = []; requireKey() && $('#photoInput').click(); });
+  $('#pickPhoto', v).addEventListener('click', () => { photoQueue = []; requireKey() && $('#galleryInput').click(); });
   $('#scanCode', v).addEventListener('click', scanBarcode);
   $('#analyzeText', v).addEventListener('click', () => {
     const text = $('#foodText', v).value.trim();
@@ -687,7 +699,13 @@ function offToFood(p) {
   return {
     name: brand && !name.toLowerCase().includes(brand.toLowerCase()) ? `${name} (${brand})` : name,
     grams: serving > 0 && serving < 2000 ? serving : 100,
-    per100: { kcal: +kcal, p: +n.proteins_100g || 0, c: +n.carbohydrates_100g || 0, f: +n.fat_100g || 0, fib: +n.fiber_100g || 0 },
+    per100: {
+      kcal: +kcal, p: +n.proteins_100g || 0, c: +n.carbohydrates_100g || 0, f: +n.fat_100g || 0, fib: +n.fiber_100g || 0,
+      ...(n.sugars_100g != null ? { sug: +n.sugars_100g } : {}), ...(n['saturated-fat_100g'] != null ? { sat: +n['saturated-fat_100g'] } : {}),
+      ...(n.salt_100g != null ? { salt: +n.salt_100g } : {}), ...(n.calcium_100g != null ? { ca: n.calcium_100g * 1000 } : {}),
+      ...(n.iron_100g != null ? { fe: n.iron_100g * 1000 } : {}), ...(n.potassium_100g != null ? { kk: n.potassium_100g * 1000 } : {}),
+      ...(n['vitamin-c_100g'] != null ? { vc: n['vitamin-c_100g'] * 1000 } : {}),
+    },
     code: p.code,
   };
 }
@@ -770,7 +788,7 @@ async function lookupBarcode(code) {
       <p class="small muted">Puoi fotografare la tabella nutrizionale sulla confezione: l'AI legge i valori dell'etichetta.</p>
       <div class="btn-row"><button class="btn secondary" id="nfManual">A mano</button><button class="btn" id="nfPhoto">📷 Foto etichetta</button></div>`, s => {
       $('#nfManual', s).addEventListener('click', manualForm);
-      $('#nfPhoto', s).addEventListener('click', () => { closeSheet(); requireKey() && $('#photoInput').click(); });
+      $('#nfPhoto', s).addEventListener('click', () => { closeSheet(); photoQueue = []; requireKey() && $('#photoInput').click(); });
     });
   } catch {
     openSheet(`<h3>Nessuna connessione</h3><p>Per cercare i prodotti col codice a barre serve internet.</p><button class="btn" id="nfOk">Ok</button>`,
@@ -779,7 +797,7 @@ async function lookupBarcode(code) {
 }
 
 // ---------- Pasti salvati e pasti passati ----------
-const cloneItems = items => items.map(e => ({ name: e.name, grams: e.grams, per100: { ...e.per100 } }));
+const cloneItems = items => items.map(e => ({ name: e.name, grams: e.grams, per100: { ...e.per100 }, ...(typeof e.veg === 'boolean' ? { veg: e.veg } : {}) }));
 
 function saveMealForm(items, meal) {
   if (!items.length) return;
@@ -917,7 +935,7 @@ function requireKey() {
 function addEntries(items, meal) {
   const list = dayEntries(curDate);
   for (const it of items) {
-    const e = { id: uid(), name: it.name, grams: it.grams, per100: it.per100, meal, t: Date.now() };
+    const e = { id: uid(), name: it.name, grams: it.grams, per100: it.per100, meal, t: Date.now(), ...(typeof it.veg === 'boolean' ? { veg: it.veg } : {}) };
     list.push(e);
     rememberRecent(e);
   }
@@ -978,22 +996,37 @@ function manualForm() {
 }
 
 // ---------- Photo ----------
-async function handlePhoto(file) {
-  if (!file) return;
+// Più foto dello stesso pasto (es. primo, secondo e contorno): si raccolgono e si analizzano insieme
+let photoQueue = [];
+const MAX_PHOTOS = 6;
+async function handlePhotos(files) {
+  files = [...files].slice(0, MAX_PHOTOS - photoQueue.length);
+  if (!files.length) { if (photoQueue.length >= MAX_PHOTOS) toast(`Massimo ${MAX_PHOTOS} foto per pasto`); return; }
   try {
-    const { dataUrl, b64 } = await resizeImage(file, 1024, 0.8);
-    openSheet(`<h3>Foto del pasto</h3>
-      <img class="preview" src="${dataUrl}" alt="">
-      <label class="field"><span>Dettagli (facoltativo)</span><input type="text" id="pNote" placeholder="es. porzione abbondante, condita con olio, pasta integrale"></label>
-      <button class="btn" id="pGo">✨ Riconosci cibo e calorie</button>`, s => {
-      $('#pGo', s).addEventListener('click', () => runAnalysis({ imageB64: b64, preview: dataUrl, text: $('#pNote', s).value.trim() }));
+    for (const f of files) photoQueue.push(await resizeImage(f, photoQueue.length + files.length > 2 ? 900 : 1024, 0.8));
+  } catch { toast('Impossibile leggere la foto'); }
+  photoSheet();
+}
+function photoSheet() {
+  const note = $('#pNote')?.value || '';
+  openSheet(`<h3>${photoQueue.length > 1 ? `${photoQueue.length} foto del pasto` : 'Foto del pasto'}</h3>
+    <div class="thumbs">${photoQueue.map((p, i) => `<div class="thumb"><img src="${p.dataUrl}" alt=""><button data-del="${i}" aria-label="Togli foto">×</button></div>`).join('')}</div>
+    ${photoQueue.length < MAX_PHOTOS ? `<div class="btn-row" style="margin-bottom:10px"><button class="btn secondary" id="pMoreCam">📷 Altra foto</button><button class="btn secondary" id="pMoreGal">🖼️ Galleria</button></div>
+    <p class="small muted" style="margin-top:-4px">Aggiungi le altre portate dello stesso pasto: l'AI le analizza insieme.</p>` : ''}
+    <label class="field"><span>Dettagli (facoltativo)</span><input type="text" id="pNote" value="${esc(note)}" placeholder="es. porzione abbondante, condita con olio, pasta integrale"></label>
+    <div class="btn-row"><button class="btn secondary" id="pCancel">Annulla</button><button class="btn" id="pGo">✨ Analizza ${photoQueue.length > 1 ? `${photoQueue.length} foto` : ''}</button></div>`, s => {
+    $$('[data-del]', s).forEach(b => b.addEventListener('click', () => { photoQueue.splice(+b.dataset.del, 1); photoQueue.length ? photoSheet() : (closeSheet()); }));
+    $('#pMoreCam', s)?.addEventListener('click', () => $('#photoInput').click());
+    $('#pMoreGal', s)?.addEventListener('click', () => $('#galleryInput').click());
+    $('#pCancel', s).addEventListener('click', () => { photoQueue = []; closeSheet(); });
+    $('#pGo', s).addEventListener('click', () => {
+      const q = photoQueue; photoQueue = [];
+      runAnalysis({ images: q.map(p => p.b64), previews: q.map(p => p.dataUrl), text: $('#pNote', s).value.trim() });
     });
-  } catch {
-    toast('Impossibile leggere la foto');
-  }
+  });
 }
 for (const id of ['#photoInput', '#galleryInput']) {
-  $(id).addEventListener('change', e => { handlePhoto(e.target.files[0]); e.target.value = ''; });
+  $(id).addEventListener('change', e => { handlePhotos(e.target.files); e.target.value = ''; });
 }
 
 function resizeImage(file, maxSide, quality) {
@@ -1032,9 +1065,17 @@ const FOOD_SCHEMA = {
           carbs_g: { type: 'number' },
           fat_g: { type: 'number' },
           fiber_g: { type: 'number' },
+          vegetarian: { type: 'boolean' },
+          sugar_g: { type: 'number' },
+          saturated_fat_g: { type: 'number' },
+          salt_g: { type: 'number' },
+          calcium_mg: { type: 'number' },
+          iron_mg: { type: 'number' },
+          potassium_mg: { type: 'number' },
+          vitamin_c_mg: { type: 'number' },
           confidence: { type: 'string', enum: ['alta', 'media', 'bassa'] },
         },
-        required: ['name', 'portion', 'grams', 'kcal', 'protein_g', 'carbs_g', 'fat_g', 'fiber_g', 'confidence'],
+        required: ['name', 'portion', 'grams', 'kcal', 'protein_g', 'carbs_g', 'fat_g', 'fiber_g', 'vegetarian', 'sugar_g', 'saturated_fat_g', 'salt_g', 'calcium_mg', 'iron_mg', 'potassium_mg', 'vitamin_c_mg', 'confidence'],
         additionalProperties: false,
       },
     },
@@ -1053,17 +1094,20 @@ Come lavorare:
 - Altrimenti stima la porzione realistica dalla foto (dimensione del piatto, posate, confezioni) o da una porzione tipica italiana.
 - "grams" è il peso della porzione così come mangiata (cotta se cotta). Per le bevande usa i ml come grammi. Scrivi in "portion" una descrizione leggibile (es. "1 piatto medio", "2 cucchiai").
 - Calorie, proteine, carboidrati, grassi e fibre si riferiscono all'intera porzione, basati su tabelle di composizione (CREA, USDA). Includi i condimenti probabili (olio, burro, salse) come voce separata quando sono rilevanti.
+- Stima anche zuccheri, grassi saturi, sale, calcio, ferro, potassio e vitamina C dell'intera porzione (0 se assenti).
+- "vegetarian" è true se l'alimento non contiene carne né pesce (uova, latte e formaggi vanno bene).
+- Se ricevi più foto, sono portate o angolazioni dello stesso pasto: elenca tutto quello che si vede, senza contare due volte lo stesso cibo se compare in più foto.
 - "confidence" indica quanto sei sicuro di identificazione e porzione.
 - In "notes" scrivi in una o due frasi le ipotesi principali (es. "Ho ipotizzato 1 cucchiaio d'olio"). Se nella foto non c'è cibo, restituisci items vuoto e spiegalo nelle note.`;
 
-async function callClaude(content) {
+async function callClaude(content, { system = SYSTEM_PROMPT, schema = FOOD_SCHEMA } = {}) {
   const model = db.settings.model || 'claude-opus-5';
   const body = {
     model,
     max_tokens: 8000,
-    system: SYSTEM_PROMPT,
+    system,
     messages: [{ role: 'user', content }],
-    output_config: { format: { type: 'json_schema', schema: FOOD_SCHEMA } },
+    output_config: { format: { type: 'json_schema', schema } },
   };
   const headers = {
     'content-type': 'application/json',
@@ -1162,19 +1206,18 @@ async function callGemini(input) {
   throw lastErr || new Error('Nessun modello Gemini disponibile al momento, riprova tra poco.');
 }
 
-async function callGeminiModel(model, { prompt, imageB64 }) {
-  const parts = [];
-  if (imageB64) parts.push({ inline_data: { mime_type: 'image/jpeg', data: imageB64 } });
+async function callGeminiModel(model, { prompt, images = [], system = SYSTEM_PROMPT, schema = FOOD_SCHEMA }) {
+  const parts = images.map(data => ({ inline_data: { mime_type: 'image/jpeg', data } }));
   parts.push({ text: prompt });
   // Meno "ragionamento" = risposta molto più rapida; per stimare un pasto basta.
   const thinking = /^gemini-3/.test(model) ? { thinkingLevel: /lite/.test(model) ? 'minimal' : 'low' } : null;
   const request = withThinking => geminiFetch(`/models/${encodeURIComponent(model)}:generateContent`, {
     method: 'POST',
     body: JSON.stringify({
-      systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+      systemInstruction: { parts: [{ text: system }] },
       contents: [{ role: 'user', parts }],
       generationConfig: {
-        responseMimeType: 'application/json', responseSchema: toGeminiSchema(FOOD_SCHEMA),
+        responseMimeType: 'application/json', responseSchema: toGeminiSchema(schema),
         ...(withThinking && thinking ? { thinkingConfig: thinking } : {}),
       },
     }),
@@ -1200,32 +1243,37 @@ async function listGeminiModels() {
     .sort((a, b) => /preview/.test(a) - /preview/.test(b) || ver(b) - ver(a) || /lite/.test(a) - /lite/.test(b));
 }
 
-function analyzeFood({ prompt, imageB64 }) {
+function analyzeFood({ prompt, images = [], system, schema }) {
   if (db.settings.provider === 'claude') {
-    const content = [];
-    if (imageB64) content.push({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: imageB64 } });
+    const content = images.map(data => ({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data } }));
     content.push({ type: 'text', text: prompt });
-    return callClaude(content);
+    return callClaude(content, { system, schema });
   }
-  return callGemini({ prompt, imageB64 });
+  return callGemini({ prompt, images, system, schema });
 }
 
-async function runAnalysis({ text, imageB64, preview }) {
-  openSheet(`<h3>Analizzo…</h3>${preview ? `<img class="preview" src="${preview}" alt="">` : ''}
+// Micronutrienti per 100 g dai valori della porzione restituiti dall'AI
+const microFromAI = (it, k) => ({ sug: (it.sugar_g || 0) * k, sat: (it.saturated_fat_g || 0) * k, salt: (it.salt_g || 0) * k,
+  ca: (it.calcium_mg || 0) * k, fe: (it.iron_mg || 0) * k, kk: (it.potassium_mg || 0) * k, vc: (it.vitamin_c_mg || 0) * k });
+
+async function runAnalysis({ text, images = [], previews = [] }) {
+  const preview = previews[0];
+  openSheet(`<h3>Analizzo…</h3>${previews.length ? `<div class="thumbs">${previews.map(p => `<img src="${p}" alt="">`).join('')}</div>` : ''}
     <div class="spinner"></div><p class="center muted small">Riconoscimento alimenti e calcolo di calorie e macro · <span id="aiSecs">0</span> s</p>`);
   const t0 = Date.now();
   const tick = setInterval(() => { const el = $('#aiSecs'); if (el) el.textContent = Math.round((Date.now() - t0) / 1000); else clearInterval(tick); }, 500);
-  const prompt = imageB64
-    ? (text ? `Foto del mio pasto. Dettagli: ${text}` : 'Foto del mio pasto.')
+  const what = images.length > 1 ? `${images.length} foto dello stesso pasto (più portate).` : 'Foto del mio pasto.';
+  const prompt = images.length
+    ? (text ? `${what} Dettagli: ${text}` : what)
     : `Ho mangiato: ${text}`;
   try {
-    const out = await analyzeFood({ prompt, imageB64 });
+    const out = await analyzeFood({ prompt, images });
     const items = (out.items || []).map(it => {
       const grams = it.grams > 0 ? it.grams : 100;
       const k = 100 / grams;
       return {
-        name: it.name, portion: it.portion, confidence: it.confidence, grams,
-        per100: { kcal: it.kcal * k, p: it.protein_g * k, c: it.carbs_g * k, f: it.fat_g * k, fib: (it.fiber_g || 0) * k },
+        name: it.name, portion: it.portion, confidence: it.confidence, grams, veg: typeof it.vegetarian === 'boolean' ? it.vegetarian : undefined,
+        per100: { kcal: it.kcal * k, p: it.protein_g * k, c: it.carbs_g * k, f: it.fat_g * k, fib: (it.fiber_g || 0) * k, ...microFromAI(it, k) },
       };
     });
     reviewResult(items, out.notes, preview);
@@ -1233,7 +1281,7 @@ async function runAnalysis({ text, imageB64, preview }) {
     openSheet(`<h3>Qualcosa non va</h3><p>${esc(err.message)}</p>${err.detail ? `<p class="small muted">Dettaglio: ${esc(err.detail)}</p>` : ''}
       <div class="btn-row"><button class="btn secondary" id="rClose">Chiudi</button><button class="btn" id="rRetry">Riprova</button></div>`, s => {
       $('#rClose', s).addEventListener('click', closeSheet);
-      $('#rRetry', s).addEventListener('click', () => runAnalysis({ text, imageB64, preview }));
+      $('#rRetry', s).addEventListener('click', () => runAnalysis({ text, images, previews }));
     });
   }
 }
@@ -1285,7 +1333,7 @@ function reviewResult(items, notes, preview) {
     $('#rSave', s).addEventListener('click', () => {
       const valid = items.filter(i => i.grams > 0 && i.name.trim());
       if (!valid.length) { toast('Nessun alimento da aggiungere'); return; }
-      const toAdd = valid.map(i => ({ name: i.name.trim(), grams: i.grams, per100: i.per100 }));
+      const toAdd = valid.map(i => ({ name: i.name.trim(), grams: i.grams, per100: i.per100, veg: i.veg }));
       addEntries(toAdd, meal);
       addMeal = meal;
       if ($('#rStar', s).checked) { saveMealForm(toAdd, meal); go('today'); return; }
@@ -1374,7 +1422,9 @@ function renderProgress(v) {
 
   let html = `<div class="seg">${[[7, '7 giorni'], [30, '30 giorni'], [90, '3 mesi'], [365, '1 anno']].map(([n, l]) => `<button data-r="${n}" class="${n === progressRange ? 'on' : ''}">${l}</button>`).join('')}</div>`;
 
+  html += monthResultsCard();
   html += `<button class="btn secondary" id="openCal" style="margin-bottom:12px">📅 Calendario giorno per giorno</button>`;
+  html += analysisCard();
   html += balanceCard();
   html += `<div class="card"><h2>Riepilogo</h2><div class="stats">
     <div class="stat"><div class="v">${r0(s.kcal)}</div><div class="k">kcal medie / giorno (obiettivo ${r0(g.kcal)})</div></div>
@@ -1439,6 +1489,11 @@ function renderProgress(v) {
   v.innerHTML = html;
   $$('[data-r]', v).forEach(b => b.addEventListener('click', () => { progressRange = +b.dataset.r; render(); }));
   $('#openCal', v).addEventListener('click', openCalendar);
+  $$('[data-am]', v).forEach(b => b.addEventListener('click', () => { anaMode = b.dataset.am; render(); }));
+  $('#anaPrev', v)?.addEventListener('click', () => { anaMonth = shiftMonth(anaMonth, -1); render(); });
+  $('#anaNext', v)?.addEventListener('click', () => { if (anaMonth < today().slice(0, 7)) { anaMonth = shiftMonth(anaMonth, 1); render(); } });
+  $('#anaEnrich', v)?.addEventListener('click', runEnrich);
+  $('#anaHow', v)?.addEventListener('click', scoreHelp);
   $('#freqPrev', v)?.addEventListener('click', () => { freqMonth = shiftMonth(freqMonth, -1); render(); });
   $('#freqNext', v)?.addEventListener('click', () => { if (freqMonth < today().slice(0, 7)) { freqMonth = shiftMonth(freqMonth, 1); render(); } });
   $$('[data-fv]', v).forEach(b => b.addEventListener('click', () => { freqView = b.dataset.fv; freqAll = false; render(); }));
@@ -1575,6 +1630,330 @@ function freqCard() {
       : `<p class="small muted">${freqView === 'ing' ? 'Nessun ingrediente riconosciuto' : 'Nessun alimento registrato'} in questo mese.</p>`}
     ${freqView === 'ing' ? '<p class="small muted" style="margin-bottom:0">Raggruppa alimenti simili (es. "petto di pollo" e "pollo arrosto" contano come Pollo).</p>' : ''}
   </div>`;
+}
+
+// ---------- Analisi dell'alimentazione: macro, micro, vegetariano, voto ----------
+const normName = t => String(t || '').trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[’']/g, ' ');
+const MICRO_KEYS = ['sug', 'sat', 'salt', 'ca', 'fe', 'kk', 'vc'];
+const NONVEG_RE = /pollo|tacchin|manzo|vitell|maiale|prosciutt|bresaol|salam|mortadell|speck|wurstel|salsicc|pancett|guancial|carne|bistecc|hamburger|polpett|ragu|lonza|conigli|agnell|anatra|tonno|salmone|merluzz|nasell|orata|branzin|pesce|gamber|calamar|polpo|seppi|sgombr|alici|acciug|sardin|cozze|vongol|frutti di mare|surimi|baccala|trota|spigola|sushi|kebab|cotolett|lardo|cotechin|porchett|braciol|nuggets|fesa|arrost/;
+function entryVeg(e) {
+  if (typeof e.veg === 'boolean') return e.veg;
+  const fi = db.foodInfo?.[normName(e.name)];
+  if (fi && typeof fi.veg === 'boolean') return fi.veg;
+  return !NONVEG_RE.test(normName(e.name));
+}
+function entryMicros(e) {
+  if (e.per100 && e.per100.ca != null) return e.per100;
+  return db.foodInfo?.[normName(e.name)] || null;
+}
+function nutritionStats(dates) {
+  const days = dates.filter(d => dayEntries(d).length);
+  const tot = { kcal: 0, p: 0, c: 0, f: 0, fib: 0 };
+  const micro = Object.fromEntries(MICRO_KEYS.map(k => [k, 0]));
+  let kcalMicro = 0, meals = 0, vegMeals = 0, fruitVeg = 0, green = 0;
+  const groups = new Set();
+  for (const d of days) {
+    if (dayStatus(d) === 'ok') green++;
+    const list = dayEntries(d);
+    for (const m of MEALS) {
+      const ml = list.filter(e => e.meal === m.id);
+      if (!ml.length) continue;
+      meals++; if (ml.every(entryVeg)) vegMeals++;
+    }
+    for (const e of list) {
+      const n = nutrients(e);
+      for (const k in tot) tot[k] += n[k];
+      const mi = entryMicros(e), f = (e.grams || 0) / 100;
+      if (mi) { kcalMicro += n.kcal; for (const k of MICRO_KEYS) micro[k] += (mi[k] || 0) * f; }
+      const nm = normName(e.name);
+      for (const [label, re] of INGREDIENTS) if (re.test(nm)) { groups.add(label); if (label === 'Frutta' || label === 'Verdure') fruitVeg++; }
+    }
+  }
+  const n = days.length || 1;
+  const cov = tot.kcal ? kcalMicro / tot.kcal : 0;
+  return {
+    days: days.length, green, meals, vegMeals, groups: groups.size, fruitVegPerDay: fruitVeg / n, cov,
+    avg: Object.fromEntries(Object.entries(tot).map(([k, v]) => [k, v / n])),
+    // i micronutrienti noti vengono riportati al totale delle calorie se la copertura è parziale
+    mavg: Object.fromEntries(MICRO_KEYS.map(k => [k, cov > 0 ? micro[k] / n / cov : null])),
+  };
+}
+function dietScore(st) {
+  const g = db.goals, w = weightOn(today());
+  const protGoal = g.protein || (w ? w * 1.6 : 100);
+  const parts = [];
+  const add = (label, pts, max, tip) => parts.push({ label, pts: Math.max(0, Math.min(max, pts)), max, tip });
+  add('Calorie nel target', st.days ? 2 * st.green / st.days : 0, 2, `${st.green} giorni verdi su ${st.days}`);
+  add('Proteine', 2 * Math.min(1, st.avg.p / protGoal), 2, `${r0(st.avg.p)} g al giorno su ${r0(protGoal)}`);
+  add('Fibre', 1.5 * Math.min(1, st.avg.fib / 25), 1.5, `${r0(st.avg.fib)} g al giorno (consigliati 25–30)`);
+  add('Frutta e verdura', 1.5 * Math.min(1, st.fruitVegPerDay / 4), 1.5, `${fmtNum(st.fruitVegPerDay, 1)} porzioni al giorno (consigliate 4–5)`);
+  const known = st.cov >= 0.4;
+  const satPct = known ? st.mavg.sat * 9 / (st.avg.kcal || 1) * 100 : null;
+  add('Grassi saturi', known ? (satPct <= 10 ? 1 : satPct >= 15 ? 0 : (15 - satPct) / 5) : 0.5, 1, known ? `${fmtNum(satPct, 0)}% delle calorie (max 10%)` : 'dati insufficienti');
+  add('Sale', known ? (st.mavg.salt <= 5 ? 1 : st.mavg.salt >= 10 ? 0 : (10 - st.mavg.salt) / 5) : 0.5, 1, known ? `${fmtNum(st.mavg.salt, 1)} g al giorno (max 5)` : 'dati insufficienti');
+  add('Zuccheri', known ? (st.mavg.sug <= 90 ? 1 : st.mavg.sug >= 140 ? 0 : (140 - st.mavg.sug) / 50) : 0.5, 1, known ? `${r0(st.mavg.sug)} g al giorno (max ~90)` : 'dati insufficienti');
+  const score = Math.max(1, Math.round(parts.reduce((a, p) => a + p.pts, 0) * 10) / 10);
+  const label = score >= 8.5 ? 'Ottimo' : score >= 7 ? 'Buono' : score >= 5.5 ? 'Discreto' : 'Da migliorare';
+  return { score, label, parts };
+}
+const monthDays = m => { const out = []; const last = ymd(new Date(+m.slice(0, 4), +m.slice(5, 7), 0)); for (let d = `${m}-01`; d <= last && d <= today(); d = addDays(d, 1)) out.push(d); return out; };
+const allDays = () => Object.keys(db.entries).filter(d => d <= today() && db.entries[d]?.length).sort();
+let anaMode = 'month', anaMonth = null;
+
+function analysisCard() {
+  anaMonth ||= today().slice(0, 7);
+  const dates = anaMode === 'all' ? allDays() : monthDays(anaMonth);
+  const st = nutritionStats(dates);
+  const female = db.profile.sex === 'f';
+  const head = `<div class="card ana">
+    <h2>Analisi alimentazione <button class="add-mini" id="anaHow">Come si calcola</button></h2>
+    <div class="seg"><button data-am="month" class="${anaMode === 'month' ? 'on' : ''}">Mese</button><button data-am="all" class="${anaMode === 'all' ? 'on' : ''}">Da sempre</button></div>
+    ${anaMode === 'month' ? `<div class="cal-head"><button class="icon-btn" id="anaPrev" aria-label="Mese precedente">‹</button><h3>${cap(monthName(anaMonth, true))}</h3><button class="icon-btn" id="anaNext" aria-label="Mese successivo" ${anaMonth >= today().slice(0, 7) ? 'disabled style="opacity:.35"' : ''}>›</button></div>` : `<p class="small muted center" style="margin-top:-4px">${st.days} giorni registrati${dates[0] ? ` dal ${fmtDate(dates[0], { day: 'numeric', month: 'long', year: 'numeric' })}` : ''}</p>`}`;
+  if (!st.days) return head + `<p class="muted small">Nessun pasto registrato in questo periodo.</p></div>`;
+  const sc = dietScore(st);
+  const kc = st.avg.kcal || 1;
+  const pc = x => r0(x / kc * 100);
+  const vegPct = st.meals ? st.vegMeals / st.meals * 100 : 0;
+  const allSt = anaMode === 'month' ? nutritionStats(allDays()) : st;
+  const allVeg = allSt.meals ? allSt.vegMeals / allSt.meals * 100 : 0;
+  const R = 52, C = 2 * Math.PI * R;
+  const scoreCol = sc.score >= 7 ? 'var(--ok)' : sc.score >= 5.5 ? 'var(--warn)' : 'var(--danger)';
+  const microRow = (label, val, ref, unit, kind) => {
+    if (val == null) return `<div class="mrow"><span>${label}</span><span class="muted">–</span></div>`;
+    const ratio = val / ref;
+    const good = kind === 'max' ? ratio <= 1 : ratio >= 0.8;
+    return `<div class="mrow"><div class="mtop"><span>${label}</span><span><b>${fmtNum(val, unit === 'g' ? 1 : 0)}</b> ${unit} <small class="muted">${kind === 'max' ? 'max' : 'su'} ${fmtNum(ref, 0)}</small></span></div>
+      <div class="bar"><i style="width:${Math.min(100, ratio * 100)}%;background:${good ? 'var(--ok)' : kind === 'max' ? 'var(--danger)' : 'var(--warn)'}"></i></div></div>`;
+  };
+  const missing = foodsMissingInfo().length;
+  let html = head + `
+    <div class="score-wrap">
+      <svg width="128" height="128" viewBox="0 0 128 128"><circle cx="64" cy="64" r="${R}" fill="none" stroke="var(--line)" stroke-width="11"/>
+        <circle class="ring-prog" data-to="${C * (1 - sc.score / 10)}" cx="64" cy="64" r="${R}" fill="none" stroke="${scoreCol}" stroke-width="11" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C}" transform="rotate(-90 64 64)"/></svg>
+      <div class="score-num"><b data-count="${sc.score}" data-dec="1">${fmtNum(sc.score, 1)}</b><small>/10</small><span style="color:${scoreCol}">${sc.label}</span></div>
+    </div>
+    <div class="parts">${sc.parts.map(p => `<div class="prow"><div class="mtop"><span>${p.label}</span><span><b>${fmtNum(p.pts, 1)}</b><small class="muted">/${fmtNum(p.max, 1)}</small></span></div>
+      <div class="bar"><i style="width:${p.pts / p.max * 100}%;background:${p.pts / p.max >= 0.75 ? 'var(--ok)' : p.pts / p.max >= 0.4 ? 'var(--warn)' : 'var(--danger)'}"></i></div><small class="muted">${p.tip}</small></div>`).join('')}</div>
+
+    <h3 class="ana-h">🥗 Pasti vegetariani</h3>
+    <div class="veg-big"><b data-count="${vegPct}" data-suffix="%">${r0(vegPct)}%</b><span>${st.vegMeals} pasti vegetariani su ${st.meals}${anaMode === 'month' ? ` · da sempre <b>${r0(allVeg)}%</b> (${allSt.vegMeals} su ${allSt.meals})` : ''}</span></div>
+    <div class="bar" style="height:10px"><i style="width:${vegPct}%;background:var(--ok)"></i></div>
+
+    <h3 class="ana-h">Macronutrienti · media al giorno</h3>
+    <div class="stats">
+      <div class="stat"><div class="v">${r0(st.avg.kcal)}</div><div class="k">kcal</div></div>
+      <div class="stat"><div class="v">${r0(st.avg.p)} g</div><div class="k">proteine · ${pc(st.avg.p * 4)}% kcal</div></div>
+      <div class="stat"><div class="v">${r0(st.avg.c)} g</div><div class="k">carboidrati · ${pc(st.avg.c * 4)}% kcal</div></div>
+      <div class="stat"><div class="v">${r0(st.avg.f)} g</div><div class="k">grassi · ${pc(st.avg.f * 9)}% kcal</div></div>
+      <div class="stat"><div class="v">${r0(st.avg.fib)} g</div><div class="k">fibre</div></div>
+      <div class="stat"><div class="v">${st.groups}</div><div class="k">gruppi di alimenti diversi</div></div>
+    </div>
+
+    <h3 class="ana-h">Micronutrienti · media al giorno</h3>
+    ${microRow('Zuccheri', st.mavg.sug, 90, 'g', 'max')}
+    ${microRow('Grassi saturi', st.mavg.sat, (st.avg.kcal * 0.1) / 9, 'g', 'max')}
+    ${microRow('Sale', st.mavg.salt, 5, 'g', 'max')}
+    ${microRow('Calcio', st.mavg.ca, 1000, 'mg', 'min')}
+    ${microRow('Ferro', st.mavg.fe, female ? 18 : 10, 'mg', 'min')}
+    ${microRow('Potassio', st.mavg.kk, 3900, 'mg', 'min')}
+    ${microRow('Vitamina C', st.mavg.vc, female ? 85 : 105, 'mg', 'min')}
+    <p class="small muted">Micronutrienti stimati su ${r0(st.cov * 100)}% delle calorie registrate${st.cov < 1 ? ' e riportati al totale' : ''}.</p>
+    ${missing ? `<button class="btn secondary" id="anaEnrich">✨ Completa i micronutrienti con l'AI (${missing} alimenti)</button>` : ''}`;
+  if (anaMode === 'all') {
+    const months = trackedMonths();
+    html += `<h3 class="ana-h">Mese per mese</h3><div class="hist">${[...months].reverse().map(m => {
+      const ms = nutritionStats(monthDays(m));
+      if (!ms.days) return '';
+      const s2 = dietScore(ms);
+      return `<div class="hrow"><span><b>${cap(monthName(m, true))}</b><br><small class="muted">${ms.days} giorni · ${r0(ms.avg.kcal)} kcal/giorno</small></span><span><b>${fmtNum(s2.score, 1)}</b>/10<br><small class="muted">🥗 ${ms.meals ? r0(ms.vegMeals / ms.meals * 100) : 0}% vegetariani</small></span></div>`;
+    }).join('')}</div>`;
+  }
+  return html + `</div>`;
+}
+
+function scoreHelp() {
+  openSheet(`<h3>Come si calcola il voto</h3>
+    <p class="small">Un punteggio indicativo da 1 a 10, basato sulle linee guida per una sana alimentazione (CREA, OMS):</p>
+    <ul class="small" style="padding-left:18px;line-height:1.6">
+      <li><b>Calorie nel target</b> (2 punti): quota di giorni "verdi".</li>
+      <li><b>Proteine</b> (2): media rispetto al tuo obiettivo.</li>
+      <li><b>Fibre</b> (1,5): almeno 25 g al giorno.</li>
+      <li><b>Frutta e verdura</b> (1,5): almeno 4 porzioni al giorno.</li>
+      <li><b>Grassi saturi</b> (1): sotto il 10% delle calorie.</li>
+      <li><b>Sale</b> (1): sotto i 5 g al giorno.</li>
+      <li><b>Zuccheri</b> (1): sotto circa 90 g al giorno.</li>
+    </ul>
+    <p class="small muted">Un pasto è vegetariano se nessun alimento contiene carne o pesce. I micronutrienti sono stime dell'AI o delle etichette: usali per vedere le tendenze, non come valori esatti. Non sostituisce il parere di un nutrizionista.</p>
+    <button class="btn" id="hOk">Ok</button>`, s => $('#hOk', s).addEventListener('click', closeSheet));
+}
+
+// Completa micronutrienti e "vegetariano" per gli alimenti registrati prima (una volta per nome)
+const ENRICH_SCHEMA = {
+  type: 'object', additionalProperties: false, required: ['foods'],
+  properties: { foods: { type: 'array', items: { type: 'object', additionalProperties: false,
+    required: ['name', 'vegetarian', 'sugar_g', 'saturated_fat_g', 'salt_g', 'calcium_mg', 'iron_mg', 'potassium_mg', 'vitamin_c_mg'],
+    properties: { name: { type: 'string' }, vegetarian: { type: 'boolean' }, sugar_g: { type: 'number' }, saturated_fat_g: { type: 'number' }, salt_g: { type: 'number' },
+      calcium_mg: { type: 'number' }, iron_mg: { type: 'number' }, potassium_mg: { type: 'number' }, vitamin_c_mg: { type: 'number' } } } } },
+};
+const ENRICH_PROMPT = `Sei un nutrizionista. Per ogni alimento dell'elenco stima i valori medi PER 100 GRAMMI secondo le tabelle di composizione (CREA, USDA): zuccheri, grassi saturi, sale, calcio, ferro, potassio, vitamina C. Indica anche se è vegetariano (true se non contiene carne né pesce; uova e latticini vanno bene). Restituisci gli alimenti nello stesso ordine, con lo stesso nome.`;
+function foodsMissingInfo() {
+  const seen = new Map();
+  for (const list of Object.values(db.entries)) for (const e of list) {
+    if (entryMicros(e)) continue;
+    const k = normName(e.name);
+    if (!seen.has(k)) seen.set(k, e);
+  }
+  return [...seen.values()];
+}
+async function runEnrich() {
+  if (!requireKey()) return;
+  const todo = foodsMissingInfo();
+  openSheet(`<h3>Completo i micronutrienti…</h3><div class="spinner"></div><p class="center muted small" id="enrMsg">0 di ${todo.length} alimenti</p>`);
+  let done = 0;
+  try {
+    for (let i = 0; i < todo.length; i += 25) {
+      const batch = todo.slice(i, i + 25);
+      const prompt = batch.map((e, j) => `${j + 1}. ${e.name} (${r0(e.per100.kcal)} kcal per 100 g)`).join('\n');
+      const out = await analyzeFood({ prompt, system: ENRICH_PROMPT, schema: ENRICH_SCHEMA });
+      (out.foods || []).forEach((f, j) => {
+        const src = batch[j] && normName(batch[j].name) === normName(f.name) ? batch[j] : batch.find(b => normName(b.name) === normName(f.name)) || batch[j];
+        if (!src) return;
+        db.foodInfo[normName(src.name)] = { veg: !!f.vegetarian, sug: f.sugar_g || 0, sat: f.saturated_fat_g || 0, salt: f.salt_g || 0, ca: f.calcium_mg || 0, fe: f.iron_mg || 0, kk: f.potassium_mg || 0, vc: f.vitamin_c_mg || 0 };
+      });
+      done += batch.length; save();
+      const m = $('#enrMsg'); if (m) m.textContent = `${Math.min(done, todo.length)} di ${todo.length} alimenti`;
+    }
+    closeSheet(); render(); toast('Micronutrienti completati');
+  } catch (err) {
+    save();
+    openSheet(`<h3>Non completato</h3><p>${esc(err.message)}</p><p class="small muted">Gli alimenti già elaborati restano salvati: puoi riprovare più tardi.</p><button class="btn" id="eOk">Ok</button>`, s2 => $('#eOk', s2).addEventListener('click', () => { closeSheet(); render(); }));
+  }
+}
+
+// ---------- Risultati del mese (in cima ai Progressi) ----------
+function greenStreak() {
+  let d = dayStatus(today()) === 'ok' ? today() : addDays(today(), -1), n = 0;
+  while (dayStatus(d) === 'ok') { n++; d = addDays(d, -1); }
+  return n;
+}
+function monthResultsCard() {
+  const m = today().slice(0, 7);
+  const ws = db.body.filter(b => b.weight != null).sort((a, b) => a.date.localeCompare(b.date));
+  const base = ws.filter(b => b.date < `${m}-01`).pop() || ws.find(b => b.date.startsWith(m));
+  const last = ws.at(-1);
+  const dW = base && last && last.date >= `${m}-01` && base !== last ? last.weight - base.weight : null;
+  const mb = monthBalance(m);
+  const days = monthDays(m).filter(d => d < today() || dayEntries(d).length);
+  const green = days.filter(d => dayStatus(d) === 'ok').length;
+  const vsGoal = db.goals.deficitRef === 'goal';
+  const tile = (val, dec, unit, label, cls = '') => `<div class="stat res ${cls}"><div class="v"><span data-count="${val}" data-dec="${dec}" data-sign="1">${val > 0 ? '+' : val < 0 ? '−' : ''}${fmtNum(Math.abs(val), dec)}</span> <small>${unit}</small></div><div class="k">${label}</div></div>`;
+  return `<div class="card results">
+    <h2>🏁 ${cap(monthName(m))} finora</h2>
+    <div class="stats">
+      ${dW != null ? tile(Math.round(dW * 10) / 10, 1, 'kg', 'sulla bilancia', dW <= 0 ? 'good' : 'bad') : `<div class="stat res"><div class="v">–</div><div class="k">peso: pesati per vedere i kg persi</div></div>`}
+      ${!vsGoal && (mb.days || mb.start) ? tile(-Math.round(-mb.total / 770) / 10, 1, 'kg', 'di grasso stimato', mb.total <= 0 ? 'good' : 'bad') : tile(Math.round(mb.total), 0, 'kcal', 'rispetto all\'obiettivo', mb.total <= 0 ? 'good' : 'bad')}
+      <div class="stat res"><div class="v"><span data-count="${green}">${green}</span> <small>/ ${days.length}</small></div><div class="k">giorni verdi</div></div>
+      <div class="stat res"><div class="v">🔥 <span data-count="${greenStreak()}">${greenStreak()}</span></div><div class="k">giorni verdi di fila</div></div>
+    </div>
+  </div>`;
+}
+
+// ---------- Animazioni ----------
+const reduceMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+const countPrev = {};
+function animateView(root) {
+  // anelli: dal valore precedente al nuovo
+  requestAnimationFrame(() => requestAnimationFrame(() => $$('.ring-prog', root).forEach(c => { c.style.strokeDashoffset = c.dataset.to; })));
+  if (reduceMotion()) return;
+  // numeri che contano fino al valore
+  $$('[data-count]', root).forEach((el, i) => {
+    const to = +el.dataset.count, dec = +(el.dataset.dec || 0), suffix = el.dataset.suffix || '', signed = el.dataset.sign;
+    const key = `${tab}-${i}`;
+    const from = countPrev[key] ?? 0;
+    countPrev[key] = to;
+    if (from === to) return;
+    const t0 = performance.now(), dur = 900;
+    const fmt = x => (signed ? (x > 0 ? '+' : x < 0 ? '−' : '') + fmtNum(Math.abs(x), dec) : fmtNum(x, dec)) + suffix;
+    const step = now => {
+      const p = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - p, 3);
+      el.textContent = fmt(from + (to - from) * e);
+      if (p < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  });
+}
+function confetti() {
+  if (reduceMotion()) return;
+  const cv = document.createElement('canvas');
+  cv.className = 'confetti';
+  const dpr = devicePixelRatio || 1;
+  cv.width = innerWidth * dpr; cv.height = innerHeight * dpr;
+  document.body.appendChild(cv);
+  const ctx = cv.getContext('2d'); ctx.scale(dpr, dpr);
+  const css = getComputedStyle(document.documentElement);
+  const colors = ['--accent', '--prot', '--carb', '--fat', '--ok'].map(v => css.getPropertyValue(v).trim() || '#0f766e');
+  const parts = Array.from({ length: 140 }, () => ({
+    x: innerWidth / 2 + (Math.random() - .5) * 80, y: innerHeight * .35, vx: (Math.random() - .5) * 13, vy: -Math.random() * 13 - 4,
+    w: 6 + Math.random() * 6, h: 8 + Math.random() * 8, r: Math.random() * 6, vr: (Math.random() - .5) * .3, c: colors[Math.floor(Math.random() * colors.length)],
+  }));
+  const t0 = performance.now();
+  const frame = now => {
+    ctx.clearRect(0, 0, innerWidth, innerHeight);
+    for (const p of parts) {
+      p.vy += 0.32; p.vx *= 0.99; p.x += p.vx; p.y += p.vy; p.r += p.vr;
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r); ctx.fillStyle = p.c; ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); ctx.restore();
+    }
+    if (now - t0 < 2600) requestAnimationFrame(frame); else cv.remove();
+  };
+  requestAnimationFrame(frame);
+}
+const celebrateQueue = [];
+function celebrate(list) {
+  celebrateQueue.push(...list);
+  if ($('.celebrate')) return;
+  const next = () => {
+    const a = celebrateQueue.shift();
+    if (!a) return;
+    const el = document.createElement('div');
+    el.className = 'celebrate';
+    el.innerHTML = `<div class="cbox"><div class="cemoji">${a.emoji}</div><h3>${esc(a.title)}</h3><p>${esc(a.text)}</p><button class="btn" id="cOk">Grande! 💪</button></div>`;
+    document.body.appendChild(el);
+    confetti();
+    const close = () => { el.remove(); setTimeout(next, 250); };
+    el.querySelector('#cOk').addEventListener('click', close);
+    el.addEventListener('click', e => { if (e.target === el) close(); });
+  };
+  next();
+}
+// Traguardi: kg persi nel mese e in totale, peso obiettivo, giorni verdi di fila, grasso bruciato
+function checkAchievements() {
+  const a = db.achievements ||= {};
+  const found = [];
+  const best = (keys, payload) => { const fresh = keys.filter(k => !a[k]); fresh.forEach(k => { a[k] = today(); }); if (fresh.length) found.push(payload(fresh.length)); };
+  const m = today().slice(0, 7);
+  const ws = db.body.filter(b => b.weight != null).sort((x, y) => x.date.localeCompare(y.date));
+  if (ws.length >= 2) {
+    const last = ws.at(-1);
+    const base = ws.filter(b => b.date < `${m}-01`).pop() || ws.find(b => b.date.startsWith(m));
+    if (base && base !== last && last.date >= `${m}-01`) {
+      const k = Math.floor(base.weight - last.weight + 1e-9);
+      if (k >= 1) best(Array.from({ length: k }, (_, i) => `wm-${m}-${i + 1}`), () => ({ emoji: '🎉', title: `−${k} kg a ${monthName(m)}!`, text: `Da ${fmtNum(base.weight)} a ${fmtNum(last.weight)} kg questo mese.` }));
+    }
+    const first = ws[0], kt = Math.floor(first.weight - last.weight + 1e-9);
+    if (kt >= 2) best(Array.from({ length: kt - 1 }, (_, i) => `wt-${i + 2}`), () => ({ emoji: '🏆', title: `−${kt} kg in totale!`, text: `Dall'inizio sei passato da ${fmtNum(first.weight)} a ${fmtNum(last.weight)} kg.` }));
+    const tgt = db.goals.weightTarget;
+    if (tgt != null && first.weight > tgt && last.weight <= tgt) best([`target-${tgt}`], () => ({ emoji: '🥇', title: 'Peso obiettivo raggiunto!', text: `${fmtNum(last.weight)} kg: hai centrato l'obiettivo di ${fmtNum(tgt)} kg.` }));
+  }
+  let d = addDays(today(), -1), n = 0;
+  while (dayStatus(d) === 'ok') { n++; d = addDays(d, -1); }
+  const start = addDays(d, 1);
+  const marks = [3, 7, 14, 30, 60, 100].filter(k => n >= k);
+  if (marks.length) best(marks.map(k => `streak-${k}-${start}`), () => ({ emoji: '🔥', title: `${marks.at(-1)} giorni verdi di fila!`, text: 'Calorie nel target ogni giorno: continua così.' }));
+  if (db.goals.deficitRef !== 'goal') {
+    const h = balanceHistory(), kg = Math.floor(-h.total / KCAL_PER_KG_FAT + 1e-9);
+    if (kg >= 1) best(Array.from({ length: kg }, (_, i) => `fat-${i + 1}`), () => ({ emoji: '🔥', title: `≈ ${kg} kg di grasso bruciati`, text: `Dall'inizio hai accumulato ${fmtBalance(h.total)} di deficit calorico.` }));
+  }
+  if (found.length) { save(); celebrate(found); }
 }
 
 function weightTrend() {
@@ -1743,6 +2122,7 @@ function bodyForm(date, newDate) {
       db.body.push(out);
       const changed = out.weight != null && autoGoals();
       save(); closeSheet(); render();
+      if (out.weight != null) setTimeout(checkAchievements, 400);
       toast(changed ? `Misurazione salvata · nuovo obiettivo ${db.goals.kcal} kcal` : 'Misurazione salvata');
     });
     const del = $('#bDel', s);
@@ -2096,6 +2476,7 @@ document.addEventListener('visibilitychange', () => {
     if (curDate === lastSeenDay) curDate = today();
     lastSeenDay = today();
     render();
+    setTimeout(checkAchievements, 800);
   }
 });
 // Chi ha cambiato le calorie con una versione vecchia ha ancora i macro iniziali (130/220/65): ricalcolali.
@@ -2108,6 +2489,23 @@ document.addEventListener('visibilitychange', () => {
 })();
 render();
 importKeyFromLink();
+setTimeout(checkAchievements, 1200);
+
+// ---------- Tasto indietro del telefono: torna alla schermata precedente invece di chiudere l'app ----------
+let lastBack = 0;
+history.replaceState({ dieta: 'base' }, '');
+history.pushState({ dieta: 'guard' }, '');
+window.addEventListener('popstate', () => {
+  const cel = $('.celebrate');
+  if (cel) cel.remove();
+  else if (!$('#sheet').hidden) closeSheet();
+  else if (navStack.length) { const prev = navStack.pop(); curDate = prev.curDate; go(prev.tab, false); }
+  else if (curDate !== today()) { curDate = today(); render(); }
+  else if (tab !== 'today') go('today', false);
+  else if (Date.now() - lastBack < 2000) { history.back(); return; }
+  else { lastBack = Date.now(); toast('Premi di nuovo indietro per uscire'); }
+  history.pushState({ dieta: 'guard' }, '');
+});
 // Chiede al browser di non cancellare mai i dati salvati (diario, misure, chiave)
 navigator.storage?.persist?.().catch(() => {});
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});

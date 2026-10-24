@@ -377,3 +377,45 @@ label.check input { width: 20px; height: 20px; accent-color: var(--accent); }
 .search-results mark { background: var(--accent-soft); color: var(--text); border-radius: 4px; padding: 0 2px; font-weight: 600; }
 .ring .big.good { color: var(--ok); }
 .ring .big.bad { color: var(--danger); }
+
+/* Foto multiple */
+.thumbs { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 10px; padding-bottom: 2px; }
+.thumbs img { width: 96px; height: 96px; object-fit: cover; border-radius: 12px; flex: none; }
+.thumb { position: relative; flex: none; }
+.thumb button { position: absolute; top: 4px; right: 4px; width: 26px; height: 26px; border-radius: 50%; border: 0; background: rgba(0,0,0,.6); color: #fff; font-size: 16px; line-height: 1; }
+
+/* Anelli animati */
+.ring-prog { transition: stroke-dashoffset .9s cubic-bezier(.2,.8,.2,1); }
+@media (prefers-reduced-motion: reduce) { .ring-prog { transition: none; } }
+
+/* Analisi alimentazione */
+.ana h2 .add-mini { font-size: 12px; }
+.ana-h { font-size: 15px; margin: 18px 0 8px; }
+.score-wrap { position: relative; width: 128px; height: 128px; margin: 6px auto 10px; }
+.score-num { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1; }
+.score-num b { font-size: 34px; letter-spacing: -.02em; }
+.score-num small { color: var(--muted); font-size: 12px; }
+.score-num span { font-size: 13px; font-weight: 700; margin-top: 2px; }
+.prow, .mrow { padding: 7px 0; }
+.mtop { display: flex; justify-content: space-between; gap: 8px; font-size: 14px; }
+.prow .bar, .mrow .bar { margin: 4px 0 2px; }
+.veg-big { display: flex; align-items: baseline; gap: 10px; margin-bottom: 6px; flex-wrap: wrap; }
+.veg-big > b { font-size: 30px; color: var(--ok); }
+.veg-big span { font-size: 13px; color: var(--muted); }
+
+/* Risultati del mese */
+.results .res .v { font-size: 24px; }
+.results .res .v small { font-size: 13px; color: var(--muted); font-weight: 600; }
+.results .res.good .v span { color: var(--ok); }
+.results .res.bad .v span { color: var(--danger); }
+
+/* Festeggiamenti */
+.confetti { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 60; }
+.celebrate { position: fixed; inset: 0; z-index: 50; background: rgba(0,0,0,.45); display: flex; align-items: center; justify-content: center; padding: 24px; animation: fadein .2s; }
+.celebrate .cbox { background: var(--card); border-radius: 22px; padding: 22px 20px 18px; max-width: 340px; width: 100%; text-align: center; animation: pop .45s cubic-bezier(.2,1.4,.4,1); }
+.celebrate .cemoji { font-size: 64px; line-height: 1; animation: bounce 1s ease-in-out infinite alternate; }
+.celebrate h3 { font-size: 22px; margin: 10px 0 6px; }
+.celebrate p { color: var(--muted); margin: 0 0 16px; }
+@keyframes pop { from { transform: scale(.6); opacity: 0; } }
+@keyframes fadein { from { opacity: 0; } }
+@keyframes bounce { to { transform: translateY(-8px) scale(1.06); } }
