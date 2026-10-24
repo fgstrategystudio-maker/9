@@ -535,3 +535,9 @@ h1, h2, h3, .big, .balance-big, .score-num b { font-weight: 800; letter-spacing:
 @keyframes wave { 50% { height: 38px; } }
 #dText { min-height: 120px; font-size: 17px; }
 @media (prefers-reduced-motion: reduce) { .dict-wave.on i { animation: none; height: 24px; } }
+.dict-wave.level i { background: var(--accent); transition: height .08s linear; animation: none; }
+.rec-time { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 28px; font-weight: 800; font-variant-numeric: tabular-nums; margin-bottom: 4px; }
+.rec-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--danger); animation: blink 1s ease-in-out infinite; }
+.rec-dot.off { animation: none; background: var(--line); }
+@keyframes blink { 50% { opacity: .25; } }
+.btn.small { font-size: 13px; font-weight: 600; padding: 8px; }

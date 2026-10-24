@@ -2,7 +2,7 @@
 'use strict';
 
 // ---------- Storage ----------
-const APP_VERSION = '27';
+const APP_VERSION = '28';
 const KEY = 'dieta.v1';
 const MEALS = [
   { id: 'colazione', label: 'Colazione', icon: '☀️' },
@@ -802,7 +802,7 @@ function bindQuickBar(v) {
   }));
   $('#qaCam', v).addEventListener('click', () => { addMeal = qaTarget(); photoQueue = []; requireKey() && $('#photoInput').click(); });
   // Dettatura: si apre un pannello che ascolta finché non tocchi "Fatto"
-  $('#qaMic', v)?.addEventListener('click', () => openDictation(text => {
+  $('#qaMic', v)?.addEventListener('click', () => openDictation(qaTarget(), text => {
     inp.value = text; draw();
     const best = rows.find(r => r.kind === 'ref') || rows.find(r => r.kind === 'ai');
     if (best) pick(best); else inp.focus();
@@ -811,15 +811,99 @@ function bindQuickBar(v) {
 
 // Pannello di dettatura: resta in ascolto anche con le pause (Chrome si ferma da solo dopo un silenzio:
 // la registrazione riparte in automatico) finché non si tocca "Fatto". Il testo si può correggere a mano.
-function openDictation(onDone) {
+const canRecordAudio = () => db.settings.provider !== 'claude' && !!(window.MediaRecorder && navigator.mediaDevices?.getUserMedia);
+function openDictation(meal, onText) {
+  if (canRecordAudio() && db.settings.dictMode !== 'live') return openVoiceRecorder(meal, onText);
+  return openLiveDictation(onText);
+}
+
+// Registratore: nessun suono e nessuna interruzione; alla fine l'audio va a Gemini che lo ascolta e calcola tutto
+function openVoiceRecorder(meal, onText) {
+  let stream = null, mr = null, ac = null, raf = 0, tick = 0, chunks = [], done = false, paused = false, elapsed = 0, t0 = 0;
+  const MAX = 120;
+  const fmtT = sec => `${Math.floor(sec / 60)}:${String(Math.floor(sec % 60)).padStart(2, '0')}`;
+  openSheet(`<h3>🎤 Dimmi cosa hai mangiato</h3>
+    <div class="dict-wave level" id="dWave">${'<i></i>'.repeat(11)}</div>
+    <div class="rec-time"><span class="rec-dot" id="dDot"></span><span id="dTime">0:00</span></div>
+    <p class="small muted center" id="dState">Avvio il microfono…</p>
+    <div class="btn-row"><button class="btn secondary" id="dPause" disabled>⏸ Pausa</button><button class="btn" id="dDone" disabled>✓ Fatto</button></div>
+    <button class="btn ghost small" id="dLive" style="margin-top:4px">Vuoi vedere il testo mentre parli? Usa la trascrizione dal vivo</button>`, async s => {
+    const state = $('#dState', s), bars = $$('#dWave i', s), pauseBtn = $('#dPause', s), doneBtn = $('#dDone', s);
+    const release = () => {
+      cancelAnimationFrame(raf); clearInterval(tick);
+      try { if (mr && mr.state !== 'inactive') mr.stop(); } catch {}
+      stream?.getTracks().forEach(t => t.stop());
+      ac?.close().catch(() => {});
+    };
+    sheetCleanup = () => { if (!done) { chunks = []; } release(); };
+    $('#dLive', s).addEventListener('click', () => { db.settings.dictMode = 'live'; save(); closeSheet(); openLiveDictation(onText); toast('Trascrizione dal vivo attiva (si cambia in Obiettivi → AI)'); });
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
+    } catch {
+      state.textContent = 'Non riesco a usare il microfono: consenti l\'accesso al browser, oppure usa la trascrizione dal vivo.';
+      return;
+    }
+    if (!$('#dWave')) { release(); return; } // pannello già chiuso
+    const mime = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus'].find(t => MediaRecorder.isTypeSupported(t)) || '';
+    mr = new MediaRecorder(stream, mime ? { mimeType: mime, audioBitsPerSecond: 32000 } : undefined);
+    mr.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+    // barrette che seguono il volume della voce
+    try {
+      ac = new (window.AudioContext || window.webkitAudioContext)();
+      const an = ac.createAnalyser(); an.fftSize = 256;
+      ac.createMediaStreamSource(stream).connect(an);
+      const data = new Uint8Array(an.frequencyBinCount);
+      const loop = () => {
+        an.getByteFrequencyData(data);
+        bars.forEach((b, i) => { const v = paused ? 0 : data[2 + i * 3] / 255; b.style.height = `${8 + v * 40}px`; });
+        raf = requestAnimationFrame(loop);
+      };
+      loop();
+    } catch {}
+    mr.start(500);
+    t0 = Date.now(); navigator.vibrate?.(10);
+    state.textContent = 'Parla liberamente, anche a lungo: quando hai finito tocca «Fatto».';
+    pauseBtn.disabled = doneBtn.disabled = false;
+    tick = setInterval(() => {
+      const sec = elapsed + (paused ? 0 : (Date.now() - t0) / 1000);
+      $('#dTime', s).textContent = fmtT(sec);
+      if (sec >= MAX) doneBtn.click();
+    }, 250);
+    pauseBtn.addEventListener('click', () => {
+      if (!paused) { mr.pause(); elapsed += (Date.now() - t0) / 1000; paused = true; pauseBtn.textContent = '▶ Riprendi'; $('#dDot', s).classList.add('off'); state.textContent = 'In pausa'; }
+      else { mr.resume(); t0 = Date.now(); paused = false; pauseBtn.textContent = '⏸ Pausa'; $('#dDot', s).classList.remove('off'); state.textContent = 'Ti ascolto…'; }
+    });
+    doneBtn.addEventListener('click', () => {
+      if (done) return;
+      done = true;
+      const sec = elapsed + (paused ? 0 : (Date.now() - t0) / 1000);
+      mr.onstop = async () => {
+        release();
+        const blob = new Blob(chunks, { type: (mr.mimeType || mime || 'audio/webm').split(';')[0] });
+        if (sec < 0.8 || blob.size < 1500) { closeSheet(); toast('Registrazione troppo corta: riprova'); return; }
+        const data = await new Promise(res => { const fr = new FileReader(); fr.onload = () => res(String(fr.result).split(',')[1]); fr.readAsDataURL(blob); });
+        addMeal = meal || addMeal;
+        runAnalysis({ audio: { mime: blob.type || 'audio/webm', data } });
+      };
+      try { mr.stop(); } catch { mr.onstop(); }
+    });
+  });
+}
+
+// Trascrizione dal vivo con il riconoscimento vocale del browser (usata con Claude o se preferita):
+// ascolto continuo, così il suono di avvio di Android si sente solo all'inizio o dopo un silenzio lungo.
+function openLiveDictation(onDone) {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { toast('Dettatura non disponibile su questo browser'); return; }
   let listening = false, rec = null, base = '', closed = false, restartT = null;
   openSheet(`<h3>🎤 Dimmi cosa hai mangiato</h3>
     <div class="dict-wave" id="dWave"><i></i><i></i><i></i><i></i><i></i></div>
     <textarea id="dText" placeholder="Parla pure, anche con delle pause: es. «cento grammi di pasta al pomodoro, un'insalata con un filo d'olio e una mela»"></textarea>
     <p class="small muted center" id="dState">Ti ascolto… tocca «Fatto» quando hai finito</p>
     <div class="btn-row"><button class="btn secondary" id="dPause">⏸ Pausa</button><button class="btn" id="dDone">✓ Fatto</button></div>
-    <button class="btn ghost" id="dClear" style="margin-top:4px">Cancella e ricomincia</button>`, s => {
+    <button class="btn ghost" id="dClear" style="margin-top:4px">Cancella e ricomincia</button>
+    ${canRecordAudio() ? '<button class="btn ghost small" id="dRec">Preferisci registrare senza suoni? Usa la registrazione</button>' : ''}`, s => {
+    $('#dRec', s)?.addEventListener('click', () => { db.settings.dictMode = 'record'; save(); closeSheet(); openVoiceRecorder(qaTarget(), onDone); });
     const ta = $('#dText', s), state = $('#dState', s), pauseBtn = $('#dPause', s), wave = $('#dWave', s);
     const setUi = () => {
       wave.classList.toggle('on', listening);
@@ -831,13 +915,18 @@ function openDictation(onDone) {
       if (closed) return;
       base = ta.value;
       rec = new SR();
-      rec.lang = 'it-IT'; rec.interimResults = true; rec.continuous = false; rec.maxAlternatives = 1;
-      let sessionFinal = '';
+      rec.lang = 'it-IT'; rec.interimResults = true; rec.continuous = true; rec.maxAlternatives = 1;
       rec.onresult = ev => {
-        let interim = '';
-        sessionFinal = '';
-        for (const r of ev.results) { if (r.isFinal) sessionFinal += r[0].transcript; else interim += r[0].transcript; }
-        ta.value = join(base, join(sessionFinal, interim));
+        const segs = [];
+        for (const r of ev.results) {
+          const t = r[0].transcript.trim();
+          if (!t) continue;
+          const last = segs.at(-1)?.toLowerCase();
+          if (last && t.toLowerCase().startsWith(last)) segs[segs.length - 1] = t; // stesso pezzo, più lungo
+          else if (last && last.startsWith(t.toLowerCase())) continue;          // ripetizione
+          else segs.push(t);
+        }
+        ta.value = join(base, segs.join(' '));
       };
       rec.onerror = ev => {
         if (ev.error === 'not-allowed' || ev.error === 'service-not-allowed') { listening = false; setUi(); state.textContent = 'Consenti il microfono al browser per dettare'; }
@@ -1495,6 +1584,7 @@ Come lavorare:
 - Calorie, proteine, carboidrati, grassi e fibre si riferiscono all'intera porzione, basati su tabelle di composizione (CREA, USDA). Includi i condimenti probabili (olio, burro, salse) come voce separata quando sono rilevanti.
 - Stima anche zuccheri, grassi saturi, sale, calcio, ferro, potassio e vitamina C dell'intera porzione (0 se assenti).
 - "vegetarian" è true se l'alimento non contiene carne né pesce (uova, latte e formaggi vanno bene).
+- Se ricevi un audio, è la persona che descrive a voce cosa ha mangiato (in italiano): ascoltalo tutto, usa quantità e marche che dice, e in "notes" scrivi prima la trascrizione tra virgolette e poi le ipotesi.
 - Se ricevi più foto, sono portate o angolazioni dello stesso pasto: elenca tutto quello che si vede, senza contare due volte lo stesso cibo se compare in più foto.
 - "confidence" indica quanto sei sicuro di identificazione e porzione.
 - In "notes" scrivi in una o due frasi le ipotesi principali (es. "Ho ipotizzato 1 cucchiaio d'olio"). Se nella foto non c'è cibo, restituisci items vuoto e spiegalo nelle note.`;
@@ -1605,8 +1695,9 @@ async function callGemini(input) {
   throw lastErr || new Error('Nessun modello Gemini disponibile al momento, riprova tra poco.');
 }
 
-async function callGeminiModel(model, { prompt, images = [], system = SYSTEM_PROMPT, schema = FOOD_SCHEMA }) {
+async function callGeminiModel(model, { prompt, images = [], audio = null, system = SYSTEM_PROMPT, schema = FOOD_SCHEMA }) {
   const parts = images.map(data => ({ inline_data: { mime_type: 'image/jpeg', data } }));
+  if (audio) parts.push({ inline_data: { mime_type: audio.mime, data: audio.data } });
   parts.push({ text: prompt });
   // Meno "ragionamento" = risposta molto più rapida; per stimare un pasto basta.
   const thinking = /^gemini-3/.test(model) ? { thinkingLevel: /lite/.test(model) ? 'minimal' : 'low' } : null;
@@ -1642,36 +1733,38 @@ async function listGeminiModels() {
     .sort((a, b) => /preview/.test(a) - /preview/.test(b) || ver(b) - ver(a) || /lite/.test(a) - /lite/.test(b));
 }
 
-function analyzeFood({ prompt, images = [], system, schema }) {
+function analyzeFood({ prompt, images = [], audio = null, system, schema }) {
   if (db.settings.provider === 'claude') {
+    if (audio) throw new Error('Claude non accetta audio: usa la trascrizione dal vivo.');
     const content = images.map(data => ({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data } }));
     content.push({ type: 'text', text: prompt });
     return callClaude(content, { system, schema });
   }
-  return callGemini({ prompt, images, system, schema });
+  return callGemini({ prompt, images, audio, system, schema });
 }
 
 // Micronutrienti per 100 g dai valori della porzione restituiti dall'AI
 const microFromAI = (it, k) => ({ sug: (it.sugar_g || 0) * k, sat: (it.saturated_fat_g || 0) * k, salt: (it.salt_g || 0) * k,
   ca: (it.calcium_mg || 0) * k, fe: (it.iron_mg || 0) * k, kk: (it.potassium_mg || 0) * k, vc: (it.vitamin_c_mg || 0) * k });
 
-async function runAnalysis({ text, images = [], previews = [] }) {
+async function runAnalysis({ text, images = [], previews = [], audio = null }) {
   const preview = previews[0];
   openSheet(`<h3>Analizzo…</h3>
     ${previews.length ? `<div class="scan"><img src="${previews[0]}" alt=""><div class="scan-beam"></div>${previews.length > 1 ? `<span class="scan-n">+${previews.length - 1} foto</span>` : ''}</div>`
       : `<div class="skel-wrap">${[0, 1, 2].map(() => '<div class="skel"><i></i><div><b></b><b></b></div></div>').join('')}</div>`}
     <p class="center muted small"><span id="aiStep">Riconosco gli alimenti…</span> · <span id="aiSecs">0</span> s</p>`);
-  const steps = ['Riconosco gli alimenti…', 'Stimo le porzioni…', 'Calcolo calorie e macro…', 'Ultimi controlli…'];
+  const steps = [audio ? 'Ascolto la registrazione…' : 'Riconosco gli alimenti…', 'Stimo le porzioni…', 'Calcolo calorie e macro…', 'Ultimi controlli…'];
+  if (audio) $('#aiStep').textContent = steps[0];
   let stepI = 0;
   const stepTimer = setInterval(() => { const el = $('#aiStep'); if (!el) return clearInterval(stepTimer); stepI = Math.min(stepI + 1, steps.length - 1); el.textContent = steps[stepI]; }, 1400);
   const t0 = Date.now();
   const tick = setInterval(() => { const el = $('#aiSecs'); if (el) el.textContent = Math.round((Date.now() - t0) / 1000); else clearInterval(tick); }, 500);
   const what = images.length > 1 ? `${images.length} foto dello stesso pasto (più portate).` : 'Foto del mio pasto.';
-  const prompt = images.length
-    ? (text ? `${what} Dettagli: ${text}` : what)
+  const prompt = audio ? 'Registrazione vocale: ti dico cosa ho mangiato.'
+    : images.length ? (text ? `${what} Dettagli: ${text}` : what)
     : `Ho mangiato: ${text}`;
   try {
-    const out = await analyzeFood({ prompt, images });
+    const out = await analyzeFood({ prompt, images, audio });
     const items = (out.items || []).map(it => {
       const grams = it.grams > 0 ? it.grams : 100;
       const k = 100 / grams;
@@ -1685,7 +1778,7 @@ async function runAnalysis({ text, images = [], previews = [] }) {
     openSheet(`<h3>Qualcosa non va</h3><p>${esc(err.message)}</p>${err.detail ? `<p class="small muted">Dettaglio: ${esc(err.detail)}</p>` : ''}
       <div class="btn-row"><button class="btn secondary" id="rClose">Chiudi</button><button class="btn" id="rRetry">Riprova</button></div>`, s => {
       $('#rClose', s).addEventListener('click', closeSheet);
-      $('#rRetry', s).addEventListener('click', () => runAnalysis({ text, images, previews }));
+      $('#rRetry', s).addEventListener('click', () => runAnalysis({ text, images, previews, audio }));
     });
   }
 }
@@ -2667,6 +2760,10 @@ function renderGoals(v) {
         <button data-mode="precise" class="${st.aiMode === 'precise' ? 'on' : ''}">🎯 Preciso</button>
       </div>
       <p class="small muted" style="margin-top:-4px">Veloce risponde in 1–2 secondi ed è ottimo per il diario di tutti i giorni. Preciso è più lento (5–10 secondi): utile per piatti complessi o foto difficili.</p>
+      <label class="field"><span>Dettatura con 🎤</span><select id="sDict">
+        <option value="record" ${st.dictMode !== 'live' ? 'selected' : ''}>Registrazione: parli di fila, nessun suono (consigliata)</option>
+        <option value="live" ${st.dictMode === 'live' ? 'selected' : ''}>Trascrizione dal vivo: vedi il testo mentre parli</option>
+      </select></label>
       <label class="field" id="gModelField" ${st.aiMode === 'precise' ? '' : 'hidden'}><span>Modello (modalità Preciso)</span><select id="sGModel">${geminiModels.map(m => `<option ${m === st.geminiModel ? 'selected' : ''}>${esc(m)}</option>`).join('')}</select></label>
     </div>
     <div id="provClaude" ${st.provider === 'claude' ? '' : 'hidden'}>
@@ -2766,6 +2863,7 @@ function renderGoals(v) {
     save(); render(); toast('Obiettivi salvati');
   });
 
+  $('#sDict', v)?.addEventListener('change', e => { db.settings.dictMode = e.target.value; save(); toast('Dettatura aggiornata'); });
   $$('#aiModeSeg [data-mode]', v).forEach(b => b.addEventListener('click', () => {
     db.settings.aiMode = b.dataset.mode; save();
     $$('#aiModeSeg [data-mode]', v).forEach(x => x.classList.toggle('on', x === b));
