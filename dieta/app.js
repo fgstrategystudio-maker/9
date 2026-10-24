@@ -2,7 +2,7 @@
 'use strict';
 
 // ---------- Storage ----------
-const APP_VERSION = '24';
+const APP_VERSION = '25';
 const KEY = 'dieta.v1';
 const MEALS = [
   { id: 'colazione', label: 'Colazione', icon: '☀️' },
@@ -224,12 +224,21 @@ function rememberRecent(item) {
 }
 
 let toastTimer;
-function toast(msg) {
+function toast(msg, action) {
   const t = $('#toast');
   t.textContent = msg; t.hidden = false;
+  if (action) {
+    const b = document.createElement('button');
+    b.className = 'toast-act'; b.textContent = action.label;
+    b.onclick = () => { t.hidden = true; action.fn(); };
+    t.appendChild(b);
+  }
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => { t.hidden = true; }, 2600);
+  toastTimer = setTimeout(() => { t.hidden = true; }, action ? 5000 : 2600);
 }
+// Pulsanti ½ · 1 · 1½ · 2 porzioni
+const PORTIONS = [[0.5, '½'], [1, '1'], [1.5, '1½'], [2, '2']];
+const porChips = (attr, cur = 1) => `<div class="por">${PORTIONS.map(([k, l]) => `<button class="${k === cur ? 'on' : ''}" ${attr} data-k="${k}">${l}</button>`).join('')}<span class="small muted">porzioni</span></div>`;
 
 // ---------- Sheet ----------
 let sheetCleanup = null;
@@ -510,7 +519,7 @@ function renderToday(v) {
     justAdded = new Set();
   }
   $$('[data-save]', v).forEach(b => b.addEventListener('click', () => saveMealForm(dayEntries(curDate).filter(e => e.meal === b.dataset.save), b.dataset.save)));
-  $$('[data-entry]', v).forEach(li => li.addEventListener('click', () => editEntry(li.dataset.entry)));
+  $$('[data-entry]', v).forEach(li => bindSwipe(li));
   $$('[data-copy]', v).forEach(b => b.addEventListener('click', () => {
     const src = dayEntries(yesterday).filter(e => e.meal === b.dataset.copy);
     const copies = src.map(e => ({ ...e, id: uid(), t: Date.now() }));
@@ -602,7 +611,8 @@ const FOOD_ICONS = [
 const foodIcon = name => { const n = normName(name); return (FOOD_ICONS.find(([re]) => re.test(n)) || [, '🍴'])[1]; };
 
 // ---------- Inserimento rapido dal Diario ----------
-let qaMeal = null;
+let qaMeal = null, recog = null;
+const speechSupported = () => !!(window.SpeechRecognition || window.webkitSpeechRecognition);
 const qaTarget = () => qaMeal || (curDate === today() ? defaultMeal() : 'pranzo');
 function quickBar() {
   const t = qaTarget();
@@ -610,6 +620,7 @@ function quickBar() {
     <div class="qa-bar">
       <span class="qa-ico">✨</span>
       <input id="qaInput" type="search" enterkeyhint="send" placeholder="Cosa hai mangiato?" autocomplete="off" aria-label="Cosa hai mangiato">
+      ${speechSupported() ? '<button id="qaMic" class="qa-btn ghost" aria-label="Detta cosa hai mangiato">🎤</button>' : ''}
       <button id="qaCam" class="qa-btn" aria-label="Fotografa il pasto">📷</button>
     </div>
     <div class="qa-meals">${MEALS.map(m => `<button class="chip ${m.id === t ? 'on' : ''}" data-qm="${m.id}">${m.icon} ${m.label}</button>`).join('')}</div>
@@ -702,6 +713,106 @@ function bindQuickBar(v) {
     if (!box.hidden) draw();
   }));
   $('#qaCam', v).addEventListener('click', () => { addMeal = qaTarget(); photoQueue = []; requireKey() && $('#photoInput').click(); });
+  // Dettatura: "cento grammi di pasta al pomodoro e un'insalata"
+  const mic = $('#qaMic', v);
+  if (mic) mic.addEventListener('click', () => {
+    if (mic.classList.contains('rec')) { recog?.stop(); return; }
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recog = new SR();
+    recog.lang = 'it-IT'; recog.interimResults = true; recog.maxAlternatives = 1;
+    let finalText = '';
+    recog.onresult = ev => {
+      let txt = '';
+      for (const r of ev.results) { txt += r[0].transcript; if (r.isFinal) finalText = txt; }
+      inp.value = txt; draw();
+    };
+    recog.onerror = ev => { mic.classList.remove('rec'); if (ev.error === 'not-allowed') toast('Consenti il microfono per dettare'); };
+    recog.onend = () => {
+      mic.classList.remove('rec');
+      const text = (finalText || inp.value).trim();
+      if (!text) return;
+      inp.value = text; draw();
+      const best = rows.find(r => r.kind === 'ref') || rows.find(r => r.kind === 'ai');
+      if (best) pick(best);
+    };
+    mic.classList.add('rec'); navigator.vibrate?.(10);
+    try { recog.start(); } catch { mic.classList.remove('rec'); }
+  });
+}
+
+// Scorri a sinistra: elimina · a destra: duplica · tieni premuto: sposta · tocco: modifica
+function bindSwipe(li) {
+  const id = li.dataset.entry;
+  let x0 = 0, y0 = 0, dx = 0, mode = null, timer = null, longDone = false;
+  const content = [...li.children];
+  const setX = x => content.forEach(c => { c.style.transform = x ? `translateX(${x}px)` : ''; });
+  li.addEventListener('pointerdown', e => {
+    x0 = e.clientX; y0 = e.clientY; dx = 0; mode = 'press'; longDone = false;
+    content.forEach(c => { c.style.transition = 'none'; });
+    timer = setTimeout(() => { if (mode === 'press') { longDone = true; mode = null; navigator.vibrate?.(12); entryActions(id); } }, 550);
+  });
+  li.addEventListener('pointermove', e => {
+    if (!mode) return;
+    const mx = e.clientX - x0, my = e.clientY - y0;
+    if (mode === 'press' && (Math.abs(mx) > 8 || Math.abs(my) > 8)) {
+      clearTimeout(timer);
+      mode = Math.abs(mx) > Math.abs(my) ? 'swipe' : null;
+      if (mode === 'swipe') li.setPointerCapture?.(e.pointerId);
+    }
+    if (mode === 'swipe') {
+      dx = Math.max(-140, Math.min(140, mx));
+      setX(dx);
+      li.classList.toggle('sw-left', dx < -20); li.classList.toggle('sw-right', dx > 20);
+      li.classList.toggle('sw-armed', Math.abs(dx) > 90);
+    }
+  });
+  const end = () => {
+    clearTimeout(timer);
+    content.forEach(c => { c.style.transition = ''; });
+    if (mode === 'swipe') {
+      if (dx < -90) removeEntry(id);
+      else if (dx > 90) duplicateEntry(id);
+      setX(0); li.classList.remove('sw-left', 'sw-right', 'sw-armed');
+      li.addEventListener('click', ev => ev.stopPropagation(), { capture: true, once: true });
+    } else if (mode === 'press' && !longDone) editEntry(id);
+    mode = null;
+  };
+  li.addEventListener('pointerup', end);
+  li.addEventListener('pointercancel', () => { clearTimeout(timer); mode = null; setX(0); li.classList.remove('sw-left', 'sw-right', 'sw-armed'); });
+  li.addEventListener('contextmenu', e => e.preventDefault());
+}
+function removeEntry(id) {
+  const list = dayEntries(curDate), i = list.findIndex(e => e.id === id);
+  if (i < 0) return;
+  const [gone] = list.splice(i, 1);
+  save(); render(); navigator.vibrate?.(15);
+  toast(`Eliminato: ${gone.name}`, { label: 'Annulla', fn: () => { dayEntries(curDate).splice(i, 0, gone); db.entries[curDate] = dayEntries(curDate); justAdded = new Set([gone.id]); save(); render(); } });
+}
+function duplicateEntry(id) {
+  const list = dayEntries(curDate), i = list.findIndex(e => e.id === id);
+  if (i < 0) return;
+  const copy = { ...list[i], id: uid(), t: Date.now(), per100: { ...list[i].per100 } };
+  list.splice(i + 1, 0, copy);
+  justAdded = new Set([copy.id]);
+  save(); render();
+  toast(`Duplicato: ${copy.name}`, { label: 'Annulla', fn: () => { db.entries[curDate] = dayEntries(curDate).filter(e => e.id !== copy.id); save(); render(); } });
+}
+function entryActions(id) {
+  const e = dayEntries(curDate).find(x => x.id === id);
+  if (!e) return;
+  openSheet(`<h3>${foodIcon(e.name)} ${esc(e.name)}</h3>
+    <p class="small muted" style="margin-top:-6px">${r0(e.grams)} g · ${r0(nutrients(e).kcal)} kcal</p>
+    <p class="small" style="margin-bottom:6px">Sposta in:</p>
+    <div class="meal-pick">${MEALS.map(m => `<button class="chip ${m.id === e.meal ? 'on' : ''}" data-mv="${m.id}">${m.icon} ${m.label}</button>`).join('')}</div>
+    <div class="btn-row" style="margin-bottom:8px"><button class="btn secondary" id="aDup">⧉ Duplica</button><button class="btn secondary" id="aEdit">✎ Modifica</button></div>
+    <button class="btn danger" id="aDel">Elimina</button>`, s => {
+    $$('[data-mv]', s).forEach(c => c.addEventListener('click', () => {
+      e.meal = c.dataset.mv; justAdded = new Set([e.id]); save(); closeSheet(); render(); toast(`Spostato in ${MEALS.find(m => m.id === e.meal).label}`);
+    }));
+    $('#aDup', s).addEventListener('click', () => { closeSheet(); duplicateEntry(id); });
+    $('#aEdit', s).addEventListener('click', () => editEntry(id));
+    $('#aDel', s).addEventListener('click', () => { closeSheet(); removeEntry(id); });
+  });
 }
 
 function editEntry(id) {
@@ -718,12 +829,18 @@ function editEntry(id) {
     <label class="field"><span>Quantità (g)</span>
       <div class="row"><button class="step" id="eMinus">−</button><input type="number" inputmode="decimal" id="eGrams" value="${r0(grams)}" style="text-align:center"><button class="step" id="ePlus">+</button></div>
     </label>
+    ${porChips('data-ep')}
     <div class="nutri" id="eNutri"></div>
     <div class="meal-pick" style="margin-top:14px">${MEALS.map(m => `<button class="chip ${m.id === meal ? 'on' : ''}" data-m="${m.id}">${m.label}</button>`).join('')}</div>
     <div class="btn-row"><button class="btn danger" id="eDel">Elimina</button><button class="btn" id="eSave">Salva</button></div>`, s => {
     draw(s);
     const gi = $('#eGrams', s);
     gi.addEventListener('input', () => { grams = num(gi.value) || 0; draw(s); });
+    const base = e.grams;
+    $$('[data-ep]', s).forEach(b => b.addEventListener('click', () => {
+      grams = r0(base * +b.dataset.k); gi.value = grams; draw(s);
+      $$('[data-ep]', s).forEach(x => x.classList.toggle('on', x === b));
+    }));
     $('#eMinus', s).addEventListener('click', () => { grams = Math.max(0, grams - 10); gi.value = r0(grams); draw(s); });
     $('#ePlus', s).addEventListener('click', () => { grams += 10; gi.value = r0(grams); draw(s); });
     $$('[data-m]', s).forEach(c => c.addEventListener('click', () => { meal = c.dataset.m; $$('[data-m]', s).forEach(x => x.classList.toggle('on', x === c)); }));
@@ -1101,12 +1218,17 @@ function quickAdd(food) {
     <label class="field"><span>Quantità (g)</span>
       <div class="row"><button class="step" id="qMinus">−</button><input type="number" inputmode="decimal" id="qGrams" value="${r0(grams)}" style="text-align:center"><button class="step" id="qPlus">+</button></div>
     </label>
+    ${porChips('data-qp')}
     <div class="nutri" id="qNutri"></div>
     <p class="small muted">Per 100 g: ${r0(food.per100.kcal)} kcal · P ${fmtNum(food.per100.p)} · C ${fmtNum(food.per100.c)} · G ${fmtNum(food.per100.f)}</p>
     <button class="btn" id="qAdd">Aggiungi a ${MEALS.find(m => m.id === addMeal).label}</button>`, s => {
     draw(s);
     const gi = $('#qGrams', s);
     gi.addEventListener('input', () => { grams = num(gi.value) || 0; draw(s); });
+    $$('[data-qp]', s).forEach(b => b.addEventListener('click', () => {
+      grams = r0(food.grams * +b.dataset.k); gi.value = grams; draw(s);
+      $$('[data-qp]', s).forEach(x => x.classList.toggle('on', x === b));
+    }));
     $('#qMinus', s).addEventListener('click', () => { grams = Math.max(0, grams - 10); gi.value = r0(grams); draw(s); });
     $('#qPlus', s).addEventListener('click', () => { grams += 10; gi.value = r0(grams); draw(s); });
     $('#qAdd', s).addEventListener('click', () => {
@@ -1406,8 +1528,13 @@ const microFromAI = (it, k) => ({ sug: (it.sugar_g || 0) * k, sat: (it.saturated
 
 async function runAnalysis({ text, images = [], previews = [] }) {
   const preview = previews[0];
-  openSheet(`<h3>Analizzo…</h3>${previews.length ? `<div class="thumbs">${previews.map(p => `<img src="${p}" alt="">`).join('')}</div>` : ''}
-    <div class="spinner"></div><p class="center muted small">Riconoscimento alimenti e calcolo di calorie e macro · <span id="aiSecs">0</span> s</p>`);
+  openSheet(`<h3>Analizzo…</h3>
+    ${previews.length ? `<div class="scan"><img src="${previews[0]}" alt=""><div class="scan-beam"></div>${previews.length > 1 ? `<span class="scan-n">+${previews.length - 1} foto</span>` : ''}</div>`
+      : `<div class="skel-wrap">${[0, 1, 2].map(() => '<div class="skel"><i></i><div><b></b><b></b></div></div>').join('')}</div>`}
+    <p class="center muted small"><span id="aiStep">Riconosco gli alimenti…</span> · <span id="aiSecs">0</span> s</p>`);
+  const steps = ['Riconosco gli alimenti…', 'Stimo le porzioni…', 'Calcolo calorie e macro…', 'Ultimi controlli…'];
+  let stepI = 0;
+  const stepTimer = setInterval(() => { const el = $('#aiStep'); if (!el) return clearInterval(stepTimer); stepI = Math.min(stepI + 1, steps.length - 1); el.textContent = steps[stepI]; }, 1400);
   const t0 = Date.now();
   const tick = setInterval(() => { const el = $('#aiSecs'); if (el) el.textContent = Math.round((Date.now() - t0) / 1000); else clearInterval(tick); }, 500);
   const what = images.length > 1 ? `${images.length} foto dello stesso pasto (più portate).` : 'Foto del mio pasto.';
@@ -1440,13 +1567,15 @@ function reviewResult(items, notes, preview) {
     const box = $('#rItems', s);
     box.innerHTML = items.length ? items.map((it, i) => {
       const n = nutrients(it);
-      return `<div class="res-item">
-        <div class="line1"><input type="text" data-name="${i}" value="${esc(it.name)}">
+      it.base ??= it.grams;
+      return `<div class="res-item" style="animation-delay:${i * 80}ms">
+        <div class="line1"><span class="food-ico">${foodIcon(it.name)}</span><input type="text" data-name="${i}" value="${esc(it.name)}">
           ${it.confidence ? `<span class="conf ${it.confidence === 'bassa' ? 'low' : ''}">${esc(it.confidence)}</span>` : ''}
           <button class="x-btn" data-rm="${i}" aria-label="Rimuovi">×</button></div>
         <div class="grams"><button class="step" data-dec="${i}">−</button>
           <input type="number" inputmode="decimal" data-g="${i}" value="${r0(it.grams)}"><span class="muted small">g ${it.portion ? '· ' + esc(it.portion) : ''}</span>
           <button class="step" data-inc="${i}" style="margin-left:auto">+</button></div>
+        ${porChips(`data-rp="${i}"`, Math.abs(it.grams / it.base - 1) < 0.01 ? 1 : null)}
         <div class="nutri" data-n="${i}"><span><b>${r0(n.kcal)}</b> kcal</span><span>P <b>${fmtNum(n.p)}</b></span><span>C <b>${fmtNum(n.c)}</b></span><span>G <b>${fmtNum(n.f)}</b></span></div>
       </div>`;
     }).join('') : `<p class="muted">Nessun alimento riconosciuto.</p>`;
@@ -1457,6 +1586,11 @@ function reviewResult(items, notes, preview) {
     const bump = (i, d) => { items[i].grams = Math.max(0, r0(items[i].grams + d)); $(`[data-g="${i}"]`, box).value = items[i].grams; drawItemNutri(s, i); drawTotals(s); };
     $$('[data-dec]', box).forEach(b => b.addEventListener('click', () => bump(+b.dataset.dec, -10)));
     $$('[data-inc]', box).forEach(b => b.addEventListener('click', () => bump(+b.dataset.inc, 10)));
+    $$('[data-rp]', box).forEach(b => b.addEventListener('click', () => {
+      const i = +b.dataset.rp; items[i].grams = r0(items[i].base * +b.dataset.k);
+      $(`[data-g="${i}"]`, box).value = items[i].grams; drawItemNutri(s, i); drawTotals(s);
+      $$(`[data-rp="${i}"]`, box).forEach(x => x.classList.toggle('on', x === b));
+    }));
   };
   const drawItemNutri = (s, i) => {
     const n = nutrients(items[i]);

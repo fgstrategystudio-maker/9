@@ -462,3 +462,42 @@ label.check input { width: 20px; height: 20px; accent-color: var(--accent); }
 .icon-act { width: 36px; height: 36px; border-radius: 50%; border: 0; background: var(--accent-soft); color: var(--accent); font-size: 16px; display: inline-flex; align-items: center; justify-content: center; transition: transform .12s ease; }
 .icon-act.add { background: var(--accent); color: var(--on-accent); font-size: 22px; font-weight: 500; }
 .icon-act:active { transform: scale(.92); }
+
+/* Pacchetto B */
+.toast { display: flex; align-items: center; gap: 12px; }
+.toast[hidden] { display: none; }
+.toast-act { border: 0; background: none; color: var(--accent-soft); font-weight: 700; padding: 2px 4px; text-transform: uppercase; font-size: 13px; letter-spacing: .03em; }
+.por { display: flex; align-items: center; gap: 6px; margin: 8px 0 2px; }
+.por button { border: 1px solid var(--line); background: var(--card); border-radius: 99px; min-width: 40px; padding: 5px 10px; font-weight: 700; font-size: 13px; }
+.por button.on { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.qa-btn.ghost { background: var(--accent-soft); color: var(--accent); }
+.qa-btn.rec { background: var(--danger); color: #fff; animation: recpulse 1.1s ease-in-out infinite; }
+@keyframes recpulse { 50% { box-shadow: 0 0 0 8px color-mix(in srgb, var(--danger) 25%, transparent); } }
+/* gesti */
+.items li { position: relative; overflow: hidden; touch-action: pan-y; user-select: none; -webkit-user-select: none; }
+.items li > * { transition: transform .25s ease; position: relative; z-index: 1; }
+.items li::before, .items li::after { position: absolute; top: 0; bottom: 0; display: flex; align-items: center; font-size: 13px; font-weight: 700; opacity: 0; transition: opacity .15s; padding: 0 14px; }
+.items li::before { content: '⧉ Duplica'; left: 0; color: var(--accent); }
+.items li::after { content: 'Elimina 🗑'; right: 0; color: var(--danger); }
+.items li.sw-right { background: var(--accent-soft); }
+.items li.sw-left { background: color-mix(in srgb, var(--danger) 14%, transparent); }
+.items li.sw-right::before, .items li.sw-left::after { opacity: .55; }
+.items li.sw-armed::before, .items li.sw-armed::after { opacity: 1; }
+/* analisi AI */
+.scan { position: relative; border-radius: 14px; overflow: hidden; margin-bottom: 10px; max-height: 240px; }
+.scan img { width: 100%; height: 240px; object-fit: cover; display: block; filter: saturate(.85); }
+.scan-beam { position: absolute; left: 0; right: 0; height: 60px; top: -60px; background: linear-gradient(to bottom, transparent, color-mix(in srgb, var(--accent) 45%, transparent), transparent); border-bottom: 2px solid var(--accent); animation: scan 1.6s ease-in-out infinite; }
+.scan-n { position: absolute; right: 8px; bottom: 8px; background: rgba(0,0,0,.6); color: #fff; font-size: 12px; font-weight: 700; padding: 3px 8px; border-radius: 99px; }
+@keyframes scan { 0% { top: -60px; } 100% { top: 100%; } }
+.skel-wrap { margin: 6px 0 12px; }
+.skel { display: flex; gap: 10px; align-items: center; padding: 10px 0; }
+.skel i { width: 36px; height: 36px; border-radius: 10px; flex: none; }
+.skel div { flex: 1; display: grid; gap: 6px; }
+.skel b { height: 10px; border-radius: 6px; }
+.skel b:last-child { width: 55%; }
+.skel i, .skel b { background: linear-gradient(90deg, var(--line) 25%, var(--bg) 50%, var(--line) 75%); background-size: 200% 100%; animation: shimmer 1.2s linear infinite; }
+@keyframes shimmer { to { background-position: -200% 0; } }
+.res-item { animation: resin .4s ease-out both; }
+@keyframes resin { from { opacity: 0; transform: translateY(8px); } }
+.res-item .line1 .food-ico { width: 34px; height: 34px; }
+@media (prefers-reduced-motion: reduce) { .scan-beam, .skel i, .skel b, .res-item, .qa-btn.rec { animation: none; } }
