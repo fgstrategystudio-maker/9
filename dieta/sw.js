@@ -1,5 +1,5 @@
 // Cache dell'app per l'uso offline. Aumenta VERSION a ogni modifica dei file.
-const VERSION = 'dieta-v28';
+const VERSION = 'dieta-v29';
 const FILES = ['./', 'index.html', 'style.css', 'app.js', 'foods.js', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png', 'fonts/manrope.woff2'];
 
 self.addEventListener('install', e => {

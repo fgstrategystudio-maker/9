@@ -541,3 +541,10 @@ h1, h2, h3, .big, .balance-big, .score-num b { font-weight: 800; letter-spacing:
 .rec-dot.off { animation: none; background: var(--line); }
 @keyframes blink { 50% { opacity: .25; } }
 .btn.small { font-size: 13px; font-weight: 600; padding: 8px; }
+/* Correzioni nella revisione AI */
+.fix-box { display: flex; gap: 8px; align-items: center; background: var(--bg); border: 1.5px solid var(--line); border-radius: 14px; padding: 4px 4px 4px 12px; margin: 10px 0 6px; }
+.fix-box:focus-within { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+.fix-box input { border: 0; background: none; padding: 10px 0; flex: 1; min-width: 0; }
+.fix-box input:focus { outline: none; }
+.fix-box .qa-btn { font-size: 20px; font-weight: 700; }
+.res-item.busy, #rItems.busy { opacity: .55; pointer-events: none; transition: opacity .2s; }

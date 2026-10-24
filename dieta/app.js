@@ -2,7 +2,7 @@
 'use strict';
 
 // ---------- Storage ----------
-const APP_VERSION = '28';
+const APP_VERSION = '29';
 const KEY = 'dieta.v1';
 const MEALS = [
   { id: 'colazione', label: 'Colazione', icon: '☀️' },
@@ -1765,14 +1765,7 @@ async function runAnalysis({ text, images = [], previews = [], audio = null }) {
     : `Ho mangiato: ${text}`;
   try {
     const out = await analyzeFood({ prompt, images, audio });
-    const items = (out.items || []).map(it => {
-      const grams = it.grams > 0 ? it.grams : 100;
-      const k = 100 / grams;
-      return {
-        name: it.name, portion: it.portion, confidence: it.confidence, grams, veg: typeof it.vegetarian === 'boolean' ? it.vegetarian : undefined,
-        per100: { kcal: it.kcal * k, p: it.protein_g * k, c: it.carbs_g * k, f: it.fat_g * k, fib: (it.fiber_g || 0) * k, ...microFromAI(it, k) },
-      };
-    });
+    const items = mapAiItems(out);
     reviewResult(items, out.notes, preview);
   } catch (err) {
     openSheet(`<h3>Qualcosa non va</h3><p>${esc(err.message)}</p>${err.detail ? `<p class="small muted">Dettaglio: ${esc(err.detail)}</p>` : ''}
@@ -1783,13 +1776,62 @@ async function runAnalysis({ text, images = [], previews = [], audio = null }) {
   }
 }
 
+const mapAiItems = out => (out.items || []).map(it => {
+  const grams = it.grams > 0 ? it.grams : 100;
+  const k = 100 / grams;
+  return {
+    name: it.name, portion: it.portion, confidence: it.confidence, grams, veg: typeof it.vegetarian === 'boolean' ? it.vegetarian : undefined,
+    per100: { kcal: it.kcal * k, p: it.protein_g * k, c: it.carbs_g * k, f: it.fat_g * k, fib: (it.fiber_g || 0) * k, ...microFromAI(it, k) },
+  };
+});
+
 function reviewResult(items, notes, preview) {
   let meal = addMeal;
+  // Cambiando il nome di una voce si ricalcolano calorie e macro di quella voce (stessi grammi)
+  const recalcItem = async (s, i) => {
+    const it = items[i];
+    if (!it || !it.name.trim() || it.name === it.origName) return;
+    if (!hasAiKey()) { toast('Per ricalcolare serve la chiave AI'); return; }
+    const row = $$('.res-item', s)[i];
+    row?.classList.add('busy');
+    $(`[data-n="${i}"]`, s).innerHTML = '<span class="muted">↻ Ricalcolo i valori…</span>';
+    try {
+      const out = mapAiItems(await analyzeFood({ prompt: `Ho mangiato: ${r0(it.grams)} g di ${it.name.trim()}. Restituisci un solo alimento, con esattamente ${r0(it.grams)} grammi.` }));
+      const fresh = out[0];
+      if (!fresh) throw new Error('nessun risultato');
+      Object.assign(it, { per100: fresh.per100, veg: fresh.veg, confidence: fresh.confidence, portion: fresh.portion, origName: it.name });
+      draw(s); toast(`Valori aggiornati: ${it.name}`);
+    } catch (err) {
+      row?.classList.remove('busy'); drawItemNutri(s, i); toast(err.message || 'Non riesco a ricalcolare, riprova');
+    }
+  };
+  // Correzione a parole su tutto il pasto: l'AI aggiorna l'elenco e lascia invariato il resto
+  const applyFix = async s => {
+    const text = $('#rFix', s).value.trim();
+    if (!text) { $('#rFix', s).focus(); return; }
+    if (!requireKey()) return;
+    const btn = $('#rFixGo', s);
+    btn.disabled = true; btn.textContent = '…';
+    $('#rItems', s).classList.add('busy');
+    try {
+      const list = items.map(it => `- ${it.name}, ${r0(it.grams)} g`).join('\n');
+      const out = await analyzeFood({ prompt: `Avevi riconosciuto questi alimenti:\n${list}\n\nCorrezione: ${text}\n\nRestituisci l'elenco completo corretto: applica la correzione e lascia invariato tutto il resto (stessi nomi e grammi, se la correzione non li riguarda).` });
+      const fresh = mapAiItems(out);
+      if (!fresh.length) throw new Error('Nessun alimento nella risposta, riprova');
+      items.splice(0, items.length, ...fresh);
+      $('#rFix', s).value = '';
+      if (out.notes) { const n = $('#rNotes', s); if (n) n.textContent = out.notes; }
+      draw(s); toast('Elenco corretto');
+    } catch (err) { toast(err.message || 'Correzione non riuscita, riprova'); }
+    btn.disabled = false; btn.textContent = '↻';
+    $('#rItems', s).classList.remove('busy');
+  };
   const draw = s => {
     const box = $('#rItems', s);
     box.innerHTML = items.length ? items.map((it, i) => {
       const n = nutrients(it);
       it.base ??= it.grams;
+      it.origName ??= it.name;
       return `<div class="res-item" style="animation-delay:${i * 80}ms">
         <div class="line1"><span class="food-ico">${foodIcon(it.name)}</span><input type="text" data-name="${i}" value="${esc(it.name)}">
           ${it.confidence ? `<span class="conf ${it.confidence === 'bassa' ? 'low' : ''}">${esc(it.confidence)}</span>` : ''}
@@ -1802,7 +1844,11 @@ function reviewResult(items, notes, preview) {
       </div>`;
     }).join('') : `<p class="muted">Nessun alimento riconosciuto.</p>`;
     drawTotals(s);
-    $$('[data-name]', box).forEach(inp => inp.addEventListener('input', () => { items[+inp.dataset.name].name = inp.value; }));
+    $$('[data-name]', box).forEach(inp => {
+      inp.addEventListener('input', () => { items[+inp.dataset.name].name = inp.value; });
+      inp.addEventListener('change', () => recalcItem($('#sheet'), +inp.dataset.name));
+      inp.addEventListener('keydown', e => { if (e.key === 'Enter') inp.blur(); });
+    });
     $$('[data-g]', box).forEach(inp => inp.addEventListener('input', () => { items[+inp.dataset.g].grams = num(inp.value) || 0; drawItemNutri(s, +inp.dataset.g); drawTotals(s); }));
     $$('[data-rm]', box).forEach(b => b.addEventListener('click', () => { items.splice(+b.dataset.rm, 1); draw(s); }));
     const bump = (i, d) => { items[i].grams = Math.max(0, r0(items[i].grams + d)); $(`[data-g="${i}"]`, box).value = items[i].grams; drawItemNutri(s, i); drawTotals(s); };
@@ -1826,12 +1872,18 @@ function reviewResult(items, notes, preview) {
     ${preview ? `<img class="preview" src="${preview}" alt="" style="max-height:140px">` : ''}
     <div id="rItems"></div>
     <div class="totals" id="rTot"></div>
-    ${notes ? `<p class="small muted">${esc(notes)}</p>` : ''}
-    <p class="small muted">Correggi nomi e grammi se serve: calorie e macro si aggiornano da soli.</p>
+    ${notes ? `<p class="small muted" id="rNotes">${esc(notes)}</p>` : ''}
+    <div class="fix-box">
+      <input type="text" id="rFix" placeholder="Qualcosa non va? es. «erano tonnarelli, non tortelli»" enterkeyhint="send" autocomplete="off">
+      <button class="qa-btn" id="rFixGo" aria-label="Correggi con l'AI">↻</button>
+    </div>
+    <p class="small muted">Puoi anche cambiare il nome di una voce (calorie e macro si ricalcolano) o i grammi.</p>
     <div class="meal-pick">${MEALS.map(m => `<button class="chip ${m.id === meal ? 'on' : ''}" data-m="${m.id}">${m.label}</button>`).join('')}</div>
     <label class="check"><input type="checkbox" id="rStar"> ⭐ Salva anche come pasto, per rimetterlo con un tocco</label>
     <div class="btn-row"><button class="btn secondary" id="rCancel">Annulla</button><button class="btn" id="rSave">Aggiungi al diario</button></div>`, s => {
     draw(s);
+    $('#rFixGo', s).addEventListener('click', () => applyFix(s));
+    $('#rFix', s).addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); applyFix(s); } });
     $$('[data-m]', s).forEach(c => c.addEventListener('click', () => { meal = c.dataset.m; $$('[data-m]', s).forEach(x => x.classList.toggle('on', x === c)); }));
     $('#rCancel', s).addEventListener('click', closeSheet);
     $('#rSave', s).addEventListener('click', () => {
