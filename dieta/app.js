@@ -2,7 +2,7 @@
 'use strict';
 
 // ---------- Storage ----------
-const APP_VERSION = '26';
+const APP_VERSION = '27';
 const KEY = 'dieta.v1';
 const MEALS = [
   { id: 'colazione', label: 'Colazione', icon: '☀️' },
@@ -657,7 +657,7 @@ const FOOD_ICONS = [
 const foodIcon = name => { const n = normName(name); return (FOOD_ICONS.find(([re]) => re.test(n)) || [, '🍴'])[1]; };
 
 // ---------- Inserimento rapido dal Diario ----------
-let qaMeal = null, recog = null;
+let qaMeal = null;
 const speechSupported = () => !!(window.SpeechRecognition || window.webkitSpeechRecognition);
 const qaTarget = () => qaMeal || (curDate === today() ? defaultMeal() : 'pranzo');
 // Il pasto "solito" per quest'ora: la combinazione più frequente degli ultimi 30 giorni (almeno 2 volte)
@@ -801,30 +801,71 @@ function bindQuickBar(v) {
     if (!box.hidden) draw();
   }));
   $('#qaCam', v).addEventListener('click', () => { addMeal = qaTarget(); photoQueue = []; requireKey() && $('#photoInput').click(); });
-  // Dettatura: "cento grammi di pasta al pomodoro e un'insalata"
-  const mic = $('#qaMic', v);
-  if (mic) mic.addEventListener('click', () => {
-    if (mic.classList.contains('rec')) { recog?.stop(); return; }
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    recog = new SR();
-    recog.lang = 'it-IT'; recog.interimResults = true; recog.maxAlternatives = 1;
-    let finalText = '';
-    recog.onresult = ev => {
-      let txt = '';
-      for (const r of ev.results) { txt += r[0].transcript; if (r.isFinal) finalText = txt; }
-      inp.value = txt; draw();
+  // Dettatura: si apre un pannello che ascolta finché non tocchi "Fatto"
+  $('#qaMic', v)?.addEventListener('click', () => openDictation(text => {
+    inp.value = text; draw();
+    const best = rows.find(r => r.kind === 'ref') || rows.find(r => r.kind === 'ai');
+    if (best) pick(best); else inp.focus();
+  }));
+}
+
+// Pannello di dettatura: resta in ascolto anche con le pause (Chrome si ferma da solo dopo un silenzio:
+// la registrazione riparte in automatico) finché non si tocca "Fatto". Il testo si può correggere a mano.
+function openDictation(onDone) {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  let listening = false, rec = null, base = '', closed = false, restartT = null;
+  openSheet(`<h3>🎤 Dimmi cosa hai mangiato</h3>
+    <div class="dict-wave" id="dWave"><i></i><i></i><i></i><i></i><i></i></div>
+    <textarea id="dText" placeholder="Parla pure, anche con delle pause: es. «cento grammi di pasta al pomodoro, un'insalata con un filo d'olio e una mela»"></textarea>
+    <p class="small muted center" id="dState">Ti ascolto… tocca «Fatto» quando hai finito</p>
+    <div class="btn-row"><button class="btn secondary" id="dPause">⏸ Pausa</button><button class="btn" id="dDone">✓ Fatto</button></div>
+    <button class="btn ghost" id="dClear" style="margin-top:4px">Cancella e ricomincia</button>`, s => {
+    const ta = $('#dText', s), state = $('#dState', s), pauseBtn = $('#dPause', s), wave = $('#dWave', s);
+    const setUi = () => {
+      wave.classList.toggle('on', listening);
+      pauseBtn.textContent = listening ? '⏸ Pausa' : '▶ Riprendi';
+      state.textContent = listening ? 'Ti ascolto… tocca «Fatto» quando hai finito' : 'In pausa: puoi correggere il testo, poi «Fatto» o «Riprendi»';
     };
-    recog.onerror = ev => { mic.classList.remove('rec'); if (ev.error === 'not-allowed') toast('Consenti il microfono per dettare'); };
-    recog.onend = () => {
-      mic.classList.remove('rec');
-      const text = (finalText || inp.value).trim();
-      if (!text) return;
-      inp.value = text; draw();
-      const best = rows.find(r => r.kind === 'ref') || rows.find(r => r.kind === 'ai');
-      if (best) pick(best);
+    const join = (a, b) => [a.trim(), b.trim()].filter(Boolean).join(' ');
+    const start = () => {
+      if (closed) return;
+      base = ta.value;
+      rec = new SR();
+      rec.lang = 'it-IT'; rec.interimResults = true; rec.continuous = false; rec.maxAlternatives = 1;
+      let sessionFinal = '';
+      rec.onresult = ev => {
+        let interim = '';
+        sessionFinal = '';
+        for (const r of ev.results) { if (r.isFinal) sessionFinal += r[0].transcript; else interim += r[0].transcript; }
+        ta.value = join(base, join(sessionFinal, interim));
+      };
+      rec.onerror = ev => {
+        if (ev.error === 'not-allowed' || ev.error === 'service-not-allowed') { listening = false; setUi(); state.textContent = 'Consenti il microfono al browser per dettare'; }
+        else if (ev.error === 'network') { listening = false; setUi(); state.textContent = 'Serve la connessione per la dettatura'; }
+      };
+      rec.onend = () => {
+        // si è fermato da solo dopo una pausa: riparte finché non si tocca Pausa o Fatto
+        if (listening && !closed) restartT = setTimeout(start, 150);
+      };
+      try { rec.start(); } catch {}
     };
-    mic.classList.add('rec'); navigator.vibrate?.(10);
-    try { recog.start(); } catch { mic.classList.remove('rec'); }
+    const stop = () => { listening = false; clearTimeout(restartT); try { rec?.stop(); } catch {} setUi(); };
+    const resume = () => { listening = true; setUi(); navigator.vibrate?.(10); start(); };
+    sheetCleanup = () => { closed = true; listening = false; clearTimeout(restartT); try { rec?.abort(); } catch {} };
+    pauseBtn.addEventListener('click', () => (listening ? stop() : resume()));
+    // quando si corregge il testo a mano il microfono non ci scrive più sopra
+    ta.addEventListener('focus', () => { if (rec) rec.onresult = null; if (listening) stop(); });
+    $('#dClear', s).addEventListener('click', () => { ta.value = ''; if (!listening) resume(); });
+    $('#dDone', s).addEventListener('click', () => {
+      stop();
+      // lascia arrivare l'ultimo pezzo riconosciuto prima di inviare
+      setTimeout(() => {
+        const text = ta.value.trim();
+        closeSheet();
+        if (text) onDone(text); else toast('Non ho sentito niente: riprova');
+      }, 350);
+    });
+    resume();
   });
 }
 
