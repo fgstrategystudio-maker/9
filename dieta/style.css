@@ -1,3 +1,5 @@
+/* Manrope (SIL Open Font License, vedi fonts/OFL.txt), incluso nell'app per funzionare anche offline */
+@font-face { font-family: "Manrope"; src: url("fonts/manrope.woff2") format("woff2"); font-weight: 200 800; font-style: normal; font-display: swap; }
 :root {
   --bg: #f4f6f5;
   --card: #ffffff;
@@ -42,7 +44,7 @@
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { margin: 0; }
 body {
-  font: 16px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font: 16px/1.4 "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   background: var(--bg);
   color: var(--text);
   min-height: 100vh;
@@ -217,7 +219,8 @@ label.field > span { display: block; font-size: 13px; color: var(--muted); margi
   max-width: 640px; margin: 0 auto;
   animation: up .2s ease-out;
 }
-.sheet::before { content: ""; display: block; width: 40px; height: 5px; border-radius: 9px; background: var(--line); margin: 0 auto 10px; }
+.sheet-handle { height: 22px; margin: -6px -16px 4px; touch-action: none; cursor: grab; display: flex; align-items: center; justify-content: center; }
+.sheet-handle::before { content: ""; width: 44px; height: 5px; border-radius: 9px; background: var(--line); }
 .sheet h3 { margin: 0 0 12px; font-size: 19px; }
 @keyframes up { from { transform: translateY(30px); opacity: 0; } }
 
@@ -501,3 +504,25 @@ label.check input { width: 20px; height: 20px; accent-color: var(--accent); }
 @keyframes resin { from { opacity: 0; transform: translateY(8px); } }
 .res-item .line1 .food-ico { width: 34px; height: 34px; }
 @media (prefers-reduced-motion: reduce) { .scan-beam, .skel i, .skel b, .res-item, .qa-btn.rec { animation: none; } }
+
+/* Pacchetto C */
+body { -webkit-font-smoothing: antialiased; }
+h1, h2, h3, .big, .balance-big, .score-num b { font-weight: 800; letter-spacing: -.02em; }
+.topbar { flex-wrap: wrap; }
+.mini-sum { flex-basis: 100%; display: flex; gap: 10px; align-items: center; font-size: 13px; color: var(--muted); padding: 6px 2px 0; animation: sugin .2s ease-out; }
+.mini-sum[hidden] { display: none; }
+.mini-sum b { font-size: 14px; margin-right: auto; }
+.hello { display: flex; align-items: center; justify-content: space-between; margin: 0 2px 10px; }
+.hello b { display: block; font-size: 20px; font-weight: 800; letter-spacing: -.02em; }
+.hello span { color: var(--muted); font-size: 14px; }
+.hello .streak { background: var(--accent-soft); color: var(--text); font-weight: 800; font-size: 15px; padding: 6px 12px; border-radius: 99px; }
+.habit { border: 1.5px solid var(--accent); animation: sugin .3s ease-out; }
+.habit-ico { font-size: 28px; line-height: 1; margin-right: 4px; }
+.habit b { font-size: 16px; }
+.habit .pill { margin-left: 4px; }
+.qa-empty { margin: 10px 2px 0; font-size: 13px; color: var(--muted); }
+.add-sheet .card { box-shadow: none; border: 1px solid var(--line); }
+.tabbar svg.ti { display: block; margin: 0 auto 2px; }
+.tabbar button.active svg.ti { stroke-width: 2.4; }
+.empty-card { text-align: center; padding: 24px 18px; }
+.empty-ico { font-size: 44px; margin-bottom: 6px; }

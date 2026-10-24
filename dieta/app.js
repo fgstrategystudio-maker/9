@@ -2,7 +2,7 @@
 'use strict';
 
 // ---------- Storage ----------
-const APP_VERSION = '25';
+const APP_VERSION = '26';
 const KEY = 'dieta.v1';
 const MEALS = [
   { id: 'colazione', label: 'Colazione', icon: '☀️' },
@@ -245,7 +245,8 @@ let sheetCleanup = null;
 function openSheet(html, onMount) {
   runSheetCleanup();
   const s = $('#sheet');
-  s.innerHTML = html;
+  s.innerHTML = '<div class="sheet-handle" aria-hidden="true"></div>' + html;
+  s.style.transform = ''; s.style.transition = '';
   s.hidden = false; $('#sheetBackdrop').hidden = false;
   s.scrollTop = 0;
   document.body.style.overflow = 'hidden';
@@ -262,6 +263,33 @@ function closeSheet() {
   document.body.style.overflow = '';
 }
 $('#sheetBackdrop').addEventListener('click', closeSheet);
+// Trascina la maniglia (o la parte alta del pannello) verso il basso per chiudere
+(() => {
+  const s = $('#sheet');
+  let y0 = null, dy = 0;
+  s.addEventListener('pointerdown', e => {
+    if (!e.target.closest('.sheet-handle') && !(e.target.closest('h3') && s.scrollTop <= 0)) return;
+    y0 = e.clientY; dy = 0;
+    s.setPointerCapture?.(e.pointerId);
+    s.style.transition = 'none';
+  });
+  s.addEventListener('pointermove', e => {
+    if (y0 == null) return;
+    dy = Math.max(0, e.clientY - y0);
+    s.style.transform = `translateY(${dy}px)`;
+    $('#sheetBackdrop').style.opacity = String(Math.max(0.2, 1 - dy / 400));
+  });
+  const end = () => {
+    if (y0 == null) return;
+    y0 = null;
+    s.style.transition = 'transform .2s ease';
+    $('#sheetBackdrop').style.opacity = '';
+    if (dy > 110) { s.style.transform = 'translateY(100%)'; setTimeout(closeSheet, 180); }
+    else s.style.transform = '';
+  };
+  s.addEventListener('pointerup', end);
+  s.addEventListener('pointercancel', end);
+})();
 
 // ---------- Navigation ----------
 let tab = 'today';
@@ -281,9 +309,16 @@ function go(t, push = true) {
   window.scrollTo(0, 0);
 }
 $$('.tabbar button').forEach(b => b.addEventListener('click', () => {
-  if (b.dataset.tab === 'add') addMeal = curDate === today() ? defaultMeal() : addMeal;
+  if (b.dataset.tab === 'add') { openAddSheet(); return; }
   go(b.dataset.tab);
 }));
+// "Aggiungi" come pannello sopra il Diario: si resta nel contesto
+function openAddSheet(meal) {
+  addMeal = meal || (curDate === today() ? defaultMeal() : addMeal);
+  if (tab !== 'today') go('today');
+  const day = curDate === today() ? 'oggi' : fmtDate(curDate, { weekday: 'long', day: 'numeric', month: 'long' });
+  openSheet(`<h3>Aggiungi <small class="muted" style="font-weight:600;font-size:14px">· ${day}</small></h3><div id="addView" class="add-sheet"></div>`, s => renderAdd($('#addView', s)));
+}
 $('#prevDay').addEventListener('click', () => { curDate = addDays(curDate, -1); render(); });
 $('#nextDay').addEventListener('click', () => { if (curDate < today()) { curDate = addDays(curDate, 1); render(); } });
 $('#dateLabel').addEventListener('click', () => openCalendar());
@@ -291,6 +326,7 @@ $('#calBtn').addEventListener('click', () => openCalendar());
 
 function render() {
   $('#title').textContent = TITLES[tab];
+  if (tab !== 'today') { $('#miniSum').hidden = true; miniObs?.disconnect(); }
   const showDay = tab === 'today' || tab === 'add';
   $('#daynav').hidden = !showDay;
   if (showDay) {
@@ -412,6 +448,12 @@ function renderToday(v) {
       <div class="btn-row"><button class="btn secondary" id="closedDetail">Storico</button><button class="btn" id="closedOk">Ok</button></div>
     </div>`;
   }
+  if (curDate === today()) {
+    const h = new Date().getHours();
+    const greet = h < 5 ? 'Buonanotte' : h < 13 ? 'Buongiorno' : h < 18 ? 'Buon pomeriggio' : 'Buonasera';
+    const streak = greenStreak();
+    html += `<div class="hello"><div><b>${greet}${db.profile.name ? `, ${esc(db.profile.name)}` : ''}</b><span>${cap(fmtDate(curDate, { weekday: 'long', day: 'numeric', month: 'long' }))}</span></div>${streak >= 2 ? `<span class="streak" title="Giorni verdi di fila">🔥 ${streak}</span>` : ''}</div>`;
+  }
   if (curDate !== today()) {
     html += `<div class="banner row between"><span>Stai vedendo <b>${fmtDate(curDate, { weekday: 'long', day: 'numeric', month: 'long' })}</b>: puoi aggiungere e modificare.</span><button class="add-mini" id="backToday">Oggi</button></div>`;
   }
@@ -442,6 +484,7 @@ function renderToday(v) {
     })()}
   </div>`;
 
+  html += habitCard();
   html += quickBar();
 
   const exList = dayExercise(curDate);
@@ -502,13 +545,16 @@ function renderToday(v) {
   }
   v.innerHTML = html;
 
-  $$('[data-add]', v).forEach(b => b.addEventListener('click', () => { addMeal = b.dataset.add; go('add'); }));
+  $$('[data-add]', v).forEach(b => b.addEventListener('click', () => openAddSheet(b.dataset.add)));
   $$('[data-cam]', v).forEach(b => b.addEventListener('click', () => { addMeal = b.dataset.cam; photoQueue = []; requireKey() && $('#photoInput').click(); }));
   $$('[data-qsm]', v).forEach(b => b.addEventListener('click', () => {
     const sm = db.savedMeals[+b.dataset.qsm]; addMeal = b.dataset.meal;
     mealPreview({ title: sm.name, items: sm.items, meal: b.dataset.meal, saved: sm });
   }));
   bindQuickBar(v);
+  $('#habYes', v)?.addEventListener('click', () => { const hb = habitFor(); if (hb) mealPreview({ title: `Il tuo ${hb.label.toLowerCase()} solito`, items: hb.items, meal: hb.meal }); });
+  $('#habNo', v)?.addEventListener('click', () => { db.settings.habitDismissed = `${today()}-${defaultMeal()}`; save(); render(); });
+  watchMiniSum(v, tot, budget, left);
   // alimenti appena aggiunti: compaiono nel pasto con un'animazione e una breve vibrazione
   if (justAdded.size) {
     const first = $('.just-added', v);
@@ -614,8 +660,49 @@ const foodIcon = name => { const n = normName(name); return (FOOD_ICONS.find(([r
 let qaMeal = null, recog = null;
 const speechSupported = () => !!(window.SpeechRecognition || window.webkitSpeechRecognition);
 const qaTarget = () => qaMeal || (curDate === today() ? defaultMeal() : 'pranzo');
+// Il pasto "solito" per quest'ora: la combinazione più frequente degli ultimi 30 giorni (almeno 2 volte)
+function habitFor() {
+  if (curDate !== today()) return null;
+  const meal = defaultMeal();
+  if (dayEntries(today()).some(e => e.meal === meal) || db.settings.habitDismissed === `${today()}-${meal}`) return null;
+  const combos = new Map();
+  for (let i = 1; i <= 30; i++) {
+    const items = dayEntries(addDays(today(), -i)).filter(e => e.meal === meal);
+    if (!items.length) continue;
+    const key = items.map(e => normName(e.name)).sort().join('|');
+    const o = combos.get(key) || { n: 0, items };
+    o.n++; combos.set(key, o);
+  }
+  const best = [...combos.values()].sort((a, b) => b.n - a.n)[0];
+  if (!best || best.n < 2) return null;
+  const m = MEALS.find(x => x.id === meal);
+  return { meal, label: m.label, icon: m.icon, items: best.items, n: best.n };
+}
+function habitCard() {
+  const hb = habitFor();
+  if (!hb) return '';
+  return `<div class="card habit">
+    <div class="row" style="align-items:flex-start"><span class="habit-ico">${hb.icon}</span><div class="grow">
+      <b>È ora di ${hb.label.toLowerCase()}</b>
+      <div class="small muted">Di solito: ${esc(hb.items.map(e => e.name).join(', '))} · ${r0(sumNutr(hb.items).kcal)} kcal <span class="pill">${hb.n} volte</span></div>
+    </div></div>
+    <div class="btn-row" style="margin-top:10px"><button class="btn secondary" id="habNo">No, grazie</button><button class="btn" id="habYes">Aggiungi</button></div>
+  </div>`;
+}
+// Riepilogo compatto sotto l'intestazione quando l'anello esce dallo schermo
+let miniObs = null;
+function watchMiniSum(v, tot, budget, left) {
+  miniObs?.disconnect();
+  const mini = $('#miniSum'), card = $('.summary', v)?.closest('.card');
+  if (!card) { mini.hidden = true; return; }
+  const g = db.goals;
+  mini.innerHTML = `<b class="${left >= 0 ? 'good' : 'bad'}">${r0(Math.abs(left))} kcal ${left >= 0 ? 'rimaste' : 'in più'}</b><span>P ${r0(tot.p)}/${r0(g.protein)}</span><span>C ${r0(tot.c)}/${r0(g.carbs)}</span><span>G ${r0(tot.f)}/${r0(g.fat)}</span>`;
+  miniObs = new IntersectionObserver(([en]) => { mini.hidden = en.isIntersecting || tab !== 'today'; }, { rootMargin: '-70px 0px 0px 0px' });
+  miniObs.observe(card);
+}
 function quickBar() {
   const t = qaTarget();
+  const empty = !dayEntries(curDate).length;
   return `<div class="card qa">
     <div class="qa-bar">
       <span class="qa-ico">✨</span>
@@ -625,6 +712,7 @@ function quickBar() {
     </div>
     <div class="qa-meals">${MEALS.map(m => `<button class="chip ${m.id === t ? 'on' : ''}" data-qm="${m.id}">${m.icon} ${m.label}</button>`).join('')}</div>
     <div id="qaSug" class="qa-sug" hidden></div>
+    ${empty ? `<p class="qa-empty">✨ Giornata ancora da scrivere. Prova «cappuccino e cornetto»${speechSupported() ? ', tocca 🎤 per dettare' : ''} o 📷 per una foto.</p>` : ''}
   </div>`;
 }
 // Alimenti più frequenti in un pasto negli ultimi 45 giorni
@@ -857,7 +945,7 @@ function editEntry(id) {
 // ---------- Add ----------
 function renderAdd(v) {
   v.innerHTML = `
-    <div class="meal-pick">${MEALS.map(m => `<button class="chip ${m.id === addMeal ? 'on' : ''}" data-m="${m.id}">${m.label}</button>`).join('')}</div>
+    <div class="meal-pick">${MEALS.map(m => `<button class="chip ${m.id === addMeal ? 'on' : ''}" data-m="${m.id}">${m.icon} ${m.label}</button>`).join('')}</div>
     <div class="big-actions three">
       <button class="big-action primary" id="takePhoto"><span class="ic">📷</span>Foto</button>
       <button class="big-action" id="pickPhoto"><span class="ic">🖼️</span>Galleria</button>
@@ -2324,7 +2412,7 @@ function renderBody(v) {
       <div class="small muted">${BODY_FIELDS.filter(f => b[f.k] != null).map(f => `${f.label} ${fmtNum(b[f.k])}${f.unit ? ' ' + f.unit : ''}`).join(' · ')}</div></div>
       <span class="muted">›</span></li>`).join('')}</ul>${!showAllBody && sorted.length > 10 ? '<button class="btn ghost" id="allBody">Mostra tutto</button>' : ''}</div>`;
   } else {
-    html += `<p class="muted center small">Registra peso, massa grassa e circonferenze per seguire i tuoi progressi nel tempo.</p>`;
+    html += `<div class="card empty-card"><div class="empty-ico">⚖️</div><b>Inizia dalla prima pesata</b><p class="small muted">Registra peso, massa grassa e circonferenze: qui vedrai grafici, massa grassa stimata e i kg persi mese per mese.</p></div>`;
   }
   v.innerHTML = html;
   $('#newBody', v).addEventListener('click', () => bodyForm(null, today()));
@@ -2480,6 +2568,7 @@ function renderGoals(v) {
   v.innerHTML = `
   <div class="card">
     <h2>Il tuo fabbisogno</h2>
+    <label class="field"><span>Come ti chiami? (facoltativo, per il saluto)</span><input type="text" id="pName" value="${esc(p.name || '')}" maxlength="30" autocomplete="given-name"></label>
     <div class="grid2">
       <label class="field"><span>Sesso</span><select id="pSex"><option value="m" ${p.sex === 'm' ? 'selected' : ''}>Uomo</option><option value="f" ${p.sex === 'f' ? 'selected' : ''}>Donna</option></select></label>
       ${field('pAge', 'Età', p.age)}
@@ -2571,7 +2660,7 @@ function renderGoals(v) {
   <p class="center small muted">Versione ${APP_VERSION} · ${esc(location.host)}</p>`;
 
   const readProfile = () => ({
-    sex: $('#pSex', v).value, age: num($('#pAge', v).value) || p.age, height: num($('#pH', v).value) || p.height,
+    name: $('#pName', v).value.trim(), sex: $('#pSex', v).value, age: num($('#pAge', v).value) || p.age, height: num($('#pH', v).value) || p.height,
     lifestyle: +$('#pLife', v).value, baseActivity: Math.max(0, num($('#pBase', v).value) || 0), goalType: $('#pGoal', v).value,
   });
   let sg = null;
@@ -2590,6 +2679,7 @@ function renderGoals(v) {
     <p class="small muted">Proteine ${sg.protein} g · Carboidrati ${sg.carbs} g · Grassi ${sg.fat} g · Fibre ${sg.fiber} g · Acqua ${fmtNum(sg.water / 1000, 2)} L. Gli allenamenti si aggiungono giorno per giorno.</p>`;
   };
   ['#pSex', '#pAge', '#pH', '#pLife', '#pBase', '#pGoal'].forEach(id => $(id, v).addEventListener('input', drawCalc));
+  $('#pName', v).addEventListener('change', e => { db.profile.name = e.target.value.trim(); save(); });
   drawCalc();
   $('#applyCalc', v).addEventListener('click', () => {
     db.profile = readProfile();
