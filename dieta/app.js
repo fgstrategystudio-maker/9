@@ -2,7 +2,7 @@
 'use strict';
 
 // ---------- Storage ----------
-const APP_VERSION = '22';
+const APP_VERSION = '23';
 const KEY = 'dieta.v1';
 const MEALS = [
   { id: 'colazione', label: 'Colazione' },
@@ -1420,13 +1420,10 @@ function renderProgress(v) {
   const dim = new Date(parseYmd(t).getFullYear(), parseYmd(t).getMonth() + 1, 0).getDate();
   const daysLeft = dim - parseYmd(t).getDate();
 
-  let html = `<div class="seg">${[[7, '7 giorni'], [30, '30 giorni'], [90, '3 mesi'], [365, '1 anno']].map(([n, l]) => `<button data-r="${n}" class="${n === progressRange ? 'on' : ''}">${l}</button>`).join('')}</div>`;
-
-  html += monthResultsCard();
-  html += `<button class="btn secondary" id="openCal" style="margin-bottom:12px">📅 Calendario giorno per giorno</button>`;
-  html += analysisCard();
-  html += balanceCard();
-  html += `<div class="card"><h2>Riepilogo</h2><div class="stats">
+  let html = monthResultsCard();
+  html += `<p class="small muted" style="margin:0 0 6px">Periodo per riepilogo, analisi e grafici:</p>`;
+  html += `<div class="seg">${[[7, '7 giorni'], [30, '30 giorni'], [90, '3 mesi'], [365, '1 anno']].map(([n, l]) => `<button data-r="${n}" class="${n === progressRange ? 'on' : ''}">${l}</button>`).join('')}</div>`;
+  html += `<div class="card"><h2>Riepilogo <small>ultimi ${RANGE_LABEL[progressRange]}</small></h2><div class="stats">
     <div class="stat"><div class="v">${r0(s.kcal)}</div><div class="k">kcal medie / giorno (obiettivo ${r0(g.kcal)})</div></div>
     <div class="stat"><div class="v">${s.inTarget}<span class="muted" style="font-size:15px">/${s.logged}</span></div><div class="k">giorni verdi (nel target)</div></div>
     <div class="stat"><div class="v">${signed(s.dW, 'kg')}</div><div class="k">variazione peso</div></div>
@@ -1436,6 +1433,10 @@ function renderProgress(v) {
     <div class="stat"><div class="v">${s.workouts}</div><div class="k">allenamenti</div></div>
     <div class="stat"><div class="v">${fmtNum(s.burned, 0)}</div><div class="k">kcal bruciate con lo sport</div></div>
   </div></div>`;
+
+  html += analysisCard();
+  html += `<button class="btn secondary" id="openCal" style="margin-bottom:12px">📅 Calendario giorno per giorno</button>`;
+  html += balanceCard();
 
   if (progressRange <= 90) {
     html += `<div class="card"><h2>Calorie giornaliere</h2>${barChart(s.days.map(d => ({ date: d, v: dayTotals(d).kcal, b: dayBudget(d) })), g.kcal)}</div>`;
@@ -1487,7 +1488,7 @@ function renderProgress(v) {
   html += weightGoalCard();
   html += freqCard();
   v.innerHTML = html;
-  $$('[data-r]', v).forEach(b => b.addEventListener('click', () => { progressRange = +b.dataset.r; render(); }));
+  $$('[data-r]', v).forEach(b => b.addEventListener('click', () => { progressRange = +b.dataset.r; anaMode = 'range'; render(); }));
   $('#openCal', v).addEventListener('click', openCalendar);
   $$('[data-am]', v).forEach(b => b.addEventListener('click', () => { anaMode = b.dataset.am; render(); }));
   $('#anaPrev', v)?.addEventListener('click', () => { anaMonth = shiftMonth(anaMonth, -1); render(); });
@@ -1634,6 +1635,7 @@ function freqCard() {
 
 // ---------- Analisi dell'alimentazione: macro, micro, vegetariano, voto ----------
 const normName = t => String(t || '').trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[’']/g, ' ');
+const VEG_MEALS = ['pranzo', 'cena'];
 const MICRO_KEYS = ['sug', 'sat', 'salt', 'ca', 'fe', 'kk', 'vc'];
 const NONVEG_RE = /pollo|tacchin|manzo|vitell|maiale|prosciutt|bresaol|salam|mortadell|speck|wurstel|salsicc|pancett|guancial|carne|bistecc|hamburger|polpett|ragu|lonza|conigli|agnell|anatra|tonno|salmone|merluzz|nasell|orata|branzin|pesce|gamber|calamar|polpo|seppi|sgombr|alici|acciug|sardin|cozze|vongol|frutti di mare|surimi|baccala|trota|spigola|sushi|kebab|cotolett|lardo|cotechin|porchett|braciol|nuggets|fesa|arrost/;
 function entryVeg(e) {
@@ -1655,8 +1657,8 @@ function nutritionStats(dates) {
   for (const d of days) {
     if (dayStatus(d) === 'ok') green++;
     const list = dayEntries(d);
-    for (const m of MEALS) {
-      const ml = list.filter(e => e.meal === m.id);
+    for (const m of VEG_MEALS) { // pranzi e cene (colazioni e spuntini non contano)
+      const ml = list.filter(e => e.meal === m);
       if (!ml.length) continue;
       meals++; if (ml.every(entryVeg)) vegMeals++;
     }
@@ -1700,21 +1702,23 @@ const monthDays = m => { const out = []; const last = ymd(new Date(+m.slice(0, 4
 const allDays = () => Object.keys(db.entries).filter(d => d <= today() && db.entries[d]?.length).sort();
 let anaMode = 'month', anaMonth = null;
 
+const RANGE_LABEL = { 7: '7 giorni', 30: '30 giorni', 90: '3 mesi', 365: '1 anno' };
+const rangeDays = () => Array.from({ length: progressRange }, (_, i) => addDays(today(), -i)).reverse();
 function analysisCard() {
   anaMonth ||= today().slice(0, 7);
-  const dates = anaMode === 'all' ? allDays() : monthDays(anaMonth);
+  const dates = anaMode === 'all' ? allDays() : anaMode === 'range' ? rangeDays() : monthDays(anaMonth);
   const st = nutritionStats(dates);
   const female = db.profile.sex === 'f';
   const head = `<div class="card ana">
     <h2>Analisi alimentazione <button class="add-mini" id="anaHow">Come si calcola</button></h2>
-    <div class="seg"><button data-am="month" class="${anaMode === 'month' ? 'on' : ''}">Mese</button><button data-am="all" class="${anaMode === 'all' ? 'on' : ''}">Da sempre</button></div>
+    <div class="seg seg3"><button data-am="month" class="${anaMode === 'month' ? 'on' : ''}">Mese</button><button data-am="range" class="${anaMode === 'range' ? 'on' : ''}">Ultimi ${RANGE_LABEL[progressRange]}</button><button data-am="all" class="${anaMode === 'all' ? 'on' : ''}">Da sempre</button></div>
     ${anaMode === 'month' ? `<div class="cal-head"><button class="icon-btn" id="anaPrev" aria-label="Mese precedente">‹</button><h3>${cap(monthName(anaMonth, true))}</h3><button class="icon-btn" id="anaNext" aria-label="Mese successivo" ${anaMonth >= today().slice(0, 7) ? 'disabled style="opacity:.35"' : ''}>›</button></div>` : `<p class="small muted center" style="margin-top:-4px">${st.days} giorni registrati${dates[0] ? ` dal ${fmtDate(dates[0], { day: 'numeric', month: 'long', year: 'numeric' })}` : ''}</p>`}`;
   if (!st.days) return head + `<p class="muted small">Nessun pasto registrato in questo periodo.</p></div>`;
   const sc = dietScore(st);
   const kc = st.avg.kcal || 1;
   const pc = x => r0(x / kc * 100);
   const vegPct = st.meals ? st.vegMeals / st.meals * 100 : 0;
-  const allSt = anaMode === 'month' ? nutritionStats(allDays()) : st;
+  const allSt = anaMode !== 'all' ? nutritionStats(allDays()) : st;
   const allVeg = allSt.meals ? allSt.vegMeals / allSt.meals * 100 : 0;
   const R = 52, C = 2 * Math.PI * R;
   const scoreCol = sc.score >= 7 ? 'var(--ok)' : sc.score >= 5.5 ? 'var(--warn)' : 'var(--danger)';
@@ -1735,8 +1739,8 @@ function analysisCard() {
     <div class="parts">${sc.parts.map(p => `<div class="prow"><div class="mtop"><span>${p.label}</span><span><b>${fmtNum(p.pts, 1)}</b><small class="muted">/${fmtNum(p.max, 1)}</small></span></div>
       <div class="bar"><i style="width:${p.pts / p.max * 100}%;background:${p.pts / p.max >= 0.75 ? 'var(--ok)' : p.pts / p.max >= 0.4 ? 'var(--warn)' : 'var(--danger)'}"></i></div><small class="muted">${p.tip}</small></div>`).join('')}</div>
 
-    <h3 class="ana-h">🥗 Pasti vegetariani</h3>
-    <div class="veg-big"><b data-count="${vegPct}" data-suffix="%">${r0(vegPct)}%</b><span>${st.vegMeals} pasti vegetariani su ${st.meals}${anaMode === 'month' ? ` · da sempre <b>${r0(allVeg)}%</b> (${allSt.vegMeals} su ${allSt.meals})` : ''}</span></div>
+    <h3 class="ana-h">🥗 Pranzi e cene vegetariani</h3>
+    <div class="veg-big"><b data-count="${vegPct}" data-suffix="%">${r0(vegPct)}%</b><span>${st.vegMeals} su ${st.meals} pranzi e cene${anaMode !== 'all' ? ` · da sempre <b>${r0(allVeg)}%</b> (${allSt.vegMeals} su ${allSt.meals})` : ''}</span></div>
     <div class="bar" style="height:10px"><i style="width:${vegPct}%;background:var(--ok)"></i></div>
 
     <h3 class="ana-h">Macronutrienti · media al giorno</h3>
@@ -1759,8 +1763,8 @@ function analysisCard() {
     ${microRow('Vitamina C', st.mavg.vc, female ? 85 : 105, 'mg', 'min')}
     <p class="small muted">Micronutrienti stimati su ${r0(st.cov * 100)}% delle calorie registrate${st.cov < 1 ? ' e riportati al totale' : ''}.</p>
     ${missing ? `<button class="btn secondary" id="anaEnrich">✨ Completa i micronutrienti con l'AI (${missing} alimenti)</button>` : ''}`;
-  if (anaMode === 'all') {
-    const months = trackedMonths();
+  if (anaMode === 'all' || (anaMode === 'range' && progressRange >= 90)) {
+    const months = trackedMonths().filter(m => anaMode === 'all' || m >= dates[0].slice(0, 7));
     html += `<h3 class="ana-h">Mese per mese</h3><div class="hist">${[...months].reverse().map(m => {
       const ms = nutritionStats(monthDays(m));
       if (!ms.days) return '';
@@ -1783,7 +1787,7 @@ function scoreHelp() {
       <li><b>Sale</b> (1): sotto i 5 g al giorno.</li>
       <li><b>Zuccheri</b> (1): sotto circa 90 g al giorno.</li>
     </ul>
-    <p class="small muted">Un pasto è vegetariano se nessun alimento contiene carne o pesce. I micronutrienti sono stime dell'AI o delle etichette: usali per vedere le tendenze, non come valori esatti. Non sostituisce il parere di un nutrizionista.</p>
+    <p class="small muted">Per la quota vegetariana contano solo pranzi e cene: un pasto è vegetariano se nessun alimento contiene carne o pesce. I micronutrienti sono stime dell'AI o delle etichette: usali per vedere le tendenze, non come valori esatti. Non sostituisce il parere di un nutrizionista.</p>
     <button class="btn" id="hOk">Ok</button>`, s => $('#hOk', s).addEventListener('click', closeSheet));
 }
 
