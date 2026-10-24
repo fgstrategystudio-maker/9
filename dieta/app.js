@@ -2,13 +2,13 @@
 'use strict';
 
 // ---------- Storage ----------
-const APP_VERSION = '23';
+const APP_VERSION = '24';
 const KEY = 'dieta.v1';
 const MEALS = [
-  { id: 'colazione', label: 'Colazione' },
-  { id: 'pranzo', label: 'Pranzo' },
-  { id: 'cena', label: 'Cena' },
-  { id: 'spuntini', label: 'Spuntini' },
+  { id: 'colazione', label: 'Colazione', icon: '☀️' },
+  { id: 'pranzo', label: 'Pranzo', icon: '🍽️' },
+  { id: 'cena', label: 'Cena', icon: '🌙' },
+  { id: 'spuntini', label: 'Spuntini', icon: '🍪' },
 ];
 const MODELS = [
   { id: 'claude-opus-5', label: 'Claude Opus 5 — più preciso' },
@@ -412,7 +412,7 @@ function renderToday(v) {
   html += `<div class="card">
     <div class="summary">
       <div class="ring">${ringSvg(tot.kcal, budget, 'var(--ok)')}
-        <div class="ring-label"><span class="big ${left >= 0 ? 'good' : 'bad'}">${r0(Math.abs(left))}</span><span class="lbl">${left >= 0 ? 'kcal rimaste' : 'kcal in più'}</span></div>
+        <div class="ring-label"><span class="big ${left >= 0 ? 'good' : 'bad'}" data-count="${r0(Math.abs(left))}" data-key="left-${curDate}">${r0(Math.abs(left))}</span><span class="lbl">${left >= 0 ? 'kcal rimaste' : 'kcal in più'}</span></div>
       </div>
       <div class="macros">
         ${macroBar('Calorie', tot.kcal, budget, 'var(--kcal)', 'kcal')}
@@ -433,6 +433,8 @@ function renderToday(v) {
     })()}
   </div>`;
 
+  html += quickBar();
+
   const exList = dayExercise(curDate);
   html += `<div class="card">
     <div class="meal-head">
@@ -449,15 +451,18 @@ function renderToday(v) {
     const list = dayEntries(curDate).filter(e => e.meal === m.id);
     const mt = sumNutr(list);
     const yList = dayEntries(yesterday).filter(e => e.meal === m.id);
-    html += `<div class="card">
+    const share = tot.kcal ? mt.kcal / Math.max(tot.kcal, budget) : 0;
+    html += `<div class="card meal-card" id="meal-${m.id}">
       <div class="meal-head">
-        <h2>${m.label} ${list.length ? `<small>${r0(mt.kcal)} kcal</small>` : ''}</h2>
-        <span class="row" style="gap:6px">${list.length ? `<button class="add-mini star" data-save="${m.id}" aria-label="Salva pasto">⭐</button>` : ''}<button class="add-mini" data-add="${m.id}">+ Aggiungi</button></span>
-      </div>`;
+        <h2><span class="meal-ico">${m.icon}</span>${m.label} ${list.length ? `<small><span data-count="${r0(mt.kcal)}" data-key="meal-${curDate}-${m.id}">${r0(mt.kcal)}</span> kcal</small>` : ''}</h2>
+        <span class="meal-actions">${list.length ? `<button class="icon-act" data-save="${m.id}" aria-label="Salva pasto">⭐</button>` : ''}<button class="icon-act" data-cam="${m.id}" aria-label="Foto del pasto">📷</button><button class="icon-act add" data-add="${m.id}" aria-label="Aggiungi a ${m.label}">+</button></span>
+      </div>
+      ${list.length ? `<div class="meal-share"><i style="width:${Math.min(100, share * 100)}%"></i></div>` : ''}`;
     if (list.length) {
       html += `<ul class="items">${list.map(e => {
         const n = nutrients(e);
-        return `<li data-entry="${e.id}">
+        return `<li data-entry="${e.id}" class="${justAdded.has(e.id) ? 'just-added' : ''}">
+          <span class="food-ico">${foodIcon(e.name)}</span>
           <div class="grow"><div class="name">${esc(e.name)}</div>
           <div class="sub">${r0(e.grams)} g · P ${r0(n.p)} · C ${r0(n.c)} · G ${r0(n.f)}</div></div>
           <div class="kc">${r0(n.kcal)}</div>
@@ -465,7 +470,12 @@ function renderToday(v) {
       }).join('')}</ul>
       <div class="small muted" style="margin-top:4px">P ${r0(mt.p)} g · C ${r0(mt.c)} g · G ${r0(mt.f)} g</div>`;
     } else {
-      html += `<div class="empty">Niente ancora.${yList.length ? ` <button class="add-mini" style="margin-left:6px" data-copy="${m.id}">Ripeti ieri (${r0(sumNutr(yList).kcal)} kcal)</button>` : ''}</div>`;
+      const saved = db.savedMeals.map((sm, i) => ({ sm, i })).filter(x => x.sm.meal === m.id).slice(0, 2);
+      html += `<div class="quick-chips">
+        ${saved.map(x => `<button class="qchip" data-qsm="${x.i}" data-meal="${m.id}">⭐ ${esc(x.sm.name)} · ${r0(sumNutr(x.sm.items).kcal)}</button>`).join('')}
+        ${yList.length ? `<button class="qchip" data-copy="${m.id}">↺ Come ieri · ${r0(sumNutr(yList).kcal)} kcal</button>` : ''}
+        ${!saved.length && !yList.length ? '<span class="empty" style="padding:0">Niente ancora.</span>' : ''}
+      </div>`;
     }
     html += `</div>`;
   }
@@ -484,11 +494,28 @@ function renderToday(v) {
   v.innerHTML = html;
 
   $$('[data-add]', v).forEach(b => b.addEventListener('click', () => { addMeal = b.dataset.add; go('add'); }));
+  $$('[data-cam]', v).forEach(b => b.addEventListener('click', () => { addMeal = b.dataset.cam; photoQueue = []; requireKey() && $('#photoInput').click(); }));
+  $$('[data-qsm]', v).forEach(b => b.addEventListener('click', () => {
+    const sm = db.savedMeals[+b.dataset.qsm]; addMeal = b.dataset.meal;
+    mealPreview({ title: sm.name, items: sm.items, meal: b.dataset.meal, saved: sm });
+  }));
+  bindQuickBar(v);
+  // alimenti appena aggiunti: compaiono nel pasto con un'animazione e una breve vibrazione
+  if (justAdded.size) {
+    const first = $('.just-added', v);
+    if (first) {
+      setTimeout(() => first.scrollIntoView({ behavior: reduceMotion() ? 'auto' : 'smooth', block: 'center' }), 60);
+      navigator.vibrate?.(18);
+    }
+    justAdded = new Set();
+  }
   $$('[data-save]', v).forEach(b => b.addEventListener('click', () => saveMealForm(dayEntries(curDate).filter(e => e.meal === b.dataset.save), b.dataset.save)));
   $$('[data-entry]', v).forEach(li => li.addEventListener('click', () => editEntry(li.dataset.entry)));
   $$('[data-copy]', v).forEach(b => b.addEventListener('click', () => {
     const src = dayEntries(yesterday).filter(e => e.meal === b.dataset.copy);
-    db.entries[curDate] = [...dayEntries(curDate), ...src.map(e => ({ ...e, id: uid(), t: Date.now() }))];
+    const copies = src.map(e => ({ ...e, id: uid(), t: Date.now() }));
+    db.entries[curDate] = [...dayEntries(curDate), ...copies];
+    justAdded = new Set(copies.map(e => e.id));
     save(); render(); toast('Pasto copiato da ieri');
   }));
   $$('[data-drop]', v).forEach(b => b.addEventListener('click', () => {
@@ -557,6 +584,124 @@ function exerciseForm(id) {
       db.exercise[curDate] = list.filter(x => x.id !== id); save(); closeSheet(); render(); toast('Eliminato');
     });
   });
+}
+
+// ---------- Icone degli alimenti ----------
+const FOOD_ICONS = [
+  [/banana/, '🍌'], [/arancia|mandarin|clementin/, '🍊'], [/fragol/, '🍓'], [/\bmela\b|mele\b/, '🍎'], [/\bpera\b/, '🍐'], [/kiwi/, '🥝'], [/\buva\b/, '🍇'], [/pesca|albicocc/, '🍑'],
+  [/ananas/, '🍍'], [/anguria|melone/, '🍉'], [/limone/, '🍋'], [/mirtill|frutti di bosco|frutti rossi/, '🫐'], [/avocado/, '🥑'], [/pomodor/, '🍅'], [/carot/, '🥕'], [/broccol|cavol/, '🥦'],
+  [/insalat|lattuga|rucola|spinac|verdur/, '🥗'], [/funghi/, '🍄'], [/mais/, '🌽'], [/peperon/, '🫑'], [/melanzan/, '🍆'], [/patat/, '🥔'], [/pizza/, '🍕'], [/spaghett|pasta|penne|fusilli|lasagn|gnocch|tortellin|ravioli/, '🍝'],
+  [/sushi/, '🍣'], [/\briso|risotto/, '🍚'], [/hamburger|panino/, '🍔'], [/piadin|wrap|kebab/, '🌯'], [/cornett|brioche|croissant/, '🥐'], [/pane|toast|fette biscottate|cracker|grissin|focacc/, '🍞'],
+  [/uov[oa]|frittata|albume/, '🥚'], [/pollo|tacchin/, '🍗'], [/manzo|bistecc|vitell|carne|bresaol|roast/, '🥩'], [/prosciutt|pancett|speck|salam|mortadell|maiale|salsicc|wurstel/, '🥓'],
+  [/salmone|tonno|merluzz|pesce|orata|branzin|sgombr|alici|acciug|trota/, '🐟'], [/gamber|calamar|polpo|cozze|vongol/, '🦐'], [/formagg|parmigian|grana|mozzarell|ricotta|feta|scamorz|stracchin/, '🧀'],
+  [/yogurt|skyr/, '🥣'], [/avena|porridge|cereali|muesli|granola|cornflakes/, '🥣'], [/latte\b|cappuccin/, '🥛'], [/caff/, '☕'], [/\bte\b|tisana/, '🍵'],
+  [/ceci|lenticch|fagiol|piselli|legumi|edamame/, '🫘'], [/tofu/, '🍢'], [/mandorl|\bnoci\b|nocciol|arachid|anacard|pistacch|frutta secca/, '🥜'], [/olio/, '🫒'], [/burro/, '🧈'],
+  [/gelato/, '🍨'], [/biscott/, '🍪'], [/torta|crostat|tiramisu/, '🍰'], [/cioccolat|nutella/, '🍫'], [/miele|marmellat/, '🍯'], [/birra/, '🍺'], [/vino|prosecco|spritz/, '🍷'],
+  [/proteine|whey|protein/, '💪'], [/acqua/, '💧'], [/succo|spremut/, '🧃'], [/zupp|minestr|brodo|vellutat/, '🍲'], [/frutta|frutti/, '🍎'],
+];
+const foodIcon = name => { const n = normName(name); return (FOOD_ICONS.find(([re]) => re.test(n)) || [, '🍴'])[1]; };
+
+// ---------- Inserimento rapido dal Diario ----------
+let qaMeal = null;
+const qaTarget = () => qaMeal || (curDate === today() ? defaultMeal() : 'pranzo');
+function quickBar() {
+  const t = qaTarget();
+  return `<div class="card qa">
+    <div class="qa-bar">
+      <span class="qa-ico">✨</span>
+      <input id="qaInput" type="search" enterkeyhint="send" placeholder="Cosa hai mangiato?" autocomplete="off" aria-label="Cosa hai mangiato">
+      <button id="qaCam" class="qa-btn" aria-label="Fotografa il pasto">📷</button>
+    </div>
+    <div class="qa-meals">${MEALS.map(m => `<button class="chip ${m.id === t ? 'on' : ''}" data-qm="${m.id}">${m.icon} ${m.label}</button>`).join('')}</div>
+    <div id="qaSug" class="qa-sug" hidden></div>
+  </div>`;
+}
+// Alimenti più frequenti in un pasto negli ultimi 45 giorni
+function frequentFor(meal) {
+  const cnt = new Map();
+  for (let i = 1; i <= 45; i++) for (const e of dayEntries(addDays(today(), -i))) {
+    if (e.meal !== meal) continue;
+    const k = normName(e.name);
+    const o = cnt.get(k) || { n: 0, item: e };
+    o.n++; cnt.set(k, o);
+  }
+  return [...cnt.values()].sort((a, b) => b.n - a.n).slice(0, 5).map(o => ({ name: o.item.name, grams: o.item.grams, per100: o.item.per100, veg: o.item.veg, freq: o.n }));
+}
+function bindQuickBar(v) {
+  const inp = $('#qaInput', v), box = $('#qaSug', v);
+  if (!inp) return;
+  let brandTimer, brandSeq = 0, rows = [];
+  const pick = r => {
+    addMeal = qaTarget();
+    inp.blur(); box.hidden = true;
+    if (r.kind === 'food') quickAdd(r.food);
+    else if (r.kind === 'saved') mealPreview({ title: r.sm.name, items: r.sm.items, meal: addMeal, saved: r.sm });
+    else if (r.kind === 'ref') mealPreview({ title: r.title, items: r.items, meal: addMeal });
+    else if (r.kind === 'yesterday') mealPreview({ title: `${MEALS.find(m => m.id === addMeal).label} di ieri`, items: r.items, meal: addMeal });
+    else if (r.kind === 'ai') { if (requireKey()) runAnalysis({ text: r.text }); }
+  };
+  const row = (r, i) => `<button class="qa-row" data-qr="${i}"><span class="qa-ri">${r.icon}</span><span class="grow"><span class="name">${r.title}</span>${r.sub ? `<br><span class="small muted">${r.sub}</span>` : ''}</span>${r.kcal != null ? `<span class="kc">${r0(r.kcal)}</span>` : ''}</button>`;
+  const draw = () => {
+    const raw = inp.value.trim(), term = normName(raw), t = qaTarget();
+    const label = MEALS.find(m => m.id === t).label.toLowerCase();
+    rows = [];
+    if (!term) {
+      db.savedMeals.filter(sm => sm.meal === t).slice(0, 3).forEach(sm => rows.push({ kind: 'saved', sm, icon: '⭐', title: esc(sm.name), sub: `${sm.items.length} alimenti`, kcal: sumNutr(sm.items).kcal }));
+      const y = dayEntries(addDays(curDate, -1)).filter(e => e.meal === t);
+      if (y.length) rows.push({ kind: 'yesterday', items: y, icon: '↺', title: `Come ${label} di ieri`, sub: esc(y.map(e => e.name).join(', ')).slice(0, 70), kcal: sumNutr(y).kcal });
+      frequentFor(t).forEach(f => rows.push({ kind: 'food', food: f, icon: foodIcon(f.name), title: esc(f.name), sub: `${r0(f.grams)} g · ${f.freq} volte di recente a ${label}`, kcal: nutrients(f).kcal }));
+      box.innerHTML = rows.length ? `<p class="qa-h">Suggeriti per ${label}</p>${rows.map(row).join('')}` : `<p class="small muted" style="margin:6px 2px">Scrivi un alimento ("mela", "yogurt Müller"), una frase ("80 g di pasta al pomodoro") o "pranzo di ieri".</p>`;
+    } else {
+      const ref = parseMealRef(raw);
+      if (ref) {
+        const items = dayEntries(ref.date).filter(e => e.meal === ref.meal);
+        const title = `${MEALS.find(m => m.id === ref.meal).label} di ${fmtDate(ref.date, { weekday: 'long', day: 'numeric', month: 'long' })}`;
+        rows.push(items.length ? { kind: 'ref', items, title, icon: '↺', sub: esc(items.map(e => e.name).join(', ')).slice(0, 70), kcal: sumNutr(items).kcal } : { kind: 'none', icon: '∅', title: `${title}: niente registrato` });
+      }
+      db.savedMeals.filter(sm => normName(sm.name).includes(term) || sm.items.some(e => normName(e.name).includes(term))).slice(0, 3)
+        .forEach(sm => rows.push({ kind: 'saved', sm, icon: '⭐', title: esc(sm.name), sub: `${sm.items.length} alimenti`, kcal: sumNutr(sm.items).kcal }));
+      const seen = new Set();
+      const base = window.FOODS.map(([name, kcal, p, c, f, fib, portion]) => ({ name, grams: portion, per100: { kcal, p, c, f, fib } }));
+      [...db.recent, ...base].filter(x => { const k = normName(x.name); if (!k.includes(term) || seen.has(k)) return false; seen.add(k); return true; }).slice(0, 6)
+        .forEach(f => rows.push({ kind: 'food', food: f, icon: foodIcon(f.name), title: esc(f.name), sub: `${r0(f.grams)} g`, kcal: nutrients(f).kcal }));
+      if (hasAiKey() && raw.length > 2 && !rows.some(r => r.kind === 'ref')) rows.push({ kind: 'ai', text: raw, icon: '✨', title: `Analizza «${esc(raw)}» con l'AI`, sub: 'calorie e macro anche per frasi e piatti composti' });
+      box.innerHTML = rows.map(row).join('') + (term.length >= 3 ? '<div id="qaBrand"></div>' : '');
+      clearTimeout(brandTimer);
+      if (term.length >= 3) {
+        const seq = ++brandSeq;
+        brandTimer = setTimeout(async () => {
+          try {
+            const found = (await offSearch(term)).slice(0, 4);
+            if (seq !== brandSeq || !found.length) return;
+            const start = rows.length;
+            found.forEach(f => rows.push({ kind: 'food', food: f, icon: '🏷️', title: esc(f.name), sub: `${r0(f.grams)} g · prodotto di marca`, kcal: nutrients(f).kcal }));
+            const bx = $('#qaBrand', v); if (bx) bx.innerHTML = `<p class="qa-h">Prodotti di marca</p>` + rows.slice(start).map((r, j) => row(r, start + j)).join('');
+            bindRows();
+          } catch {}
+        }, 600);
+      }
+    }
+    box.hidden = false;
+    bindRows();
+  };
+  const bindRows = () => $$('[data-qr]', box).forEach(b => { b.onclick = () => { const r = rows[+b.dataset.qr]; if (r && r.kind !== 'none') pick(r); }; });
+  // tocchi sui suggerimenti senza perdere il focus
+  box.addEventListener('pointerdown', e => e.preventDefault());
+  inp.addEventListener('focus', draw);
+  inp.addEventListener('input', draw);
+  inp.addEventListener('blur', () => setTimeout(() => { box.hidden = true; }, 150));
+  inp.addEventListener('keydown', e => {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    const best = rows.find(r => r.kind === 'ref') || rows.find(r => r.kind === 'ai') || rows.find(r => r.kind !== 'none');
+    if (best) pick(best);
+  });
+  $$('[data-qm]', v).forEach(c => c.addEventListener('click', () => {
+    qaMeal = c.dataset.qm;
+    $$('[data-qm]', v).forEach(x => x.classList.toggle('on', x === c));
+    if (!box.hidden) draw();
+  }));
+  $('#qaCam', v).addEventListener('click', () => { addMeal = qaTarget(); photoQueue = []; requireKey() && $('#photoInput').click(); });
 }
 
 function editEntry(id) {
@@ -643,7 +788,7 @@ function renderAdd(v) {
   }));
   $('#pastMeals', v).addEventListener('click', () => pastMealsSheet());
   const si = $('#foodSearch', v);
-  const row = (x, i, attr) => `<li><button ${attr}="${i}"><span class="grow"><span class="name">${esc(x.name)}</span><br><span class="small muted">${r0(x.grams)} g · ${r0(x.per100.kcal * x.grams / 100)} kcal</span></span><span class="add-mini">+</span></button></li>`;
+  const row = (x, i, attr) => `<li><button ${attr}="${i}"><span class="food-ico">${foodIcon(x.name)}</span><span class="grow"><span class="name">${esc(x.name)}</span><br><span class="small muted">${r0(x.grams)} g · ${r0(x.per100.kcal * x.grams / 100)} kcal</span></span><span class="add-mini">+</span></button></li>`;
   let brandTimer, brandSeq = 0;
   const drawResults = () => {
     const term = si.value.trim().toLowerCase();
@@ -932,11 +1077,14 @@ function requireKey() {
   return false;
 }
 
+let justAdded = new Set();
 function addEntries(items, meal) {
   const list = dayEntries(curDate);
+  justAdded = new Set();
   for (const it of items) {
     const e = { id: uid(), name: it.name, grams: it.grams, per100: it.per100, meal, t: Date.now(), ...(typeof it.veg === 'boolean' ? { veg: it.veg } : {}) };
     list.push(e);
+    justAdded.add(e.id);
     rememberRecent(e);
   }
   db.entries[curDate] = list;
@@ -1872,7 +2020,7 @@ function animateView(root) {
   // numeri che contano fino al valore
   $$('[data-count]', root).forEach((el, i) => {
     const to = +el.dataset.count, dec = +(el.dataset.dec || 0), suffix = el.dataset.suffix || '', signed = el.dataset.sign;
-    const key = `${tab}-${i}`;
+    const key = el.dataset.key || `${tab}-${i}`;
     const from = countPrev[key] ?? 0;
     countPrev[key] = to;
     if (from === to) return;

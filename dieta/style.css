@@ -419,3 +419,46 @@ label.check input { width: 20px; height: 20px; accent-color: var(--accent); }
 @keyframes pop { from { transform: scale(.6); opacity: 0; } }
 @keyframes fadein { from { opacity: 0; } }
 @keyframes bounce { to { transform: translateY(-8px) scale(1.06); } }
+
+/* Pacchetto A: inserimento rapido */
+.qa { padding: 12px; position: relative; }
+.qa-bar { display: flex; align-items: center; gap: 8px; background: var(--bg); border: 1.5px solid var(--line); border-radius: 14px; padding: 4px 4px 4px 12px; transition: border-color .2s, box-shadow .2s; }
+.qa-bar:focus-within { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+.qa-bar input { border: 0; background: none; padding: 10px 0; flex: 1; min-width: 0; font-size: 16px; }
+.qa-bar input:focus { outline: none; }
+.qa-ico { font-size: 18px; }
+.qa-btn { border: 0; background: var(--accent); color: var(--on-accent); width: 42px; height: 42px; border-radius: 11px; font-size: 19px; flex: none; }
+.qa-meals { display: flex; gap: 6px; overflow-x: auto; margin-top: 10px; scrollbar-width: none; }
+.qa-meals::-webkit-scrollbar { display: none; }
+.qa-meals .chip { font-size: 13px; padding: 6px 11px; }
+.qa-sug { margin-top: 8px; max-height: 55vh; overflow-y: auto; animation: sugin .18s ease-out; }
+.qa-h { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; margin: 8px 2px 2px; }
+.qa-row { width: 100%; display: flex; align-items: center; gap: 10px; border: 0; background: none; text-align: left; padding: 9px 4px; border-top: 1px solid var(--line); border-radius: 0; }
+.qa-row:first-of-type { border-top: 0; }
+.qa-row:active { background: var(--accent-soft); }
+.qa-ri, .food-ico { width: 34px; height: 34px; flex: none; border-radius: 10px; background: var(--bg); display: inline-flex; align-items: center; justify-content: center; font-size: 19px; }
+.qa-row .kc { font-weight: 600; white-space: nowrap; }
+@keyframes sugin { from { opacity: 0; transform: translateY(-4px); } }
+
+/* Pasti: icone, quota del giorno, chip rapidi, alimenti appena aggiunti */
+.meal-ico { margin-right: 6px; }
+.meal-share { height: 4px; border-radius: 9px; background: var(--line); margin-top: 8px; overflow: hidden; }
+.meal-share i { display: block; height: 100%; background: var(--accent); border-radius: 9px; transition: width .6s ease; }
+.items li .food-ico { width: 36px; height: 36px; }
+.quick-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; align-items: center; }
+.qchip { border: 1px dashed var(--accent); background: var(--accent-soft); color: var(--text); border-radius: 99px; padding: 7px 12px; font-size: 13px; font-weight: 600; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.qchip:active, .btn:active, .add-mini:active, .chip:active, .big-action:active { transform: scale(.96); }
+.btn, .add-mini, .chip, .big-action, .qchip { transition: transform .12s ease; }
+.just-added { animation: justadd 1.4s ease-out; border-radius: 12px; }
+@keyframes justadd {
+  0% { transform: translateY(-14px) scale(.94); opacity: 0; background: var(--accent-soft); }
+  25% { transform: none; opacity: 1; background: var(--accent-soft); }
+  100% { background: transparent; }
+}
+@media (prefers-reduced-motion: reduce) { .just-added, .qa-sug { animation: none; } }
+.meal-card .meal-head h2 { white-space: nowrap; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.meal-card .meal-head h2 small { margin-left: 4px; }
+.meal-actions { display: flex; gap: 6px; flex: none; }
+.icon-act { width: 36px; height: 36px; border-radius: 50%; border: 0; background: var(--accent-soft); color: var(--accent); font-size: 16px; display: inline-flex; align-items: center; justify-content: center; transition: transform .12s ease; }
+.icon-act.add { background: var(--accent); color: var(--on-accent); font-size: 22px; font-weight: 500; }
+.icon-act:active { transform: scale(.92); }
