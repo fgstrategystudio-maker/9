@@ -2,7 +2,7 @@
 'use strict';
 
 // ---------- Storage ----------
-const APP_VERSION = '30';
+const APP_VERSION = '31';
 const KEY = 'dieta.v1';
 const MEALS = [
   { id: 'colazione', label: 'Colazione', icon: '☀️' },
@@ -72,6 +72,7 @@ const DEFAULT_DB = {
   savedMeals: [], // [{ id, name, meal, items: [{ name, grams, per100 }] }]
   foodInfo: {},   // { nome normalizzato: { veg, sug, sat, salt, ca, fe, kk, vc } } micronutrienti per 100 g completati dall'AI
   achievements: {}, // traguardi già festeggiati
+  reports: {},      // resoconti settimanali dell'AI: { 'YYYY-MM-DD' (lunedì): { …, createdAt } }
   settings: {
     provider: 'gemini',
     geminiKey: '', geminiModel: GEMINI_DEFAULT_MODEL, geminiModels: [],
@@ -484,6 +485,7 @@ function renderToday(v) {
     })()}
   </div>`;
 
+  html += nudgesHtml();
   html += quickBar();
 
   const exList = dayExercise(curDate);
@@ -551,6 +553,10 @@ function renderToday(v) {
     mealPreview({ title: sm.name, items: sm.items, meal: b.dataset.meal, saved: sm });
   }));
   bindQuickBar(v);
+  $('#nBackup', v)?.addEventListener('click', () => shareBackup());
+  $('#nBackupLater', v)?.addEventListener('click', () => { db.settings.backupSnooze = addDays(today(), 3); save(); render(); });
+  $('#nReport', v)?.addEventListener('click', () => openReport(lastWeekStart()));
+  $('#nReportLater', v)?.addEventListener('click', () => { db.settings.reportSeen = lastWeekStart(); save(); render(); });
   watchMiniSum(v, tot, budget, left);
   // alimenti appena aggiunti: compaiono nel pasto con un'animazione e una breve vibrazione
   if (justAdded.size) {
@@ -1945,6 +1951,8 @@ function renderProgress(v) {
   const daysLeft = dim - parseYmd(t).getDate();
 
   let html = monthResultsCard();
+  html += insightsCard();
+  html += reportCard();
   html += `<p class="small muted" style="margin:0 0 6px">Periodo per riepilogo, analisi e grafici:</p>`;
   html += `<div class="seg">${[[7, '7 giorni'], [30, '30 giorni'], [90, '3 mesi'], [365, '1 anno']].map(([n, l]) => `<button data-r="${n}" class="${n === progressRange ? 'on' : ''}">${l}</button>`).join('')}</div>`;
   html += `<div class="card"><h2>Riepilogo <small>ultimi ${RANGE_LABEL[progressRange]}</small></h2><div class="stats">
@@ -2014,6 +2022,8 @@ function renderProgress(v) {
   v.innerHTML = html;
   $$('[data-r]', v).forEach(b => b.addEventListener('click', () => { progressRange = +b.dataset.r; anaMode = 'range'; render(); }));
   $('#openCal', v).addEventListener('click', openCalendar);
+  $('#insAll', v)?.addEventListener('click', () => { insightsAll = true; render(); });
+  $$('[data-rep]', v).forEach(b => b.addEventListener('click', () => openReport(b.dataset.rep)));
   $$('[data-am]', v).forEach(b => b.addEventListener('click', () => { anaMode = b.dataset.am; render(); }));
   $('#anaPrev', v)?.addEventListener('click', () => { anaMonth = shiftMonth(anaMonth, -1); render(); });
   $('#anaNext', v)?.addEventListener('click', () => { if (anaMonth < today().slice(0, 7)) { anaMonth = shiftMonth(anaMonth, 1); render(); } });
@@ -2484,6 +2494,226 @@ function checkAchievements() {
   if (found.length) { save(); celebrate(found); }
 }
 
+// ---------- Backup ----------
+const daysAgo = d => { const n = Math.round((parseYmd(today()) - parseYmd(d)) / 864e5); return n === 0 ? 'oggi' : n === 1 ? 'ieri' : `${n} giorni fa`; };
+function backupFile() {
+  const copy = { ...db, settings: { ...db.settings, apiKey: '', geminiKey: '' } };
+  return new File([JSON.stringify(copy)], `dieta-backup-${today()}.json`, { type: 'application/json' });
+}
+function markBackup() { db.settings.lastBackup = today(); db.settings.backupSnooze = null; save(); }
+function downloadBackup() {
+  const f = backupFile();
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(f); a.download = f.name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  markBackup(); toast('Backup scaricato');
+}
+// Condivisione del telefono (WhatsApp, Drive, email…); se non c'è, scarica il file
+async function shareBackup() {
+  const f = backupFile();
+  if (navigator.canShare?.({ files: [f] })) {
+    try {
+      await navigator.share({ files: [f], title: 'Backup Dieta', text: `Backup del diario alimentare del ${fmtDate(today(), { day: 'numeric', month: 'long', year: 'numeric' })}` });
+      markBackup(); render(); toast('Backup inviato ✓');
+    } catch (err) { if (err?.name !== 'AbortError') { downloadBackup(); render(); } }
+  } else { downloadBackup(); render(); }
+}
+const needsBackup = () => {
+  const st = db.settings;
+  const days = Object.keys(db.entries).filter(d => db.entries[d]?.length).length;
+  if (days < 3 || (st.backupSnooze && st.backupSnooze > today())) return false;
+  return !st.lastBackup || (parseYmd(today()) - parseYmd(st.lastBackup)) / 864e5 >= 7;
+};
+// Promemoria nel Diario (solo oggi): backup e resoconto della settimana pronto
+function nudgesHtml() {
+  if (curDate !== today()) return '';
+  let h = '';
+  const ws = lastWeekStart();
+  if (db.settings.reportSeen !== ws && weekDays(ws).filter(d => dayEntries(d).length).length >= 3) {
+    h += `<div class="card nudge"><span class="nudge-ico">📝</span><div class="grow"><b>Resoconto della settimana</b><div class="small muted">${weekLabel(ws)} · cosa è andato bene e cosa migliorare</div></div>
+      <div class="nudge-acts"><button class="add-mini" id="nReportLater">Dopo</button><button class="add-mini on" id="nReport">Leggi</button></div></div>`;
+  }
+  if (needsBackup()) {
+    h += `<div class="card nudge"><span class="nudge-ico">🛡️</span><div class="grow"><b>Salva un backup</b><div class="small muted">${db.settings.lastBackup ? `Ultimo ${daysAgo(db.settings.lastBackup)}` : 'Non ne hai ancora fatto uno'}: i dati sono solo su questo telefono</div></div>
+      <div class="nudge-acts"><button class="add-mini" id="nBackupLater">Dopo</button><button class="add-mini on" id="nBackup">Salva</button></div></div>`;
+  }
+  return h;
+}
+
+// ---------- Scoperte automatiche (calcolate sul telefono, senza AI) ----------
+let insightsAll = false;
+function computeInsights(daysBack = 60) {
+  const days = [];
+  for (let i = 1; i <= daysBack; i++) { const d = addDays(today(), -i); if (dayEntries(d).length) days.push(d); }
+  if (days.length < 7) return { days: days.length, list: [] };
+  const g = db.goals, out = [];
+  const add = (prio, icon, tone, title, text) => out.push({ prio, icon, tone, title, text });
+  const avg = arr => arr.length ? arr.reduce((a, x) => a + x, 0) / arr.length : 0;
+  const kc = d => dayTotals(d).kcal;
+  // weekend vs settimana
+  const we = days.filter(d => [0, 6].includes(parseYmd(d).getDay())), wd = days.filter(d => ![0, 6].includes(parseYmd(d).getDay()));
+  if (we.length >= 2 && wd.length >= 3) {
+    const diff = avg(we.map(kc)) - avg(wd.map(kc));
+    if (diff >= 200) add(diff / 100, '🍕', 'warn', `Nel weekend mangi ${r0(diff)} kcal in più`, `In media ${r0(avg(we.map(kc)))} kcal il sabato e la domenica contro ${r0(avg(wd.map(kc)))} negli altri giorni: è lì che si perde buona parte del deficit.`);
+    else if (diff <= -150) add(1.5, '👏', 'good', 'Nel weekend resti in linea', `Il sabato e la domenica mangi anche meno (${r0(avg(we.map(kc)))} kcal) che in settimana.`);
+  }
+  // giorno della settimana più pesante
+  const byDow = [0, 1, 2, 3, 4, 5, 6].map(w => days.filter(d => parseYmd(d).getDay() === w)).map(l => l.length >= 2 ? avg(l.map(kc)) : null);
+  const valid = byDow.map((v, i) => [v, i]).filter(x => x[0] != null);
+  if (valid.length >= 5) {
+    const [maxV, maxI] = valid.reduce((a, b) => (b[0] > a[0] ? b : a));
+    const mean = avg(valid.map(x => x[0]));
+    const weekendSaid = out.some(x => x.icon === '🍕') && [0, 6].includes(maxI);
+    if (maxV - mean >= 250 && !weekendSaid) add((maxV - mean) / 120, '📅', 'warn', `${maxI === 0 ? 'La domenica' : 'Il ' + ['', 'lunedì', 'martedì', 'mercoledì', 'giovedì', 'venerdì', 'sabato'][maxI]} è il giorno più pesante`, `In media ${r0(maxV)} kcal, ${r0(maxV - mean)} in più rispetto agli altri giorni.`);
+  }
+  // proteine a colazione
+  const bfP = days.map(d => sumNutr(dayEntries(d).filter(e => e.meal === 'colazione')).p), totP = days.map(d => dayTotals(d).p);
+  const shareBf = avg(totP) ? avg(bfP) / avg(totP) : 0;
+  if (avg(bfP) < 15 && avg(totP) > 0) add(2.2, '🥚', 'warn', `A colazione solo ${r0(avg(bfP))} g di proteine`, `È il ${r0(shareBf * 100)}% delle proteine del giorno. Yogurt greco, uova, fiocchi di latte o un frullato proteico aiutano a sentire meno fame fino a pranzo.`);
+  // obiettivo proteine
+  if (g.protein) {
+    const hit = days.filter(d => dayTotals(d).p >= g.protein * 0.9).length / days.length;
+    if (hit < 0.4) add(2.5, '💪', 'warn', `Proteine raggiunte solo ${r0(hit * 100)}% dei giorni`, `Media ${r0(avg(totP))} g su un obiettivo di ${r0(g.protein)} g: in deficit le proteine proteggono i muscoli.`);
+    else if (hit >= 0.75) add(1.2, '💪', 'good', `Proteine centrate il ${r0(hit * 100)}% dei giorni`, `Media ${r0(avg(totP))} g al giorno: ottimo per mantenere i muscoli mentre dimagrisci.`);
+  }
+  // mangiare tardi (solo voci inserite lo stesso giorno, dopo le 21)
+  const late = days.map(d => dayEntries(d).filter(e => e.t && ymd(new Date(e.t)) === d && new Date(e.t).getHours() >= 21));
+  const lateDays = late.filter(l => l.length);
+  if (lateDays.length >= 3) {
+    const k = avg(lateDays.map(l => sumNutr(l).kcal));
+    if (k >= 150) add(k / 120, '🌙', 'warn', `Dopo le 21 mangi in media ${r0(k)} kcal`, `Succede in ${lateDays.length} giorni su ${days.length}. Spesso è fame arretrata: un pomeriggio con uno spuntino proteico può aiutare.`);
+  }
+  // sport e giorni verdi
+  const withEx = days.filter(d => dayExercise(d).length), noEx = days.filter(d => !dayExercise(d).length);
+  if (withEx.length >= 3 && noEx.length >= 3) {
+    const gr = l => l.filter(d => dayStatus(d) === 'ok').length / l.length;
+    const delta = gr(withEx) - gr(noEx);
+    if (delta >= 0.2) add(2, '🏃', 'good', 'Quando ti alleni resti più in linea', `Giorni verdi: ${r0(gr(withEx) * 100)}% con allenamento contro ${r0(gr(noEx) * 100)}% senza.`);
+  }
+  // fibre
+  const fib = avg(days.map(d => dayTotals(d).fib));
+  if (fib < 20) add(1.8, '🥦', 'warn', `Fibre basse: ${r0(fib)} g al giorno`, 'Ne servono almeno 25: legumi 2–3 volte a settimana, verdura a pranzo e cena e cereali integrali.');
+  // spuntini
+  const snackShare = avg(days.map(d => { const t = dayTotals(d).kcal; return t ? sumNutr(dayEntries(d).filter(e => e.meal === 'spuntini')).kcal / t : 0; }));
+  if (snackShare >= 0.2) add(snackShare * 8, '🍪', 'info', `Gli spuntini sono il ${r0(snackShare * 100)}% delle calorie`, 'Vale la pena guardarli: spesso sono le calorie più facili da ridurre.');
+  // alimento che pesa di più
+  const byFood = new Map(); let totK = 0;
+  for (const d of days) for (const e of dayEntries(d)) { const k = nutrients(e).kcal; totK += k; const key = normName(e.name); const o = byFood.get(key) || { name: e.name, k: 0, n: 0 }; o.k += k; o.n++; byFood.set(key, o); }
+  const top = [...byFood.values()].sort((a, b) => b.k - a.k)[0];
+  if (top && totK && top.k / totK >= 0.1) add(1.4, foodIcon(top.name), 'info', `${top.name}: ${r0(top.k / totK * 100)}% delle tue calorie`, `L'hai registrato ${top.n} volte negli ultimi ${daysBack} giorni: è l'alimento che pesa di più sul totale.`);
+  // costanza
+  const last30 = Array.from({ length: 30 }, (_, i) => addDays(today(), -(i + 1))).filter(d => dayEntries(d).length).length;
+  if (last30 >= 25) add(1, '📒', 'good', `Hai registrato ${last30} giorni su 30`, 'La costanza è la cosa che conta di più: continua così.');
+  else if (last30 <= 18) add(1.6, '📒', 'warn', `Registrati ${last30} giorni su 30`, 'I giorni non registrati spesso sono quelli più "liberi": segnarli anche in modo veloce rende i dati più veri.');
+  return { days: days.length, list: out.sort((a, b) => b.prio - a.prio) };
+}
+function insightsCard() {
+  const ins = computeInsights();
+  if (!ins.list.length) return ins.days < 7 ? `<div class="card"><h2>💡 Scoperte</h2><p class="small muted" style="margin:0">Dopo 7 giorni registrati qui compariranno le scoperte sulle tue abitudini (ora ${ins.days}).</p></div>` : '';
+  const shown = insightsAll ? ins.list : ins.list.slice(0, 3);
+  return `<div class="card"><h2>💡 Scoperte <small>ultimi 60 giorni</small></h2>
+    ${shown.map(x => `<div class="insight ${x.tone}"><span class="ins-ico">${x.icon}</span><div><b>${esc(x.title)}</b><p>${esc(x.text)}</p></div></div>`).join('')}
+    ${!insightsAll && ins.list.length > 3 ? `<button class="btn ghost" id="insAll">Mostra tutte (${ins.list.length})</button>` : ''}
+  </div>`;
+}
+
+// ---------- Resoconto settimanale con l'AI ----------
+const weekStartOf = d => addDays(d, -((parseYmd(d).getDay() + 6) % 7));
+const lastWeekStart = () => addDays(weekStartOf(today()), -7);
+const weekDays = ws => Array.from({ length: 7 }, (_, i) => addDays(ws, i));
+const weekLabel = ws => `${fmtDate(ws, { day: 'numeric', month: 'short' })} – ${fmtDate(addDays(ws, 6), { day: 'numeric', month: 'short' })}`;
+function weekStats(ws) {
+  const days = weekDays(ws).filter(d => d < today());
+  const st = nutritionStats(days);
+  const logged = days.filter(d => dayEntries(d).length);
+  let deficit = 0, defDays = 0;
+  for (const d of logged) { const b = dayBurn(d); if (b != null) { deficit += dayTotals(d).kcal - b; defDays++; } }
+  const ws2 = db.body.filter(b => b.weight != null && b.date >= ws && b.date <= addDays(ws, 6)).sort((a, b) => a.date.localeCompare(b.date));
+  const sc = st.days ? dietScore(st) : null;
+  const freq = new Map();
+  for (const d of logged) for (const e of dayEntries(d)) freq.set(e.name, (freq.get(e.name) || 0) + 1);
+  return {
+    giorni_registrati: logged.length, kcal_medie: r0(st.avg.kcal), obiettivo_kcal: db.goals.kcal, giorni_verdi: st.green,
+    proteine_medie_g: r0(st.avg.p), obiettivo_proteine_g: db.goals.protein, carboidrati_medi_g: r0(st.avg.c), grassi_medi_g: r0(st.avg.f), fibre_medie_g: r0(st.avg.fib),
+    porzioni_frutta_verdura_al_giorno: Math.round(st.fruitVegPerDay * 10) / 10, pranzi_cene_vegetariani: `${st.vegMeals}/${st.meals}`,
+    voto: sc?.score ?? null, voto_dettaglio: sc ? Object.fromEntries(sc.parts.map(p => [p.label, `${fmtNum(p.pts, 1)}/${p.max}`])) : null,
+    allenamenti: logged.reduce((a, d) => a + dayExercise(d).length, 0), kcal_sport: r0(logged.reduce((a, d) => a + dayExerciseKcal(d), 0)),
+    deficit_kcal_settimana: defDays ? r0(deficit) : null, grasso_stimato_kg: defDays ? Math.round(-deficit / 770) / 10 : null,
+    peso_inizio: ws2[0]?.weight ?? null, peso_fine: ws2.at(-1)?.weight ?? null,
+    alimenti_piu_frequenti: [...freq.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6).map(([n, c]) => `${n} (${c})`),
+  };
+}
+const REPORT_SCHEMA = {
+  type: 'object', additionalProperties: false, required: ['title', 'summary', 'good', 'improve', 'tips', 'next_week_goal'],
+  properties: {
+    title: { type: 'string' }, summary: { type: 'string' },
+    good: { type: 'array', items: { type: 'string' } }, improve: { type: 'array', items: { type: 'string' } },
+    tips: { type: 'array', items: { type: 'object', additionalProperties: false, required: ['tip', 'why'], properties: { tip: { type: 'string' }, why: { type: 'string' } } } },
+    next_week_goal: { type: 'string' },
+  },
+};
+const REPORT_PROMPT = `Sei un coach nutrizionale che scrive il resoconto settimanale di una persona che segue una dieta per dimagrire, con il diario alimentare sul telefono. Ricevi i dati della settimana appena finita e di quella precedente.
+Scrivi in italiano, dando del tu, con tono diretto e incoraggiante, senza giudicare e senza consigli medici.
+- title: un titolo breve che riassume la settimana (max 8 parole).
+- summary: 2-3 frasi con l'andamento, citando i numeri più importanti e il confronto con la settimana precedente.
+- good: 2-3 cose andate bene, concrete.
+- improve: 1-3 cose da migliorare, concrete.
+- tips: esattamente 2 consigli pratici per la prossima settimana, legati ai dati e ai cibi che la persona mangia davvero; "why" spiega in una frase perché.
+- next_week_goal: un solo obiettivo misurabile per la prossima settimana (es. "almeno 140 g di proteine in 5 giorni su 7").
+Se i dati sono pochi, dillo in modo semplice. Non inventare numeri che non ci sono.`;
+function reportCard() {
+  const ws = lastWeekStart();
+  const enough = weekDays(ws).filter(d => dayEntries(d).length).length >= 3;
+  const past = Object.keys(db.reports || {}).sort().reverse().filter(k => k !== ws).slice(0, 4);
+  if (!enough && !past.length) return '';
+  return `<div class="card"><h2>📝 Resoconto settimanale</h2>
+    ${enough ? `<button class="report-row" data-rep="${ws}"><span class="grow"><b>${db.reports?.[ws] ? esc(db.reports[ws].title) : 'Settimana ' + weekLabel(ws)}</b><br><small class="muted">${weekLabel(ws)} · ${db.reports?.[ws] ? 'leggi il resoconto' : 'genera il resoconto con l’AI'}</small></span><span class="add-mini on">${db.reports?.[ws] ? 'Leggi' : 'Genera'}</span></button>` : ''}
+    ${past.map(k => `<button class="report-row" data-rep="${k}"><span class="grow"><b>${esc(db.reports[k].title)}</b><br><small class="muted">${weekLabel(k)}</small></span><span class="muted">›</span></button>`).join('')}
+  </div>`;
+}
+async function openReport(ws, regenerate = false) {
+  db.settings.reportSeen = lastWeekStart() === ws ? ws : db.settings.reportSeen; save();
+  const stats = weekStats(ws);
+  const nums = `<div class="stats rep-stats">
+      <div class="stat"><div class="v">${stats.voto != null ? fmtNum(stats.voto, 1) : '–'}<small>/10</small></div><div class="k">voto</div></div>
+      <div class="stat"><div class="v">${stats.giorni_verdi}<small>/${stats.giorni_registrati}</small></div><div class="k">giorni verdi</div></div>
+      <div class="stat"><div class="v">${stats.deficit_kcal_settimana != null ? fmtBalance(stats.deficit_kcal_settimana).replace(' kcal', '') : '–'}</div><div class="k">kcal di bilancio${stats.grasso_stimato_kg != null ? ` · ≈ ${fmtNum(Math.abs(stats.grasso_stimato_kg), 1)} kg grasso` : ''}</div></div>
+      <div class="stat"><div class="v">${stats.peso_inizio != null && stats.peso_fine != null ? signed(Math.round((stats.peso_fine - stats.peso_inizio) * 10) / 10, 'kg') : '–'}</div><div class="k">peso nella settimana</div></div>
+    </div>`;
+  const cached = db.reports?.[ws];
+  const show = r => openSheet(`<h3>📝 ${esc(r.title)}</h3><p class="small muted" style="margin-top:-8px">${weekLabel(ws)}</p>
+    ${nums}
+    <p class="rep-sum">${esc(r.summary)}</p>
+    ${r.good?.length ? `<h4 class="rep-h">✅ Cosa è andato bene</h4><ul class="rep-list">${r.good.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
+    ${r.improve?.length ? `<h4 class="rep-h">🎯 Da migliorare</h4><ul class="rep-list">${r.improve.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
+    ${r.tips?.length ? `<h4 class="rep-h">💡 Consigli per la prossima settimana</h4>${r.tips.map(t => `<div class="insight info"><div><b>${esc(t.tip)}</b><p>${esc(t.why)}</p></div></div>`).join('')}` : ''}
+    ${r.next_week_goal ? `<div class="rep-goal"><span>Obiettivo della settimana</span><b>${esc(r.next_week_goal)}</b></div>` : ''}
+    <div class="btn-row" style="margin-top:12px"><button class="btn secondary" id="repRegen">↻ Rigenera</button><button class="btn" id="repOk">Ok</button></div>`, s => {
+    $('#repOk', s).addEventListener('click', () => { closeSheet(); render(); });
+    $('#repRegen', s).addEventListener('click', () => openReport(ws, true));
+  });
+  if (cached && !regenerate) { show(cached); return; }
+  if (!hasAiKey()) {
+    openSheet(`<h3>📝 Settimana ${weekLabel(ws)}</h3>${nums}<p class="small muted">Per il resoconto scritto serve la chiave AI (Obiettivi → Intelligenza artificiale).</p><button class="btn" id="repOk">Ok</button>`, s => $('#repOk', s).addEventListener('click', closeSheet));
+    return;
+  }
+  openSheet(`<h3>📝 Scrivo il resoconto…</h3>${nums}<div class="skel-wrap">${[0, 1, 2].map(() => '<div class="skel"><i></i><div><b></b><b></b></div></div>').join('')}</div>`);
+  try {
+    const prev = weekStats(addDays(ws, -7));
+    const insights = computeInsights(28).list.slice(0, 4).map(x => x.title);
+    const prompt = `Settimana ${weekLabel(ws)}:\n${JSON.stringify(stats)}\n\nSettimana precedente:\n${JSON.stringify(prev)}\n\nScoperte sulle abitudini (ultime 4 settimane): ${insights.join('; ') || 'nessuna'}`;
+    const r = await analyzeFood({ prompt, system: REPORT_PROMPT, schema: REPORT_SCHEMA });
+    db.reports = { ...(db.reports || {}), [ws]: { ...r, createdAt: today() } };
+    save(); show(db.reports[ws]);
+  } catch (err) {
+    openSheet(`<h3>Resoconto non riuscito</h3><p>${esc(err.message)}</p><div class="btn-row"><button class="btn secondary" id="rClose">Chiudi</button><button class="btn" id="rRetry">Riprova</button></div>`, s => {
+      $('#rClose', s).addEventListener('click', closeSheet);
+      $('#rRetry', s).addEventListener('click', () => openReport(ws, true));
+    });
+  }
+}
+
 function weightTrend() {
   // kg/settimana dalla regressione lineare delle pesate degli ultimi 28 giorni
   const from = addDays(today(), -28);
@@ -2810,9 +3040,11 @@ function renderGoals(v) {
     <label class="check"><input type="checkbox" id="autoScheme" ${st.scheme === 'auto' ? 'checked' : ''}> Passa da solo tra chiaro e scuro seguendo il telefono</label>
   </div>
   <div class="card">
-    <h2>Dati</h2>
-    <p class="small muted" style="margin-top:0">I dati restano sul telefono. Esporta un backup ogni tanto: servirà anche per passare a un altro dispositivo.</p>
-    <div class="btn-row"><button class="btn secondary" id="exportData">Esporta backup</button><button class="btn secondary" id="importData">Importa</button></div>
+    <h2>Dati e backup</h2>
+    <p class="small muted" style="margin-top:0">I dati sono salvati solo su questo telefono. Il backup (senza le chiavi AI) si invia a WhatsApp, Drive o email e serve anche per passare a un altro telefono.</p>
+    <p class="small"><b>Ultimo backup:</b> ${db.settings.lastBackup ? `${fmtDate(db.settings.lastBackup, { day: 'numeric', month: 'long' })} (${daysAgo(db.settings.lastBackup)})` : 'mai'}</p>
+    <button class="btn" id="shareData">📤 Invia backup</button>
+    <div class="btn-row" style="margin-top:8px"><button class="btn secondary" id="exportData">Scarica file</button><button class="btn secondary" id="importData">Ripristina</button></div>
     <button class="btn danger" id="wipe" style="margin-top:6px">Cancella tutti i dati</button>
   </div>
   <p class="center small muted">Versione ${APP_VERSION} · ${esc(location.host)}</p>`;
@@ -2935,14 +3167,8 @@ function renderGoals(v) {
     db.settings.scheme = e.target.checked ? 'auto' : curScheme;
     save(); applyPalette(); render();
   });
-  $('#exportData', v).addEventListener('click', () => {
-    const copy = { ...db, settings: { ...db.settings, apiKey: '', geminiKey: '' } };
-    const blob = new Blob([JSON.stringify(copy, null, 1)], { type: 'application/json' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob); a.download = `dieta-backup-${today()}.json`;
-    document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-  });
+  $('#exportData', v).addEventListener('click', () => { downloadBackup(); render(); });
+  $('#shareData', v).addEventListener('click', () => shareBackup());
   $('#importData', v).addEventListener('click', () => $('#importInput').click());
   $('#wipe', v).addEventListener('click', () => {
     if (!confirm('Cancellare diario, misure e obiettivi da questo telefono? Non si può annullare.')) return;
