@@ -516,10 +516,6 @@ h1, h2, h3, .big, .balance-big, .score-num b { font-weight: 800; letter-spacing:
 .hello b { display: block; font-size: 20px; font-weight: 800; letter-spacing: -.02em; }
 .hello span { color: var(--muted); font-size: 14px; }
 .hello .streak { background: var(--accent-soft); color: var(--text); font-weight: 800; font-size: 15px; padding: 6px 12px; border-radius: 99px; }
-.habit { border: 1.5px solid var(--accent); animation: sugin .3s ease-out; }
-.habit-ico { font-size: 28px; line-height: 1; margin-right: 4px; }
-.habit b { font-size: 16px; }
-.habit .pill { margin-left: 4px; }
 .qa-empty { margin: 10px 2px 0; font-size: 13px; color: var(--muted); }
 .add-sheet .card { box-shadow: none; border: 1px solid var(--line); }
 .tabbar svg.ti { display: block; margin: 0 auto 2px; }

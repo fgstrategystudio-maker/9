@@ -2,7 +2,7 @@
 'use strict';
 
 // ---------- Storage ----------
-const APP_VERSION = '29';
+const APP_VERSION = '30';
 const KEY = 'dieta.v1';
 const MEALS = [
   { id: 'colazione', label: 'Colazione', icon: '☀️' },
@@ -484,7 +484,6 @@ function renderToday(v) {
     })()}
   </div>`;
 
-  html += habitCard();
   html += quickBar();
 
   const exList = dayExercise(curDate);
@@ -552,8 +551,6 @@ function renderToday(v) {
     mealPreview({ title: sm.name, items: sm.items, meal: b.dataset.meal, saved: sm });
   }));
   bindQuickBar(v);
-  $('#habYes', v)?.addEventListener('click', () => { const hb = habitFor(); if (hb) mealPreview({ title: `Il tuo ${hb.label.toLowerCase()} solito`, items: hb.items, meal: hb.meal }); });
-  $('#habNo', v)?.addEventListener('click', () => { db.settings.habitDismissed = `${today()}-${defaultMeal()}`; save(); render(); });
   watchMiniSum(v, tot, budget, left);
   // alimenti appena aggiunti: compaiono nel pasto con un'animazione e una breve vibrazione
   if (justAdded.size) {
@@ -660,35 +657,6 @@ const foodIcon = name => { const n = normName(name); return (FOOD_ICONS.find(([r
 let qaMeal = null;
 const speechSupported = () => !!(window.SpeechRecognition || window.webkitSpeechRecognition);
 const qaTarget = () => qaMeal || (curDate === today() ? defaultMeal() : 'pranzo');
-// Il pasto "solito" per quest'ora: la combinazione più frequente degli ultimi 30 giorni (almeno 2 volte)
-function habitFor() {
-  if (curDate !== today()) return null;
-  const meal = defaultMeal();
-  if (dayEntries(today()).some(e => e.meal === meal) || db.settings.habitDismissed === `${today()}-${meal}`) return null;
-  const combos = new Map();
-  for (let i = 1; i <= 30; i++) {
-    const items = dayEntries(addDays(today(), -i)).filter(e => e.meal === meal);
-    if (!items.length) continue;
-    const key = items.map(e => normName(e.name)).sort().join('|');
-    const o = combos.get(key) || { n: 0, items };
-    o.n++; combos.set(key, o);
-  }
-  const best = [...combos.values()].sort((a, b) => b.n - a.n)[0];
-  if (!best || best.n < 2) return null;
-  const m = MEALS.find(x => x.id === meal);
-  return { meal, label: m.label, icon: m.icon, items: best.items, n: best.n };
-}
-function habitCard() {
-  const hb = habitFor();
-  if (!hb) return '';
-  return `<div class="card habit">
-    <div class="row" style="align-items:flex-start"><span class="habit-ico">${hb.icon}</span><div class="grow">
-      <b>È ora di ${hb.label.toLowerCase()}</b>
-      <div class="small muted">Di solito: ${esc(hb.items.map(e => e.name).join(', '))} · ${r0(sumNutr(hb.items).kcal)} kcal <span class="pill">${hb.n} volte</span></div>
-    </div></div>
-    <div class="btn-row" style="margin-top:10px"><button class="btn secondary" id="habNo">No, grazie</button><button class="btn" id="habYes">Aggiungi</button></div>
-  </div>`;
-}
 // Riepilogo compatto sotto l'intestazione quando l'anello esce dallo schermo
 let miniObs = null;
 function watchMiniSum(v, tot, budget, left) {
