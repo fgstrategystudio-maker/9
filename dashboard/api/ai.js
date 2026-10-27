@@ -62,6 +62,7 @@ const AZIONI_SCHEMA = {
               tipo: { type: 'string' },
               inizio: { type: 'string' },
               fine: { type: 'string' },
+              incasso: { type: 'string' },
               splitMezzoMese: { type: 'boolean' },
               priorita: { type: 'string' },
               servizio: { type: 'string' },
@@ -112,6 +113,7 @@ Una volta al mese l'utente scrive, per ogni commessa, cose come: incassato lordo
 - quanto percepirà d'ora in poi (fee mensile) → aggiorna_commessa "lordoMensile" se diverso da quello attuale; per un progetto a corpo usa "lordoProgetto".
 - ore previste al mese d'ora in poi → aggiorna_commessa "oreMensili" se diverse. Se dice solo le ore lavorate questo mese e non ha una stima, puoi usarle anche come oreMensili.
 - commessa finita → aggiorna_commessa stato "Concluso" (e fine se nota). Cliente nuovo → nuova_commessa.
+- lavoro già concluso ma pagato più avanti (es. "finito a ottobre, mi pagano a novembre") → stato "Concluso", "fine" = quando è finito il lavoro, "incasso" = data (YYYY-MM-DD, anche ultimo giorno del mese) in cui arriva il pagamento: l'importo conta nel mese dell'incasso.
 - Alla fine, se ha dato gli incassi di TUTTI i clienti del mese, aggiungi registra_incasso con la somma esatta (vedi regole sotto); se ne manca qualcuno, dillo nella spiegazione e non inventare.
 - Non proporre aggiornamenti per campi che non cambiano.
 

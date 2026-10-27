@@ -26,7 +26,7 @@ import {
   dataBreve,
   pipelineCommessa,
   lordoPipelineMesi,
-  scadenzaF24,
+  creaPianoF24,
   icsPromemoria,
   serieOrarioClienti,
   importoCompetenzaMese,
@@ -362,9 +362,12 @@ export default function Dashboard({ commesse, setCommesse, setup, setSetup, them
   const f24Override = setup.f24 || {};
   const modoTasse = setup.cashTasse || "f24";
   const tasseMaturate = Math.round(lordoAnnoCorrente * taxRate);
-  const tPrec = tasseAnno(anno - 1);
-  // Acconti per l'anno in corso già versati (giugno 40%, novembre 60% delle tasse dell'anno prima)
-  const accontiVersati = tPrec == null ? 0 : Math.round(tPrec * ((meseIdx > 5 ? 0.4 : 0) + (meseIdx > 10 ? 0.6 : 0)));
+  const f24Pagati = setup.f24Pagati || {};
+  const pianoF24 = creaPianoF24(tasseAnno, f24Override, f24Pagati);
+  // Acconti per l'anno in corso già versati (giugno, e novembre se passato)
+  const accontiVersati = pianoF24.accontiVersati(anno, meseIdx);
+  const keyGiugno = `${anno}-06`;
+  const giugnoPagato = f24Pagati[keyGiugno] || {};
   const debitoFiscale = Math.max(0, tasseMaturate - accontiVersati);
   const cassaLibera = cassaIniziale - debitoFiscale;
   // Scadenze F24 di giugno e novembre nei prossimi 12 mesi (anche senza stima,
@@ -372,7 +375,7 @@ export default function Dashboard({ commesse, setCommesse, setup, setSetup, them
   const prossimiF24 = mesi12
     .filter(({ m }) => m === 5 || m === 10)
     .map(({ m, y }) => {
-      const f = scadenzaF24(m, y, tasseAnno, f24Override);
+      const f = pianoF24(m, y);
       const key = `${y}-${String(m + 1).padStart(2, "0")}`;
       return {
         key, m, y, data: `${key}-30`,
@@ -406,11 +409,15 @@ export default function Dashboard({ commesse, setCommesse, setup, setSetup, them
     const recorded = revenueHistory.find(r => stessoMese(r.mese, label));
     const lordo = recorded ? recorded.lordo : getLordoPerMese(mIdx, y, lista);
     const netto = recorded ? recorded.netto : calcNetto(lordo, setup.fattoreNetto);
-    const f24 = modoTasse === "f24" ? scadenzaF24(mIdx, y, tasseAnno, f24Override) : null;
+    const f24 = modoTasse === "f24" ? pianoF24(mIdx, y) : null;
     const tasse = f24?.importo || 0;
     const entrate = modoTasse === "f24" ? lordo : netto;
     const tipo  = recorded ? "reale" : "proiezione";
-    return { mese: `${MESI_SHORT[mIdx]}${y !== anno ? " '" + String(y).slice(2) : ""}`, entrate, costi: usciteMensili, tasse, flusso: entrate - usciteMensili - tasse, tipo };
+    // da chi arrivano i soldi del mese (solo per i mesi previsti)
+    const dettaglio = recorded ? [] : lista
+      .map((c) => ({ nome: c.cliente, v: importoCompetenzaMese(c, mIdx, y), concluso: c.stato === "Concluso" }))
+      .filter((d) => d.v > 0);
+    return { mese: `${MESI_SHORT[mIdx]}${y !== anno ? " '" + String(y).slice(2) : ""}`, entrate, costi: usciteMensili, tasse, flusso: entrate - usciteMensili - tasse, tipo, dettaglio };
   }).map((row, i, arr) => ({
     ...row,
     // cassa accumulata = saldo di partenza + somma dei flussi fino a questo mese
@@ -981,6 +988,20 @@ export default function Dashboard({ commesse, setCommesse, setup, setSetup, them
               </div>
               <span className="num" style={{ fontFamily: "var(--font-serif)", fontSize: 19 }}>{fmtN(tasseMaturate)} €</span>
             </div>
+            {meseIdx > 5 && (
+              <div className="lrow f24-pagato" style={{ cursor: "default" }}>
+                <div>
+                  <div className="nm">F24 · 30 giu {anno} · pagato</div>
+                  <div className="meta">saldo {anno - 1} + 1° acconto {anno}: scrivi il totale pagato e quanto era acconto</div>
+                </div>
+                <span className="f24-campi">
+                  <label>totale <input className="input num" type="number" min="0" placeholder="€" value={giugnoPagato.importo ?? ""}
+                    onChange={(e) => setSetup((prev) => ({ ...prev, f24Pagati: { ...(prev.f24Pagati || {}), [keyGiugno]: { ...((prev.f24Pagati || {})[keyGiugno] || {}), importo: e.target.value === "" ? null : Number(e.target.value) } } }))} /></label>
+                  <label>di cui acconto <input className="input num" type="number" min="0" placeholder="€" value={giugnoPagato.acconto ?? ""}
+                    onChange={(e) => setSetup((prev) => ({ ...prev, f24Pagati: { ...(prev.f24Pagati || {}), [keyGiugno]: { ...((prev.f24Pagati || {})[keyGiugno] || {}), acconto: e.target.value === "" ? null : Number(e.target.value) } } }))} /></label>
+                </span>
+              </div>
+            )}
             {prossimiF24.map((f) => (
               <div key={f.key} className="lrow" style={{ gridTemplateColumns: "1fr auto", cursor: "default" }}>
                 <div>
@@ -1003,7 +1024,7 @@ export default function Dashboard({ commesse, setCommesse, setup, setSetup, them
               <button className={modoTasse === "mensile" ? "on" : ""} onClick={() => setSetup((prev) => ({ ...prev, cashTasse: "mensile" }))}>Tasse tolte ogni mese</button>
             </div>
             <p style={{ color: "var(--ink-3)", fontSize: 12, marginTop: 10 }}>
-              Stima semplificata: aliquota complessiva {Math.round(taxRate * 100)}% (Setup), metodo storico, acconti 40% a giugno e 60% a novembre. Scrivi negli spazi gli importi del commercialista: sostituiscono la stima.
+              Stima semplificata: aliquota complessiva {Math.round(taxRate * 100)}% (Setup), metodo storico, acconti in due rate del 50% (giugno e novembre) calcolate sulle tasse dell'anno prima. Scrivi negli spazi gli importi del commercialista: sostituiscono la stima.
             </p>
           </div>
         </section>
@@ -1841,7 +1862,12 @@ function CashTooltip({ active, payload }) {
   return (
     <div style={{ ...TOOLTIP_STYLE, padding: "10px 12px", minWidth: 210 }}>
       <div style={{ color: "#A39684", fontWeight: 700, marginBottom: 6 }}>{r.mese} · {r.tipo === "reale" ? "registrato" : "proiezione"}</div>
-      {riga("Entrate", r.entrate)}
+      {riga(r.tipo === "reale" ? "Entrate" : "Entrate previste", r.entrate)}
+      {r.dettaglio?.map((d) => (
+        <div key={d.nome} style={{ display: "flex", justifyContent: "space-between", gap: 18, fontSize: 11.5, paddingLeft: 10 }}>
+          <span style={{ color: "#A39684" }}>{d.nome}{d.concluso ? " · saldo progetto" : ""}</span><span className="num" style={{ color: "#CFC4B2" }}>{formatCurrency(d.v)}</span>
+        </div>
+      ))}
       {riga("Costi e spese", -r.costi)}
       {r.tasse > 0 && riga("F24", -r.tasse, "#E3A27F")}
       {riga("Flusso del mese", r.flusso, r.flusso >= 0 ? "#9CC496" : "#E3A27F")}

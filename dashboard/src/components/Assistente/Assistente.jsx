@@ -10,11 +10,11 @@ const fmtN = (n) => nf.format(Math.round(n ?? 0));
 
 const STATI = ["In corso", "In scadenza", "Da chiarire", "Sospeso", "Concluso", "Perso"];
 const CAMPI_NUM = ["lordoMensile", "lordoProgetto", "oreMensili", "upsellTarget"];
-const CAMPI_STR = ["stato", "tipo", "inizio", "fine", "priorita", "servizio", "note"];
+const CAMPI_STR = ["stato", "tipo", "inizio", "fine", "incasso", "priorita", "servizio", "note"];
 const CAMPI_BOOL = ["splitMezzoMese"];
 const LABEL_CAMPO = {
   lordoMensile: "Fee lorda mensile", lordoProgetto: "Lordo progetto", oreMensili: "Ore/mese",
-  upsellTarget: "Upsell target", stato: "Stato", tipo: "Tipo", inizio: "Inizio", fine: "Fine",
+  upsellTarget: "Upsell target", stato: "Stato", tipo: "Tipo", inizio: "Inizio", fine: "Fine", incasso: "Incasso previsto",
   splitMezzoMese: "Split 50/50", priorita: "Priorità", servizio: "Servizio", note: "Note",
 };
 
@@ -84,7 +84,7 @@ export default function Assistente({ commesse, setCommesse, setup, setSetup, see
       commesse: commesse.map((c) => ({
         id: c.id, cliente: c.cliente, servizio: c.servizio, tipo: c.tipo, stato: c.stato,
         lordoMensile: c.lordoMensile, lordoProgetto: c.lordoProgetto,
-        inizio: c.inizio, fine: c.fine, oreMensili: c.oreMensili,
+        inizio: c.inizio, fine: c.fine, incasso: c.incasso || null, oreMensili: c.oreMensili,
         upsellTarget: c.upsellTarget, splitMezzoMese: !!c.splitMezzoMese,
         pagamenti: (c.pagamenti || []).map((p) => ({ mese: p.mese, importo: p.importo, nota: p.nota })),
       })),

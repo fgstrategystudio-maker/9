@@ -11,6 +11,7 @@ const EMPTY = {
   tipo: "Mensile",
   inizio: "",
   fine: "",
+  incasso: "",
   stato: "In corso",
   lordoMensile: "",
   lordoProgetto: "",
@@ -33,6 +34,7 @@ export default function CommessaModal({ initial, onSave, onClose }) {
       splitMezzoMese: initial.splitMezzoMese ?? false,
       inizio: initial.inizio ?? "",
       fine: initial.fine ?? "",
+      incasso: initial.incasso ?? "",
     };
   });
 
@@ -53,6 +55,7 @@ export default function CommessaModal({ initial, onSave, onClose }) {
       splitMezzoMese: !!form.splitMezzoMese,
       inizio: form.inizio || null,
       fine: form.fine || null,
+      incasso: form.incasso || null,
     });
   }
 
@@ -114,6 +117,12 @@ export default function CommessaModal({ initial, onSave, onClose }) {
               <input type="date" className={styles.input} value={form.fine} onChange={(e) => set("fine", e.target.value)} />
             </Field>
           </div>
+
+          {(form.tipo === "Progetto" || form.stato === "Concluso") && (
+            <Field label="Incasso previsto (se diverso dalla fine)">
+              <input type="date" className={styles.input} value={form.incasso} onChange={(e) => set("incasso", e.target.value)} />
+            </Field>
+          )}
 
           <div className={styles.row}>
             <Field label="Lordo mensile (€)">

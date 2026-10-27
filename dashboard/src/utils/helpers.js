@@ -240,7 +240,7 @@ export function isMeseAttivo(c, monthIdx, year) {
 
 /**
  * Importo di competenza della commessa per (monthIdx, year).
- * - Concluso: totale progetto nel solo mese di chiusura (invariato, niente split).
+ * - Concluso: totale progetto nel solo mese di incasso (o di chiusura se manca), niente split.
  * - Senza flag: importo pieno se il mese è attivo.
  * - Con splitMezzoMese: 50% del mese corrente + 50% di coda dal mese precedente.
  * Nota: è solo logica di visualizzazione; i dati salvati restano invariati e il
@@ -248,7 +248,9 @@ export function isMeseAttivo(c, monthIdx, year) {
  */
 export function importoCompetenzaMese(c, monthIdx, year) {
   if (c.stato === "Concluso") {
-    const end = c.fine ? parseLocalDate(c.fine) : null;
+    // conta nel mese in cui arriva il pagamento (incasso), altrimenti in quello di fine
+    const quando = c.incasso || c.fine;
+    const end = quando ? parseLocalDate(quando) : null;
     const monthStart = new Date(year, monthIdx, 1);
     const monthEnd = new Date(year, monthIdx + 1, 0, 23, 59, 59);
     const hasLordo = c.lordoProgetto || c.lordoMensile;
@@ -394,23 +396,51 @@ export function lordoPipelineMesi(p, mesi) {
 }
 
 /**
- * Scadenze F24 stimate (regime forfettario, metodo storico):
- * - 30 giugno Y: saldo dell'anno Y-1 (tasse Y-1 meno acconti versati, cioè
- *   tasse Y-2) + 1° acconto 40% delle tasse Y-1
- * - 30 novembre Y: 2° acconto 60% delle tasse Y-1
- * tasse(anno) → importo stimato o null se l'anno non è noto.
- * Gli importi reali (dal commercialista) in `override` ("2027-06": 5000) vincono.
+ * Piano F24 (regime forfettario: acconti in due rate del 50%, giugno e novembre,
+ * calcolati sulle tasse dell'anno prima; metodo storico).
+ * - 30 giugno Y: saldo Y-1 (tasse Y-1 meno acconti Y-1 versati) + 1° acconto Y
+ * - 30 novembre Y: 2° acconto Y (di norma uguale al primo)
+ * I numeri reali vincono sempre sulle stime:
+ * - override["2026-11"] = importo di una scadenza futura (dal commercialista)
+ * - pagati["2026-06"] = { importo, acconto } F24 già pagato e sua quota di acconto
+ * tasse(anno) → tasse stimate dell'anno o null.
+ * Ritorna f24(monthIdx, year) → { importo, manuale, key } | null.
  */
-export function scadenzaF24(monthIdx, year, tasse, override = {}) {
-  const key = `${year}-${String(monthIdx + 1).padStart(2, "0")}`;
-  if (override[key] != null && override[key] !== "") return { importo: Number(override[key]) || 0, manuale: true, key };
-  if (monthIdx !== 5 && monthIdx !== 10) return null;
-  const t1 = tasse(year - 1);
-  if (t1 == null) return null;
-  if (monthIdx === 10) return { importo: Math.round(t1 * 0.6), manuale: false, key, voce: `2° acconto ${year}` };
-  const t2 = tasse(year - 2);
-  const saldo = t2 == null ? 0 : t1 - t2;
-  return { importo: Math.max(0, Math.round(saldo + t1 * 0.4)), manuale: false, key, voce: `saldo ${year - 1} + 1° acconto ${year}` };
+export function creaPianoF24(tasse, override = {}, pagati = {}) {
+  const k = (y, m) => `${y}-${String(m + 1).padStart(2, "0")}`;
+  const num = (v) => (v != null && v !== "" ? Number(v) || 0 : null);
+  const primoAcconto = (y) => {
+    const reale = num(pagati[k(y, 5)]?.acconto);
+    if (reale != null) return { v: reale, reale: true };
+    const t = tasse(y - 1);
+    return t == null ? null : { v: Math.round(t * 0.5), reale: false };
+  };
+  const secondoAcconto = (y) => {
+    const reale = num(override[k(y, 10)]) ?? num(pagati[k(y, 10)]?.importo);
+    if (reale != null) return { v: reale, reale: true };
+    const p = primoAcconto(y);
+    return p ? { v: p.v, reale: false } : null;
+  };
+  const f24 = (m, y) => {
+    const key = k(y, m);
+    const o = num(override[key]);
+    if (o != null) return { importo: o, manuale: true, key };
+    if (m === 10) {
+      const a = secondoAcconto(y);
+      return a ? { importo: a.v, manuale: false, key } : null;
+    }
+    if (m === 5) {
+      const t1 = tasse(y - 1);
+      if (t1 == null) return null;
+      const acconti = (primoAcconto(y - 1)?.v || 0) + (secondoAcconto(y - 1)?.v || 0);
+      return { importo: Math.max(0, Math.round(t1 - acconti + t1 * 0.5)), manuale: false, key };
+    }
+    return null;
+  };
+  // Acconti dell'anno y già versati alla data (giugno, e novembre se passato)
+  f24.accontiVersati = (y, meseIdx) =>
+    (meseIdx > 5 ? primoAcconto(y)?.v || 0 : 0) + (meseIdx > 10 ? secondoAcconto(y)?.v || 0 : 0);
+  return f24;
 }
 
 // File calendario (.ics) con promemoria il 1° di ogni mese alle 9:00
