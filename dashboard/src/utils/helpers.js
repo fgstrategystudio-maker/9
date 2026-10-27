@@ -369,3 +369,88 @@ export function templateMese(commesse, mese) {
 
 const _nf = new Intl.NumberFormat("it-IT");
 function fmtNum(n) { return _nf.format(Math.round(n ?? 0)); }
+
+// ── Pipeline, tasse F24, promemoria e andamento per cliente ─────────
+
+// Trattativa in pipeline → oggetto "commessa" per i calcoli (scenario)
+export function pipelineCommessa(p) {
+  const inizio = p.inizio || null;
+  let fine = null;
+  if (inizio && Number(p.mesi) > 0) {
+    const s = parseLocalDate(inizio);
+    const e = new Date(s.getFullYear(), s.getMonth() + Number(p.mesi), 0);
+    fine = `${e.getFullYear()}-${String(e.getMonth() + 1).padStart(2, "0")}-${String(e.getDate()).padStart(2, "0")}`;
+  }
+  return {
+    id: `p${p.id}`, cliente: p.cliente || "Trattativa", stato: "In corso", tipo: "Mensile",
+    lordoMensile: Number(p.lordoMensile) || 0, oreMensili: Number(p.oreMensili) || 0, inizio, fine,
+  };
+}
+
+// Lordo dell'anno di una trattativa (pieno, senza probabilità)
+export function lordoPipelineMesi(p, mesi) {
+  const c = pipelineCommessa(p);
+  return mesi.reduce((s, { m, y }) => s + importoCompetenzaMese(c, m, y), 0);
+}
+
+/**
+ * Scadenze F24 stimate (regime forfettario, metodo storico):
+ * - 30 giugno Y: saldo dell'anno Y-1 (tasse Y-1 meno acconti versati, cioè
+ *   tasse Y-2) + 1° acconto 40% delle tasse Y-1
+ * - 30 novembre Y: 2° acconto 60% delle tasse Y-1
+ * tasse(anno) → importo stimato o null se l'anno non è noto.
+ * Gli importi reali (dal commercialista) in `override` ("2027-06": 5000) vincono.
+ */
+export function scadenzaF24(monthIdx, year, tasse, override = {}) {
+  const key = `${year}-${String(monthIdx + 1).padStart(2, "0")}`;
+  if (override[key] != null && override[key] !== "") return { importo: Number(override[key]) || 0, manuale: true, key };
+  if (monthIdx !== 5 && monthIdx !== 10) return null;
+  const t1 = tasse(year - 1);
+  if (t1 == null) return null;
+  if (monthIdx === 10) return { importo: Math.round(t1 * 0.6), manuale: false, key, voce: `2° acconto ${year}` };
+  const t2 = tasse(year - 2);
+  const saldo = t2 == null ? 0 : t1 - t2;
+  return { importo: Math.max(0, Math.round(saldo + t1 * 0.4)), manuale: false, key, voce: `saldo ${year - 1} + 1° acconto ${year}` };
+}
+
+// File calendario (.ics) con promemoria il 1° di ogni mese alle 9:00
+export function icsPromemoria(url) {
+  const oggi = new Date();
+  const primo = new Date(oggi.getFullYear(), oggi.getMonth() + 1, 1);
+  const d = `${primo.getFullYear()}${String(primo.getMonth() + 1).padStart(2, "0")}01`;
+  const stamp = oggi.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+  return [
+    "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Freelance Dashboard//IT", "CALSCALE:GREGORIAN",
+    "BEGIN:VEVENT",
+    `UID:aggiornamento-mensile-${stamp}@freelance-dashboard`,
+    `DTSTAMP:${stamp}`,
+    `DTSTART:${d}T090000`, `DTEND:${d}T091500`,
+    "RRULE:FREQ=MONTHLY;BYMONTHDAY=1",
+    "SUMMARY:Aggiorna la Freelance Dashboard",
+    `DESCRIPTION:Scrivi all'assistente incassi\\, ore\\, date di fine e cassa del mese appena chiuso.\\n${url}`,
+    `URL:${url}`,
+    "BEGIN:VALARM", "ACTION:DISPLAY", "DESCRIPTION:Aggiorna la Freelance Dashboard", "TRIGGER:PT0M", "END:VALARM",
+    "END:VEVENT", "END:VCALENDAR",
+  ].join("\r\n");
+}
+
+// €/h reale mese per mese per ogni cliente (dai pagamenti con ore lavorate)
+export function serieOrarioClienti(commesse) {
+  const clienti = [];
+  const perMese = {};
+  for (const c of commesse || []) {
+    const pag = (c.pagamenti || []).filter((p) => Number(p.ore) > 0 && chiaveMese(p.mese));
+    if (!pag.length) continue;
+    clienti.push({ id: c.id, nome: c.cliente });
+    for (const p of pag) {
+      const k = chiaveMese(p.mese);
+      perMese[k] = perMese[k] || { k };
+      const prev = perMese[k][`_${c.id}`] || { ore: 0, imp: 0 };
+      prev.ore += Number(p.ore); prev.imp += Number(p.importo) || 0;
+      perMese[k][`_${c.id}`] = prev;
+      perMese[k][c.id] = Math.round(prev.imp / prev.ore);
+    }
+  }
+  const righe = Object.values(perMese).sort((a, b) => a.k.localeCompare(b.k));
+  return { clienti, righe };
+}

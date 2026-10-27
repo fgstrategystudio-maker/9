@@ -34,6 +34,10 @@ const PATHS = {
   menu: <path d="M4 7h16M4 12h16M4 17h16" {...P} />,
   target: <><circle cx="12" cy="12" r="8" {...P} /><circle cx="12" cy="12" r="4" {...P} /><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none" /></>,
   x: <path d="M6 6l12 12M18 6 6 18" {...P} />,
+  moon: <path d="M19.5 14.5A7.5 7.5 0 0 1 9.5 4.5a7.5 7.5 0 1 0 10 10Z" {...P} />,
+  sun: <><circle cx="12" cy="12" r="3.8" {...P} /><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4" {...P} /></>,
+  file: <><path d="M7 3h7l4 4v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z" {...P} /><path d="M14 3v4h4M9 12h6M9 16h6" {...P} /></>,
+  funnel: <path d="M4 5h16l-6 7.5V18l-4 2v-7.5L4 5Z" {...P} />,
   edit: <><path d="M4 20h4L19.5 8.5a2.1 2.1 0 0 0-3-3L5 17v3Z" {...P} /><path d="m14 7 3 3" {...P} /></>,
   trash: <><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" {...P} /><path d="M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" {...P} /></>,
 };

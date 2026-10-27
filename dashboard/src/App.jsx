@@ -1,17 +1,30 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { useLocalStorage } from "./hooks/useLocalStorage";
 import { INITIAL_COMMESSE, INITIAL_SETUP, INITIAL_NETWORK, INITIAL_REDDITI_ANNUALI } from "./data/initialData";
 import Sidebar from "./components/Sidebar/Sidebar";
-import Dashboard from "./components/Dashboard/Dashboard";
-import Commesse from "./components/Commesse/Commesse";
-import Fiscale from "./components/Fiscale/Fiscale";
-import Setup from "./components/Setup/Setup";
-import Storico from "./components/Storico/Storico";
-import Network from "./components/Network/Network";
 import PinGate from "./components/PinGate/PinGate";
 import styles from "./App.module.css";
 import { loadFromSupabase, enableSync } from "./lib/supabase";
 import { daysSinceLastBackup, exportData } from "./lib/backup";
+
+// Le pagine si scaricano solo quando servono: la schermata del PIN parte subito
+const caricaDashboard = () => import("./components/Dashboard/Dashboard");
+const Dashboard = lazy(caricaDashboard);
+const Commesse = lazy(() => import("./components/Commesse/Commesse"));
+const Fiscale = lazy(() => import("./components/Fiscale/Fiscale"));
+const Setup = lazy(() => import("./components/Setup/Setup"));
+const Storico = lazy(() => import("./components/Storico/Storico"));
+const Network = lazy(() => import("./components/Network/Network"));
+
+function temaIniziale() {
+  try {
+    const t = localStorage.getItem("tema");
+    if (t === "dark" || t === "light") return t;
+    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  } catch {
+    return "light";
+  }
+}
 
 const NEW_COSTS = [
   { id: 10, nome: "Supporto ai figli", importo: 250, tipo: "annuale", importoAnnuale: 3000 },
@@ -74,6 +87,24 @@ export default function App() {
   const [setup, setSetup] = useLocalStorage("setup", INITIAL_SETUP);
   const [network, setNetwork] = useLocalStorage("network", INITIAL_NETWORK);
   const [view, setView] = useState("dashboard");
+  const [tema, setTema] = useState(temaIniziale);
+
+  useEffect(() => { document.documentElement.dataset.theme = tema; }, [tema]);
+  const cambiaTema = () => setTema((t) => {
+    const nuovo = t === "dark" ? "light" : "dark";
+    try { localStorage.setItem("tema", nuovo); } catch { /* storage non disponibile */ }
+    return nuovo;
+  });
+
+  // Mentre si digita il PIN scarica già la dashboard
+  useEffect(() => { caricaDashboard(); }, []);
+
+  // Token rifiutato dal server (scaduto o PIN cambiato): di nuovo il PIN
+  useEffect(() => {
+    const blocca = () => setUnlocked(false);
+    window.addEventListener("accesso-scaduto", blocca);
+    return () => window.removeEventListener("accesso-scaduto", blocca);
+  }, []);
 
   useEffect(() => {
     setSetup((prev) => migrateSetup(prev));
@@ -119,7 +150,7 @@ export default function App() {
 
   return (
     <div className={styles.layout}>
-      <Sidebar view={view} onNavigate={setView} />
+      <Sidebar view={view} onNavigate={setView} tema={tema} onTema={cambiaTema} />
       <main className={styles.main}>
         <div className={styles.mainInner}>
         {loadError && (
@@ -141,8 +172,9 @@ export default function App() {
             </div>
           </div>
         )}
+        <Suspense fallback={<div className="lazy-wait" role="status">Caricamento…</div>}>
         {view === "dashboard" && (
-          <Dashboard commesse={commesse} setCommesse={setCommesse} setup={setup} setSetup={setSetup} />
+          <Dashboard commesse={commesse} setCommesse={setCommesse} setup={setup} setSetup={setSetup} theme={tema} />
         )}
         {view === "commesse" && (
           <Commesse
@@ -163,6 +195,7 @@ export default function App() {
         {view === "network" && (
           <Network network={network} setNetwork={setNetwork} />
         )}
+        </Suspense>
         </div>
       </main>
     </div>

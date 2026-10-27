@@ -11,6 +11,14 @@
       rel="stylesheet"
     />
     <title>Freelance Dashboard</title>
+      <script>
+      // Tema prima del primo disegno: niente lampo chiaro in modalità scura
+      try {
+        var t = localStorage.getItem("tema");
+        if (t !== "dark" && t !== "light") t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        document.documentElement.dataset.theme = t;
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

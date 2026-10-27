@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
 import Icon from "../Icon";
 import styles from "./PinGate.module.css";
+import { accedi } from "../../lib/auth";
 
 const PIN_LENGTH = 4;
-// Hash SHA-256 del PIN 4770
+// Il PIN si verifica sul server (/api/auth). Questo hash serve solo in locale,
+// quando le API non sono raggiungibili (sviluppo): nessun dato cloud senza token.
 const DEFAULT_HASH = "3f7e05acc03b0893efd9bbb4990cd9d20b1451ab549633510c427f96c40e7143";
 
 const MAX_ATTEMPTS = 10;
@@ -50,12 +52,23 @@ export default function PinGate({ onUnlock }) {
       setMessage(`Troppi tentativi. Riprova tra ${lockMin} min`);
       return;
     }
+    if (input.length >= PIN_LENGTH) return; // verifica in corso
     const next = input + key;
     setInput(next);
     if (next.length < PIN_LENGTH) return;
-    let hashed = null;
-    try { hashed = await hashPin(next); } catch { /* crypto non disponibile */ }
-    if (hashed === DEFAULT_HASH) {
+    setMessage("Verifica…");
+    let esito = await accedi(next);
+    if (esito === "bloccato") {
+      setMessage("Troppi tentativi dal tuo indirizzo. Riprova tra 15 minuti");
+      triggerShake();
+      return;
+    }
+    if (esito === "offline") {
+      let hashed = null;
+      try { hashed = await hashPin(next); } catch { /* crypto non disponibile */ }
+      esito = hashed === DEFAULT_HASH ? "ok" : "errato";
+    }
+    if (esito === "ok") {
       localStorage.removeItem(FAILS_KEY);
       onUnlock();
     } else {

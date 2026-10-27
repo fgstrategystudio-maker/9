@@ -15,6 +15,8 @@
 // In più: timeout per chiamata, catena di fallback tra modelli ed errori
 // con il corpo esatto della risposta di Google.
 
+import { tokenValido } from './_auth.js'
+
 const MODELLO_VELOCE = 'gemini-3.5-flash-lite'
 const MODELLO_PRECISO = 'gemini-3.5-flash'
 const CATENE = {
@@ -182,11 +184,8 @@ function dettaglio(text) {
 }
 
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
-  if (req.method === 'OPTIONS') return res.status(200).end()
   if (req.method !== 'POST') return res.status(405).end()
+  if (!tokenValido(req)) return res.status(401).json({ error: 'non_autorizzato' })
 
   const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey) {

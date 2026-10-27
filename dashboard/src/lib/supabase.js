@@ -1,3 +1,5 @@
+import { authHeaders, segnalaAccessoScaduto } from './auth'
+
 // Il sync passa dall'API serverless (/api/db) che usa la service key lato
 // server: nessuna chiave Supabase nel bundle client, RLS chiusa per anon.
 
@@ -11,9 +13,13 @@ export function enableSync() { syncEnabled = true }
 async function dbCall(action, params = {}) {
   const res = await fetch('/api/db', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
     body: JSON.stringify({ action, ...params }),
   })
+  if (res.status === 401) {
+    segnalaAccessoScaduto()
+    throw new Error('non_autorizzato')
+  }
   if (!res.ok) throw new Error('DB error')
   const json = await res.json()
   return json.result

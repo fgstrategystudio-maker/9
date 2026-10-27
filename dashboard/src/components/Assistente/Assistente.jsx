@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useLocalStorage } from "../../hooks/useLocalStorage";
 import { getMeseCorrente, pagamentiDelMese, stessoMese, etichettaMese, chiaveMese, formatDate, templateMese } from "../../utils/helpers";
+import { authHeaders, segnalaAccessoScaduto } from "../../lib/auth";
 import Icon from "../Icon";
 import styles from "./Assistente.module.css";
 
@@ -106,11 +107,12 @@ export default function Assistente({ commesse, setCommesse, setup, setSetup, see
     try {
       const res = await fetch("/api/ai", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...authHeaders() },
         signal: ctrl.signal,
         body: JSON.stringify({ istruzione: testo.trim(), contesto: buildContesto(), modalita }),
       });
       const json = await res.json().catch(() => ({}));
+      if (res.status === 401) { segnalaAccessoScaduto(); return; }
       if (!res.ok) {
         if (json.error === "missing_api_key") {
           setErrore("Assistente non configurato: crea una chiave gratuita su aistudio.google.com e aggiungila come GEMINI_API_KEY nelle variabili d'ambiente su Vercel, poi rideploya.");
