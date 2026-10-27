@@ -26,8 +26,10 @@ const ESEMPI = [
 ];
 
 
-export default function Assistente({ commesse, setCommesse, setup, setSetup, seed }) {
-  const [open, setOpen] = useState(false);
+export default function Assistente({ commesse, setCommesse, setup, setSetup, seed, sempreAperto = false, meseDaRegistrare = null }) {
+  const [aperto, setOpen] = useState(false);
+  const [mostraEsempi, setMostraEsempi] = useState(false);
+  const open = sempreAperto || aperto;
   const [testo, setTesto] = useState("");
   const [loading, setLoading] = useState(false);
   const [errore, setErrore] = useState(null);
@@ -296,16 +298,33 @@ export default function Assistente({ commesse, setCommesse, setup, setSetup, see
   const applicabili = anteprime.filter((d) => d.applicabile).length;
 
   return (
-    <section className="panel" ref={boxRef}>
-      <button className={styles.head} onClick={() => setOpen((v) => !v)}>
-        <span className="panel-title"><Icon name="spark" size={15} />Assistente AI</span>
-        <span className="panel-note">
-          {open ? "chiudi ▲" : "scrivi cosa è successo, penso io ad aggiornare ▼"}
-        </span>
-      </button>
+    <section className={"panel" + (sempreAperto ? " " + styles.inCima : "")} ref={boxRef}>
+      {sempreAperto ? (
+        <div className={styles.head} style={{ cursor: "default" }}>
+          <span className="panel-title"><Icon name="spark" size={15} />Cosa è successo?</span>
+          <span className="panel-note">scrivi in parole tue: aggiorno io commesse, ore, incassi e patrimonio</span>
+        </div>
+      ) : (
+        <button className={styles.head} onClick={() => setOpen((v) => !v)}>
+          <span className="panel-title"><Icon name="spark" size={15} />Assistente AI</span>
+          <span className="panel-note">
+            {open ? "chiudi ▲" : "scrivi cosa è successo, penso io ad aggiornare ▼"}
+          </span>
+        </button>
+      )}
 
       {open && (
         <div className={styles.body}>
+          {meseDaRegistrare && !testo.trim() && !proposta && !loading && !esito && (
+            <button className={styles.meseBanner + " anim-in"} onClick={() => setTesto(templateMese(commesse, meseDaRegistrare))}>
+              <span className={styles.meseIco}><Icon name="calendar" size={18} /></span>
+              <span>
+                <b>{meseDaRegistrare} non è ancora registrato.</b>
+                <span> Compila l&apos;aggiornamento: una riga per commessa con incassato, ore, fine e prossimo compenso.</span>
+              </span>
+              <span className={styles.meseCta}>Compila →</span>
+            </button>
+          )}
           <div className={styles.inputRow}>
             <textarea
               className="textarea"
@@ -340,12 +359,17 @@ export default function Assistente({ commesse, setCommesse, setup, setSetup, see
 
           {!proposta && !loading && !errore && !esito && (
             <div className={styles.esempi}>
-              <button className={styles.esempio} style={{ fontWeight: 600 }} onClick={() => setTesto(templateMese(commesse, meseCorrente))}>
-                📅 Aggiornamento di {meseCorrente.split(" ")[0].toLowerCase()} (una riga per commessa)
-              </button>
-              {ESEMPI.map((e) => (
+              {!meseDaRegistrare && (
+                <button className={styles.esempio} style={{ fontWeight: 600 }} onClick={() => setTesto(templateMese(commesse, meseCorrente))}>
+                  📅 Aggiornamento di {meseCorrente.split(" ")[0].toLowerCase()} (una riga per commessa)
+                </button>
+              )}
+              {(!sempreAperto || mostraEsempi) && ESEMPI.map((e) => (
                 <button key={e} className={styles.esempio} onClick={() => setTesto(e)}>{e}</button>
               ))}
+              {sempreAperto && !mostraEsempi && (
+                <button className={styles.esempio} onClick={() => setMostraEsempi(true)}>Altri esempi…</button>
+              )}
             </div>
           )}
 

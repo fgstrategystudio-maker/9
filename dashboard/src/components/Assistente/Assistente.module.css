@@ -205,3 +205,23 @@
   border-radius: var(--r-sm);
   padding: 8px 11px;
 }
+
+/* In cima alla Dashboard: sempre aperto, in evidenza */
+.inCima {
+  border-color: color-mix(in oklab, var(--accent) 35%, var(--hair));
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--accent) 8%, transparent), var(--sh);
+}
+.inCima textarea { min-height: 64px; font-size: 15px; }
+
+.meseBanner {
+  display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; cursor: pointer;
+  padding: 11px 14px; border-radius: 12px; font-family: inherit; font-size: 13px; color: var(--ink-2);
+  background: var(--accent-wash); border: 1px solid color-mix(in oklab, var(--accent) 30%, var(--hair));
+  transition: transform .2s var(--ease), box-shadow .2s;
+}
+.meseBanner:hover { transform: translateY(-1px); box-shadow: var(--sh); }
+.meseBanner b { color: var(--ink); }
+.meseIco { color: var(--accent-ink); display: grid; place-items: center; flex: none; }
+.meseCta { margin-left: auto; font-weight: 700; color: var(--accent-ink); white-space: nowrap; }
+@media (max-width: 560px) { .meseCta { display: none; } }
+@media (max-width: 640px) { .inCima .head :global(.panel-note) { display: none; } }
