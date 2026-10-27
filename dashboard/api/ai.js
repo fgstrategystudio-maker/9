@@ -39,14 +39,19 @@ const AZIONI_SCHEMA = {
       items: {
         type: 'object',
         properties: {
-          tipo: { type: 'string', enum: ['registra_pagamento', 'registra_incasso', 'aggiorna_commessa', 'aggiungi_nota', 'nessuna_azione'] },
+          tipo: { type: 'string', enum: ['registra_pagamento', 'registra_incasso', 'aggiorna_commessa', 'nuova_commessa', 'aggiungi_nota', 'aggiorna_patrimonio', 'nessuna_azione'] },
           mese: { type: 'string' },
           lordo: { type: 'number' },
           importo: { type: 'number' },
+          ore: { type: 'number' },
           id: { type: 'number' },
+          voce: { type: 'string', enum: ['cassa', 'crypto', 'bene'] },
+          nome: { type: 'string' },
+          valore: { type: 'number' },
           campi: {
             type: 'object',
             properties: {
+              cliente: { type: 'string' },
               lordoMensile: { type: 'number' },
               lordoProgetto: { type: 'number' },
               oreMensili: { type: 'number' },
@@ -90,11 +95,23 @@ function systemPrompt(ctx) {
 Interpreti richieste in linguaggio naturale e rispondi SOLO col JSON richiesto: "spiegazione" (breve, in italiano) e "azioni".
 
 TIPI DI AZIONE
-- registra_pagamento: { tipo, id, mese, importo, testo, motivo } — un singolo pagamento ricevuto da UN cliente (commessa "id") nel "mese"; "testo" = nota breve facoltativa (es. "fisso mensile", "extra non chiaro").
+- registra_pagamento: { tipo, id, mese, importo, ore, testo, motivo } — un singolo pagamento ricevuto da UN cliente (commessa "id") nel "mese"; "ore" = ore REALMENTE lavorate per quel cliente in quel mese, se l'utente le dice (altrimenti ometti il campo); "testo" = nota breve facoltativa (es. "fisso mensile", "extra non chiaro").
 - registra_incasso: { tipo, mese, lordo, motivo } — "mese" in italiano con anno (es. "Settembre 2026"); "lordo" = TOTALE lordo REALE incassato in quel mese da tutti i clienti insieme. Sostituisce il valore già registrato per quel mese.
 - aggiorna_commessa: { tipo, id, campi, motivo } — "campi" contiene SOLO i campi da cambiare; date inizio/fine in YYYY-MM-DD.
+- nuova_commessa: { tipo, campi, motivo } — crea una commessa che NON esiste nel contesto; "campi" con almeno "cliente", e se noti: servizio, tipo ("Mensile" o "Progetto"), inizio, fine, lordoMensile o lordoProgetto, oreMensili, stato (di solito "In corso"). Prima controlla bene che il cliente non sia già tra le commesse (anche con nome scritto diversamente).
 - aggiungi_nota: { tipo, id, testo, motivo } — aggiunge una nota alla commessa.
+- aggiorna_patrimonio: { tipo, voce, nome, valore, motivo } — aggiorna il patrimonio: voce "cassa" (liquidità sul conto) o "crypto" con il nuovo valore totale in euro; voce "bene" per altri beni (es. "Carte Pokémon", "Orologio") con "nome" e valore attuale. Usalo solo se l'utente dà un valore.
 - nessuna_azione: { tipo, motivo } — quando è meglio non agire.
+
+AGGIORNAMENTO MENSILE (il caso più frequente)
+Una volta al mese l'utente scrive, per ogni commessa, cose come: incassato lordo del mese, ore lavorate, quando finisce, quanto incasserà nei prossimi mesi e con quante ore. Per ciascuna commessa nominata:
+- incassato del mese → registra_pagamento (con "ore" se le ha dette). Se il mese non è indicato, è il mese corrente; se l'utente scrive a inizio mese parlando del mese appena chiuso, usa quel mese.
+- data di fine / durata ("finisce a marzo", "altri 3 mesi") → aggiorna_commessa con "fine" (ultimo giorno del mese indicato, YYYY-MM-DD).
+- quanto percepirà d'ora in poi (fee mensile) → aggiorna_commessa "lordoMensile" se diverso da quello attuale; per un progetto a corpo usa "lordoProgetto".
+- ore previste al mese d'ora in poi → aggiorna_commessa "oreMensili" se diverse. Se dice solo le ore lavorate questo mese e non ha una stima, puoi usarle anche come oreMensili.
+- commessa finita → aggiorna_commessa stato "Concluso" (e fine se nota). Cliente nuovo → nuova_commessa.
+- Alla fine, se ha dato gli incassi di TUTTI i clienti del mese, aggiungi registra_incasso con la somma esatta (vedi regole sotto); se ne manca qualcuno, dillo nella spiegazione e non inventare.
+- Non proporre aggiornamenti per campi che non cambiano.
 
 REGOLE SUGLI INCASSI (importanti: sono soldi veri)
 - Per ogni pagamento che l'utente dice di aver ricevuto da un cliente proponi un registra_pagamento su quella commessa (anche due pagamenti dello stesso cliente nello stesso mese = due azioni). Controlla nel contesto "pagamenti" della commessa per non registrare due volte un pagamento già presente.
@@ -177,7 +194,7 @@ export default async function handler(req, res) {
   }
 
   const { istruzione, contesto, modalita: modalitaRaw } = req.body || {}
-  if (!istruzione || typeof istruzione !== 'string' || istruzione.length > 2000) {
+  if (!istruzione || typeof istruzione !== 'string' || istruzione.length > 6000) {
     return res.status(400).json({ error: 'bad_request' })
   }
   const modalita = modalitaRaw === 'preciso' ? 'preciso' : 'veloce'

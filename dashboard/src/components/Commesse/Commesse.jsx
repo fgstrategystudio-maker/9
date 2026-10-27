@@ -419,9 +419,10 @@ function PagamentiCommessa({ commessa: c, onRemove }) {
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 4 }}>
           {lista.map((p) => (
-            <div key={p.idx} style={{ display: "grid", gridTemplateColumns: "130px auto 1fr 28px", gap: 10, alignItems: "center", fontSize: 13.5 }}>
+            <div key={p.idx} style={{ display: "grid", gridTemplateColumns: "130px auto auto 1fr 28px", gap: 10, alignItems: "center", fontSize: 13.5 }}>
               <span style={{ color: "var(--ink-2)", fontWeight: 600 }}>{p.mese}</span>
               <span className="num" style={{ fontWeight: 600, color: annoFromMese(p.mese) === anno ? "var(--ink)" : "var(--ink-3)" }}>{fmtN(p.importo)} €</span>
+              <span className="num" style={{ fontSize: 12.5, color: "var(--info)" }}>{Number(p.ore) > 0 ? `${fmtN(p.ore)} h · ${fmtN(p.importo / p.ore)} €/h` : ""}</span>
               <span style={{ color: "var(--ink-3)", fontSize: 12.5 }}>{p.nota}</span>
               <button className="btn-quiet btn" style={{ padding: 4 }} title="Rimuovi pagamento" onClick={() => onRemove(p.idx)}>✕</button>
             </div>

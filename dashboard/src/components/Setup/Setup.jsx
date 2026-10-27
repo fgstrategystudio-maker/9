@@ -641,6 +641,7 @@ function CashSetup({ setup, setSetup }) {
     setSetup(prev => ({
       ...prev,
       cassaIniziale: Number(cassa),
+      cassaData: new Date().toISOString().slice(0, 10),
       crypto: Number(crypto),
       cryptoAggiornato: today,
     }));
@@ -661,6 +662,11 @@ function CashSetup({ setup, setSetup }) {
           {setup.cryptoAggiornato && <span className="field-note">aggiornato {setup.cryptoAggiornato}</span>}
         </div>
       </div>
+      <p className="field-note" style={{ marginTop: 10 }}>
+        La cassa è il punto di partenza del cash flow (vale dalla data di salvataggio). Altri beni, come le carte Pokémon,
+        si gestiscono dal riquadro «Patrimonio» in Dashboard o scrivendolo all&apos;assistente.
+        {(setup.altriAsset || []).length > 0 && ` Oggi: ${(setup.altriAsset || []).map((b) => `${b.nome} ${Number(b.valore || 0).toLocaleString("it-IT")} €`).join(" · ")}.`}
+      </p>
       <div className={styles.formFooter}>
         {saved && <span className={styles.savedMsg}><Icon name="check" size={14} /> Salvato</span>}
         <button className="btn btn-primary" onClick={handleSave}>Salva</button>

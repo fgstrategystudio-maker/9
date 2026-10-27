@@ -1,6 +1,6 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useLocalStorage } from "../../hooks/useLocalStorage";
-import { getMeseCorrente, pagamentiDelMese, stessoMese, etichettaMese, chiaveMese } from "../../utils/helpers";
+import { getMeseCorrente, pagamentiDelMese, stessoMese, etichettaMese, chiaveMese, formatDate, templateMese } from "../../utils/helpers";
 import Icon from "../Icon";
 import styles from "./Assistente.module.css";
 
@@ -18,12 +18,14 @@ const LABEL_CAMPO = {
 };
 
 const ESEMPI = [
-  "Grano mi ha pagato 500 invece di 800 questo mese",
-  "L'Assistedile rinnova a 1.200 €/mese fino a dicembre",
-  "Segna conclusa la commessa Sering",
+  "Grano mi ha pagato 500 invece di 800 questo mese, 12 ore",
+  "L'Assistedile rinnova a 1.200 €/mese fino a dicembre con 25 ore al mese",
+  "Nuovo cliente Rossi srl: 900 €/mese da novembre a giugno, 15 ore",
+  "Cassa 16.400 €, crypto 1.500 €, carte Pokémon 10.000 €",
 ];
 
-export default function Assistente({ commesse, setCommesse, setup, setSetup }) {
+
+export default function Assistente({ commesse, setCommesse, setup, setSetup, seed }) {
   const [open, setOpen] = useState(false);
   const [testo, setTesto] = useState("");
   const [loading, setLoading] = useState(false);
@@ -34,6 +36,18 @@ export default function Assistente({ commesse, setCommesse, setup, setSetup }) {
   const [elapsedMs, setElapsedMs] = useState(0);
   const [tempo, setTempo] = useState(null); // { ms, modello, fallback }
   const timerRef = useRef(null);
+  const boxRef = useRef(null);
+
+  // Testo precompilato dalla Dashboard (es. «Aggiorna il mese»): apre il
+  // pannello e inserisce il messaggio guida; l'effetto lo porta solo in vista.
+  const [seedVisto, setSeedVisto] = useState(null);
+  if (seed?.testo && seed !== seedVisto) {
+    setSeedVisto(seed);
+    setOpen(true); setTesto(seed.testo); setProposta(null); setEsito(null); setErrore(null);
+  }
+  useEffect(() => {
+    if (seed?.testo) boxRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [seed]);
 
   const secondi = (ms) => (ms / 1000).toFixed(1).replace(".", ",");
 
@@ -72,6 +86,11 @@ export default function Assistente({ commesse, setCommesse, setup, setSetup }) {
         pagamenti: (c.pagamenti || []).map((p) => ({ mese: p.mese, importo: p.importo, nota: p.nota })),
       })),
       incassatoStorico: setup.incassatoStorico || [],
+      patrimonio: {
+        cassa: setup.cassaIniziale ?? 0, cassaData: setup.cassaData || null,
+        crypto: setup.crypto ?? 0,
+        beni: (setup.altriAsset || []).map((a) => ({ nome: a.nome, valore: a.valore })),
+      },
     };
   }
 
@@ -123,8 +142,11 @@ export default function Assistente({ commesse, setCommesse, setup, setSetup }) {
       const c = byId(a.id);
       const importo = Number(a.importo);
       if (!c || !chiaveMese(a.mese) || !(importo > 0)) return null;
+      const ore = Number(a.ore) > 0 ? Number(a.ore) : null;
       return {
-        label: `Pagamento da «${c.cliente}» — ${etichettaMese(a.mese)}: ${fmtN(importo)} €${a.testo ? ` (${a.testo})` : ""}`,
+        label: `Pagamento da «${c.cliente}» — ${etichettaMese(a.mese)}: ${fmtN(importo)} €` +
+          (ore ? ` · ${fmtN(ore)} ore lavorate (${fmtN(importo / ore)} €/h)` : "") +
+          (a.testo ? ` (${a.testo})` : ""),
         motivo: a.motivo, applicabile: true,
       };
     }
@@ -153,6 +175,29 @@ export default function Assistente({ commesse, setCommesse, setup, setSetup }) {
       if (!c || !a.testo) return null;
       return { label: `Nota su «${c.cliente}»: “${a.testo}”`, motivo: a.motivo, applicabile: true };
     }
+    if (a.tipo === "nuova_commessa") {
+      const nome = String(a.campi?.cliente || "").trim();
+      if (!nome) return null;
+      const dett = [
+        a.campi.lordoMensile ? `${fmtN(a.campi.lordoMensile)} €/mese` : a.campi.lordoProgetto ? `progetto ${fmtN(a.campi.lordoProgetto)} €` : null,
+        a.campi.oreMensili ? `${fmtN(a.campi.oreMensili)} ore/mese` : null,
+        a.campi.inizio ? `dal ${formatDate(a.campi.inizio)}` : null,
+        a.campi.fine ? `al ${formatDate(a.campi.fine)}` : null,
+      ].filter(Boolean).join(" · ");
+      return { label: `Nuova commessa «${nome}»${dett ? ` — ${dett}` : ""}`, motivo: a.motivo, applicabile: true };
+    }
+    if (a.tipo === "aggiorna_patrimonio") {
+      const valore = Number(a.valore);
+      if (!(valore >= 0) || !["cassa", "crypto", "bene"].includes(a.voce)) return null;
+      if (a.voce === "bene" && !String(a.nome || "").trim()) return null;
+      const prima = a.voce === "cassa" ? setup.cassaIniziale : a.voce === "crypto" ? setup.crypto
+        : (setup.altriAsset || []).find((b) => b.nome.toLowerCase() === String(a.nome).trim().toLowerCase())?.valore;
+      const nomeVoce = a.voce === "cassa" ? "Cassa sul conto" : a.voce === "crypto" ? "Crypto" : String(a.nome).trim();
+      return {
+        label: `Patrimonio · ${nomeVoce}: ${fmtN(valore)} €${prima != null ? ` (era ${fmtN(prima)} €)` : " (nuova voce)"}`,
+        motivo: a.motivo, applicabile: true,
+      };
+    }
     return null;
   }
 
@@ -165,7 +210,8 @@ export default function Assistente({ commesse, setCommesse, setup, setSetup }) {
       if (a.tipo === "registra_pagamento") {
         const importo = Number(a.importo);
         const mese = etichettaMese(a.mese);
-        const pagamento = { mese, importo, nota: a.testo || "", data: new Date().toISOString().slice(0, 10) };
+        const ore = Number(a.ore) > 0 ? Number(a.ore) : null;
+        const pagamento = { mese, importo, nota: a.testo || "", data: new Date().toISOString().slice(0, 10), ...(ore ? { ore } : {}) };
         setCommesse((prev) => prev.map((c) =>
           c.id === a.id ? { ...c, pagamenti: [...(c.pagamenti || []), pagamento] } : c
         ));
@@ -201,6 +247,39 @@ export default function Assistente({ commesse, setCommesse, setup, setSetup }) {
         ));
         riepilogo.push(`Nota aggiunta a «${byId(a.id)?.cliente}» → la vedi aprendo la commessa in Commesse`);
         applicate++;
+      } else if (a.tipo === "nuova_commessa") {
+        const k = a.campi || {};
+        const num = (v) => (v === null || v === undefined || v === "" ? null : Number(v));
+        const nuova = {
+          cliente: String(k.cliente).trim(), servizio: k.servizio || "", tipo: k.tipo === "Progetto" ? "Progetto" : "Mensile",
+          stato: STATI.includes(k.stato) ? k.stato : "In corso", priorita: "Media",
+          inizio: k.inizio || null, fine: k.fine || null,
+          lordoMensile: num(k.lordoMensile), lordoProgetto: num(k.lordoProgetto), oreMensili: num(k.oreMensili),
+          upsellTarget: null, splitMezzoMese: false, note: "", pagamenti: [],
+        };
+        setCommesse((prev) => [...prev, { ...nuova, id: Math.max(0, ...prev.map((c) => Number(c.id) || 0)) + 1 }]);
+        riepilogo.push(`Nuova commessa «${nuova.cliente}» creata → la trovi in Commesse e nella tabella del tempo`);
+        applicate++;
+      } else if (a.tipo === "aggiorna_patrimonio") {
+        const valore = Number(a.valore);
+        const oggiIso = new Date().toISOString().slice(0, 10);
+        if (a.voce === "cassa") {
+          setSetup((prev) => ({ ...prev, cassaIniziale: valore, cassaData: oggiIso }));
+          riepilogo.push(`Cassa aggiornata a ${fmtN(valore)} € → riparte da qui il cash flow`);
+        } else if (a.voce === "crypto") {
+          setSetup((prev) => ({ ...prev, crypto: valore, cryptoAggiornato: oggi }));
+          riepilogo.push(`Crypto aggiornate a ${fmtN(valore)} € → nel patrimonio`);
+        } else {
+          const nome = String(a.nome).trim();
+          setSetup((prev) => {
+            const beni = prev.altriAsset || [];
+            const i = beni.findIndex((b) => b.nome.toLowerCase() === nome.toLowerCase());
+            const voce = { ...(i >= 0 ? beni[i] : { id: Math.max(0, ...beni.map((b) => b.id || 0)) + 1, nome }), valore, aggiornato: oggiIso };
+            return { ...prev, altriAsset: i >= 0 ? beni.map((b, j) => (j === i ? voce : b)) : [...beni, voce] };
+          });
+          riepilogo.push(`${nome}: ${fmtN(valore)} € → nel patrimonio`);
+        }
+        applicate++;
       }
     }
     setProposta(null);
@@ -215,7 +294,7 @@ export default function Assistente({ commesse, setCommesse, setup, setSetup }) {
   const applicabili = anteprime.filter((d) => d.applicabile).length;
 
   return (
-    <section className="panel">
+    <section className="panel" ref={boxRef}>
       <button className={styles.head} onClick={() => setOpen((v) => !v)}>
         <span className="panel-title"><Icon name="spark" size={15} />Assistente AI</span>
         <span className="panel-note">
@@ -228,7 +307,7 @@ export default function Assistente({ commesse, setCommesse, setup, setSetup }) {
           <div className={styles.inputRow}>
             <textarea
               className="textarea"
-              rows={2}
+              rows={testo.split("\n").length > 2 ? Math.min(14, testo.split("\n").length + 1) : 2}
               placeholder='Es. "Grano mi ha pagato 500 invece di 800 questo mese"'
               value={testo}
               onChange={(e) => setTesto(e.target.value)}
@@ -259,6 +338,9 @@ export default function Assistente({ commesse, setCommesse, setup, setSetup }) {
 
           {!proposta && !loading && !errore && !esito && (
             <div className={styles.esempi}>
+              <button className={styles.esempio} style={{ fontWeight: 600 }} onClick={() => setTesto(templateMese(commesse, meseCorrente))}>
+                📅 Aggiornamento di {meseCorrente.split(" ")[0].toLowerCase()} (una riga per commessa)
+              </button>
               {ESEMPI.map((e) => (
                 <button key={e} className={styles.esempio} onClick={() => setTesto(e)}>{e}</button>
               ))}
@@ -267,7 +349,7 @@ export default function Assistente({ commesse, setCommesse, setup, setSetup }) {
 
           {errore && <p className={styles.errore}>{errore}</p>}
           {esito && (
-            <div className={styles.esito}>
+            <div className={styles.esito + " anim-in"}>
               <div>{esito.titolo}</div>
               {esito.righe.length > 0 && (
                 <ul className={styles.esitoRighe}>
@@ -284,7 +366,7 @@ export default function Assistente({ commesse, setCommesse, setup, setSetup }) {
           )}
 
           {proposta && (
-            <div className={styles.proposta}>
+            <div className={styles.proposta + " anim-in"}>
               <p className={styles.spiegazione}>{proposta.spiegazione}</p>
               {avvisi.map((w, i) => <p key={i} className={styles.avviso}>{w}</p>)}
               {tempo && (

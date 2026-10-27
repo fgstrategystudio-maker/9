@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
@@ -11,7 +11,6 @@ import {
   getStatoTone,
   calcNetto,
   getCommessaLordoMensile,
-  getRicavoOrario,
   getMeseCorrente,
   getLordoPerMese,
   sumLordoAnno,
@@ -19,6 +18,13 @@ import {
   stessoMese,
   chiaveMese,
   statPagamentiCommessa,
+  oreCommessaMese,
+  orarioRealeCommessa,
+  templateMese,
+  mesiRimanenti,
+  valoreResiduo,
+  calcPatrimonio,
+  dataBreve,
 } from "../../utils/helpers";
 import Icon from "../Icon";
 import Assistente from "../Assistente/Assistente";
@@ -74,6 +80,27 @@ const kfmt = (v) => {
 
 export default function Dashboard({ commesse, setCommesse, setup, setSetup }) {
   const [drill, setDrill] = useState(null);
+  // Testo precompilato per l'assistente (aggiornamento mensile)
+  const [seed, setSeed] = useState(null);
+  const rootRef = useRef(null);
+
+  // Le sezioni compaiono mentre scorri (una volta sola)
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root || !("IntersectionObserver" in window)) return;
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add("in-view"); io.unobserve(e.target); } });
+    }, { rootMargin: "0px 0px -6% 0px" });
+    const vh = window.innerHeight;
+    root.querySelectorAll(":scope > section.panel, :scope > .grid > section.panel").forEach((el) => {
+      if (el.dataset.rev) return;
+      el.dataset.rev = "1";
+      if (el.getBoundingClientRect().top < vh) return; // già visibile: niente animazione
+      el.classList.add("scroll-reveal");
+      io.observe(el);
+    });
+    return () => io.disconnect();
+  });
   const now = new Date();
   const anno = now.getFullYear();
   const meseIdx = now.getMonth();
@@ -93,9 +120,6 @@ export default function Dashboard({ commesse, setCommesse, setup, setSetup }) {
   })).filter((s) => s.value > 0);
   const statoTotal = statoCount.reduce((s, e) => s + e.value, 0);
 
-  const upsellOpportunities = commesse
-    .filter((c) => c.upsellTarget)
-    .reduce((sum, c) => sum + c.upsellTarget, 0);
 
   // Commesse attive con scadenza entro la finestra: in arrivo (giorni > 0) e
   // scadute (giorni <= 0, oggi o passate). Le scadute NON spariscono da sole:
@@ -118,24 +142,55 @@ export default function Dashboard({ commesse, setCommesse, setup, setSetup }) {
     setCommesse((prev) => prev.map((x) => (x.id === c.id ? { ...x, stato: "Concluso" } : x)));
   }
 
-  // — Tempo del mese / saturazione —
+  // — Tempo e guadagno orario —
   const oreDisponibili = setup.oreMeseDisponibili ?? 160;
-  const tempoData = attive
-    .filter((c) => Number(c.oreMensili) > 0)
+  const righeTempo = attive
     .map((c) => {
-      const orario = getRicavoOrario(c, setup.fattoreNetto);
+      const ore = oreCommessaMese(c, meseIdx, anno) || Number(c.oreMensili) || 0;
+      const lordo = getCommessaLordoMensile(c) || 0;
+      const reale = orarioRealeCommessa(c);
       return {
-        nome: c.cliente.length > 14 ? c.cliente.slice(0, 13) + "…" : c.cliente,
-        ore: Number(c.oreMensili),
-        tipo: c.tipo === "Progetto" ? "Progetto" : "Commessa",
-        lordoOra: orario ? orario.lordoOra : null,
+        c, ore, lordo,
+        lordoOra: ore > 0 && lordo ? Math.round(lordo / ore) : null,
+        nettoOra: ore > 0 && lordo ? Math.round((lordo * setup.fattoreNetto) / ore) : null,
+        realeOra: reale ? reale.lordoOra : null,
+        realeMesi: reale ? reale.mesi : 0,
+        mesi: mesiRimanenti(c),
+        residuo: valoreResiduo(c),
       };
     })
-    .sort((a, b) => b.ore - a.ore);
-  const oreTotali = tempoData.reduce((s, d) => s + d.ore, 0);
+    .sort((a, b) => (b.lordoOra ?? -1) - (a.lordoOra ?? -1));
+  const oreTotali = righeTempo.reduce((s, r) => s + r.ore, 0);
+  const oreLibere = Math.max(0, oreDisponibili - oreTotali);
   const saturazione = oreDisponibili > 0 ? Math.round((oreTotali / oreDisponibili) * 100) : 0;
   const satColor = saturazione <= 60 ? C.pos : saturazione <= 85 ? C.warn : C.danger;
-  const attiveSenzaOre = attive.filter((c) => !(Number(c.oreMensili) > 0)).length;
+  const attiveSenzaOre = righeTempo.filter((r) => !r.ore).length;
+  // €/h medio: solo sulle commesse con ore stimate (pesato sulle ore)
+  const lordoConOre = righeTempo.filter((r) => r.ore > 0).reduce((s, r) => s + r.lordo, 0);
+  const lordoOraMedio = oreTotali > 0 ? Math.round(lordoConOre / oreTotali) : null;
+  const nettoOraMedio = lordoOraMedio != null ? Math.round(lordoOraMedio * setup.fattoreNetto) : null;
+  // €/h reale dell'anno: dai pagamenti registrati insieme alle ore lavorate
+  const realeAnno = commesse.reduce((acc, c) => {
+    const r = orarioRealeCommessa(c, anno);
+    return r ? { ore: acc.ore + r.ore, importo: acc.importo + r.importo } : acc;
+  }, { ore: 0, importo: 0 });
+  const lordoOraReale = realeAnno.ore > 0 ? Math.round(realeAnno.importo / realeAnno.ore) : null;
+  const residuoTotale = righeTempo.reduce((s, r) => s + (r.residuo || 0), 0);
+
+  // Prossimi 12 mesi: ore impegnate, ore libere e lordo previsto
+  const tempo12 = Array.from({ length: 12 }, (_, i) => {
+    const d = new Date(anno, meseIdx + i, 1);
+    const m = d.getMonth(), y = d.getFullYear();
+    const impegnate = commesse.reduce((s, c) => s + oreCommessaMese(c, m, y), 0);
+    const lordo = getLordoPerMese(m, y, commesse);
+    return {
+      mese: `${MESI_SHORT[m]}${y !== anno ? " '" + String(y).slice(2) : ""}`,
+      impegnate,
+      libere: Math.max(0, oreDisponibili - impegnate),
+      lordo,
+    };
+  });
+  const oreLibere12 = tempo12.reduce((s, t) => s + t.libere, 0);
 
   const barData = commesse
     .filter((c) => getCommessaLordoMensile(c) || statPagamentiCommessa(c, anno))
@@ -178,27 +233,38 @@ export default function Dashboard({ commesse, setCommesse, setup, setSetup }) {
   const totaleCostiAnnualiMensile = Math.round(totaleCostiAnnuali / 12);
 
   const cassaIniziale    = setup.cassaIniziale ?? 0;
-  const cryptoVal        = setup.crypto ?? 0;
   const cryptoAggiornato = setup.cryptoAggiornato ?? null;
+  const patrimonio       = calcPatrimonio(setup);
 
-  const cashFlowData = (() => {
-    let balance = cassaIniziale;
-    return Array.from({ length: 12 }, (_, i) => {
-      const d     = new Date(anno, meseIdx + i, 1);
-      const mIdx  = d.getMonth();
-      const y     = d.getFullYear();
-      const label = `${MESI_IT[mIdx]} ${y}`;
-      const recorded = revenueHistory.find(r => stessoMese(r.mese, label));
-      const netto = recorded
-        ? recorded.netto
-        : calcNetto(getLordoPerMese(mIdx, y, commesse), setup.fattoreNetto);
-      const tipo  = recorded ? "reale" : (i === 0 ? "stimato" : "proiezione");
-      const flusso = netto - totaleCostiFissi;
-      balance += flusso;
-      return { mese: MESI_SHORT[mIdx], netto, costi: totaleCostiFissi, flusso, cassa: balance, tipo };
-    });
-  })();
+  // Cash flow: parte dalla cassa reale alla sua data. Il saldo include già
+  // gli incassi fino a quel giorno, quindi la proiezione inizia dal mese
+  // successivo. Uscite = costi fissi mensili + spese annuali spalmate.
+  const cassaData = setup.cassaData || null;
+  const inizioCash = cassaData
+    ? (() => { const [y, m] = cassaData.split("-").map(Number); return new Date(y, m, 1); })()
+    : new Date(anno, meseIdx, 1);
+  const usciteMensili = totaleCostiFissi + totaleCostiAnnualiMensile;
+  const cashFlowData = Array.from({ length: 12 }, (_, i) => {
+    const d     = new Date(inizioCash.getFullYear(), inizioCash.getMonth() + i, 1);
+    const mIdx  = d.getMonth();
+    const y     = d.getFullYear();
+    const label = `${MESI_IT[mIdx]} ${y}`;
+    const recorded = revenueHistory.find(r => stessoMese(r.mese, label));
+    const netto = recorded
+      ? recorded.netto
+      : calcNetto(getLordoPerMese(mIdx, y, commesse), setup.fattoreNetto);
+    const tipo  = recorded ? "reale" : "proiezione";
+    return { mese: `${MESI_SHORT[mIdx]}${y !== anno ? " '" + String(y).slice(2) : ""}`, netto, costi: usciteMensili, flusso: netto - usciteMensili, tipo };
+  }).map((row, i, arr) => ({
+    ...row,
+    // cassa accumulata = saldo di partenza + somma dei flussi fino a questo mese
+    cassa: cassaIniziale + arr.slice(0, i + 1).reduce((s, r) => s + r.flusso, 0),
+  }));
   const cassaFinale = cashFlowData[cashFlowData.length - 1]?.cassa ?? cassaIniziale;
+  // Primo mese in cui la cassa scende sotto zero (se succede)
+  const meseRosso = cashFlowData.find((d) => d.cassa < 0) || null;
+  // Mesi di autonomia: quanti mesi copre la cassa con le sole uscite
+  const mesiAutonomia = usciteMensili > 0 ? Math.floor(cassaIniziale / usciteMensili) : null;
 
   const profittoMensile = nettoMese - totaleCostiFissi;
   const breakEvenLordo = totaleCostiFissi > 0
@@ -249,27 +315,39 @@ export default function Dashboard({ commesse, setCommesse, setup, setSetup }) {
   const totAnno = totReale + totProiezione;
   const mesiMancanti = annualData.filter((d) => d.tipo === "mancante").length;
 
+  // Conto dell'anno: entrate (reali + previste) meno tasse, costi e spese annuali
+  const contoAnno = (() => {
+    const lordo = annualData.reduce((s, d) => s + d.lordo, 0);
+    const netto = annualData.reduce((s, d) => s + d.netto, 0);
+    const costiFissiAnno = totaleCostiFissi * 12;
+    return {
+      lordo, netto, tasse: lordo - netto, costiFissiAnno, speseAnnuali: totaleCostiAnnuali,
+      risparmio: netto - costiFissiAnno - totaleCostiAnnuali,
+    };
+  })();
+
   const kpis = [
     meseRegistrato
-      ? { id: "lordoAttivo", label: `Lordo incassato · ${nomeMese}`, value: fmtN(lordoMese), cur: "€", sub: `reale · previsto per ${nomeMese} ${fmtN(lordoMensileAttivo)} €`, tone: "accent", icon: "card" }
-      : { id: "lordoAttivo", label: "Lordo mensile attivo", value: fmtN(lordoMensileAttivo), cur: "€", sub: `previsto · ${nomeMese} non ancora registrato`, tone: "accent", icon: "card" },
+      ? { id: "lordoAttivo", label: `Lordo incassato · ${nomeMese}`, value: fmtN(lordoMese), cur: "€", sub: `reale · previsto ${fmtN(lordoMensileAttivo)} €`, tone: "accent", icon: "card" }
+      : { id: "lordoAttivo", label: `Lordo previsto · ${nomeMese}`, value: fmtN(lordoMensileAttivo), cur: "€", sub: `da contratti · ${nomeMese} non ancora registrato`, tone: "accent", icon: "card" },
     meseRegistrato
       ? { id: "nettoAttivo", label: `Netto incassato · ${nomeMese}`, value: fmtN(nettoMese), cur: "€", sub: `reale · previsto ${fmtN(nettoMensileAttivo)} €`, tone: "pos", icon: "trend" }
-      : { id: "nettoAttivo", label: "Netto mensile attivo", value: fmtN(nettoMensileAttivo), cur: "€", sub: `previsto · fattore ${(setup.fattoreNetto * 100).toFixed(0)}%`, tone: "pos", icon: "trend" },
-    { id: "commesseAttive", label: "Commesse attive", value: attive.length, sub: `su ${commesse.length} totali`, tone: "ink", icon: "folder" },
-    { id: "upsell", label: "Potenziale upsell", value: fmtN(upsellOpportunities), cur: "€", sub: "obiettivo mensile aggregato", tone: "info", icon: "spark" },
+      : { id: "nettoAttivo", label: `Netto previsto · ${nomeMese}`, value: fmtN(nettoMensileAttivo), cur: "€", sub: `lordo × ${(setup.fattoreNetto * 100).toFixed(0)}%`, tone: "pos", icon: "trend" },
+    { id: "orario", label: "Guadagno orario medio", value: lordoOraMedio != null ? fmtN(lordoOraMedio) : "—", cur: lordoOraMedio != null ? "€/h" : null,
+      sub: lordoOraMedio != null ? `netto ${fmtN(nettoOraMedio)} €/h${lordoOraReale != null ? ` · reale ${anno} ${fmtN(lordoOraReale)} €/h` : ""}` : "aggiungi le ore alle commesse", tone: "info", icon: "clock" },
+    { id: "tempo", label: `Ore libere · ${nomeMese}`, value: fmtN(oreLibere), cur: "h", sub: `${fmtN(oreTotali)} h impegnate su ${oreDisponibili} · ${saturazione}%`, tone: saturazione > 85 ? "danger" : saturazione > 60 ? "warn" : "pos", icon: "calendar" },
+    { id: "patrimonio", label: "Patrimonio", value: fmtN(patrimonio.totale), cur: "€", sub: `cassa ${fmtN(patrimonio.cassa)} · crypto ${fmtN(patrimonio.crypto)}${patrimonio.totaleAltri ? ` · beni ${fmtN(patrimonio.totaleAltri)}` : ""}`, tone: "ink", icon: "wallet" },
     ...(totaleCostiFissi > 0 ? [
-      { id: "costiMensili", label: "Costi mensili", value: fmtN(totaleCostiFissi), cur: "€", sub: `${costiFissi.length} voci · ${meseCorrente.split(" ")[0]}`, tone: "danger", icon: "coin" },
-      { id: "profitto", label: "Profitto mensile", value: fmtN(profittoMensile), cur: "€", sub: `${meseRegistrato ? "netto reale" : "netto previsto"} − ${fmtN(totaleCostiFissi)} € costi fissi`, tone: profittoMensile >= 0 ? "pos" : "danger", icon: "wallet" },
+      { id: "profitto", label: `Profitto · ${nomeMese}`, value: fmtN(profittoMensile), cur: "€", sub: `${meseRegistrato ? "netto reale" : "netto previsto"} − ${fmtN(totaleCostiFissi)} € costi fissi`, tone: profittoMensile >= 0 ? "pos" : "danger", icon: "spark" },
+      { id: "costiMensili", label: "Costi fissi mensili", value: fmtN(totaleCostiFissi), cur: "€", sub: `${costiFissiMensili.length} voci`, tone: "danger", icon: "coin" },
     ] : []),
     ...(costiAnnuali.length > 0 ? [
-      { id: "speseAnnuali", label: "Spese annuali", value: fmtN(totaleCostiAnnuali), cur: "€", sub: "promemoria · non le stai pagando ora", tone: "warn", icon: "calendar" },
-      { id: "equivMensile", label: "Equivalente mensile spese ann.", value: fmtN(totaleCostiAnnualiMensile), cur: "€", sub: "se le spalmassi ogni mese", tone: "warn", icon: "divide" },
+      { id: "speseAnnuali", label: "Spese annuali", value: fmtN(totaleCostiAnnuali), cur: "€", sub: `≈ ${fmtN(totaleCostiAnnualiMensile)} €/mese · nel cash flow`, tone: "warn", icon: "divide" },
     ] : []),
   ];
 
   return (
-    <div className="view-enter grid" style={{ gap: "var(--gap)" }}>
+    <div className="view-enter grid" style={{ gap: "var(--gap)" }} ref={rootRef}>
       <header className="topbar" style={{ marginBottom: 0 }}>
         <div>
           <div className="page-eyebrow">
@@ -281,7 +359,9 @@ export default function Dashboard({ commesse, setCommesse, setup, setSetup }) {
         </div>
       </header>
 
-      <Assistente commesse={commesse} setCommesse={setCommesse} setup={setup} setSetup={setSetup} />
+      <SectionNav />
+
+      <div id="sez-ai"><Assistente commesse={commesse} setCommesse={setCommesse} setup={setup} setSetup={setSetup} seed={seed} /></div>
 
       {(inScadenza.length > 0 || scadute.length > 0) && (
         <div className="notice warn reveal">
@@ -316,6 +396,7 @@ export default function Dashboard({ commesse, setCommesse, setup, setSetup }) {
           stimaLordo={lordoMensileAttivo}
           fattoreNetto={setup.fattoreNetto}
           commesseAttive={attive}
+          onAggiorna={() => setSeed((prev) => ({ testo: templateMese(commesse, meseCorrente), n: (prev?.n || 0) + 1 }))}
           onAdd={(entry) =>
             setSetup((prev) => ({
               ...prev,
@@ -325,75 +406,156 @@ export default function Dashboard({ commesse, setCommesse, setup, setSetup }) {
         />
       )}
 
-      <div className="grid kpi-grid">
-        {kpis.map((k) => <KpiCard key={k.label} {...k} onOpen={() => setDrill(k.id)} />)}
+      <div className="grid kpi-grid" id="sez-mese">
+        {kpis.map((k, i) => <KpiCard key={k.label} {...k} i={i} onOpen={() => setDrill(k.id)} />)}
       </div>
 
-      {/* Tempo del mese / saturazione */}
-      <section className="panel">
+      {/* Tempo e guadagno orario per commessa */}
+      <section className="panel" id="sez-tempo">
         <div className="panel-head">
-          <div className="panel-title"><Icon name="clock" size={15} />Tempo del mese — {meseCorrente}</div>
+          <div className="panel-title"><Icon name="clock" size={15} />Tempo e €/h · {nomeMese}</div>
           <div className="stat-strip">
             <div className="si">
-              <div className="v num" style={{ color: "var(--ink)" }}>{oreTotali} h</div>
-              <div className="l">Ore impegnate</div>
+              <div className="v num" style={{ color: "var(--info)" }}>{lordoOraMedio != null ? `${fmtN(lordoOraMedio)} €/h` : "—"}</div>
+              <div className="l">Lordo orario medio</div>
             </div>
             <div className="si">
-              <div className="v num" style={{ color: satColor }}>{saturazione}%</div>
-              <div className="l">Saturazione su {oreDisponibili} h</div>
+              <div className="v num" style={{ color: satColor }}>{fmtN(oreLibere)} h</div>
+              <div className="l">Ore libere su {oreDisponibili}</div>
             </div>
+            {residuoTotale > 0 && (
+              <div className="si">
+                <div className="v num" style={{ color: "var(--accent-ink)" }}>{formatCurrency(residuoTotale)}</div>
+                <div className="l">Ancora da incassare</div>
+              </div>
+            )}
           </div>
         </div>
         <div className="panel-pad" style={{ paddingTop: 0 }}>
           <div className="statbar-track" style={{ height: 10 }}>
-            <div
-              className="statbar-fill"
-              style={{ width: Math.min(100, saturazione) + "%", background: satColor }}
-            ></div>
+            <div className="statbar-fill" style={{ width: Math.min(100, saturazione) + "%", background: satColor }}></div>
           </div>
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11.5, color: "var(--ink-3)", marginTop: 6, marginBottom: 14 }}>
-            <span>0 h</span>
-            <span>{oreDisponibili} h disponibili</span>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11.5, color: "var(--ink-3)", marginTop: 6, marginBottom: 8 }}>
+            <span>{fmtN(oreTotali)} h impegnate · saturazione {saturazione}%</span>
+            <span>{oreDisponibili} h disponibili (Setup)</span>
           </div>
-
-          {tempoData.length > 0 ? (
-            <>
-              <div className="legend" style={{ marginBottom: 4 }}>
-                <span className="li"><span className="sw" style={{ background: "var(--accent)" }}></span>Commesse</span>
-                <span className="li"><span className="sw" style={{ background: C.info }}></span>Progetti</span>
+        </div>
+        {righeTempo.length > 0 ? (
+          <>
+          <div className="tempo-cards">
+            {righeTempo.map((r) => (
+              <div key={r.c.id} className="tempo-card row-in">
+                <div className="tc-top">
+                  <span className="tc-nome">{r.c.cliente}</span>
+                  <span className="tc-ora num" style={{ color: r.lordoOra == null ? "var(--ink-3)" : r.lordoOra >= (lordoOraMedio ?? 0) ? "var(--pos-ink)" : "var(--warn)" }}>
+                    {r.lordoOra != null ? `${fmtN(r.lordoOra)} €/h` : "—"}
+                  </span>
+                </div>
+                <div className="tc-riga">
+                  {r.ore ? `${fmtN(r.ore)} h/mese` : "ore mancanti"} · {r.lordo ? `${fmtN(r.lordo)} €/mese` : "senza fee"}
+                  {r.nettoOra != null && ` · netto ${fmtN(r.nettoOra)} €/h`}{r.realeOra != null && ` · reale ${fmtN(r.realeOra)} €/h`}
+                </div>
+                <div className="tc-riga">
+                  {r.c.fine ? `fine ${dataBreve(r.c.fine)} (${r.mesi === 0 ? "scaduta" : `${r.mesi} ${r.mesi === 1 ? "mese" : "mesi"}`})` : "senza data di fine"}
+                  {r.residuo != null && <> · da incassare <b className="num" style={{ color: "var(--accent-ink)" }}>{fmtN(r.residuo)} €</b></>}
+                </div>
               </div>
-              <ResponsiveContainer width="100%" height={Math.max(120, tempoData.length * 46 + 36)}>
-                <BarChart data={tempoData} layout="vertical" margin={{ top: 8, right: 24, left: 0, bottom: 0 }}>
-                  <XAxis type="number" tick={{ fill: C.ink3, fontSize: 10.5 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v}h`} />
-                  <YAxis type="category" dataKey="nome" width={112} tick={{ fill: C.ink2, fontSize: 11.5, fontWeight: 600 }} axisLine={false} tickLine={false} />
-                  <Tooltip
-                    cursor={{ fill: "rgba(60,44,28,.05)" }}
-                    contentStyle={TOOLTIP_STYLE}
-                    labelStyle={{ color: "#A39684", fontWeight: 700 }}
-                    itemStyle={{ color: "#E9E0D0" }}
-                    formatter={(v, name, props) => [
-                      `${v} h/mese${props.payload.lordoOra ? ` · ${fmtN(props.payload.lordoOra)} €/h lordo` : ""}`,
-                      props.payload.tipo,
-                    ]}
-                  />
-                  <Bar dataKey="ore" radius={[0, 4, 4, 0]} maxBarSize={18}>
-                    {tempoData.map((d, i) => (
-                      <Cell key={i} fill={d.tipo === "Progetto" ? C.info : "#B5654A"} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </>
-          ) : (
-            <p style={{ color: "var(--ink-3)", fontSize: 13 }}>
-              Nessuna ora registrata: aggiungi le «Ore dedicate al mese» alle tue commesse per vedere lo spaccato del tempo.
-            </p>
-          )}
-          {attiveSenzaOre > 0 && tempoData.length > 0 && (
-            <p style={{ color: "var(--ink-3)", fontSize: 12, marginTop: 6 }}>
-              {attiveSenzaOre} {attiveSenzaOre === 1 ? "commessa attiva è senza" : "commesse attive sono senza"} stima ore — il totale potrebbe essere sottostimato.
-            </p>
-          )}
+            ))}
+          </div>
+          <div className="tempo-table" style={{ overflowX: "auto" }}>
+            <table className="table" style={{ minWidth: 760 }}>
+              <thead>
+                <tr>
+                  <th>Commessa</th>
+                  <th className="r">Ore/mese</th>
+                  <th className="r">Lordo/mese</th>
+                  <th className="r">€/h lordo</th>
+                  <th className="r">€/h netto</th>
+                  <th className="r" title="Dai pagamenti registrati con le ore lavorate">€/h reale</th>
+                  <th className="r">Fine</th>
+                  <th className="r">Da incassare</th>
+                </tr>
+              </thead>
+              <tbody>
+                {righeTempo.map((r, i) => {
+                  const sopraMedia = r.lordoOra != null && lordoOraMedio != null && r.lordoOra >= lordoOraMedio;
+                  return (
+                    <tr key={r.c.id} className="row-in" style={{ cursor: "default", "--i": i }}>
+                      <td>
+                        <div style={{ fontWeight: 600, color: "var(--ink)" }}>{r.c.cliente}</div>
+                        <div style={{ fontSize: 12, color: "var(--ink-3)" }}>{r.c.tipo === "Progetto" ? "progetto" : "mensile"}{r.c.servizio ? ` · ${r.c.servizio}` : ""}</div>
+                      </td>
+                      <td className="r num">{r.ore ? `${fmtN(r.ore)} h` : <span style={{ color: "var(--warn)" }}>manca</span>}</td>
+                      <td className="r num">{r.lordo ? `${fmtN(r.lordo)} €` : "—"}</td>
+                      <td className="r num" style={{ fontWeight: 700, color: r.lordoOra == null ? "var(--ink-3)" : sopraMedia ? "var(--pos-ink)" : "var(--warn)" }}>{r.lordoOra != null ? `${fmtN(r.lordoOra)} €` : "—"}</td>
+                      <td className="r num" style={{ color: "var(--ink-2)" }}>{r.nettoOra != null ? `${fmtN(r.nettoOra)} €` : "—"}</td>
+                      <td className="r num" style={{ color: "var(--ink-2)" }} title={r.realeMesi ? `media su ${r.realeMesi} ${r.realeMesi === 1 ? "mese" : "mesi"} con ore registrate` : "nessun mese con ore lavorate registrate"}>{r.realeOra != null ? `${fmtN(r.realeOra)} €` : "—"}</td>
+                      <td className="r" style={{ fontSize: 13 }}>
+                        {r.c.fine ? (
+                          <>
+                            <div className="num">{dataBreve(r.c.fine)}</div>
+                            <div style={{ fontSize: 11.5, color: r.mesi <= 1 ? "var(--danger)" : r.mesi <= 3 ? "var(--warn)" : "var(--ink-3)" }}>{r.mesi === 0 ? "scaduta" : `${r.mesi} ${r.mesi === 1 ? "mese" : "mesi"}`}</div>
+                          </>
+                        ) : <span style={{ color: "var(--ink-3)" }}>senza fine</span>}
+                      </td>
+                      <td className="r num" style={{ color: "var(--accent-ink)", fontWeight: 600 }}>{r.residuo != null ? `${fmtN(r.residuo)} €` : "—"}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          </>
+        ) : (
+          <p style={{ color: "var(--ink-3)", fontSize: 13, padding: "0 var(--card-pad) var(--card-pad)" }}>Nessuna commessa attiva.</p>
+        )}
+        <p style={{ color: "var(--ink-3)", fontSize: 12, padding: "10px var(--card-pad) var(--card-pad)" }}>
+          €/h verde = sopra la tua media, ocra = sotto. Il «reale» arriva dai mesi in cui dici all&apos;assistente anche le ore lavorate.
+          {attiveSenzaOre > 0 && ` ${attiveSenzaOre} ${attiveSenzaOre === 1 ? "commessa è senza" : "commesse sono senza"} stima ore: il tempo libero è sovrastimato.`}
+        </p>
+      </section>
+
+      {/* Tempo libero nei prossimi 12 mesi */}
+      <section className="panel" id="sez-liberi">
+        <div className="panel-head">
+          <div className="panel-title"><Icon name="calendar" size={15} />Tempo libero · prossimi 12 mesi</div>
+          <div className="stat-strip">
+            <div className="si">
+              <div className="v num" style={{ color: "var(--pos-ink)" }}>{fmtN(oreLibere12)} h</div>
+              <div className="l">Ore libere in 12 mesi</div>
+            </div>
+            <div className="si">
+              <div className="v num" style={{ color: "var(--accent-ink)" }}>{formatCurrency(tempo12.reduce((s, t) => s + t.lordo, 0))}</div>
+              <div className="l">Lordo da contratti</div>
+            </div>
+          </div>
+        </div>
+        <div className="panel-pad" style={{ paddingTop: 0 }}>
+          <div className="legend" style={{ marginBottom: 8 }}>
+            <span className="li"><span className="sw" style={{ background: "#B5654A" }}></span>Ore impegnate</span>
+            <span className="li"><span className="sw" style={{ background: "#CFE0CB" }}></span>Ore libere</span>
+            <span className="li"><span className="sw line" style={{ background: C.info }}></span>Lordo previsto (asse destro)</span>
+          </div>
+          <ResponsiveContainer width="100%" height={260}>
+            <ComposedChart data={tempo12} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+              <XAxis dataKey="mese" tick={{ fill: C.ink2, fontSize: 11, fontWeight: 600 }} axisLine={false} tickLine={false} />
+              <YAxis yAxisId="ore" tick={{ fill: C.ink3, fontSize: 10.5 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v}h`} width={44} />
+              <YAxis yAxisId="eur" orientation="right" tick={{ fill: C.info, fontSize: 10.5 }} axisLine={false} tickLine={false} tickFormatter={kfmt} width={44} />
+              <Tooltip
+                cursor={{ fill: "rgba(60,44,28,.05)" }}
+                contentStyle={TOOLTIP_STYLE}
+                labelStyle={{ color: "#A39684", fontWeight: 700 }}
+                itemStyle={{ color: "#E9E0D0" }}
+                formatter={(v, name) => (name === "Lordo previsto" ? [formatCurrency(v), name] : [`${fmtN(v)} h`, name])}
+              />
+              <Bar yAxisId="ore" dataKey="impegnate" name="Ore impegnate" stackId="ore" fill="#B5654A" maxBarSize={38} />
+              <Bar yAxisId="ore" dataKey="libere" name="Ore libere" stackId="ore" fill="#CFE0CB" radius={[3, 3, 0, 0]} maxBarSize={38} />
+              <Line yAxisId="eur" type="monotone" dataKey="lordo" name="Lordo previsto" stroke={C.info} strokeWidth={2.2} dot={{ fill: "#FBF8F2", stroke: C.info, strokeWidth: 2, r: 3 }} />
+            </ComposedChart>
+          </ResponsiveContainer>
+          <p style={{ color: "var(--ink-3)", fontSize: 12, marginTop: 6 }}>
+            Le ore libere crescono quando le commesse finiscono: è il tempo da vendere. Base: ore/mese di ogni commessa nelle sue date di inizio e fine.
+          </p>
         </div>
       </section>
 
@@ -434,7 +596,7 @@ export default function Dashboard({ commesse, setCommesse, setup, setSetup }) {
       )}
 
       {/* Panoramica annuale */}
-      <section className="panel">
+      <section className="panel" id="sez-anno">
         <div className="panel-head">
           <div className="panel-title"><Icon name="bars" size={15} />Panoramica {anno}</div>
           <div className="stat-strip">
@@ -508,7 +670,7 @@ export default function Dashboard({ commesse, setCommesse, setup, setSetup }) {
 
       {/* Incassato storico */}
       {sortedStorico.length > 0 && (
-        <section className="panel">
+        <section className="panel" id="sez-storico">
           <div className="panel-head">
             <div className="panel-title"><Icon name="history" size={15} />Incassato storico</div>
             <span className="panel-note">{sortedStorico.length} mesi · valori lordi e netti</span>
@@ -705,8 +867,71 @@ export default function Dashboard({ commesse, setCommesse, setup, setSetup }) {
         </section>
       )}
 
-      {/* Cash Flow */}
-      <section className="panel">
+      {/* Patrimonio, conto dell'anno e cash flow */}
+      <div className="grid cols-2">
+      <section className="panel" id="sez-patrimonio">
+        <div className="panel-head">
+          <div className="panel-title"><Icon name="wallet" size={15} />Patrimonio</div>
+          <div className="stat-strip">
+            <div className="si">
+              <div className="v num" style={{ color: "var(--ink)" }}>{formatCurrency(patrimonio.totale)}</div>
+              <div className="l">Totale oggi</div>
+            </div>
+            {mesiAutonomia != null && (
+              <div className="si">
+                <div className="v num" style={{ color: mesiAutonomia >= 6 ? "var(--pos-ink)" : "var(--warn)" }}>{mesiAutonomia} mesi</div>
+                <div className="l">Autonomia della cassa</div>
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="row-list">
+          {[
+            { nome: "Cassa sul conto", valore: patrimonio.cassa, nota: cassaData ? `al ${dataBreve(cassaData)}` : "data non indicata", colore: C.info },
+            { nome: "Crypto", valore: patrimonio.crypto, nota: cryptoAggiornato ? `al ${dataBreve(cryptoAggiornato)}` : "", colore: C.warn },
+            ...patrimonio.altri.map((a) => ({ nome: a.nome, valore: a.valore, nota: a.aggiornato ? `al ${dataBreve(a.aggiornato)}` : "", colore: "#8A5A8A" })),
+          ].map((v) => {
+            const pct = patrimonio.totale > 0 ? Math.round((v.valore / patrimonio.totale) * 100) : 0;
+            return (
+              <div key={v.nome} className="statbar-row">
+                <div className="statbar-top">
+                  <span className="statbar-lab"><span className="d" style={{ background: v.colore }}></span>{v.nome}{v.nota && <span style={{ fontWeight: 400, color: "var(--ink-3)", fontSize: 12 }}>{v.nota}</span>}</span>
+                  <span className="statbar-val"><b className="num">{fmtN(v.valore)} €</b>{pct}%</span>
+                </div>
+                <div className="statbar-track"><div className="statbar-fill" style={{ width: pct + "%", background: v.colore }}></div></div>
+              </div>
+            );
+          })}
+        </div>
+        <p style={{ color: "var(--ink-3)", fontSize: 12, padding: "4px var(--card-pad) var(--card-pad)" }}>
+          Aggiorna i valori dal riquadro «Patrimonio» in alto, da Setup, oppure scrivendo all&apos;assistente (es. «cassa 16.900 €, carte Pokémon 11.000 €»). Solo la cassa entra nel cash flow: crypto e beni sono riserve.
+        </p>
+      </section>
+
+      <section className="panel" id="sez-conto">
+        <div className="panel-head">
+          <div className="panel-title"><Icon name="bars" size={15} />Conto dell&apos;anno {anno}</div>
+          <span className="panel-note">mesi registrati + previsione dai contratti{mesiMancanti > 0 ? ` · ${mesiMancanti} ${mesiMancanti === 1 ? "mese non registrato" : "mesi non registrati"} contano 0` : ""}</span>
+        </div>
+        <div className="row-list">
+          {[
+            { l: "Entrate lorde", v: contoAnno.lordo, c: "var(--ink)" },
+            { l: `− Tasse e contributi (${100 - Math.round(setup.fattoreNetto * 100)}%)`, v: -contoAnno.tasse, c: "var(--ink-2)" },
+            { l: "= Netto", v: contoAnno.netto, c: "var(--pos-ink)", b: true },
+            { l: "− Costi fissi (12 mesi)", v: -contoAnno.costiFissiAnno, c: "var(--danger)" },
+            { l: "− Spese annuali", v: -contoAnno.speseAnnuali, c: "var(--warn)" },
+            { l: "= Risparmio dell'anno", v: contoAnno.risparmio, c: contoAnno.risparmio >= 0 ? "var(--pos-ink)" : "var(--danger)", b: true },
+          ].map((r) => (
+            <div key={r.l} style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 12, padding: "11px var(--card-pad)", borderTop: "1px solid var(--hair-soft)", fontWeight: r.b ? 700 : 500 }}>
+              <span style={{ color: "var(--ink)" }}>{r.l}</span>
+              <span className="num" style={{ color: r.c }}>{r.v < 0 ? "− " : ""}{fmtN(Math.abs(r.v))} €</span>
+            </div>
+          ))}
+        </div>
+      </section>
+      </div>
+
+      <section className="panel" id="sez-cash">
         <div className="panel-head">
           <div className="panel-title"><Icon name="flow" size={15} />Cash flow — prossimi 12 mesi</div>
           <div className="stat-strip">
@@ -714,25 +939,22 @@ export default function Dashboard({ commesse, setCommesse, setup, setSetup }) {
               <div className="v num" style={{ color: cassaFinale >= cassaIniziale ? "var(--pos-ink)" : "var(--danger)" }}>{formatCurrency(cassaFinale)}</div>
               <div className="l">Cassa fra 12 mesi</div>
             </div>
-            {cryptoVal > 0 && (
-              <div className="si">
-                <div className="v num" style={{ color: "var(--accent-ink)" }}>{formatCurrency(cassaIniziale + cryptoVal)}</div>
-                <div className="l">Cassa + Crypto oggi</div>
-              </div>
-            )}
+            <div className="si">
+              <div className="v num" style={{ color: "var(--ink)" }}>{formatCurrency(cassaFinale + patrimonio.crypto + patrimonio.totaleAltri)}</div>
+              <div className="l">Patrimonio fra 12 mesi</div>
+            </div>
           </div>
         </div>
         <div className="panel-pad" style={{ paddingTop: 0 }}>
           <div style={{ display: "flex", gap: 24, flexWrap: "wrap", marginBottom: 6, fontSize: 13, color: "var(--ink-2)" }}>
-            <span>Cassa attuale: <b className="num" style={{ color: "var(--ink)" }}>{formatCurrency(cassaIniziale)}</b></span>
-            {cryptoVal > 0 && (
-              <span>
-                Crypto: <b className="num" style={{ color: "var(--accent-ink)" }}>{formatCurrency(cryptoVal)}</b>
-                {cryptoAggiornato && <span style={{ color: "var(--ink-3)" }}> al {cryptoAggiornato}</span>}
-              </span>
-            )}
-            <span>Costi fissi/mese: <b className="num" style={{ color: "var(--danger)" }}>{formatCurrency(totaleCostiFissi)}</b></span>
+            <span>Parte da: <b className="num" style={{ color: "var(--ink)" }}>{formatCurrency(cassaIniziale)}</b>{cassaData && <span style={{ color: "var(--ink-3)" }}> al {dataBreve(cassaData)}</span>}</span>
+            <span>Uscite/mese: <b className="num" style={{ color: "var(--danger)" }}>{formatCurrency(usciteMensili)}</b> <span style={{ color: "var(--ink-3)" }}>({fmtN(totaleCostiFissi)} fissi + {fmtN(totaleCostiAnnualiMensile)} spese annuali spalmate)</span></span>
           </div>
+          {meseRosso && (
+            <div className="notice warn" style={{ margin: "8px 0" }}>
+              <span className="lab">Con i contratti attuali la cassa va sotto zero a {meseRosso.mese}: servono nuove commesse prima di allora.</span>
+            </div>
+          )}
           <div className="legend" style={{ marginBottom: 8 }}>
             <span className="li"><span className="sw" style={{ background: C.pos }}></span>Flusso positivo</span>
             <span className="li"><span className="sw" style={{ background: C.danger }}></span>Flusso negativo</span>
@@ -760,16 +982,7 @@ export default function Dashboard({ commesse, setCommesse, setup, setSetup }) {
                   <Cell key={i} fill={entry.flusso >= 0 ? C.pos : C.danger} opacity={entry.tipo === "proiezione" ? 0.62 : 1} />
                 ))}
               </Bar>
-              <Line
-                yAxisId="cassa"
-                type="monotone"
-                dataKey="cassa"
-                name="Cassa"
-                stroke={C.info}
-                strokeWidth={2.4}
-                dot={{ fill: "#FBF8F2", stroke: C.info, strokeWidth: 2, r: 3.4 }}
-                activeDot={{ r: 5 }}
-              />
+              <Line yAxisId="cassa" type="monotone" dataKey="cassa" name="Cassa" stroke={C.info} strokeWidth={2.4} dot={{ fill: "#FBF8F2", stroke: C.info, strokeWidth: 2, r: 3.4 }} activeDot={{ r: 5 }} />
             </ComposedChart>
           </ResponsiveContainer>
         </div>
@@ -854,6 +1067,9 @@ function KpiDrillModal({ drill, onClose, commesse, setCommesse, setup, setSetup,
     profitto: { title: "Profitto mensile", icon: "wallet", note: meseRegistrato ? "Netto reale del mese meno i costi fissi mensili." : "Netto mensile previsto meno i costi fissi mensili." },
     speseAnnuali: { title: "Spese annuali", icon: "calendar", note: "Spese annuali promemoria. Modifica gli importi annui qui." },
     equivMensile: { title: "Equivalente mensile spese annuali", icon: "divide", note: "Spese annuali divise per 12." },
+    orario: { title: "Guadagno orario per commessa", icon: "clock", note: `Lordo/mese diviso ore/mese stimate; netto = lordo × ${(factor * 100).toFixed(0)}%. Il reale arriva dai pagamenti registrati con le ore lavorate.` },
+    tempo: { title: `Ore del mese · ${meseCorrente}`, icon: "calendar", note: "Ore stimate al mese per commessa: modificale qui. Le ore disponibili si cambiano in Setup." },
+    patrimonio: { title: "Patrimonio", icon: "wallet", note: "Aggiorna i valori: la cassa è il punto di partenza del cash flow, crypto e beni sono riserve." },
   };
   const meta = META[drill];
 
@@ -983,6 +1199,81 @@ function KpiDrillModal({ drill, onClose, commesse, setCommesse, setup, setSetup,
         <div style={{ ...rowStyle, fontWeight: 700 }}><span>Totale annuo</span><span className="num t-warn">{money(tot)}</span></div>
       </>
     );
+  } else if (drill === "orario" || drill === "tempo") {
+    const righe = attive.map((c) => {
+      const lordo = getCommessaLordoMensile(c) || 0;
+      const ore = Number(c.oreMensili) || 0;
+      const reale = orarioRealeCommessa(c);
+      return { c, lordo, ore, lordoOra: ore && lordo ? Math.round(lordo / ore) : null, reale };
+    });
+    const oreTot = righe.reduce((s, r) => s + r.ore, 0);
+    const oreDisp = setup.oreMeseDisponibili ?? 160;
+    body = (
+      <>
+        {righe.map(({ c, lordo, lordoOra, reale }) => (
+          <div key={c.id} style={rowStyle}>
+            <div>
+              <div className="nm">{c.cliente}</div>
+              <div className="meta">
+                {lordo ? `${money(lordo)}/mese` : "senza fee"}
+                {lordoOra != null && ` · ${fmtN(lordoOra)} €/h lordo · ${fmtN(lordoOra * factor)} €/h netto`}
+                {reale && ` · reale ${fmtN(reale.lordoOra)} €/h su ${reale.mesi} ${reale.mesi === 1 ? "mese" : "mesi"}`}
+              </div>
+            </div>
+            {drill === "tempo" ? (
+              <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <input className="input num" style={{ width: 90 }} type="number" min="0" step="0.5" placeholder="ore" value={c.oreMensili ?? ""} onChange={(e) => setCommessaField(c.id, "oreMensili", e.target.value)} />
+                <span style={{ color: "var(--ink-3)", fontSize: 12 }}>h/mese</span>
+              </span>
+            ) : (
+              <span className="num t-info" style={{ fontWeight: 700 }}>{lordoOra != null ? `${fmtN(lordoOra)} €/h` : "—"}</span>
+            )}
+          </div>
+        ))}
+        {attive.length === 0 && <p style={{ padding: "12px var(--card-pad)", color: "var(--ink-3)" }}>Nessuna commessa attiva.</p>}
+        <div style={{ ...rowStyle, fontWeight: 700 }}>
+          <span>{drill === "tempo" ? `Impegnate ${fmtN(oreTot)} h su ${oreDisp} h` : "Media pesata sulle ore"}</span>
+          <span className={"num " + (drill === "tempo" ? "t-pos" : "t-info")}>
+            {drill === "tempo"
+              ? `${fmtN(Math.max(0, oreDisp - oreTot))} h libere`
+              : (() => { const l = righe.filter((r) => r.ore).reduce((s, r) => s + r.lordo, 0); return oreTot ? `${fmtN(l / oreTot)} €/h` : "—"; })()}
+          </span>
+        </div>
+      </>
+    );
+  } else if (drill === "patrimonio") {
+    const p = calcPatrimonio(setup);
+    const oggiIso = new Date().toISOString().slice(0, 10);
+    const setVal = (patch) => setSetup((prev) => ({ ...prev, ...patch }));
+    const setBene = (id, patch) => setSetup((prev) => ({ ...prev, altriAsset: (prev.altriAsset || []).map((b) => (b.id === id ? { ...b, ...patch, aggiornato: oggiIso } : b)) }));
+    body = (
+      <>
+        <div style={rowStyle}>
+          <div><div className="nm">Cassa sul conto</div><div className="meta">{setup.cassaData ? `al ${dataBreve(setup.cassaData)}` : "data non indicata"} · base del cash flow</div></div>
+          <input className="input num" style={{ width: 130 }} type="number" min="0" value={setup.cassaIniziale ?? ""} onChange={(e) => setVal({ cassaIniziale: Number(e.target.value) || 0, cassaData: oggiIso })} />
+        </div>
+        <div style={rowStyle}>
+          <div><div className="nm">Crypto</div><div className="meta">{setup.cryptoAggiornato ? `al ${dataBreve(setup.cryptoAggiornato)}` : ""}</div></div>
+          <input className="input num" style={{ width: 130 }} type="number" min="0" value={setup.crypto ?? ""} onChange={(e) => setVal({ crypto: Number(e.target.value) || 0, cryptoAggiornato: new Date().toLocaleDateString("it-IT") })} />
+        </div>
+        {(setup.altriAsset || []).map((b) => (
+          <div key={b.id} style={rowStyle}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <input className="input" style={{ maxWidth: 220 }} value={b.nome} onChange={(e) => setBene(b.id, { nome: e.target.value })} />
+              <button className="btn btn-quiet" title="Rimuovi" onClick={() => setSetup((prev) => ({ ...prev, altriAsset: (prev.altriAsset || []).filter((x) => x.id !== b.id) }))}><Icon name="trash" size={14} /></button>
+            </div>
+            <input className="input num" style={{ width: 130 }} type="number" min="0" value={b.valore ?? ""} onChange={(e) => setBene(b.id, { valore: Number(e.target.value) || 0 })} />
+          </div>
+        ))}
+        <div style={{ ...rowStyle, gridTemplateColumns: "1fr" }}>
+          <button className="btn btn-ghost" style={{ justifySelf: "start" }} onClick={() => setSetup((prev) => {
+            const beni = prev.altriAsset || [];
+            return { ...prev, altriAsset: [...beni, { id: Math.max(0, ...beni.map((x) => x.id || 0)) + 1, nome: "Nuovo bene", valore: 0, aggiornato: oggiIso }] };
+          })}><Icon name="plus" size={14} /> Aggiungi un bene</button>
+        </div>
+        <div style={{ ...rowStyle, fontWeight: 700 }}><span>Totale patrimonio</span><span className="num t-accent">{money(p.totale)}</span></div>
+      </>
+    );
   } else if (drill === "equivMensile") {
     const totAnnuo = costiAnnuali.reduce((s, c) => s + (c.importoAnnuale || c.importo * 12), 0);
     body = (
@@ -1019,7 +1310,7 @@ function KpiDrillModal({ drill, onClose, commesse, setCommesse, setup, setSetup,
   );
 }
 
-function MonthlyPrompt({ mese, stimaLordo, fattoreNetto, commesseAttive, onAdd }) {
+function MonthlyPrompt({ mese, stimaLordo, fattoreNetto, commesseAttive, onAdd, onAggiorna }) {
   const [open, setOpen] = useState(false);
   const [lordo, setLordo] = useState(stimaLordo);
 
@@ -1035,21 +1326,23 @@ function MonthlyPrompt({ mese, stimaLordo, fattoreNetto, commesseAttive, onAdd }
         <div className="cal"><Icon name="calendar" size={20} /></div>
         <div>
           <div style={{ fontSize: 14.5, fontWeight: 600, color: "var(--ink)" }}>
-            <b style={{ fontFamily: "var(--font-serif)", fontWeight: 600 }}>{mese}</b> non è ancora nello storico
+            Aggiornamento di <b style={{ fontFamily: "var(--font-serif)", fontWeight: 600 }}>{mese}</b>
           </div>
-          <div style={{ fontSize: 13, color: "var(--ink-3)", marginTop: 3 }}>
-            Stimato da commesse attive: <b className="num" style={{ color: "var(--accent-ink)" }}>{formatCurrency(stimaLordo)}</b>
-            {commesseAttive.length > 0 && (
-              <span> ({commesseAttive.map((c) => c.cliente).join(", ")})</span>
-            )}
+          <div style={{ fontSize: 13, color: "var(--ink-3)", marginTop: 3, maxWidth: 560 }}>
+            Scrivi all&apos;assistente, per ogni commessa, incassato, ore lavorate, data di fine e quanto incasserai:
+            aggiorna lui pagamenti, €/h, tempo libero e cash flow. Previsto dai contratti: <b className="num" style={{ color: "var(--accent-ink)" }}>{formatCurrency(stimaLordo)}</b>
+            {commesseAttive.length > 0 && <span> ({commesseAttive.length} {commesseAttive.length === 1 ? "commessa" : "commesse"})</span>}
           </div>
         </div>
       </div>
 
       {!open ? (
-        <button className="btn btn-primary" onClick={() => setOpen(true)}>
-          <Icon name="plus" size={16} /> Registra incassato
-        </button>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <button className="btn btn-primary" onClick={onAggiorna}>
+            <Icon name="spark" size={16} /> Aggiorna con l&apos;assistente
+          </button>
+          <button className="btn btn-ghost" onClick={() => setOpen(true)}>Solo il totale</button>
+        </div>
       ) : (
         <div style={{ display: "flex", alignItems: "flex-end", gap: 10, flexWrap: "wrap" }}>
           <div>
@@ -1083,9 +1376,10 @@ const TONE_ICO = { accent: "ico-accent", pos: "ico-pos", warn: "ico-warn", dange
 const TONE_TXT = { accent: "t-accent", pos: "t-pos", warn: "t-warn", danger: "t-danger", info: "t-info", ink: "t-ink" };
 const TONE_BAR = { accent: "bar-accent", pos: "bar-pos", warn: "bar-warn", danger: "bar-danger", info: "bar-info", ink: "bar-ink" };
 
-function KpiCard({ label, value, cur, sub, tone, icon, onOpen }) {
+function KpiCard({ label, value, cur, sub, tone, icon, onOpen, i = 0 }) {
   return (
     <div
+      style={{ "--i": i }}
       className={"kpi reveal" + (onOpen ? " " + styles.kpiClickable : "")}
       onClick={onOpen}
       role={onOpen ? "button" : undefined}
@@ -1098,10 +1392,64 @@ function KpiCard({ label, value, cur, sub, tone, icon, onOpen }) {
         <span className={"kpi-ico " + TONE_ICO[tone]}><Icon name={icon} size={15} /></span>
       </div>
       <div className={"kpi-val num " + TONE_TXT[tone]}>
-        {value}{cur && <span className="cur">{cur}</span>}
+        <AnimatedNumber value={value} />{cur && <span className="cur">{cur}</span>}
       </div>
       {sub && <div className="kpi-sub">{sub}</div>}
       {onOpen && <span className={styles.kpiHint}>Dettaglio →</span>}
     </div>
+  );
+}
+
+// Numero che "conta" fino al valore (formato it-IT con punti delle migliaia).
+// Aggiorna il testo direttamente, senza ri-render; nessuna animazione se il
+// dispositivo chiede movimento ridotto o il valore non è numerico.
+function AnimatedNumber({ value }) {
+  const ref = useRef(null);
+  const prev = useRef(0);
+  useEffect(() => {
+    const el = ref.current;
+    const target = Number(String(value).replace(/\./g, "").replace(",", "."));
+    if (!el || !Number.isFinite(target) || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      if (el) el.textContent = value;
+      return;
+    }
+    const from = prev.current, t0 = performance.now(), dur = 900;
+    let raf;
+    const step = (t) => {
+      const k = Math.min(1, (t - t0) / dur);
+      const e = 1 - Math.pow(1 - k, 3);
+      el.textContent = nf.format(Math.round(from + (target - from) * e));
+      if (k < 1) raf = requestAnimationFrame(step);
+      else { el.textContent = value; prev.current = target; }
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [value]);
+  return <span ref={ref}>{value}</span>;
+}
+
+// Barra fissa per saltare tra le sezioni; evidenzia quella visibile.
+const SEZIONI = [
+  ["sez-ai", "Assistente"], ["sez-mese", "Questo mese"], ["sez-tempo", "Tempo e €/h"], ["sez-liberi", "Tempo libero"],
+  ["sez-anno", "Anno"], ["sez-storico", "Storico"], ["sez-patrimonio", "Patrimonio"], ["sez-conto", "Conto dell'anno"], ["sez-cash", "Cash flow"],
+];
+function SectionNav() {
+  const [attiva, setAttiva] = useState("sez-ai");
+  useEffect(() => {
+    if (!("IntersectionObserver" in window)) return;
+    const io = new IntersectionObserver((entries) => {
+      const vis = entries.filter((e) => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+      if (vis[0]) setAttiva(vis[0].target.id);
+    }, { rootMargin: "-70px 0px -60% 0px" });
+    SEZIONI.forEach(([id]) => { const el = document.getElementById(id); if (el) io.observe(el); });
+    return () => io.disconnect();
+  }, []);
+  return (
+    <nav className="section-nav" aria-label="Sezioni della dashboard">
+      {SEZIONI.map(([id, l]) => (
+        <button key={id} className={attiva === id ? "on" : ""} aria-current={attiva === id ? "true" : undefined}
+          onClick={() => { setAttiva(id); document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" }); }}>{l}</button>
+      ))}
+    </nav>
   );
 }

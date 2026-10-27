@@ -42,7 +42,9 @@ function migrateSetup(prev) {
   const existingMesi = new Set((prev.incassatoStorico || []).map((r) => r.mese.toLowerCase()));
   const storicoToAdd = STORICO_2026.filter((r) => !existingMesi.has(r.mese.toLowerCase()));
   const needsRedditi = !Array.isArray(prev.redditiAnnuali) || prev.redditiAnnuali.length === 0;
-  if (toAdd.length === 0 && !needsCassa && !needsCrypto && !needsCryptoV2 && storicoToAdd.length === 0 && !needsRedditi) return prev;
+  // Patrimonio al 27/10/2026 (cassa, crypto, carte Pokémon): applicato una sola volta
+  const needsPatrimonio = !prev._patrimonioOtt2026;
+  if (toAdd.length === 0 && !needsCassa && !needsCrypto && !needsCryptoV2 && storicoToAdd.length === 0 && !needsRedditi && !needsPatrimonio) return prev;
   return {
     ...prev,
     costiFissi: [...(prev.costiFissi || []), ...toAdd],
@@ -50,6 +52,17 @@ function migrateSetup(prev) {
     ...(needsCassa ? { cassaIniziale: 17500 } : {}),
     ...(needsCrypto || needsCryptoV2 ? { crypto: 2000, cryptoAggiornato: "21/05/2026", _cryptoV2: true } : {}),
     ...(needsRedditi ? { redditiAnnuali: INITIAL_REDDITI_ANNUALI } : {}),
+    ...(needsPatrimonio ? {
+      cassaIniziale: 16400,
+      cassaData: "2026-10-27",
+      crypto: 1500,
+      cryptoAggiornato: "27/10/2026",
+      altriAsset: [
+        ...(prev.altriAsset || []).filter((a) => a.nome !== "Carte Pokémon"),
+        { id: 1, nome: "Carte Pokémon", valore: 10000, aggiornato: "2026-10-27" },
+      ],
+      _patrimonioOtt2026: true,
+    } : {}),
   };
 }
 

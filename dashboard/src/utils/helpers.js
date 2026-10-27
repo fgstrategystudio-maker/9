@@ -281,3 +281,91 @@ export function monthsBetween(startStr, endStr) {
     1
   );
 }
+
+// ── Tempo, guadagno orario e patrimonio ─────────────────────────────
+
+// Ore previste sulla commessa nel mese (stima ore/mese, solo nei mesi attivi)
+export function oreCommessaMese(c, monthIdx, year) {
+  const ore = Number(c.oreMensili) || 0;
+  if (!ore) return 0;
+  if (c.stato !== "In corso" && c.stato !== "In scadenza") return 0;
+  const monthStart = new Date(year, monthIdx, 1);
+  const monthEnd = new Date(year, monthIdx + 1, 0, 23, 59, 59);
+  const start = c.inizio ? parseLocalDate(c.inizio) : null;
+  const end = c.fine ? parseLocalDate(c.fine) : null;
+  if (end && end < monthStart) return 0;
+  if (start && start > monthEnd) return 0;
+  return ore;
+}
+
+// Ore e incassi REALI dai pagamenti che hanno anche le ore lavorate
+// (opz. per anno). null se non ci sono mesi con ore registrate.
+export function orarioRealeCommessa(c, anno = null) {
+  let ore = 0, importo = 0, mesi = 0;
+  for (const p of c.pagamenti || []) {
+    const o = Number(p.ore);
+    if (!(o > 0)) continue;
+    if (anno != null && annoFromMese(p.mese) !== anno) continue;
+    ore += o; importo += Number(p.importo) || 0; mesi++;
+  }
+  if (!ore) return null;
+  return { ore, importo, mesi, lordoOra: Math.round(importo / ore) };
+}
+
+// Mesi di contratto rimasti, mese corrente compreso (null se senza data fine)
+export function mesiRimanenti(c, oggi = new Date()) {
+  if (!c.fine) return null;
+  const end = parseLocalDate(c.fine);
+  const n = (end.getFullYear() - oggi.getFullYear()) * 12 + (end.getMonth() - oggi.getMonth()) + 1;
+  return Math.max(0, n);
+}
+
+// Lordo ancora da incassare dal contratto (dal mese corrente alla fine)
+export function valoreResiduo(c, oggi = new Date()) {
+  if (c.stato !== "In corso" && c.stato !== "In scadenza") return 0;
+  const mesi = mesiRimanenti(c, oggi);
+  if (mesi == null) return null;
+  if (c.lordoMensile) return c.lordoMensile * mesi;
+  if (c.lordoProgetto) return mesi > 0 ? c.lordoProgetto : 0;
+  return null;
+}
+
+// Patrimonio: cassa liquida + crypto + altri beni (es. collezionabili)
+export function calcPatrimonio(setup) {
+  const cassa = Number(setup.cassaIniziale) || 0;
+  const crypto = Number(setup.crypto) || 0;
+  const altri = (setup.altriAsset || []).map((a) => ({ ...a, valore: Number(a.valore) || 0 }));
+  const totaleAltri = altri.reduce((s, a) => s + a.valore, 0);
+  return { cassa, crypto, altri, totaleAltri, totale: cassa + crypto + totaleAltri };
+}
+
+// Data ISO → "27 ott 2026" (accetta anche date già in formato italiano)
+export function dataBreve(d) {
+  if (!d) return null;
+  const opz = { day: "numeric", month: "short", year: "numeric" };
+  if (/^\d{4}-\d{2}-\d{2}$/.test(d)) return parseLocalDate(d).toLocaleDateString("it-IT", opz);
+  const it = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(d);
+  if (it) return new Date(Number(it[3]), Number(it[2]) - 1, Number(it[1])).toLocaleDateString("it-IT", opz);
+  return d;
+}
+
+// Messaggio guida per l'aggiornamento mensile: una riga per commessa attiva,
+// da completare con i numeri del mese.
+export function templateMese(commesse, mese) {
+  const attive = (commesse || []).filter((c) => c.stato === "In corso" || c.stato === "In scadenza");
+  const righe = attive.map((c) => {
+    const fine = c.fine ? `finisce ${formatDate(c.fine)}` : "finisce il …";
+    const fee = c.lordoMensile ? `poi ${fmtNum(c.lordoMensile)} €/mese` : c.lordoProgetto ? `progetto ${fmtNum(c.lordoProgetto)} €` : "poi … €/mese";
+    const ore = c.oreMensili ? `${c.oreMensili} ore/mese` : "… ore/mese";
+    return `- ${c.cliente}: incassato … € lordi, lavorate … ore; ${fine}, ${fee}, ${ore}`;
+  });
+  return [
+    `Aggiornamento ${mese}:`,
+    ...righe,
+    "- (nuovi clienti o commesse finite: scrivili qui)",
+    "Cassa sul conto oggi: … € (facoltativo)",
+  ].join("\n");
+}
+
+const _nf = new Intl.NumberFormat("it-IT");
+function fmtNum(n) { return _nf.format(Math.round(n ?? 0)); }
