@@ -31,7 +31,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,400&family=Jost:wght@400;500&display=swap">
-<link rel="preload" as="image" href="../img/tenuta-riano-viale-ulivi-drone.webp" imagesrcset="../img/tenuta-riano-viale-ulivi-drone-sm.webp 900w, ../img/tenuta-riano-viale-ulivi-drone.webp 1920w" imagesizes="100vw">
+<link rel="preload" as="image" href="../img/hero-verticale-poster.webp">
 <link rel="stylesheet" href="../assets/style.css">
 <script type="application/ld+json">
 {
@@ -108,13 +108,7 @@
 
 <main id="main">
 
-<section class="hero" id="top" aria-labelledby="h1">
-  <div class="hero-media">
-    <img src="../img/tenuta-riano-viale-ulivi-drone.webp" srcset="../img/tenuta-riano-viale-ulivi-drone-sm.webp 900w, ../img/tenuta-riano-viale-ulivi-drone.webp 1920w" sizes="100vw" width="1920" height="1080" alt="Aerial view of the estate in Riano: an olive-lined drive leading to the farmhouse and buildings, surrounded by 21 hectares of rolling meadows" fetchpriority="high">
-    <video class="hero-video" autoplay muted loop playsinline preload="metadata" poster="../img/tenuta-riano-viale-ulivi-drone-sm.webp" aria-hidden="true" tabindex="-1">
-      <source src="../video/tenuta-riano-hero.mp4" type="video/mp4">
-    </video>
-  </div>
+<section class="hero hero-split" id="top" aria-labelledby="h1">
   <div class="wrap">
     <p class="eyebrow">For sale · Riano, Colle delle Rose · 25 km from Rome</p>
     <h1 id="h1">A country estate for sale just north of <em>Rome</em></h1>
@@ -124,6 +118,12 @@
       <a class="btn btn-primary" href="#contact">Request the private dossier</a>
       <a class="btn btn-ghost" href="#potential">See what it could become</a>
     </div>
+  </div>
+  <div class="hero-media">
+    <img src="../img/hero-verticale-poster.webp" width="864" height="1080" alt="Aerial view of the estate in Riano: olive drive, farmhouse and buildings among meadows and hills" fetchpriority="high">
+    <video class="hero-video" autoplay muted loop playsinline preload="auto" poster="../img/hero-verticale-poster.webp" aria-hidden="true" tabindex="-1">
+      <source src="../video/tenuta-riano-hero-verticale.mp4" type="video/mp4">
+    </video>
   </div>
 </section>
 
@@ -369,13 +369,18 @@
 
     <div class="style-panel" role="tabpanel" id="p1" aria-labelledby="t1">
       <div class="prose">
+        <span class="style-num" aria-hidden="true">I</span>
         <h3>A light refresh on a modest budget</h3>
         <p>Keep the wooden furniture and the floors. Natural textiles, warm lighting, prints and neutral colours are enough to open up every room.</p>
-        <dl class="kpis">
-          <div><dt>Investment</dt><dd>€5–10k / room</dd></div>
-          <div><dt>Timing</dt><dd>2–4 weeks</dd></div>
-          <div><dt>Guests</dt><dd>Classic agriturismo</dd></div>
-        </dl>
+        <div class="style-meta">
+          <div class="swatches" aria-label="Palette">
+            <span class="swatch"><i style="--c:#6b4a33"></i>Walnut</span>
+            <span class="swatch"><i style="--c:#b5653f"></i>Terracotta</span>
+            <span class="swatch"><i style="--c:#e8dfcf"></i>Linen</span>
+            <span class="swatch"><i style="--c:#a8854f"></i>Brass</span>
+          </div>
+          <p class="style-for"><span>Ideal for</span>a classic agriturismo, families and country weekends</p>
+        </div>
       </div>
       <div class="style-imgs">
         <button type="button" data-full="../img/restyling-stile-rustico-camere.webp"><img src="../img/restyling-stile-rustico-camere-sm.webp" width="900" height="675" loading="lazy" alt="Before and after, rustic contemporary style: bathroom, bedroom and breakfast room"></button>
@@ -384,13 +389,18 @@
     </div>
     <div class="style-panel" role="tabpanel" id="p2" aria-labelledby="t2" hidden>
       <div class="prose">
+        <span class="style-num" aria-hidden="true">II</span>
         <h3>More light, natural materials</h3>
         <p>Pale tones, natural fibres, rattan lamps and potted olive trees. The rooms feel lighter and closer to the design B&amp;Bs city travellers look for.</p>
-        <dl class="kpis">
-          <div><dt>Investment</dt><dd>€8–15k / room</dd></div>
-          <div><dt>Timing</dt><dd>3–5 weeks</dd></div>
-          <div><dt>Guests</dt><dd>Contemporary B&amp;B</dd></div>
-        </dl>
+        <div class="style-meta">
+          <div class="swatches" aria-label="Palette">
+            <span class="swatch"><i style="--c:#f4f1ea"></i>Lime</span>
+            <span class="swatch"><i style="--c:#d9c8a9"></i>Sand</span>
+            <span class="swatch"><i style="--c:#b8955f"></i>Rattan</span>
+            <span class="swatch"><i style="--c:#7d8a62"></i>Olive</span>
+          </div>
+          <p class="style-for"><span>Ideal for</span>design B&amp;Bs and guests arriving from the city</p>
+        </div>
       </div>
       <div class="style-imgs">
         <button type="button" data-full="../img/restyling-stile-mediterraneo-camere.webp"><img src="../img/restyling-stile-mediterraneo-camere-sm.webp" width="900" height="675" loading="lazy" alt="Before and after, Mediterranean minimal style: bathroom, bedroom and breakfast room"></button>
@@ -399,13 +409,18 @@
     </div>
     <div class="style-panel" role="tabpanel" id="p3" aria-labelledby="t3" hidden>
       <div class="prose">
+        <span class="style-num" aria-hidden="true">III</span>
         <h3>Charm for weddings and weekends</h3>
         <p>Fine fabrics, chosen pieces and a palette of sage, beige and cream. The right positioning for weddings, romantic weekends and premium hospitality around Rome.</p>
-        <dl class="kpis">
-          <div><dt>Investment</dt><dd>€12–22k / room</dd></div>
-          <div><dt>Timing</dt><dd>4–6 weeks</dd></div>
-          <div><dt>Guests</dt><dd>Boutique · weddings</dd></div>
-        </dl>
+        <div class="style-meta">
+          <div class="swatches" aria-label="Palette">
+            <span class="swatch"><i style="--c:#9aa58c"></i>Sage</span>
+            <span class="swatch"><i style="--c:#d8c7ad"></i>Beige</span>
+            <span class="swatch"><i style="--c:#f1e8d6"></i>Cream</span>
+            <span class="swatch"><i style="--c:#4a3a2c"></i>Wood</span>
+          </div>
+          <p class="style-for"><span>Ideal for</span>weddings, romantic weekends and premium hospitality</p>
+        </div>
       </div>
       <div class="style-imgs">
         <button type="button" data-full="../img/restyling-stile-boutique-camere.webp"><img src="../img/restyling-stile-boutique-camere-sm.webp" width="900" height="675" loading="lazy" alt="Before and after, boutique country chic style: bathroom, bedroom and living room with staircase"></button>
@@ -414,6 +429,7 @@
     </div>
     <div class="style-panel" role="tabpanel" id="p4" aria-labelledby="t4" hidden>
       <div class="prose">
+        <span class="style-num" aria-hidden="true">IV</span>
         <h3>Courtyard, facades and farm buildings</h3>
         <p>Paint, a tidy courtyard and some planting are enough to change the face of the hamlet. The stable and barn first need their asbestos-cement roofs removed. Once that is done and the roofs are rebuilt, their volumes can be used again.</p>
         <p>Both are already registered as agricultural buildings (cadastral category D/10). Any change of use must be agreed with the municipality.</p>
@@ -425,7 +441,6 @@
         <button type="button" data-full="../img/riqualificazione-fienile.webp"><img src="../img/riqualificazione-fienile-sm.webp" width="900" height="507" loading="lazy" alt="Tuff-stone barn before and after: concept with a new roof"></button>
       </div>
     </div>
-    <p class="caption" style="margin-top:20px">Costs, rates and timings are indicative estimates, to be confirmed with a project and the required permits.</p>
   </div>
 </section>
 

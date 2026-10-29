@@ -31,7 +31,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,400&family=Jost:wght@400;500&display=swap">
-<link rel="preload" as="image" href="img/tenuta-riano-viale-ulivi-drone.webp" imagesrcset="img/tenuta-riano-viale-ulivi-drone-sm.webp 900w, img/tenuta-riano-viale-ulivi-drone.webp 1920w" imagesizes="100vw">
+<link rel="preload" as="image" href="img/hero-verticale-poster.webp">
 <link rel="stylesheet" href="assets/style.css">
 <script type="application/ld+json">
 {
@@ -122,13 +122,7 @@
 
 <main id="main">
 
-<section class="hero" id="top" aria-labelledby="h1">
-  <div class="hero-media">
-    <img src="img/tenuta-riano-viale-ulivi-drone.webp" srcset="img/tenuta-riano-viale-ulivi-drone-sm.webp 900w, img/tenuta-riano-viale-ulivi-drone.webp 1920w" sizes="100vw" width="1920" height="1080" alt="Vista aerea della tenuta a Riano: viale di ulivi che porta al casale e ai fabbricati, circondati da 21 ettari di prati e colline" fetchpriority="high">
-    <video class="hero-video" autoplay muted loop playsinline preload="metadata" poster="img/tenuta-riano-viale-ulivi-drone-sm.webp" aria-hidden="true" tabindex="-1">
-      <source src="video/tenuta-riano-hero.mp4" type="video/mp4">
-    </video>
-  </div>
+<section class="hero hero-split" id="top" aria-labelledby="h1">
   <div class="wrap">
     <p class="eyebrow">Vendesi · Riano, località Colle delle Rose · 25 km da Roma</p>
     <h1 id="h1">Tenuta in vendita alle porte di <em>Roma Nord</em></h1>
@@ -138,6 +132,12 @@
       <a class="btn btn-primary" href="#contatti">Richiedi il dossier riservato</a>
       <a class="btn btn-ghost" href="#potenziale">Scopri cosa può diventare</a>
     </div>
+  </div>
+  <div class="hero-media">
+    <img src="img/hero-verticale-poster.webp" width="864" height="1080" alt="Vista aerea della tenuta a Riano: viale di ulivi, casale e fabbricati tra prati e colline" fetchpriority="high">
+    <video class="hero-video" autoplay muted loop playsinline preload="auto" poster="img/hero-verticale-poster.webp" aria-hidden="true" tabindex="-1">
+      <source src="video/tenuta-riano-hero-verticale.mp4" type="video/mp4">
+    </video>
   </div>
 </section>
 
@@ -383,13 +383,18 @@
 
     <div class="style-panel" role="tabpanel" id="p1" aria-labelledby="t1">
       <div class="prose">
+        <span class="style-num" aria-hidden="true">I</span>
         <h3>Restyling leggero, spesa contenuta</h3>
         <p>Si tengono gli arredi in legno e i pavimenti. Bastano tessuti naturali, luce calda, stampe alle pareti e colori neutri per dare respiro a ogni ambiente.</p>
-        <dl class="kpis">
-          <div><dt>Investimento</dt><dd>€ 5–10 mila / camera</dd></div>
-          <div><dt>Tempi</dt><dd>2–4 settimane</dd></div>
-          <div><dt>Clientela</dt><dd>Agriturismo classico</dd></div>
-        </dl>
+        <div class="style-meta">
+          <div class="swatches" aria-label="Palette">
+            <span class="swatch"><i style="--c:#6b4a33"></i>Noce</span>
+            <span class="swatch"><i style="--c:#b5653f"></i>Cotto</span>
+            <span class="swatch"><i style="--c:#e8dfcf"></i>Lino</span>
+            <span class="swatch"><i style="--c:#a8854f"></i>Ottone</span>
+          </div>
+          <p class="style-for"><span>Ideale per</span>agriturismo classico, famiglie e weekend in campagna</p>
+        </div>
       </div>
       <div class="style-imgs">
         <button type="button" data-full="img/restyling-stile-rustico-camere.webp"><img src="img/restyling-stile-rustico-camere-sm.webp" width="900" height="675" loading="lazy" alt="Prima e dopo stile rustico contemporaneo: bagno, camera da letto e sala colazioni dell'agriturismo"></button>
@@ -398,13 +403,18 @@
     </div>
     <div class="style-panel" role="tabpanel" id="p2" aria-labelledby="t2" hidden>
       <div class="prose">
+        <span class="style-num" aria-hidden="true">II</span>
         <h3>Più luce, materiali naturali</h3>
         <p>Toni chiari, fibre naturali, lampade in rattan e piante d'ulivo. Gli spazi diventano più leggeri e si avvicinano allo stile dei B&amp;B di design che piacciono a chi viaggia dalla città.</p>
-        <dl class="kpis">
-          <div><dt>Investimento</dt><dd>€ 8–15 mila / camera</dd></div>
-          <div><dt>Tempi</dt><dd>3–5 settimane</dd></div>
-          <div><dt>Clientela</dt><dd>B&amp;B contemporaneo</dd></div>
-        </dl>
+        <div class="style-meta">
+          <div class="swatches" aria-label="Palette">
+            <span class="swatch"><i style="--c:#f4f1ea"></i>Calce</span>
+            <span class="swatch"><i style="--c:#d9c8a9"></i>Sabbia</span>
+            <span class="swatch"><i style="--c:#b8955f"></i>Rattan</span>
+            <span class="swatch"><i style="--c:#7d8a62"></i>Ulivo</span>
+          </div>
+          <p class="style-for"><span>Ideale per</span>B&amp;B di design e viaggiatori che arrivano dalla città</p>
+        </div>
       </div>
       <div class="style-imgs">
         <button type="button" data-full="img/restyling-stile-mediterraneo-camere.webp"><img src="img/restyling-stile-mediterraneo-camere-sm.webp" width="900" height="675" loading="lazy" alt="Prima e dopo stile mediterraneo minimal: bagno, camera e sala colazioni"></button>
@@ -413,13 +423,18 @@
     </div>
     <div class="style-panel" role="tabpanel" id="p3" aria-labelledby="t3" hidden>
       <div class="prose">
+        <span class="style-num" aria-hidden="true">III</span>
         <h3>Charme per matrimoni e weekend</h3>
         <p>Tessuti pregiati, complementi scelti e una palette di verde salvia, beige e crema. È il posizionamento adatto a matrimoni, weekend romantici e ospitalità di fascia alta nell'area di Roma.</p>
-        <dl class="kpis">
-          <div><dt>Investimento</dt><dd>€ 12–22 mila / camera</dd></div>
-          <div><dt>Tempi</dt><dd>4–6 settimane</dd></div>
-          <div><dt>Clientela</dt><dd>Boutique · matrimoni</dd></div>
-        </dl>
+        <div class="style-meta">
+          <div class="swatches" aria-label="Palette">
+            <span class="swatch"><i style="--c:#9aa58c"></i>Salvia</span>
+            <span class="swatch"><i style="--c:#d8c7ad"></i>Beige</span>
+            <span class="swatch"><i style="--c:#f1e8d6"></i>Crema</span>
+            <span class="swatch"><i style="--c:#4a3a2c"></i>Legno</span>
+          </div>
+          <p class="style-for"><span>Ideale per</span>matrimoni, weekend di charme e ospitalità di fascia alta</p>
+        </div>
       </div>
       <div class="style-imgs">
         <button type="button" data-full="img/restyling-stile-boutique-camere.webp"><img src="img/restyling-stile-boutique-camere-sm.webp" width="900" height="675" loading="lazy" alt="Prima e dopo stile boutique country chic: bagno, camera e soggiorno con scala"></button>
@@ -428,6 +443,7 @@
     </div>
     <div class="style-panel" role="tabpanel" id="p4" aria-labelledby="t4" hidden>
       <div class="prose">
+        <span class="style-num" aria-hidden="true">IV</span>
         <h3>Corte, prospetti e volumi agricoli</h3>
         <p>Pittura, sistemazione della corte e cura del verde bastano a cambiare il volto del borgo. Stalla e fienile vanno prima liberati dalle coperture in cemento-amianto. Dopo la bonifica e il rifacimento del tetto, i loro volumi tornano utilizzabili.</p>
         <p>Le superfici sono già accatastate come fabbricati strumentali agricoli (D/10). Ogni nuova destinazione va verificata con il Comune.</p>
@@ -439,7 +455,6 @@
         <button type="button" data-full="img/riqualificazione-fienile.webp"><img src="img/riqualificazione-fienile-sm.webp" width="900" height="507" loading="lazy" alt="Fienile in tufo prima e dopo: ipotesi di recupero con nuova copertura"></button>
       </div>
     </div>
-    <p class="caption" style="margin-top:20px">Costi, tariffe e tempi sono stime indicative. Vanno verificati con un progetto e con le autorizzazioni necessarie.</p>
   </div>
 </section>
 
