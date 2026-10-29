@@ -53,12 +53,12 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://www.tenutacolledellerose.it/guida/comprare-agriturismo-vicino-roma</loc>
+    <loc>https://www.tenutacolledellerose.it/guida/cambiare-vita-trasferirsi-in-campagna-vicino-roma</loc>
     <lastmod>2026-10-29</lastmod>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://www.tenutacolledellerose.it/guida/quanto-rende-un-agriturismo-nel-lazio</loc>
+    <loc>https://www.tenutacolledellerose.it/guida/vivere-in-campagna-con-gli-animali</loc>
     <lastmod>2026-10-29</lastmod>
     <priority>0.6</priority>
   </url>
@@ -68,14 +68,28 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://www.tenutacolledellerose.it/guida/agevolazioni-acquisto-terreni-agricoli</loc>
+    <loc>https://www.tenutacolledellerose.it/guida/aprire-e-gestire-un-agriturismo</loc>
     <lastmod>2026-10-29</lastmod>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://www.tenutacolledellerose.it/guida/vivere-a-roma-nord-tra-flaminia-e-tevere</loc>
+    <loc>https://www.tenutacolledellerose.it/guida/sgravi-fiscali-e-incentivi-agricoltura</loc>
     <lastmod>2026-10-29</lastmod>
     <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.tenutacolledellerose.it/guida/vivere-a-roma-con-la-natura-intorno</loc>
+    <lastmod>2026-10-29</lastmod>
+    <priority>0.6</priority>
+    <xhtml:link rel="alternate" hreflang="it" href="https://www.tenutacolledellerose.it/guida/vivere-a-roma-con-la-natura-intorno"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenutacolledellerose.it/en/guide/moving-to-italy-countryside-near-rome"/>
+  </url>
+  <url>
+    <loc>https://www.tenutacolledellerose.it/en/guide/moving-to-italy-countryside-near-rome</loc>
+    <lastmod>2026-10-29</lastmod>
+    <priority>0.6</priority>
+    <xhtml:link rel="alternate" hreflang="it" href="https://www.tenutacolledellerose.it/guida/vivere-a-roma-con-la-natura-intorno"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenutacolledellerose.it/en/guide/moving-to-italy-countryside-near-rome"/>
   </url>
   <url>
     <loc>https://www.tenutacolledellerose.it/privacy</loc>
