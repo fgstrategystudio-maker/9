@@ -21,9 +21,21 @@ async function sb(method, path, body) {
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end()
-  if (!tokenValido(req)) return res.status(401).json({ error: 'non_autorizzato' })
 
-  const { action, ...p } = req.body
+  const { action, ...p } = req.body || {}
+
+  // Il keep-alive di GitHub Actions non ha il token: fa una lettura vera sul DB
+  // (così Supabase non mette in pausa il progetto) ma risponde solo "ok".
+  if (action === 'keepalive') {
+    try {
+      await sb('GET', 'freelance_kv?select=key&limit=1')
+      return res.json({ result: 'ok' })
+    } catch {
+      return res.status(503).json({ error: 'db_non_raggiungibile' })
+    }
+  }
+
+  if (!tokenValido(req)) return res.status(401).json({ error: 'non_autorizzato' })
 
   try {
     let result
