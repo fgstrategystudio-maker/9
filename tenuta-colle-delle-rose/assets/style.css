@@ -114,7 +114,7 @@ p { margin: 0; }
 .hero-split::after { display: none; }
 .hero-split .wrap { margin: 0; max-width: none; align-self: end; padding-left: max(20px, env(safe-area-inset-left, 0px), calc((100vw - var(--wrap)) / 2 + 20px)); padding-right: clamp(28px, 4vw, 72px); }
 .hero-split .hero-media { position: relative; inset: auto; z-index: 0; }
-.hero-split .hero-media::after { content: ""; position: absolute; inset: 0 auto 0 0; width: 18%; background: linear-gradient(90deg, #121714, rgba(18,23,20,0)); pointer-events: none; }
+.hero-split .hero-media::after { content: ""; position: absolute; inset: 0 auto 0 -1px; width: 18%; background: linear-gradient(90deg, #121714, rgba(18,23,20,0)); pointer-events: none; }
 .hero.hero-split .wrap { padding-block: 112px 56px; align-self: center; gap: 20px; }
 .hero.hero-split h1 { font-size: clamp(2.4rem, 1.2rem + 2.4vw, 4rem); max-width: 17ch; }
 .hero.hero-split .lead { font-size: clamp(1.1rem, 1rem + .4vw, 1.3rem); max-width: 46ch; }
