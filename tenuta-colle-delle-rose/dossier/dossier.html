@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>Tenuta Colle delle Rose · Dossier riservato</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,400&family=Jost:wght@400;500&display=swap">
+<style>
+  @page { size: A4; margin: 0; }
+  :root { --ivory: #f3f0e8; --ink: #1b201c; --soft: #5b6058; --brass: #94744a; --brass-lt: #c9a66f; --night: #121714; --line: #d9d2c3; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--ivory); color: var(--ink); font-family: "Jost", "Futura", sans-serif; font-size: 10pt; line-height: 1.6; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .page { width: 210mm; height: 297mm; position: relative; overflow: hidden; page-break-after: always; break-after: page; padding: 22mm 20mm 20mm; display: flex; flex-direction: column; gap: 7mm; }
+  .page:last-child { page-break-after: auto; break-after: auto; }
+  .dark { background: var(--night); color: #ece8de; }
+  h1, h2, h3 { font-family: "Cormorant Garamond", Garamond, serif; font-weight: 400; margin: 0; line-height: 1.08; }
+  h1 { font-size: 46pt; font-weight: 300; }
+  h2 { font-size: 30pt; font-weight: 300; }
+  h2 em, h1 em { font-style: italic; color: var(--brass); }
+  .dark h2 em, .dark h1 em { color: var(--brass-lt); }
+  h3 { font-size: 15pt; font-weight: 500; }
+  p { margin: 0; }
+  .eyebrow { font-size: 7pt; letter-spacing: .26em; text-transform: uppercase; color: var(--brass); display: flex; align-items: center; gap: 10px; }
+  .eyebrow::before { content: ""; width: 22px; height: 1px; background: currentColor; }
+  .dark .eyebrow { color: var(--brass-lt); }
+  .lead { font-family: "Cormorant Garamond", serif; font-size: 15pt; line-height: 1.4; color: var(--soft); }
+  .dark .lead { color: rgba(236,232,222,.78); }
+  .soft { color: var(--soft); }
+  .foot { position: absolute; left: 20mm; right: 20mm; bottom: 10mm; display: flex; justify-content: space-between; font-size: 6.5pt; letter-spacing: .2em; text-transform: uppercase; color: var(--soft); border-top: 1px solid var(--line); padding-top: 3mm; }
+  .dark .foot { color: rgba(236,232,222,.45); border-color: rgba(255,255,255,.12); }
+  img { display: block; width: 100%; object-fit: cover; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6mm; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4mm; }
+  .cap { font-family: "Cormorant Garamond", serif; font-style: italic; font-size: 10pt; color: var(--soft); margin-top: 1.5mm; }
+  table { width: 100%; border-collapse: collapse; font-size: 8.6pt; }
+  th, td { text-align: left; padding: 1.9mm 2mm 1.9mm 0; border-bottom: 1px solid var(--line); }
+  th { font-weight: 500; font-size: 6.5pt; letter-spacing: .18em; text-transform: uppercase; color: var(--soft); border-bottom: 1px solid var(--ink); }
+  td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; }
+  tfoot td { font-weight: 500; border-bottom: 0; }
+  ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 2.2mm; }
+  ul li { padding-left: 7mm; position: relative; }
+  ul li::before { content: ""; position: absolute; left: 0; top: .8em; width: 4mm; height: 1px; background: var(--brass); }
+  .figs { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--line); }
+  .figs div { padding: 4mm 3mm 4mm 0; border-bottom: 1px solid var(--line); }
+  .figs dt { font-size: 6.5pt; letter-spacing: .2em; text-transform: uppercase; color: var(--brass); }
+  .figs dd { margin: 0; font-family: "Cormorant Garamond", serif; font-size: 22pt; font-weight: 300; }
+  .dark .figs { border-color: rgba(255,255,255,.14); } .dark .figs div { border-color: rgba(255,255,255,.14); } .dark .figs dt { color: var(--brass-lt); }
+  .price { display: grid; gap: 3mm; border-top: 1px solid rgba(201,166,111,.6); border-bottom: 1px solid rgba(201,166,111,.6); padding: 5mm 0; }
+  .price .row { display: flex; justify-content: space-between; align-items: baseline; }
+  .price .k { font-size: 7pt; letter-spacing: .22em; text-transform: uppercase; color: rgba(236,232,222,.6); }
+  .price .v { font-family: "Cormorant Garamond", serif; font-size: 20pt; font-weight: 300; }
+  .price .main .v { font-size: 34pt; color: var(--brass-lt); }
+  .note { border-left: 1px solid var(--brass); padding-left: 5mm; display: grid; gap: 2mm; }
+  .steps { counter-reset: s; display: grid; gap: 4mm; }
+  .steps div { display: grid; grid-template-columns: 12mm 1fr; gap: 3mm; align-items: baseline; }
+  .steps div::before { counter-increment: s; content: counter(s, upper-roman); font-family: "Cormorant Garamond", serif; font-size: 20pt; color: var(--brass-lt); }
+  .models { display: grid; grid-template-columns: 1fr 1fr; gap: 6mm 8mm; }
+  .models div { border-top: 1px solid var(--ink); padding-top: 3mm; display: grid; gap: 1.5mm; }
+  .models .t { font-size: 6.5pt; letter-spacing: .22em; text-transform: uppercase; color: var(--brass); }
+  /* Copertina */
+  .cover { padding: 0; color: #fff; justify-content: flex-end; }
+  .cover > img { position: absolute; inset: 0; height: 100%; }
+  .cover::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(10,13,11,.35) 0%, rgba(10,13,11,.1) 40%, rgba(10,13,11,.88) 100%); }
+  .cover .inner { position: relative; z-index: 1; padding: 0 20mm 22mm; display: grid; gap: 6mm; }
+  .cover .top { position: absolute; z-index: 1; top: 18mm; left: 20mm; right: 20mm; display: flex; justify-content: space-between; font-size: 7pt; letter-spacing: .26em; text-transform: uppercase; }
+  .cover h1 { font-size: 58pt; }
+  .cover h1 em { color: #e6cf9f; }
+  .cover .lead { color: rgba(255,255,255,.88); }
+  .cover .eyebrow { color: #e6cf9f; }
+  .badge { display: inline-block; border: 1px solid rgba(255,255,255,.6); padding: 2mm 4mm; font-size: 7pt; letter-spacing: .26em; text-transform: uppercase; }
+  .full { margin: 0 -20mm; }
+</style>
+</head>
+<body>
+
+<!-- 1. Copertina -->
+<section class="page cover">
+  <img src="img/tenuta-riano-viale-ulivi-drone.jpg" alt="">
+  <div class="top"><span>Dossier riservato</span><span>Ottobre 2026</span></div>
+  <div class="inner">
+    <p class="eyebrow">Riano · località Colle delle Rose · Roma</p>
+    <h1>Tenuta <em>Colle delle Rose</em></h1>
+    <p class="lead">Ventuno ettari, un agriturismo con 8 camere, una società agricola autorizzata e oltre 1.600 mq di fabbricati, a 25 km da Roma.</p>
+    <p><span class="badge">Documento confidenziale</span></p>
+  </div>
+</section>
+
+<!-- 2. Sintesi e prezzo -->
+<section class="page dark">
+  <p class="eyebrow">01 · L'opportunità in sintesi</p>
+  <h2>Un'azienda agricola avviata, <em>pronta a essere trasformata</em></h2>
+  <p class="lead">Uno dei pochi compendi agricoli sopra i venti ettari ancora interi a questa distanza da Roma. Chi acquista trova terreni, abitazioni, una struttura ricettiva arredata e le autorizzazioni per lavorare da subito.</p>
+  <dl class="figs" style="margin:0">
+    <div><dt>Superficie</dt><dd>208.930 mq</dd></div>
+    <div><dt>Fabbricati</dt><dd>~1.680 mq</dd></div>
+    <div><dt>Camere</dt><dd>8</dd></div>
+    <div><dt>Coperti</dt><dd>~70</dd></div>
+    <div><dt>Unità abitative</dt><dd>4</dd></div>
+    <div><dt>Ulivi</dt><dd>~70</dd></div>
+    <div><dt>Da Roma</dt><dd>25 km</dd></div>
+    <div><dt>Fiumicino</dt><dd>~50 km</dd></div>
+  </dl>
+  <div class="grid2" style="align-items:end;margin-top:4mm">
+    <div style="display:grid;gap:3mm">
+      <h3 style="font-size:18pt">Prezzo e stima</h3>
+      <p style="color:rgba(236,232,222,.75)">La stima di mercato redatta nel luglio 2025 da un'agenzia specializzata in terreni e aziende agricole valuta il compendio € 1.014.969. La richiesta è di € 869.000, il 14% in meno.</p>
+      <p style="color:rgba(236,232,222,.55);font-size:8.5pt">La stima applica ai valori agricoli medi della zona un incremento del 32% per posizione, dimensione, pendenze, presenza di accesso ed elettricità. Il valore definitivo va confermato con sopralluogo.</p>
+    </div>
+    <div class="price">
+      <div class="row main"><span class="k">Prezzo richiesto</span><span class="v">€ 869.000</span></div>
+      <div class="row"><span class="k">Terreni</span><span class="v">€ 689.469</span></div>
+      <div class="row"><span class="k">Fabbricati</span><span class="v">€ 325.500</span></div>
+      <div class="row"><span class="k">Valore stimato totale</span><span class="v">€ 1.014.969</span></div>
+    </div>
+  </div>
+  <div class="foot"><span>Tenuta Colle delle Rose · Dossier riservato</span><span>2</span></div>
+</section>
+
+<!-- 3. Posizione -->
+<section class="page">
+  <p class="eyebrow">02 · Posizione</p>
+  <h2>Campagna vera, <em>a mezz'ora da Roma</em></h2>
+  <p class="lead">La tenuta si trova in località Colle delle Rose, nel Comune di Riano (RM), tra la Via Flaminia e Via Codette, poco a nord dell'Arco di Malborghetto. L'accesso carrabile è da Via Colle delle Rose.</p>
+  <div class="grid2">
+    <div><img src="img/tenuta-riano-mappa-catastale.jpg" style="height:62mm" alt=""><p class="cap">Perimetro su mappa catastale.</p></div>
+    <div><img src="img/tenuta-riano-inquadramento-roma-nord.jpg" style="height:62mm" alt=""><p class="cap">Inquadramento tra Flaminia e Tevere.</p></div>
+  </div>
+  <table>
+    <thead><tr><th>Destinazione</th><th>Come</th><th class="n">Distanza</th></tr></thead>
+    <tbody>
+      <tr><td>Roma centro</td><td>Via Flaminia, 30–40 minuti in auto</td><td class="n">≈ 25 km</td></tr>
+      <tr><td>Grande Raccordo Anulare</td><td>uscita Flaminia</td><td class="n">≈ 15 km</td></tr>
+      <tr><td>Via Flaminia (SS3)</td><td>consolare che costeggia la proprietà</td><td class="n">&lt; 1 km</td></tr>
+      <tr><td>Lago di Bracciano</td><td>turismo naturalistico e del weekend</td><td class="n">≈ 25 km</td></tr>
+      <tr><td>Aeroporto di Fiumicino</td><td>voli internazionali</td><td class="n">≈ 50 km</td></tr>
+    </tbody>
+  </table>
+  <p class="soft">Nelle vicinanze: Parco Regionale di Veio, valle del Tevere, ferrovia Roma–Civita Castellana–Viterbo lungo la Flaminia, borghi di Riano, Sacrofano, Castelnuovo di Porto e Morlupo.</p>
+  <div class="foot"><span>Tenuta Colle delle Rose · Dossier riservato</span><span>3</span></div>
+</section>
+
+<!-- 4. Terreni -->
+<section class="page">
+  <p class="eyebrow">03 · I terreni</p>
+  <h2>208.930 mq <em>in un solo corpo</em></h2>
+  <p class="lead">Fondo leggermente collinare, con prati aperti, seminativo, bosco ceduo lungo i fossi e un viale di ulivi che sale ai fabbricati.</p>
+  <table>
+    <thead><tr><th>Comune</th><th>Foglio</th><th>Particella</th><th>Qualità</th><th>Classe</th><th class="n">Mq</th></tr></thead>
+    <tbody>
+      <tr><td>Riano</td><td>5</td><td>14</td><td>Bosco ceduo</td><td>2</td><td class="n">13.450</td></tr>
+      <tr><td>Riano</td><td>5</td><td>20</td><td>Seminativo / Bosco ceduo</td><td>3 / 3</td><td class="n">63 + 279</td></tr>
+      <tr><td>Riano</td><td>5</td><td>21</td><td>Seminativo / Bosco ceduo</td><td>3 / 3</td><td class="n">44 + 136</td></tr>
+      <tr><td>Riano</td><td>5</td><td>22</td><td>Seminativo / Bosco ceduo</td><td>3 / 3</td><td class="n">190 + 500</td></tr>
+      <tr><td>Riano</td><td>5</td><td>285</td><td>Seminativo</td><td>3</td><td class="n">1.875</td></tr>
+      <tr><td>Riano</td><td>5</td><td>286</td><td>Seminativo</td><td>3</td><td class="n">690</td></tr>
+      <tr><td>Riano</td><td>5</td><td>287</td><td>Seminativo</td><td>2</td><td class="n">12.465</td></tr>
+      <tr><td>Riano</td><td>5</td><td>288</td><td>Seminativo</td><td>2</td><td class="n">6.760</td></tr>
+      <tr><td>Riano</td><td>5</td><td>290</td><td>Seminativo</td><td>3</td><td class="n">12.550</td></tr>
+      <tr><td>Riano</td><td>5</td><td>617</td><td>Seminativo</td><td>3</td><td class="n">121.917</td></tr>
+      <tr><td>Riano</td><td>5</td><td>619</td><td>Seminativo</td><td>2</td><td class="n">33.092</td></tr>
+      <tr><td>Riano</td><td>5</td><td>621</td><td>Seminativo</td><td>3</td><td class="n">4.919</td></tr>
+    </tbody>
+    <tfoot><tr><td colspan="5">Totale · seminativo 194.565 mq · bosco ceduo 14.365 mq</td><td class="n">208.930</td></tr></tfoot>
+  </table>
+  <div class="grid2">
+    <ul>
+      <li><strong>Accesso carrabile</strong> da Via Colle delle Rose con viale alberato.</li>
+      <li><strong>Sistemi di scolo</strong> primari e secondari per la regimazione delle acque.</li>
+      <li><strong>Uliveto</strong> di circa 70 piante: fino a circa 13 quintali di olive a pieno regime.</li>
+    </ul>
+    <ul>
+      <li><strong>Energia elettrica</strong> presente.</li>
+      <li><strong>Confini naturali</strong>: fossi alberati lungo i lati lunghi.</li>
+      <li>Per seminare con le agevolazioni previste, l'attività agricola deve essere attiva.</li>
+    </ul>
+  </div>
+  <div class="foot"><span>Tenuta Colle delle Rose · Dossier riservato</span><span>4</span></div>
+</section>
+
+<!-- 5. Fabbricati -->
+<section class="page">
+  <p class="eyebrow">04 · I fabbricati</p>
+  <h2>Un borgo agricolo <em>sul crinale</em></h2>
+  <img src="img/tenuta-riano-fronte-fabbricati.jpg" class="full" style="height:70mm;width:auto" alt="">
+  <table>
+    <thead><tr><th>Fabbricato</th><th>Catasto</th><th>Descrizione</th><th class="n">Mq</th></tr></thead>
+    <tbody>
+      <tr><td>Agriturismo</td><td>—</td><td>8 camere, sala ristorante ~70 coperti con camino, sala colazioni, veranda</td><td class="n">—</td></tr>
+      <tr><td>Abitazione</td><td>F. 5 p. 225/500 · A/4 cl. 2</td><td>unità abitativa</td><td class="n">77</td></tr>
+      <tr><td>Abitazione</td><td>F. 5 p. 225/501 · A/4 cl. 2</td><td>unità abitativa</td><td class="n">90</td></tr>
+      <tr><td>Abitazione</td><td>F. 5 p. 225/1 · A/4 cl. 1</td><td>unità abitativa</td><td class="n">85</td></tr>
+      <tr><td>Abitazione</td><td>F. 5 p. 225/2 · A/4 cl. 1</td><td>unità abitativa</td><td class="n">76</td></tr>
+      <tr><td>Stalla</td><td>D/10</td><td>grande volume a una campata</td><td class="n">750</td></tr>
+      <tr><td>Fienile</td><td>D/10</td><td>muratura in tufo, struttura alta e aperta</td><td class="n">400</td></tr>
+      <tr><td>Magazzino</td><td>D/10</td><td>deposito e servizi</td><td class="n">200</td></tr>
+    </tbody>
+  </table>
+  <p class="soft" style="font-size:8.5pt">Fabbricati strumentali agricoli (D/10): F. 5 p. 225/4, 226/1, 299, 324, 325, 326, 327. Le superfici di stalla, fienile e magazzino sono quelle indicate nella stima di mercato; le superfici delle abitazioni sono catastali; la superficie dell'agriturismo risulta dalle planimetrie. Planimetrie disponibili su richiesta.</p>
+  <div class="foot"><span>Tenuta Colle delle Rose · Dossier riservato</span><span>5</span></div>
+</section>
+
+<!-- 6. Agriturismo e società -->
+<section class="page">
+  <p class="eyebrow">05 · Agriturismo e società agricola</p>
+  <h2>Pronto a ripartire, <em>con i permessi</em></h2>
+  <div class="grid2">
+    <div><img src="img/agriturismo-riano-sala-ristorante-camino.jpg" style="height:58mm" alt=""><p class="cap">Sala ristorante con camino, circa 70 coperti.</p></div>
+    <div><img src="img/agriturismo-riano-sala-colazioni.jpg" style="height:58mm" alt=""><p class="cap">Sala colazioni con accesso al giardino.</p></div>
+    <div><img src="img/agriturismo-riano-porticato.jpg" style="height:58mm" alt=""><p class="cap">Porticato e terrazza in cotto.</p></div>
+    <div><img src="img/agriturismo-riano-casale-facciata.jpg" style="height:58mm" alt=""><p class="cap">Il corpo dell'agriturismo.</p></div>
+  </div>
+  <div class="grid2">
+    <div style="display:grid;gap:2mm">
+      <h3>La struttura</h3>
+      <ul>
+        <li><strong>8 camere</strong> per gli ospiti, arredate.</li>
+        <li><strong>Sala ristorante</strong> da circa 70 coperti con camino.</li>
+        <li><strong>Sala colazioni</strong> e <strong>veranda coperta</strong>.</li>
+        <li>Pavimenti in cotto e arredi in legno utilizzabili.</li>
+      </ul>
+    </div>
+    <div style="display:grid;gap:2mm">
+      <h3>La società agricola</h3>
+      <ul>
+        <li>Proposta insieme alla tenuta.</li>
+        <li>Autorizzazioni per <strong>agriturismo</strong>, <strong>ristorazione</strong> e <strong>macelleria</strong>.</li>
+        <li>Modalità di subentro (quote o azienda) da definire in trattativa, con verifica contabile.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="foot"><span>Tenuta Colle delle Rose · Dossier riservato</span><span>6</span></div>
+</section>
+
+<!-- 7. Galleria -->
+<section class="page dark">
+  <p class="eyebrow">06 · La tenuta oggi</p>
+  <div class="grid2" style="gap:4mm">
+    <img src="img/tenuta-riano-vista-aerea-colline.jpg" style="height:62mm" alt="">
+    <img src="img/tenuta-riano-complesso-fabbricati-alto.jpg" style="height:62mm" alt="">
+    <img src="img/tenuta-riano-vista-aerea-nord.jpg" style="height:62mm" alt="">
+    <img src="img/tenuta-riano-terreni-uliveto.jpg" style="height:62mm" alt="">
+    <img src="img/tenuta-riano-terreni-seminativo.jpg" style="height:62mm" alt="">
+    <img src="img/tenuta-riano-corte-fienile-tufo.jpg" style="height:62mm" alt="">
+  </div>
+  <div class="foot"><span>Tenuta Colle delle Rose · Dossier riservato</span><span>7</span></div>
+</section>
+
+<!-- 8. Potenziale -->
+<section class="page">
+  <p class="eyebrow">07 · Il potenziale</p>
+  <h2>Quattro progetti <em>sulla stessa terra</em></h2>
+  <div class="models">
+    <div><span class="t">Ospitalità</span><h3>Agriturismo di charme</h3><p class="soft">Camere rinnovate, cucina con i prodotti dell'azienda, olio della tenuta, esperienze in campagna per ospiti da Roma e dall'estero.</p></div>
+    <div><span class="t">Eventi</span><h3>Location per matrimoni</h3><p class="soft">Sala esistente, veranda e prati panoramici. Il fienile in tufo, una volta recuperato, può diventare sala ricevimenti coperta.</p></div>
+    <div><span class="t">Equitazione</span><h3>Centro equestre</h3><p class="soft">Stalla da 750 mq come scuderia con box, 19,5 ettari per paddock e fieno, pensione, scuola e turismo equestre.</p></div>
+    <div><span class="t">Benessere</span><h3>Ritiri e wellness</h3><p class="soft">Yoga, ritiri, turismo lento: a 50 km da Fiumicino, per gruppi italiani e internazionali.</p></div>
+  </div>
+  <div class="note"><h3>In alternativa: riserva fondiaria</h3><p class="soft">Ventuno ettari a 25 km da Roma possono essere affittati a un coltivatore diretto con contratti pluriennali, mantenendo aperte tutte le opzioni future.</p></div>
+  <div class="grid2">
+    <div><img src="img/confronto-camino-prima.jpg" style="height:52mm" alt=""><p class="cap">Sala con camino, oggi.</p></div>
+    <div><img src="img/confronto-camino-dopo.jpg" style="height:52mm" alt=""><p class="cap">Ipotesi di restyling (simulazione).</p></div>
+  </div>
+  <table>
+    <thead><tr><th>Stile di restyling</th><th>Interventi</th><th>Investimento indicativo</th><th class="n">Tempi</th></tr></thead>
+    <tbody>
+      <tr><td>Rustico contemporaneo</td><td>tessuti, luci, complementi</td><td>€ 5–10 mila / camera</td><td class="n">2–4 settimane</td></tr>
+      <tr><td>Mediterraneo minimal</td><td>palette chiara, fibre naturali</td><td>€ 8–15 mila / camera</td><td class="n">3–5 settimane</td></tr>
+      <tr><td>Boutique country chic</td><td>tessuti pregiati, arredi scelti</td><td>€ 12–22 mila / camera</td><td class="n">4–6 settimane</td></tr>
+    </tbody>
+  </table>
+  <div class="foot"><span>Tenuta Colle delle Rose · Dossier riservato</span><span>8</span></div>
+</section>
+
+<!-- 9. Da sapere -->
+<section class="page">
+  <p class="eyebrow">08 · Stato e informazioni tecniche</p>
+  <h2>Quello che <em>è giusto sapere</em></h2>
+  <div class="grid2" style="gap:8mm">
+    <div class="note"><h3>Coperture in amianto</h3><p class="soft">I tetti di stalla e fienile sono in cemento-amianto e vanno rimossi e smaltiti da ditta autorizzata, con piano di lavoro presentato all'ASL. Dopo la bonifica i volumi, già accatastati come fabbricati agricoli, tornano utilizzabili. Bandi come Parco Agrisolare (fotovoltaico con rimozione amianto) e ISI INAIL hanno finanziato in passato interventi di questo tipo.</p></div>
+    <div class="note"><h3>Scarichi</h3><p class="soft">Tre fosse Imhoff: una per le abitazioni, una per l'agriturismo, una per i servizi agricoli.</p></div>
+    <div class="note"><h3>Attività agricola</h3><p class="soft">Per seminare e gestire i terreni con le agevolazioni previste, la società agricola deve essere attiva. L'agriturismo resta collegato all'attività agricola, che deve essere prevalente.</p></div>
+    <div class="note"><h3>Prelazione agraria</h3><p class="soft">Prima del rogito la proposta va notificata agli eventuali aventi diritto (affittuari o confinanti coltivatori diretti), che hanno 30 giorni per esercitarla.</p></div>
+    <div class="note"><h3>Agevolazioni per l'acquirente</h3><p class="soft">Coltivatori diretti e IAP possono accedere alle imposte ridotte della piccola proprietà contadina sulla parte agricola (registro e ipotecaria fisse, catastale 1%).</p></div>
+    <div class="note"><h3>Documenti su richiesta</h3><p class="soft">Visure e planimetrie catastali, certificato di destinazione urbanistica, documentazione urbanistica dei fabbricati, autorizzazioni della società agricola, stima di mercato completa.</p></div>
+  </div>
+  <div class="foot"><span>Tenuta Colle delle Rose · Dossier riservato</span><span>9</span></div>
+</section>
+
+<!-- 10. Prossimi passi -->
+<section class="page dark">
+  <p class="eyebrow">09 · Prossimi passi</p>
+  <h2>Dalla visita <em>al rogito</em></h2>
+  <div class="steps">
+    <div><p><strong>Sopralluogo guidato</strong> della proprietà, anche nel fine settimana.</p></div>
+    <div><p><strong>Due diligence</strong>: accesso ai documenti tecnici, catastali, urbanistici e societari.</p></div>
+    <div><p><strong>Proposta d'acquisto</strong> scritta, con modalità di acquisto della società agricola.</p></div>
+    <div><p><strong>Contratto preliminare</strong> e notifica della prelazione agraria.</p></div>
+    <div><p><strong>Rogito</strong> presso il notaio scelto dalle parti.</p></div>
+  </div>
+  <div class="price" style="margin-top:4mm">
+    <div class="row main"><span class="k">Prezzo richiesto</span><span class="v">€ 869.000</span></div>
+    <div class="row"><span class="k">Comprende</span><span class="v" style="font-size:13pt">terreni, fabbricati, società agricola e autorizzazioni</span></div>
+  </div>
+  <div class="grid2" style="margin-top:4mm">
+    <div style="display:grid;gap:2mm">
+      <span class="eyebrow">Contatti</span>
+      <p style="font-family:'Cormorant Garamond',serif;font-size:18pt">fgstrategystudio@gmail.com</p>
+      <p style="font-family:'Cormorant Garamond',serif;font-size:18pt">+39 351 704 8540 · WhatsApp</p>
+      <p style="color:rgba(236,232,222,.6)">www.tenutacolledellerose.it</p>
+    </div>
+    <div style="display:grid;gap:2mm">
+      <span class="eyebrow">Riservatezza</span>
+      <p style="color:rgba(236,232,222,.6);font-size:8.3pt">Questo dossier è riservato e destinato esclusivamente al destinatario, ai soli fini della valutazione dell'acquisto. Non può essere copiato né trasmesso a terzi senza consenso. Le informazioni sono fornite in buona fede sulla base dei documenti disponibili e non costituiscono offerta contrattuale; superfici, dati catastali e stime vanno verificati in fase di due diligence. Le immagini "dopo" sono simulazioni illustrative.</p>
+    </div>
+  </div>
+  <div class="foot"><span>Tenuta Colle delle Rose · Dossier riservato</span><span>10</span></div>
+</section>
+
+</body>
+</html>
