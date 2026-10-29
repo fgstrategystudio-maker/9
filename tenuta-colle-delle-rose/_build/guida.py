@@ -131,32 +131,24 @@ body = f'''<p>Ospitare persone in campagna, cucinare con quello che produci, rac
   <li><strong>I giorni feriali</strong>: eventi aziendali, gruppi e soggiorni lunghi riempiono la settimana.</li>
   <li><strong>Le persone</strong>: una piccola squadra fidata, soprattutto in cucina e nelle pulizie.</li>
 </ul>
-<h2 id="numeri">Quanto può rendere</h2>
-<p>Il conto di base è semplice: camere × prezzo medio a notte × occupazione × 365. Con 8 camere:</p>
-<div class="table-wrap"><table>
-<thead><tr><th>Scenario</th><th class="num">Prezzo / notte</th><th class="num">Occupazione</th><th class="num">Camere / anno</th></tr></thead>
-<tbody>
-<tr><td>Agriturismo classico</td><td class="num">€ 90</td><td class="num">35%</td><td class="num">€ 91.980</td></tr>
-<tr><td>Restyling contemporaneo</td><td class="num">€ 120</td><td class="num">45%</td><td class="num">€ 157.680</td></tr>
-<tr><td>Boutique e matrimoni</td><td class="num">€ 180</td><td class="num">50%</td><td class="num">€ 262.800</td></tr>
-</tbody></table></div>
-<p>A questo si aggiungono ristorazione, eventi e vendita dei prodotti. Dall'altra parte ci sono personale, commissioni dei portali di prenotazione, utenze e manutenzione. Gli agriturismi possono contare anche su un <strong>regime fiscale agevolato</strong>, di cui parliamo nella <a href="/guida/sgravi-fiscali-e-incentivi-agricoltura">guida agli sgravi e agli incentivi</a>. Prova le tue ipotesi con il <a href="/#rendimento">simulatore dei ricavi</a>.</p>
+<h2>La fiscalità agevolata</h2>
+<p>Gli agriturismi possono contare su un <strong>regime fiscale agevolato</strong>, di cui parliamo nella <a href="/guida/sgravi-fiscali-e-incentivi-agricoltura">guida agli sgravi e agli incentivi</a>.</p>
 <h2>Un agriturismo pronto a ripartire</h2>
 <figure>{img("agriturismo-riano-sala-ristorante-camino", "Sala ristorante con camino dell'agriturismo in vendita a Riano")}<figcaption class="caption">La sala da 70 coperti della Tenuta Colle delle Rose.</figcaption></figure>
 <p>La <a href="/agriturismo-in-vendita-roma">Tenuta Colle delle Rose</a> a Riano, 25 km da Roma, è in vendita con la <strong>società agricola</strong> e le autorizzazioni per <strong>agriturismo, ristorazione e macelleria</strong>. Ha 8 camere, una sala da 70 coperti con camino, una veranda e 21 ettari di terra. È il modo più rapido per aprire un agriturismo vicino Roma senza partire da zero.</p>
 <p class="caption">Questa guida ha scopo informativo: requisiti e procedure vanno verificati con Comune, Regione Lazio e un consulente.</p>'''
 write(path, page(
     lang="it", path=path, date=DATE,
-    title="Aprire o gestire un agriturismo nel Lazio: requisiti, passi e quanto rende",
-    desc="Come aprire o gestire un agriturismo vicino Roma: chi può farlo, i passi per le autorizzazioni, come gestirlo bene e quanto può rendere con 8 camere.",
-    keywords="aprire un agriturismo, come aprire un agriturismo nel Lazio, gestire un agriturismo, requisiti agriturismo, quanto rende un agriturismo, rilevare un agriturismo",
+    title="Aprire o gestire un agriturismo nel Lazio: requisiti, passi e consigli",
+    desc="Come aprire o gestire un agriturismo vicino Roma: chi può farlo, i passi per le autorizzazioni, come gestirlo bene e una struttura con 8 camere pronta a ripartire.",
+    keywords="aprire un agriturismo, come aprire un agriturismo nel Lazio, gestire un agriturismo, requisiti agriturismo, rilevare un agriturismo",
     h1="Aprire o gestire un agriturismo", eyebrow="Agriturismo",
-    lead="Chi può farlo, cosa serve per partire, come gestirlo bene e quanto può rendere: una guida pratica per il Lazio.",
+    lead="Chi può farlo, cosa serve per partire e come gestirlo bene: una guida pratica per il Lazio.",
     hero="agriturismo-riano-porticato", hero_alt="Porticato di un agriturismo nella campagna a nord di Roma",
     body=body, crumbs=[CR_HOME, CR_G, ("Aprire o gestire un agriturismo", None)],
     related=rel("agri", "g4", "matr"),
     aside_links=links("agri", "g2", "g4", "g6", "matr"),
-    schema=[article(path, "Aprire o gestire un agriturismo", "Requisiti, passi, gestione e rendimento di un agriturismo nel Lazio.", "agriturismo-riano-porticato")]))
+    schema=[article(path, "Aprire o gestire un agriturismo", "Requisiti, passi e gestione di un agriturismo nel Lazio.", "agriturismo-riano-porticato")]))
 
 # ---------------------------------------------------------------------------
 # Sgravi fiscali e incentivi
@@ -294,7 +286,7 @@ write(path, page(
     body=body, crumbs=[("Home", "/en/"), ("Moving to Italy", None)],
     related=[("/en/", "tenuta-riano-viale-ulivi-drone", "Estate", "Colle delle Rose Estate", "Photos, video, maps and key facts."),
              ("/en/agriturismo-for-sale-near-rome", "agriturismo-riano-sala-ristorante-camino", "Agriturismo", "Agriturismo for sale near Rome", "8 rooms, a 70-cover dining room and active licences."),
-             ("/en/#returns", "agriturismo-riano-sala-colazioni", "Simulator", "What could it earn?", "Estimate yearly revenue from rooms and events.")],
+             ("/en/#before-after", "restyling-stile-boutique-sala", "Concepts", "Before and after", "Interior styles and the conversion of the farm buildings.")],
     aside_links=[("Main listing", "/en/"), ("Agriturismo for sale near Rome", "/en/agriturismo-for-sale-near-rome"), ("Video tour", "/en/#video"), ("Contact", "/en/#contact")],
     alternates={"it": P["g5"][0], "en": path},
     schema=[{"@type": "Article", "headline": "Moving to Italy: a life in nature, 30 minutes from Rome", "inLanguage": "en-GB",
@@ -344,8 +336,6 @@ write(path, page(
     schema=[article(path, "Bonifica dell'amianto in un'azienda agricola", "Procedura, costi e contributi per la bonifica dell'amianto su stalle e fienili.", "tenuta-riano-corte-fienile-tufo")]))
 
 
-# ---------------------------------------------------------------------------
-# Indice guida
 # ---------------------------------------------------------------------------
 path = G
 def _cards(keys):

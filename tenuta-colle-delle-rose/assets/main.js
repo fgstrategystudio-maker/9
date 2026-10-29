@@ -284,3 +284,12 @@ const CONFIG = {
     calc();
   }
 })();
+
+/* Header: diventa pieno quando si scorre oltre l'immagine d'apertura */
+(function () {
+  const head = document.querySelector(".site-head");
+  if (!head) return;
+  const set = () => head.classList.toggle("scrolled", window.scrollY > 40);
+  set();
+  window.addEventListener("scroll", set, { passive: true });
+})();

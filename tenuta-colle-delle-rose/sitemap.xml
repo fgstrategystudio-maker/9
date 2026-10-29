@@ -1,15 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>https://www.tenutacolledellerose.it/</loc>
+    <loc>https://www.tenutacolledellerose.it/agriturismo-in-vendita-roma</loc>
     <lastmod>2026-10-29</lastmod>
-    <priority>1.0</priority>
-    <xhtml:link rel="alternate" hreflang="it" href="https://www.tenutacolledellerose.it/"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenutacolledellerose.it/en/"/>
-    <image:image><image:loc>https://www.tenutacolledellerose.it/img/tenuta-riano-viale-ulivi-drone.webp</image:loc></image:image>
-    <image:image><image:loc>https://www.tenutacolledellerose.it/img/tenuta-riano-complesso-fabbricati-alto.webp</image:loc></image:image>
-    <image:image><image:loc>https://www.tenutacolledellerose.it/img/agriturismo-riano-sala-ristorante-camino.webp</image:loc></image:image>
-    <image:image><image:loc>https://www.tenutacolledellerose.it/img/tenuta-riano-fronte-fabbricati.webp</image:loc></image:image>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.tenutacolledellerose.it/centro-equestre-in-vendita-roma</loc>
+    <lastmod>2026-10-29</lastmod>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.tenutacolledellerose.it/en/agriturismo-for-sale-near-rome</loc>
+    <lastmod>2026-10-29</lastmod>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.tenutacolledellerose.it/en/guide/moving-to-italy-countryside-near-rome</loc>
+    <lastmod>2026-10-29</lastmod>
+    <priority>0.6</priority>
+    <xhtml:link rel="alternate" hreflang="it" href="https://www.tenutacolledellerose.it/guida/vivere-a-roma-con-la-natura-intorno"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenutacolledellerose.it/en/guide/moving-to-italy-countryside-near-rome"/>
+  </url>
+  <url>
+    <loc>https://www.tenutacolledellerose.it/en/guide/why-buy-an-agriturismo-in-italy</loc>
+    <lastmod>2026-10-29</lastmod>
+    <priority>0.6</priority>
   </url>
   <url>
     <loc>https://www.tenutacolledellerose.it/en/</loc>
@@ -19,51 +35,17 @@
     <xhtml:link rel="alternate" hreflang="en" href="https://www.tenutacolledellerose.it/en/"/>
   </url>
   <url>
-    <loc>https://www.tenutacolledellerose.it/agriturismo-in-vendita-roma</loc>
-    <lastmod>2026-10-29</lastmod>
-    <priority>0.9</priority>
-    <image:image><image:loc>https://www.tenutacolledellerose.it/img/agriturismo-riano-porticato.webp</image:loc></image:image>
-  </url>
-  <url>
-    <loc>https://www.tenutacolledellerose.it/location-matrimoni-in-vendita-roma</loc>
-    <lastmod>2026-10-29</lastmod>
-    <priority>0.8</priority>
-    <image:image><image:loc>https://www.tenutacolledellerose.it/img/restyling-stile-boutique-sala.webp</image:loc></image:image>
-  </url>
-  <url>
-    <loc>https://www.tenutacolledellerose.it/centro-equestre-in-vendita-roma</loc>
-    <lastmod>2026-10-29</lastmod>
-    <priority>0.8</priority>
-    <image:image><image:loc>https://www.tenutacolledellerose.it/img/riqualificazione-stalla.webp</image:loc></image:image>
-  </url>
-  <url>
-    <loc>https://www.tenutacolledellerose.it/terreno-agricolo-in-vendita-riano</loc>
-    <lastmod>2026-10-29</lastmod>
-    <priority>0.8</priority>
-    <image:image><image:loc>https://www.tenutacolledellerose.it/img/tenuta-riano-mappa-catastale.webp</image:loc></image:image>
-  </url>
-  <url>
-    <loc>https://www.tenutacolledellerose.it/en/agriturismo-for-sale-near-rome</loc>
-    <lastmod>2026-10-29</lastmod>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.tenutacolledellerose.it/guida/</loc>
+    <loc>https://www.tenutacolledellerose.it/guida/agriturismo-o-bb-in-campagna-differenze</loc>
     <lastmod>2026-10-29</lastmod>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://www.tenutacolledellerose.it/guida/cambiare-vita-trasferirsi-in-campagna-vicino-roma</loc>
+    <loc>https://www.tenutacolledellerose.it/guida/allevare-e-vendere-in-azienda-filiera-corta</loc>
     <lastmod>2026-10-29</lastmod>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://www.tenutacolledellerose.it/guida/vivere-in-campagna-con-gli-animali</loc>
-    <lastmod>2026-10-29</lastmod>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://www.tenutacolledellerose.it/guida/bonifica-amianto-azienda-agricola</loc>
+    <loc>https://www.tenutacolledellerose.it/guida/andare-in-pensione-in-campagna-vicino-roma</loc>
     <lastmod>2026-10-29</lastmod>
     <priority>0.6</priority>
   </url>
@@ -73,7 +55,132 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://www.tenutacolledellerose.it/guida/aprire-una-fattoria-didattica-vicino-roma</loc>
+    <lastmod>2026-10-29</lastmod>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.tenutacolledellerose.it/guida/aprire-una-location-per-matrimoni-in-campagna</loc>
+    <lastmod>2026-10-29</lastmod>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.tenutacolledellerose.it/guida/avviare-un-centro-equestre</loc>
+    <lastmod>2026-10-29</lastmod>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.tenutacolledellerose.it/guida/azienda-agricola-multifunzionale</loc>
+    <lastmod>2026-10-29</lastmod>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.tenutacolledellerose.it/guida/bonifica-amianto-azienda-agricola</loc>
+    <lastmod>2026-10-29</lastmod>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.tenutacolledellerose.it/guida/cambiare-vita-trasferirsi-in-campagna-vicino-roma</loc>
+    <lastmod>2026-10-29</lastmod>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.tenutacolledellerose.it/guida/casale-in-campagna-vicino-roma</loc>
+    <lastmod>2026-10-29</lastmod>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.tenutacolledellerose.it/guida/comprare-una-tenuta-agricola-passo-passo</loc>
+    <lastmod>2026-10-29</lastmod>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.tenutacolledellerose.it/guida/crescere-i-figli-in-campagna-vicino-roma</loc>
+    <lastmod>2026-10-29</lastmod>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.tenutacolledellerose.it/guida/fotovoltaico-sui-tetti-agricoli</loc>
+    <lastmod>2026-10-29</lastmod>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.tenutacolledellerose.it/guida/giovani-agricoltori-come-iniziare</loc>
+    <lastmod>2026-10-29</lastmod>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.tenutacolledellerose.it/guida/</loc>
+    <lastmod>2026-10-29</lastmod>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.tenutacolledellerose.it/guida/investire-in-terreni-agricoli-vicino-roma</loc>
+    <lastmod>2026-10-29</lastmod>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.tenutacolledellerose.it/guida/lavorare-da-remoto-in-campagna-vicino-roma</loc>
+    <lastmod>2026-10-29</lastmod>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.tenutacolledellerose.it/guida/orto-e-frutteto-familiare-in-campagna</loc>
+    <lastmod>2026-10-29</lastmod>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.tenutacolledellerose.it/guida/parco-di-veio-natura-a-nord-di-roma</loc>
+    <lastmod>2026-10-29</lastmod>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.tenutacolledellerose.it/guida/prelazione-agraria-come-funziona</loc>
+    <lastmod>2026-10-29</lastmod>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.tenutacolledellerose.it/guida/produrre-il-proprio-olio-extravergine</loc>
+    <lastmod>2026-10-29</lastmod>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.tenutacolledellerose.it/guida/riano-storia-natura-cosa-vedere</loc>
+    <lastmod>2026-10-29</lastmod>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.tenutacolledellerose.it/guida/rilevare-una-societa-agricola</loc>
+    <lastmod>2026-10-29</lastmod>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.tenutacolledellerose.it/guida/ritiri-yoga-e-wellness-in-campagna-vicino-roma</loc>
+    <lastmod>2026-10-29</lastmod>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://www.tenutacolledellerose.it/guida/sgravi-fiscali-e-incentivi-agricoltura</loc>
+    <lastmod>2026-10-29</lastmod>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.tenutacolledellerose.it/guida/tenere-i-cavalli-a-casa-propria</loc>
+    <lastmod>2026-10-29</lastmod>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.tenutacolledellerose.it/guida/turismo-rurale-intorno-a-roma</loc>
+    <lastmod>2026-10-29</lastmod>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.tenutacolledellerose.it/guida/una-tenuta-per-tutta-la-famiglia</loc>
+    <lastmod>2026-10-29</lastmod>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.tenutacolledellerose.it/guida/via-flaminia-da-roma-a-riano</loc>
     <lastmod>2026-10-29</lastmod>
     <priority>0.6</priority>
   </url>
@@ -85,15 +192,35 @@
     <xhtml:link rel="alternate" hreflang="en" href="https://www.tenutacolledellerose.it/en/guide/moving-to-italy-countryside-near-rome"/>
   </url>
   <url>
-    <loc>https://www.tenutacolledellerose.it/en/guide/moving-to-italy-countryside-near-rome</loc>
+    <loc>https://www.tenutacolledellerose.it/guida/vivere-in-campagna-con-gli-animali</loc>
     <lastmod>2026-10-29</lastmod>
     <priority>0.6</priority>
-    <xhtml:link rel="alternate" hreflang="it" href="https://www.tenutacolledellerose.it/guida/vivere-a-roma-con-la-natura-intorno"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenutacolledellerose.it/en/guide/moving-to-italy-countryside-near-rome"/>
+  </url>
+  <url>
+    <loc>https://www.tenutacolledellerose.it/guida/vivere-in-campagna-pro-e-contro</loc>
+    <lastmod>2026-10-29</lastmod>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.tenutacolledellerose.it/</loc>
+    <lastmod>2026-10-29</lastmod>
+    <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="it" href="https://www.tenutacolledellerose.it/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenutacolledellerose.it/en/"/>
+  </url>
+  <url>
+    <loc>https://www.tenutacolledellerose.it/location-matrimoni-in-vendita-roma</loc>
+    <lastmod>2026-10-29</lastmod>
+    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://www.tenutacolledellerose.it/privacy</loc>
     <lastmod>2026-10-29</lastmod>
-    <priority>0.2</priority>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.tenutacolledellerose.it/terreno-agricolo-in-vendita-riano</loc>
+    <lastmod>2026-10-29</lastmod>
+    <priority>0.8</priority>
   </url>
 </urlset>

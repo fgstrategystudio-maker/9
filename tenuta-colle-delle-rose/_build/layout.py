@@ -8,7 +8,7 @@ SITE = "https://www.tenutacolledellerose.it"
 PHONE = "+39 351 704 8540"
 WA = "393517048540"
 EMAIL = "fgstrategystudio@gmail.com"
-FONTS = "https://fonts.googleapis.com/css2?family=Albert+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Marcellus&display=swap"
+FONTS = "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,400&family=Jost:wght@400;500&display=swap"
 
 T = {
     "it": dict(skip="Vai al contenuto", brand_sub="Tenuta in vendita · Riano · Roma",

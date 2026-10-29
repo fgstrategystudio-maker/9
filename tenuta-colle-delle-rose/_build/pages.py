@@ -54,7 +54,7 @@ P = {
     "g6": ("/guida/vivere-in-campagna-con-gli-animali", "tenuta-riano-terreni-uliveto", "Animali",
            "Vivere in campagna con gli animali", "Cavalli, galline, capre, cani e un orto: spazi, regole e costi."),
     "g1": ("/guida/aprire-e-gestire-un-agriturismo", "agriturismo-riano-porticato", "Agriturismo",
-           "Aprire o gestire un agriturismo: requisiti, passi e numeri", "Chi può farlo, cosa serve e quanto può rendere."),
+           "Aprire o gestire un agriturismo: requisiti e passi", "Chi può farlo, cosa serve per partire e come gestirlo bene."),
     "g4": ("/guida/sgravi-fiscali-e-incentivi-agricoltura", "tenuta-riano-terreni-seminativo", "Incentivi",
            "Sgravi fiscali e incentivi per chi sceglie l'agricoltura", "Imposte ridotte, IMU, mutui agevolati e contributi per giovani."),
     "g5": ("/guida/vivere-a-roma-con-la-natura-intorno", "tenuta-riano-vista-aerea-colline", "Trasferirsi",
@@ -121,8 +121,6 @@ body = f'''<p>Cerchi un <strong>agriturismo in vendita a Roma</strong> che non s
   <li><strong>Restyling degli interni</strong>: da 2 a 6 settimane secondo lo stile scelto, senza lavori strutturali. Nella pagina principale trovi <a href="/#prima-dopo">tre stili con prima e dopo</a>.</li>
   <li><strong>Promozione</strong>: sito, portali di prenotazione, Google e social, partendo dalle foto e dai video già disponibili.</li>
 </ol>
-<h2>Quanto può incassare</h2>
-<p>Con 8 camere a 110 euro a notte e un'occupazione del 45%, le sole camere valgono circa 144.000 euro lordi l'anno. Quindici eventi da 80 invitati a 70 euro a persona aggiungono circa 84.000 euro. Puoi provare altre combinazioni con il <a href="/#rendimento">simulatore dei ricavi</a> e leggere la <a href="/guida/aprire-e-gestire-un-agriturismo#numeri">guida su come aprire e gestire un agriturismo</a>.</p>
 <h2>Cosa sapere prima di comprare</h2>
 <p>Le coperture di stalla e fienile sono in cemento-amianto e vanno bonificate. È un costo noto, che riguarda gli edifici agricoli e non l'agriturismo. Ne parliamo in dettaglio nella <a href="/guida/bonifica-amianto-azienda-agricola">guida alla bonifica dell'amianto</a>. Per tutti gli altri controlli, ecco <a href="/guida/aprire-e-gestire-un-agriturismo">cosa serve per aprire e gestire un agriturismo</a>.</p>
 <h2>Domande frequenti</h2>
@@ -259,7 +257,6 @@ body = f'''<p>Trovare un <strong>terreno agricolo in vendita</strong> sopra i 20
   <div><dt>Superficie</dt><dd>208.930 mq</dd></div>
   <div><dt>Seminativo</dt><dd>19,5 ha</dd></div>
   <div><dt>Bosco ceduo</dt><dd>1,4 ha</dd></div>
-  <div><dt>Foglio catastale</dt><dd>5 · Riano</dd></div>
 </dl>
 <h2>Com'è fatto il terreno</h2>
 <ul>
@@ -270,19 +267,6 @@ body = f'''<p>Trovare un <strong>terreno agricolo in vendita</strong> sopra i 20
   <li><strong>Accesso carrabile</strong> da Via Colle delle Rose e allaccio elettrico.</li>
 </ul>
 <figure>{img("tenuta-riano-mappa-catastale", "Perimetro del terreno agricolo in vendita a Riano su mappa catastale, tra Via Flaminia e Via Codette")}<figcaption class="caption">Il perimetro della proprietà sulla mappa catastale.</figcaption></figure>
-<h2>Le particelle</h2>
-<div class="table-wrap"><table>
-<thead><tr><th>Particella</th><th>Qualità</th><th class="num">Mq</th></tr></thead>
-<tbody>
-<tr><td>617</td><td>Seminativo</td><td class="num">121.917</td></tr>
-<tr><td>619</td><td>Seminativo</td><td class="num">33.092</td></tr>
-<tr><td>14</td><td>Bosco ceduo</td><td class="num">13.450</td></tr>
-<tr><td>290 · 287 · 288</td><td>Seminativo</td><td class="num">31.775</td></tr>
-<tr><td>621 · 285 · 286</td><td>Seminativo</td><td class="num">7.484</td></tr>
-<tr><td>20 · 21 · 22</td><td>Seminativo e bosco ceduo</td><td class="num">1.212</td></tr>
-</tbody>
-<tfoot><tr><td>Totale</td><td></td><td class="num">208.930</td></tr></tfoot>
-</table></div>
 <h2>Cosa ci puoi fare</h2>
 <ul>
   <li><strong>Coltivare</strong>: cereali, foraggere, legumi, nuovi uliveti. Per seminare con le agevolazioni previste l'attività agricola deve essere attiva, e la società agricola è compresa nella vendita.</li>
@@ -291,7 +275,7 @@ body = f'''<p>Trovare un <strong>terreno agricolo in vendita</strong> sopra i 20
   <li><strong>Diversificare</strong> con agriturismo, eventi o cavalli, sfruttando i fabbricati esistenti.</li>
 </ul>
 <h2>Prezzo e stima</h2>
-<p>La stima di mercato del luglio 2025 valuta i soli terreni <strong>€ 689.469</strong>, applicando ai valori agricoli medi della zona un incremento del 32% per posizione, dimensione, pendenze, accesso ed elettricità. Con i fabbricati il valore supera il milione. La tenuta completa è in vendita a <strong>€ 869.000</strong>.</p>
+<p>Una stima di mercato del 2025 valuta terreni e fabbricati oltre il milione di euro. La tenuta completa è in vendita a <strong>€ 869.000</strong>. I dati catastali completi sono nel dossier riservato.</p>
 <p>Prima del rogito vanno fatti i passaggi tipici della vendita di terreni agricoli: certificato di destinazione urbanistica, notifica della <a href="/guida/sgravi-fiscali-e-incentivi-agricoltura">prelazione agraria</a> ai confinanti aventi diritto e verifica delle eventuali agevolazioni fiscali.</p>
 <h2>Domande frequenti</h2>
 <div class="faq">
@@ -344,7 +328,7 @@ body = f'''<p>An <strong>agriturismo</strong> is an Italian farm that also hosts
   <li><strong>An equestrian centre</strong> using the stable and 21 hectares of meadows.</li>
   <li><strong>A retreat</strong> for yoga, wellness and slow travel.</li>
 </ul>
-<p>See the before-and-after concepts and the revenue simulator on the <a href="/en/#before-after">main page</a>.</p>
+<p>See the before-and-after concepts on the <a href="/en/#before-after">main page</a>.</p>
 <h2>Good to know</h2>
 <p>The stable and barn roofs are asbestos-cement and must be removed by a licensed contractor before those buildings are converted. As with any Italian farmland sale, neighbouring farmers may have pre-emption rights and must be notified before completion. We work with English-speaking notaries and advisers and can guide you through each step.</p>
 <h2>Frequently asked questions</h2>
@@ -362,10 +346,11 @@ write(path, page(
     body=body, crumbs=[("Home", "/en/"), ("Agriturismo for sale near Rome", None)],
     related=[("/en/", "tenuta-riano-viale-ulivi-drone", "Estate", "Colle delle Rose Estate", "The full listing: photos, video, maps and key facts."),
              ("/en/#before-after", "restyling-stile-boutique-sala", "Concepts", "Before and after", "Three interior styles and the conversion of the barn and stable."),
-             ("/en/#returns", "agriturismo-riano-sala-colazioni", "Simulator", "What could it earn?", "Estimate yearly revenue from rooms and events.")],
-    aside_links=[("Main listing (English)", "/en/"), ("Video tour", "/en/#video"), ("Key facts", "/en/#facts"), ("Contact", "/en/#contact")],
+             ("/en/guide/moving-to-italy-countryside-near-rome", "tenuta-riano-vista-aerea-colline", "Relocating", "Moving to Italy", "A life in nature, 30 minutes from Rome.")],
+    aside_links=[("Main listing (English)", "/en/"), ("Video tour", "/en/#video"), ("Contact", "/en/#contact")],
     schema=[webpage(path, "Agriturismo for sale near Rome", "8-room agriturismo with 21 hectares for sale in Riano, near Rome.", "en-GB"), faq(F5, "en-GB")]))
 
 # ---------------------------------------------------------------------------
 
 exec(open(os.path.join(os.path.dirname(__file__), "guida.py")).read())
+exec(open(os.path.join(os.path.dirname(__file__), "articoli.py")).read())
