@@ -364,3 +364,56 @@ tfoot td { font-weight: 600; border-bottom: 0; }
   .js-reveal .reveal { opacity: 0; transform: translateY(22px); transition: opacity .8s ease, transform .8s ease; }
   .js-reveal .reveal.in { opacity: 1; transform: none; }
 }
+
+/* ---------- Pagine interne e guida ---------- */
+.page-hero { position: relative; isolation: isolate; color: #fff; background: #1d2620; }
+.page-hero img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -2; }
+.page-hero::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, rgba(15,20,16,.35), rgba(15,20,16,.85)); }
+.page-hero .wrap { padding-block: clamp(96px, 14vw, 170px) clamp(36px, 5vw, 60px); display: grid; gap: 16px; }
+.page-hero h1 { font-size: var(--step-4); max-width: 18ch; text-shadow: 0 1px 14px rgba(0,0,0,.35); }
+.page-hero .lead { color: rgba(255,255,255,.88); }
+.page-hero .eyebrow { color: #f3d7a6; }
+.crumbs { font-family: var(--f-data); font-size: .74rem; letter-spacing: .06em; color: rgba(255,255,255,.75); display: flex; flex-wrap: wrap; gap: 6px; }
+.crumbs a { color: inherit; }
+.article { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: clamp(28px, 5vw, 64px); align-items: start; }
+.article > * { min-width: 0; }
+@media (max-width: 960px) { .article { grid-template-columns: 1fr; } }
+.body { display: grid; gap: 1.1em; max-width: 68ch; color: var(--ink-soft); }
+.body h2 { font-size: var(--step-2); color: var(--ink); margin-top: 1.2em; }
+.body h3 { color: var(--ink); margin-top: .6em; }
+.body strong { color: var(--ink); font-weight: 600; }
+.body ul, .body ol { margin: 0; padding-left: 1.2em; display: grid; gap: .5em; }
+.body figure { margin: .6em 0; display: grid; gap: 8px; }
+.body figure img { border-radius: var(--radius); width: 100%; }
+.body .table-wrap { margin: .4em 0; }
+.body a { color: var(--tufo); }
+.meta { font-family: var(--f-data); font-size: .76rem; letter-spacing: .06em; color: var(--ink-soft); }
+.aside { position: sticky; top: calc(84px + env(safe-area-inset-top, 0px)); display: grid; gap: 16px; }
+.aside-card { background: var(--night); color: var(--night-fg); border-radius: var(--radius); padding: 22px; display: grid; gap: 12px; }
+.aside-card img { border-radius: 2px; aspect-ratio: 16 / 10; object-fit: cover; width: 100%; }
+.aside-card b { font-family: var(--f-display); font-weight: 400; font-size: 1.35rem; }
+.aside-card p { color: rgba(233,235,227,.78); font-size: .92rem; }
+.aside-card .price { color: #d6a157; font-family: var(--f-display); font-size: 1.6rem; }
+.aside-links { display: grid; gap: 4px; font-size: .92rem; }
+.aside-links a { color: var(--ink-soft); padding: 6px 0; border-bottom: 1px solid var(--line); text-decoration: none; }
+.aside-links a:hover { color: var(--ink); }
+.facts { display: flex; flex-wrap: wrap; gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; margin: .6em 0; }
+.facts div { flex: 1 1 110px; background: var(--card); padding: 14px 16px; display: grid; gap: 2px; }
+.facts dt { font-family: var(--f-data); font-size: .7rem; letter-spacing: .12em; text-transform: uppercase; color: var(--tufo); }
+.facts dd { margin: 0; font-family: var(--f-display); font-size: 1.3rem; color: var(--ink); font-variant-numeric: tabular-nums; }
+.cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+@media (max-width: 860px) { .cards { grid-template-columns: 1fr; } }
+.card { display: grid; gap: 10px; text-decoration: none; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; align-content: start; }
+.card img { aspect-ratio: 16 / 9; object-fit: cover; width: 100%; transition: transform .4s ease; }
+.card:hover img { transform: scale(1.03); }
+.card div { padding: 4px 18px 20px; display: grid; gap: 8px; }
+.card h3 { font-size: 1.2rem; }
+.card p { color: var(--ink-soft); font-size: .93rem; }
+.card .eyebrow { font-size: .7rem; }
+.cta-band { background: var(--night); color: var(--night-fg); }
+.cta-band .wrap { padding-block: clamp(48px, 7vw, 80px); display: flex; flex-wrap: wrap; gap: 20px 40px; align-items: center; justify-content: space-between; }
+.cta-band h2 { color: var(--night-fg); font-size: var(--step-2); max-width: 24ch; }
+.cta-band .hero-actions { margin: 0; }
+.cta-band .btn-ghost { color: var(--night-fg); }
+.foot-links { display: flex; flex-wrap: wrap; gap: 6px 18px; }
+.form .consent a { color: inherit; }

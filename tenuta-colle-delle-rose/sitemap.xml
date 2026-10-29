@@ -3,6 +3,7 @@
   <url>
     <loc>https://www.tenutacolledellerose.it/</loc>
     <lastmod>2026-10-29</lastmod>
+    <priority>1.0</priority>
     <xhtml:link rel="alternate" hreflang="it" href="https://www.tenutacolledellerose.it/"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://www.tenutacolledellerose.it/en/"/>
     <image:image><image:loc>https://www.tenutacolledellerose.it/img/tenuta-riano-viale-ulivi-drone.webp</image:loc></image:image>
@@ -13,7 +14,72 @@
   <url>
     <loc>https://www.tenutacolledellerose.it/en/</loc>
     <lastmod>2026-10-29</lastmod>
+    <priority>0.9</priority>
     <xhtml:link rel="alternate" hreflang="it" href="https://www.tenutacolledellerose.it/"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://www.tenutacolledellerose.it/en/"/>
+  </url>
+  <url>
+    <loc>https://www.tenutacolledellerose.it/agriturismo-in-vendita-roma</loc>
+    <lastmod>2026-10-29</lastmod>
+    <priority>0.9</priority>
+    <image:image><image:loc>https://www.tenutacolledellerose.it/img/agriturismo-riano-porticato.webp</image:loc></image:image>
+  </url>
+  <url>
+    <loc>https://www.tenutacolledellerose.it/location-matrimoni-in-vendita-roma</loc>
+    <lastmod>2026-10-29</lastmod>
+    <priority>0.8</priority>
+    <image:image><image:loc>https://www.tenutacolledellerose.it/img/restyling-stile-boutique-sala.webp</image:loc></image:image>
+  </url>
+  <url>
+    <loc>https://www.tenutacolledellerose.it/centro-equestre-in-vendita-roma</loc>
+    <lastmod>2026-10-29</lastmod>
+    <priority>0.8</priority>
+    <image:image><image:loc>https://www.tenutacolledellerose.it/img/riqualificazione-stalla.webp</image:loc></image:image>
+  </url>
+  <url>
+    <loc>https://www.tenutacolledellerose.it/terreno-agricolo-in-vendita-riano</loc>
+    <lastmod>2026-10-29</lastmod>
+    <priority>0.8</priority>
+    <image:image><image:loc>https://www.tenutacolledellerose.it/img/tenuta-riano-mappa-catastale.webp</image:loc></image:image>
+  </url>
+  <url>
+    <loc>https://www.tenutacolledellerose.it/en/agriturismo-for-sale-near-rome</loc>
+    <lastmod>2026-10-29</lastmod>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.tenutacolledellerose.it/guida/</loc>
+    <lastmod>2026-10-29</lastmod>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.tenutacolledellerose.it/guida/comprare-agriturismo-vicino-roma</loc>
+    <lastmod>2026-10-29</lastmod>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.tenutacolledellerose.it/guida/quanto-rende-un-agriturismo-nel-lazio</loc>
+    <lastmod>2026-10-29</lastmod>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.tenutacolledellerose.it/guida/bonifica-amianto-azienda-agricola</loc>
+    <lastmod>2026-10-29</lastmod>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.tenutacolledellerose.it/guida/agevolazioni-acquisto-terreni-agricoli</loc>
+    <lastmod>2026-10-29</lastmod>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.tenutacolledellerose.it/guida/vivere-a-roma-nord-tra-flaminia-e-tevere</loc>
+    <lastmod>2026-10-29</lastmod>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.tenutacolledellerose.it/privacy</loc>
+    <lastmod>2026-10-29</lastmod>
+    <priority>0.2</priority>
   </url>
 </urlset>
