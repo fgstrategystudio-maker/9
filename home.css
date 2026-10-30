@@ -309,6 +309,7 @@ footer.foot a:hover { color: var(--ink); }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation: none !important; transition: none !important; }
+  .is-marquee .marquee-track { animation: marquee var(--marquee-dur, 40s) linear infinite !important; }
 }
 
 /* ---------- Menu mobile ---------- */
