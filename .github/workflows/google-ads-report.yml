@@ -54,12 +54,18 @@ jobs:
           cache: pip
           cache-dependency-path: google-ads-report/requirements.txt
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
       - name: Installa dipendenze
         run: |
           # Librerie di sistema per creare i PDF (WeasyPrint); di solito sono già presenti.
-          sudo apt-get install -y --no-install-recommends libpango-1.0-0 libpangoft2-1.0-0 \
-            || (sudo apt-get update && sudo apt-get install -y --no-install-recommends libpango-1.0-0 libpangoft2-1.0-0)
+          sudo apt-get install -y --no-install-recommends libpango-1.0-0 libpangoft2-1.0-0 fonts-inter \
+            || (sudo apt-get update && sudo apt-get install -y --no-install-recommends libpango-1.0-0 libpangoft2-1.0-0 fonts-inter)
           pip install -r requirements.txt
+          # Report Word: impaginazione con la libreria docx (versione fissata in package-lock.json).
+          npm ci --prefix report_ads/docx --no-audit --no-fund
 
       - name: Configurazione clienti dal Secret
         env:

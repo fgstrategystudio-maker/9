@@ -193,6 +193,35 @@ Dopo l'invio dei report del 1° del mese il programma salva, per ogni locale, le
 
 Per tenere fuori dal fatturato attribuibile le visite di alcune campagne, per esempio le Search sul nome del locale, aggiungi `escludi: [SEARCH]` al `compenso` del cliente.
 
+## Report Word e PowerPoint (`formato: docx` o `formato: pptx`)
+
+Per i ristoranti il report cliente può essere una bozza modificabile al posto del PDF. Ti arriva da inoltrare: rivedi i testi, completa le parti segnate "Da completare" e inviala.
+
+- **`docx`**: Word A4 orizzontale, antracite e oro. Contiene sintesi, cosa abbiamo fatto, perché la campagna brand, un locale per sezione (Performance Max, Brand e totale, aste sul nome, budget necessario, orari), temi di ricerca, concorrenza, profili Google, attribuzione e fee, proposte.
+- **`pptx`**: presentazione 16:9 nella palette del cliente (rossa o verde, da `colore`). Contiene sintesi, visite, confronto, temi, lingue, Maps e Ricerca, orari, ritorno economico o compenso, prossimo mese.
+
+Chiavi utili in `CLIENTI_YAML`:
+- per locale, `nome_ricerche` (espressione delle ricerche sul nome, es. `"\\bnomelocale\\b"`) e `nome_breve`;
+- nel `compenso`, `escludi_nome: true`, che toglie dalla fee anche la quota di conversioni Performance Max sul nome (dai termini di ricerca), ed `escludi_dal: "AAAA-MM"`.
+
+### Dati che Google Ads API non fornisce: la mail "Dati report"
+
+Prima del 1° del mese manda alla casella dei report (quella di `SMTP_USER`) una mail con oggetto che inizia con **Dati report**. Il programma la legge con la stessa password per le app.
+
+```
+Locale Uno Roma
+temi italiano: 29 > 37
+temi inglese: 22 > 28
+concorrenza: chi compare sponsorizzato su Maps, a pranzo e a cena...
+profilo: recensioni, completezza del profilo, foto mancanti...
+```
+
+Gli allegati hanno il nome del locale nel nome del file:
+- l'export **Informazioni aste** della campagna Brand (CSV), es. `aste roma.csv`;
+- gli screenshot PNG o JPG, es. `profilo roma.png`: con "profilo" nel nome vanno nella sezione profili, gli altri nella concorrenza.
+
+Se la mail non c'è, quelle sezioni restano segnate "Da completare".
+
 ## Testi scritti da Claude
 
 Con il Secret `ANTHROPIC_API_KEY` i testi dei report PDF (letture delle tabelle, sintesi, prossimi passi) e il commento interno sono scritti da Claude ogni volta, partendo dai numeri del report, dai mesi precedenti, dallo stesso mese dell'anno prima, dallo stato delle campagne e dalle note del mese. Tabelle, numeri e testi delle note restano quelli calcolati. Se la chiamata non riesce, il report parte con i testi automatici; il log dice quali testi sono stati usati.

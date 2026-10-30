@@ -334,6 +334,101 @@ class FonteGoogleAds:
             conteggio[(intervallo.inizio + timedelta(days=i)).weekday()] += 1
         return [t / c if c else 0.0 for t, c in zip(totali, conteggio)], totali
 
+    def extra(self, cid: str, periodi: Periodi, regex_nome: str = "") -> dict:
+        """Dati in più per i report Word/PowerPoint. Ogni blocco è indipendente: se una query non è
+        disponibile si perde solo quel dato (nei log solo il nome del blocco, mai dati)."""
+        risultato: dict = {"campagne": {}, "quota_nome": {}, "errori": []}
+        q = f"""
+            SELECT campaign.id, campaign.advertising_channel_type, metrics.top_impression_percentage,
+                   metrics.absolute_top_impression_percentage, metrics.search_impression_share,
+                   metrics.search_budget_lost_impression_share, metrics.search_rank_lost_impression_share,
+                   metrics.average_cpc
+            FROM campaign WHERE {periodi.corrente.gaql()} AND campaign.status != 'REMOVED'
+        """
+        try:
+            for row in self._query(cid, q):
+                m = row.metrics
+                risultato["campagne"][str(row.campaign.id)] = {
+                    "in_cima": _opzionale(m, "top_impression_percentage"),
+                    "primo_posto": _opzionale(m, "absolute_top_impression_percentage"),
+                    "quota_impr": _opzionale(m, "search_impression_share"),
+                    "persa_budget": _opzionale(m, "search_budget_lost_impression_share"),
+                    "persa_ranking": _opzionale(m, "search_rank_lost_impression_share"),
+                    "cpc_medio": m.average_cpc / MICRO if m.average_cpc else None,
+                }
+        except Exception as e:  # noqa: BLE001
+            risultato["errori"].append(f"posizione ({type(e).__name__})")
+        q = """
+            SELECT campaign.id, campaign_budget.amount_micros, campaign_budget.recommended_budget_amount_micros
+            FROM campaign WHERE campaign.status = 'ENABLED'
+        """
+        try:
+            for row in self._query(cid, q):
+                voce = risultato["campagne"].setdefault(str(row.campaign.id), {})
+                rec = row.campaign_budget.recommended_budget_amount_micros
+                voce["budget_consigliato"] = rec / MICRO if rec else None
+        except Exception as e:  # noqa: BLE001
+            risultato["errori"].append(f"budget consigliato ({type(e).__name__})")
+        if regex_nome:
+            for chiave, intervallo in (("corrente", periodi.corrente), ("precedente", periodi.precedente)):
+                try:
+                    risultato["quota_nome"][chiave] = self._quota_nome(cid, intervallo, regex_nome)
+                except Exception as e:  # noqa: BLE001
+                    risultato["errori"].append(f"quota nome {chiave} ({type(e).__name__})")
+        return risultato
+
+    def _quota_nome(self, cid: str, intervallo: Intervallo, regex_nome: str) -> dict | None:
+        """Quota delle conversioni Performance Max arrivate da ricerche con il nome del locale.
+
+        Prova prima i termini di ricerca della Performance Max, poi le categorie di ricerca
+        (insight), che Google fornisce anche quando i termini non ci sono."""
+        import re
+
+        nome = re.compile(regex_nome, re.IGNORECASE)
+        tentativi = [
+            ("termini", f"""
+                SELECT campaign_search_term_view.search_term, metrics.conversions, metrics.clicks
+                FROM campaign_search_term_view
+                WHERE {intervallo.gaql()} AND campaign.advertising_channel_type = 'PERFORMANCE_MAX'
+            """, lambda r: r.campaign_search_term_view.search_term),
+            ("termini", f"""
+                SELECT search_term_view.search_term, metrics.conversions, metrics.clicks
+                FROM search_term_view
+                WHERE {intervallo.gaql()} AND campaign.advertising_channel_type = 'PERFORMANCE_MAX'
+            """, lambda r: r.search_term_view.search_term),
+        ]
+        for fonte, q, termine in tentativi:
+            try:
+                righe = [(termine(r), r.metrics.conversions, r.metrics.clicks) for r in self._query(cid, q)]
+            except Exception:  # noqa: BLE001
+                continue
+            tot = sum(c for _, c, _ in righe)
+            if tot > 0:
+                sul_nome = sum(c for t, c, _ in righe if nome.search(t or ""))
+                top = sorted(((t, c) for t, c, _ in righe if nome.search(t or "")), key=lambda x: -x[1])[:5]
+                return {"quota": sul_nome / tot, "fonte": fonte, "conversioni": tot, "esempi": [t for t, _ in top]}
+        # Categorie di ricerca: una query per campagna Performance Max.
+        pmax = [str(r.campaign.id) for r in self._query(cid, f"""
+            SELECT campaign.id FROM campaign
+            WHERE {intervallo.gaql()} AND campaign.advertising_channel_type = 'PERFORMANCE_MAX' AND metrics.impressions > 0""")]
+        tot = sul_nome = 0.0
+        esempi = []
+        for id_ in pmax:
+            q = f"""
+                SELECT campaign_search_term_insight.category_label, metrics.conversions
+                FROM campaign_search_term_insight
+                WHERE {intervallo.gaql()} AND campaign_search_term_insight.campaign_id = '{id_}'
+            """
+            for r in self._query(cid, q):
+                etichetta = r.campaign_search_term_insight.category_label or ""
+                tot += r.metrics.conversions
+                if nome.search(etichetta):
+                    sul_nome += r.metrics.conversions
+                    esempi.append(etichetta)
+        if tot <= 0:
+            return None
+        return {"quota": sul_nome / tot, "fonte": "categorie", "conversioni": tot, "esempi": esempi[:5]}
+
     def storico(self, cid: str, intervallo: Intervallo) -> list[MeseStorico]:
         """Totali mese per mese, con le azioni locali come nel resto del report."""
         mesi: dict[date, Metriche] = {}

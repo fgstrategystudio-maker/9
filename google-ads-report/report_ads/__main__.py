@@ -115,6 +115,61 @@ def _applica_memoria(conf, stato: dict, mese_report: str) -> None:
         gruppo.memoria = [dict(rep, mese=m) for m, rep in sorted(mesi.items())[-3:]]
 
 
+def _dati_manuali(conf, periodi, cartella) -> dict:
+    """Aste, temi incrementali, concorrenza e profili dalla mail "Dati report" del mese."""
+    from .posta import chiavi_locali, leggi_mail
+
+    nomi = [(loc.nome, loc.nome_breve or loc.nome) for g in conf.gruppi for loc in g.locali]
+    try:
+        return leggi_mail(periodi.corrente.inizio, chiavi_locali(nomi), cartella)
+    except Exception as e:  # noqa: BLE001
+        log.warning("Mail dei dati non letta (%s)", type(e).__name__)
+        return {}
+
+
+def _report_documento(gruppo, analisi_gruppo, periodi, manuali, cartella, suffisso):
+    """Report Word o PowerPoint: numeri, testi (Claude o automatici), file. Restituisce (percorso, testi, ai)."""
+    from . import dati_doc, testi_doc
+
+    numero = gruppo.numero_report(periodi.corrente.inizio.year, periodi.corrente.inizio.month)
+    dati = dati_doc.dati_report(gruppo, analisi_gruppo, numero)
+    contesto = {
+        "storia_del_cliente": gruppo.contesto or None,
+        "storia_dei_locali": {loc.nome: loc.contesto for loc in gruppo.locali if loc.contesto} or None,
+        "report_precedenti": gruppo.memoria or None,
+        "note_del_mese": {"fatto": gruppo.fatto, "prossimi_passi": gruppo.prossimi_passi, "focus": gruppo.focus,
+                          "locali": {loc.nome: loc.nota_mese for loc in gruppo.locali if loc.nota_mese}},
+        "dati_inviati_dal_consulente": {k: {c: v for c, v in x.items() if not c.startswith("immagini")}
+                                        for k, x in manuali.items() if k in {loc.nome for loc in gruppo.locali}},
+        "modifiche_registrate": {a.cliente.nome: sorted({f"{m.risorsa} {m.operazione}" for m in a.dati.modifiche})[:20]
+                                 for a in analisi_gruppo},
+    }
+    base = cartella / f"cliente-{_slug(gruppo.nome)}-{suffisso}"
+    if gruppo.formato == "docx":
+        from . import report_docx
+
+        testi = report_docx.testi_base(dati, manuali)
+        testi, ai = testi_doc.riscrivi(testi, testi_doc.numeri_compatti(dati), contesto)
+        spec = report_docx.blocchi_word(dati, testi, manuali, cartella / f"grafici-{_slug(gruppo.nome)}")
+        return report_docx.scrivi_docx(spec, base.with_suffix(".docx")), testi, ai
+    from . import report_pptx
+
+    x = dati["locali"][0]
+    testi = report_pptx.testi_base(dati, x, manuali)
+    testi, ai = testi_doc.riscrivi(testi, testi_doc.numeri_compatti(dati), contesto)
+    return report_pptx.deck_grano(dati, x, testi, manuali, gruppo.colore, base.with_suffix(".pptx")), testi, ai
+
+
+def _testi_piatti(x) -> list[str]:
+    if isinstance(x, str):
+        return [x] if x.strip() else []
+    if isinstance(x, dict):
+        return [t for v in x.values() for t in _testi_piatti(v)]
+    if isinstance(x, list):
+        return [t for v in x for t in _testi_piatti(v)]
+    return []
+
+
 def _da_ricordare(gruppo, analisi_gruppo, vista, periodi) -> dict:
     """Numeri e testi del report appena creato, da salvare dopo l'invio."""
     from .report_locali import azioni
@@ -129,7 +184,7 @@ def _da_ricordare(gruppo, analisi_gruppo, vista, periodi) -> dict:
                                   "visite": round(c.metriche.conversioni, 1)}
                          for c in a.dati.corrente.campagne.values() if c.metriche.costo > 0},
         }
-    testi = testi_scritti(vista)
+    testi = _testi_piatti(vista) if isinstance(vista, dict) else testi_scritti(vista)
     while testi and sum(len(t) for t in testi) > 8000:
         testi.pop()
     return {"numero": gruppo.numero_report(periodi.corrente.inizio.year, periodi.corrente.inizio.month),
@@ -201,6 +256,7 @@ def main(argv: list[str] | None = None) -> int:
     log.info("Report '%s' per %d account, periodo %s", momento, totale, periodi.corrente.etichetta())
 
     analisi, errori, per_cliente = [], [], []
+    manuali = None  # dati della mail del mese, letti solo se serve
     n = 0
     for gruppo in configurazione.gruppi:
         report_gruppo = momento in gruppo.report_cliente
@@ -220,6 +276,14 @@ def main(argv: list[str] | None = None) -> int:
                 _prepara_contratto(fonte, a, gruppo)
             if dettaglio:
                 _prepara_attribuzione(fonte, a)
+            if dettaglio and gruppo.formato in ("docx", "pptx") and hasattr(fonte, "extra"):
+                try:
+                    a.dati.extra = fonte.extra(cliente.customer_id, periodi, cliente.nome_ricerche)
+                    if a.dati.extra.get("errori"):
+                        log.warning("Account %d/%d: dati aggiuntivi parziali (%s)", n, totale,
+                                    ", ".join(a.dati.extra["errori"]))
+                except Exception as e:  # noqa: BLE001
+                    log.warning("Account %d/%d: dati aggiuntivi non disponibili (%s)", n, totale, type(e).__name__)
             a.controlli = controlla(a)
             analisi.append(a)
             analisi_gruppo.append(a)
@@ -233,7 +297,23 @@ def main(argv: list[str] | None = None) -> int:
         if len(analisi_gruppo) < len(gruppo.locali):
             log.error("Report cliente %d non generato: uno o più account del gruppo sono in errore", len(per_cliente) + 1)
             continue
-        if gruppo.negozio:
+        if gruppo.negozio and gruppo.formato in ("docx", "pptx"):
+            # Word (formato "advisory") o PowerPoint (formato "grano"): bozza da rivedere prima dell'invio.
+            if manuali is None:
+                manuali = _dati_manuali(configurazione, periodi, cartella / "manuali")
+            try:
+                percorso, testi, ai = _report_documento(gruppo, analisi_gruppo, periodi, manuali, cartella, suffisso)
+                log.info("Report cliente %d: %s, testi %s", len(per_cliente) + 1, gruppo.formato,
+                         "AI" if ai else "automatici")
+            except Exception as e:
+                log.error("Report cliente non generato (%s)", type(e).__name__)
+                errori.append((gruppo.nome, "Report cliente: " + _descrivi_errore(e)))
+                continue
+            per_cliente.append((gruppo, percorso, None))
+            if periodi.mese_chiuso:
+                da_ricordare.append((gruppo.nome, f"{periodi.corrente.inizio:%Y-%m}",
+                                     _da_ricordare(gruppo, analisi_gruppo, testi, periodi)))
+        elif gruppo.negozio:
             # Ristoranti e locali: un unico report PDF per il cliente, anche con più locali.
             try:
                 if gruppo.layout == "grano" and len(analisi_gruppo) == 1:
@@ -280,7 +360,11 @@ def main(argv: list[str] | None = None) -> int:
             destinatari = (a.cliente.email if a else gruppo.email) or []
             automatico = a.cliente.invio_automatico if a else gruppo.invio_automatico
             oggetto = f"Report Google Ads · {nome} · {periodi.corrente.etichetta()}"
-            if percorso.suffix == ".pdf":
+            if percorso.suffix in (".docx", ".pptx"):
+                html = (f"<p>Report Google Ads di <strong>{escape(nome)}</strong>, {periodi.titolo}.</p>"
+                        f"<p>Bozza nel file {'Word' if percorso.suffix == '.docx' else 'PowerPoint'} allegato: "
+                        "rivedi i testi e completa le parti segnate \"Da completare\" prima di inviarlo.</p>")
+            elif percorso.suffix == ".pdf":
                 html = (f"<p>Report Google Ads di <strong>{escape(nome)}</strong>, {periodi.titolo}.</p>"
                         "<p>Il report completo è nel PDF allegato.</p>")
             else:

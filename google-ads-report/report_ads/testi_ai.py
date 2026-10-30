@@ -74,7 +74,7 @@ def _schema(slot: dict) -> dict:
             "required": list(slot), "additionalProperties": False}
 
 
-def _chiama(contesto: dict, slot: dict) -> dict | None:
+def _chiama(contesto: dict, slot: dict, istruzioni: str | None = None) -> dict | None:
     if not os.environ.get("ANTHROPIC_API_KEY") or not slot:
         return None
     import anthropic
@@ -89,7 +89,7 @@ def _chiama(contesto: dict, slot: dict) -> dict | None:
             fallbacks="default",
             output_config={"effort": os.environ.get("CLAUDE_EFFORT", "high"),
                            "format": {"type": "json_schema", "schema": _schema(slot)}},
-            system=ISTRUZIONI,
+            system=istruzioni or ISTRUZIONI,
             messages=[{"role": "user", "content": json.dumps(contesto, ensure_ascii=False, default=str)}],
         ) as flusso:
             risposta = flusso.get_final_message()

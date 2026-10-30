@@ -53,6 +53,10 @@ class Cliente:
     nota_mese: str = ""
     contesto: str = ""  # storia e strategia del locale (Secret CONTESTO_CLIENTI)
     contesto_gruppo: str = ""  # storia del cliente a cui appartiene il locale
+    # Espressione regolare delle ricerche sul nome del locale (es. "d[oòó]m[oòó]"): serve a calcolare
+    # la quota di conversioni Performance Max sul nome, da escludere dalla fee.
+    nome_ricerche: str = ""
+    nome_breve: str = ""  # nome nei grafici e nelle tabelle (es. "Locale Roma")
     # Visite scritte nei report già inviati, per mese ("2026-09": 1215): il report successivo le confronta
     # con il dato consolidato (attribuzione a 30 giorni) e calcola l'eventuale conguaglio.
     visite_comunicate: dict = field(default_factory=dict)
@@ -83,6 +87,9 @@ class Compenso:
     # Tipi di campagna le cui visite restano fuori dal fatturato attribuibile (es. [SEARCH] per le
     # campagne sul nome del locale, che proteggono clienti già acquisiti).
     escludi: list[str] = field(default_factory=list)
+    # True: esclude anche la quota di visite Performance Max arrivate da ricerche del nome del locale.
+    escludi_nome: bool = False
+    escludi_dal: str = ""  # "AAAA-MM": le esclusioni valgono dai mesi da qui in poi (prima no)
 
 
 @dataclass
@@ -93,6 +100,10 @@ class Gruppo:
     sottotitolo: str = ""
     # Impostazione del report cliente: "advisory" (una sezione per locale) o "grano" (sezioni numerate).
     layout: str = "advisory"
+    # Formato del report cliente: pdf (layout advisory o grano), docx (Word orizzontale antracite e oro),
+    # pptx (presentazione 16:9 nella palette del cliente).
+    formato: str = "pdf"
+    fisso_mensile: float = 0.0  # compenso fisso del cliente (solo nel report interno)
     colore: str = ""
     colore_titoletti: str = ""  # layout grano: colore dei sottotitoli (es. rosso chiaro, ocra)
     report_cliente: list[str] = field(default_factory=lambda: ["inizio"])
@@ -192,6 +203,8 @@ def carica(percorso: str | Path) -> Configurazione:
         if sconosciuti:
             raise ValueError(f"Cliente n. {i}: campi sconosciuti {sorted(sconosciuti)}")
         gruppo = Gruppo(nome=voce["nome"], locali=locali, compenso=compenso, **extra)
+        if gruppo.formato not in ("pdf", "docx", "pptx"):
+            raise ValueError(f"Cliente n. {i}: formato deve essere 'pdf', 'docx' o 'pptx'")
         if gruppo.layout not in ("advisory", "grano"):
             raise ValueError(f"Cliente n. {i}: layout deve essere 'advisory' o 'grano'")
         gruppi.append(gruppo)
