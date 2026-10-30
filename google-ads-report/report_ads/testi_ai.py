@@ -94,7 +94,13 @@ def _chiama(contesto: dict, slot: dict, istruzioni: str | None = None) -> dict |
         ) as flusso:
             risposta = flusso.get_final_message()
     except anthropic.APIStatusError as e:
-        log.warning("Testi AI del report non disponibili (HTTP %s): uso i testi automatici", e.status_code)
+        # Il messaggio di errore dell'API descrive la richiesta (schema, limiti), non i dati dei clienti.
+        dettaglio = ""
+        try:
+            dettaglio = str((e.body or {}).get("error", {}).get("message", ""))[:200]
+        except Exception:  # noqa: BLE001
+            pass
+        log.warning("Testi AI del report non disponibili (HTTP %s %s): uso i testi automatici", e.status_code, dettaglio)
         return None
     except anthropic.APIConnectionError:
         log.warning("Testi AI del report non disponibili (connessione): uso i testi automatici")
