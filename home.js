@@ -233,8 +233,8 @@
   var lang = (document.documentElement.lang || 'it').slice(0, 2).toLowerCase();
   var texts = BACKS[lang] || BACKS.it;
 
-  // Ritmo: una nuova tessera ogni 1,2–2 s, retro visibile ~2,5–3 s, al massimo 2 girate insieme
-  var GAP_MIN = 1200, GAP_MAX = 2000, SHOW_MIN = 2500, SHOW_MAX = 3000, MAX_ON = 2, TURN = 800;
+  // Ritmo: una nuova tessera ogni secondo, retro visibile ~2,5–3 s, al massimo 3 girate insieme
+  var GAP_MIN = 1000, GAP_MAX = 1000, SHOW_MIN = 2500, SHOW_MAX = 3000, MAX_ON = 3, TURN = 800;
   function rnd(a, b) { return a + Math.random() * (b - a); }
 
   var tiles = [];
