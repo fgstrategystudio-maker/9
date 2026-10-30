@@ -29,6 +29,10 @@ on:
         description: "Invia le email"
         type: boolean
         default: true
+      data:
+        description: "Data simulata AAAA-MM-GG (vuoto = oggi), es. 2026-11-01 per provare il report di ottobre"
+        type: string
+        default: ""
 
 permissions:
   # write serve solo per salvare la memoria cifrata dei report sul ramo stato-report.
@@ -112,9 +116,10 @@ jobs:
           REPORT_EMAIL_INTERNA: ${{ secrets.REPORT_EMAIL_INTERNA }}
           TZ: Europe/Rome
           MOMENTO: ${{ inputs.momento || 'auto' }}
+          DATA: ${{ inputs.data && format('--data={0}', inputs.data) || '' }}
           DEMO: ${{ inputs.demo && '--demo' || '' }}
           INVIA: ${{ (github.event_name == 'schedule' || inputs.invia) && '--invia' || '' }}
-        run: python -m report_ads --config clienti.yaml --momento "$MOMENTO" $DEMO $INVIA
+        run: python -m report_ads --config clienti.yaml --momento "$MOMENTO" $DATA $DEMO $INVIA
 
       - name: Salva la memoria dei report
         # Solo dopo l'invio dei report del 1° del mese; anche se un account era in errore.
