@@ -82,7 +82,7 @@
     <h2><span style="display:inline-block; width:12px; height:12px; border-radius:50%; background:{{ colori_stato[a.stato] }};"></span> {{ a.cliente.nome }}</h2>
     <div class="muted">{{ a.dati.nome }} · ID {{ a.cliente.customer_id }}{% if a.dati.punteggio_ottimizzazione is not none %} · punteggio ottimizzazione {{ a.dati.punteggio_ottimizzazione | perc(0) }}{% endif %}{% if a.cliente.negozio %} · visite {{ 'stimate (' ~ ((a.cliente.quota_visite_indicazioni * 100) | round(0) | int) ~ '% indicazioni)' if a.dati.visite_stimate else 'misurate da Google' }}{% endif %}{% if a.commento_ai %} · commento AI{% endif %}</div>
 
-    <p style="margin-top:12px;">{{ a.sintesi_interna }}</p>
+    {% for par in a.sintesi_interna.split('\n') if par.strip() %}<p style="margin-top:12px;">{{ par }}</p>{% endfor %}
 
     <h3>Punti di attenzione</h3>
     {% if a.punti %}
@@ -163,32 +163,9 @@
     </table>
     {% endif %}
 
-    <h3>Modifiche all'account nel periodo</h3>
-    {% if a.modifiche %}
-    <p class="muted">{% for tipo, n in a.modifiche_per_tipo %}{{ tipo | replace('_', ' ') | lower }}: {{ n }}{% if not loop.last %} · {% endif %}{% endfor %}</p>
-    <table class="dati">
-      <tr><th>Quando</th><th>Chi</th><th>Cosa</th><th>Campagna</th></tr>
-      {% for m in a.modifiche %}
-      <tr>
-        <td class="num" style="text-align:left !important;">{{ m.quando.strftime('%d/%m %H:%M') }}</td>
-        <td class="muted">{{ m.utente }}</td>
-        <td>{{ m.operazione | lower }} {{ m.risorsa | replace('_', ' ') | lower }}{% if m.campi %}<br><span class="muted">{{ m.campi[:4] | join(', ') }}</span>{% endif %}</td>
-        <td>{{ m.campagna or '–' }}</td>
-      </tr>
-      {% endfor %}
-    </table>
-    {% else %}
-    <p class="muted">Nessuna modifica registrata (la cronologia via API copre al massimo gli ultimi 30 giorni).</p>
-    {% endif %}
-
-    {% if a.controlli %}
     {% set falliti = a.controlli | rejectattr('ok') | list %}
-    <h3>Controlli sui dati · {{ a.controlli | length - falliti | length }}/{{ a.controlli | length }} superati</h3>
-    <table class="dati">
-      {% for c in a.controlli %}
-      <tr><td style="width:22px; color:{{ '#16a34a' if c.ok else '#dc2626' }}; font-weight:700;">{{ '✓' if c.ok else '✗' }}</td><td>{{ c.nome }}</td><td class="muted">{{ c.dettaglio }}</td></tr>
-      {% endfor %}
-    </table>
+    {% if falliti %}
+    <p style="margin-top:14px; color:#991b1b;"><strong>Dati da verificare:</strong> {% for c in falliti %}{{ c.nome }} ({{ c.dettaglio }}){% if not loop.last %}; {% endif %}{% endfor %}.</p>
     {% endif %}
   </div>
   {% endfor %}
