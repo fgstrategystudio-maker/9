@@ -189,7 +189,7 @@ Dopo l'invio dei report del 1° del mese il programma salva, per ogni locale, le
 
 - Il file è cifrato (`stato.enc`) e sta sul ramo `stato-report` del repository, che contiene solo quel file. Senza la chiave non si legge.
 - La chiave è ricavata dal Secret `GOOGLE_ADS_CLIENT_SECRET`. Se preferisci una chiave separata, crea il Secret `STATO_CHIAVE`; cambiando chiave la memoria riparte da zero.
-- I numeri scritti a mano in `visite_comunicate` valgono solo per i mesi che la memoria non ha.
+- I numeri scritti a mano in `visite_comunicate` prevalgono sulla memoria: usali quando al cliente è andato un report fatto a mano.
 
 Per tenere fuori dal fatturato attribuibile le visite di alcune campagne, per esempio le Search sul nome del locale, aggiungi `escludi: [SEARCH]` al `compenso` del cliente.
 

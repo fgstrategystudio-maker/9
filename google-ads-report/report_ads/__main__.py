@@ -103,15 +103,15 @@ def _prepara_attribuzione(fonte, a) -> None:
 def _applica_memoria(conf, stato: dict, mese_report: str) -> None:
     """Visite scritte nei report già inviati e testi degli ultimi report, dalla memoria salvata.
 
-    La memoria vince sulle visite scritte a mano in CONTESTO_CLIENTI (che restano per i mesi
-    precedenti all'automazione)."""
+    Le visite scritte a mano in CONTESTO_CLIENTI vincono sulla memoria: servono per i mesi precedenti
+    all'automazione e per i mesi in cui al cliente è andato un report fatto a mano."""
     for gruppo in conf.gruppi:
         mesi = {m: r for m, r in memoria.mesi(stato, gruppo.nome).items() if m < mese_report}
         for mese, rep in mesi.items():
             for loc in gruppo.locali:
                 voce = rep.get("locali", {}).get(loc.nome)
                 if voce and voce.get("visite") is not None:
-                    loc.visite_comunicate[mese] = float(voce["visite"])
+                    loc.visite_comunicate.setdefault(mese, float(voce["visite"]))
         gruppo.memoria = [dict(rep, mese=m) for m, rep in sorted(mesi.items())[-3:]]
 
 
