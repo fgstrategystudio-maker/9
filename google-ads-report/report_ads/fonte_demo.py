@@ -183,6 +183,17 @@ class FonteDemo:
         d.giorni_precedente = [x * r.uniform(0.7, 0.95) for x in d.giorni_corrente]
         return d
 
+    def extra(self, customer_id: str, periodi: Periodi, regex_nome: str = "") -> dict:
+        r = _rng(str(customer_id), "extra-doc")
+        campagne = {"2002": {"quota_impr": r.uniform(.45, .8), "persa_budget": r.uniform(.03, .4),
+                             "persa_ranking": r.uniform(.05, .2), "in_cima": r.uniform(.6, .8),
+                             "primo_posto": r.uniform(.4, .7), "cpc_medio": r.uniform(.15, .25)},
+                    "2001": {"quota_impr": r.uniform(.1, .3), "persa_budget": r.uniform(0, .3),
+                             "persa_ranking": r.uniform(.4, .7), "budget_consigliato": r.choice([None, 130.0])}}
+        quota = {"corrente": {"quota": r.uniform(.05, .4), "fonte": "demo", "conversioni": 1000, "esempi": []},
+                 "precedente": {"quota": r.uniform(.05, .4), "fonte": "demo", "conversioni": 1000, "esempi": []}}
+        return {"campagne": campagne, "quota_nome": quota if regex_nome else {}, "errori": []}
+
     def visite_intervallo(self, customer_id: str, intervallo: Intervallo) -> tuple[float, float]:
         m = self._periodo_locale(str(customer_id), intervallo, 1.0).totale
         return m.visite_reali, m.indicazioni

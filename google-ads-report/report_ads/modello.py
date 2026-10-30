@@ -158,3 +158,6 @@ class DatiAccount:
     due_mesi_prima: DatiPeriodo | None = None  # solo report di chiusura mese
     dettaglio: Dettaglio | None = None
     storico: list[MeseStorico] = field(default_factory=list)  # mesi più vecchi prima
+    # Dati per i report Word/PowerPoint: posizione delle campagne, budget consigliato,
+    # quota delle conversioni Performance Max su ricerche del nome del locale (vedi FonteGoogleAds.extra).
+    extra: dict = field(default_factory=dict)

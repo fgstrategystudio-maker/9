@@ -8,6 +8,14 @@ from email.message import EmailMessage
 from pathlib import Path
 
 
+TIPI = {
+    ".pdf": ("application", "pdf"),
+    ".html": ("text", "html"),
+    ".docx": ("application", "vnd.openxmlformats-officedocument.wordprocessingml.document"),
+    ".pptx": ("application", "vnd.openxmlformats-officedocument.presentationml.presentation"),
+}
+
+
 class Mittente:
     def __init__(self) -> None:
         self.utente = os.environ.get("SMTP_USER", "")
@@ -20,7 +28,7 @@ class Mittente:
     def configurato(self) -> bool:
         return bool(self.utente and self.password)
 
-    def invia(self, a: list[str], oggetto: str, html: str, allegato: Path | None = None,
+    def invia(self, a: list[str], oggetto: str, html: str, allegato: Path | list[Path] | None = None,
               ccn: list[str] | None = None) -> None:
         msg = EmailMessage()
         msg["From"] = f"{self.nome} <{self.utente}>" if self.nome else self.utente
@@ -28,9 +36,9 @@ class Mittente:
         msg["Subject"] = oggetto
         msg.set_content("Questo report è in formato HTML: aprilo con un client email che lo supporta.")
         msg.add_alternative(html, subtype="html")
-        if allegato:
-            tipo = ("application", "pdf") if allegato.suffix == ".pdf" else ("text", "html")
-            msg.add_attachment(allegato.read_bytes(), maintype=tipo[0], subtype=tipo[1], filename=allegato.name)
+        for file in ([allegato] if isinstance(allegato, Path) else list(allegato or [])):
+            maintype, subtype = TIPI.get(file.suffix, ("application", "octet-stream"))
+            msg.add_attachment(file.read_bytes(), maintype=maintype, subtype=subtype, filename=file.name)
         destinatari = a + (ccn or [])
         with smtplib.SMTP_SSL(self.host, self.porta, timeout=60) as s:
             s.login(self.utente, self.password)

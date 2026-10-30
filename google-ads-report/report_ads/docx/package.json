@@ -1,0 +1,8 @@
+{
+  "name": "report-docx",
+  "private": true,
+  "description": "Impaginazione dei report Word",
+  "dependencies": {
+    "docx": "9.10.0"
+  }
+}
