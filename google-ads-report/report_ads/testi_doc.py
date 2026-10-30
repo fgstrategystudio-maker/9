@@ -16,6 +16,8 @@ from . import testi_ai
 
 log = logging.getLogger(__name__)
 
+PER_RICHIESTA = 10  # testi per richiesta a Claude
+
 REGOLE = """
 
 Regole di scrittura di questo report (vincolanti):
@@ -62,7 +64,13 @@ def riscrivi(base: dict, numeri: dict, contesto: dict) -> tuple[dict, bool]:
     if not os.environ.get("ANTHROPIC_API_KEY"):
         return base, False
     slot, percorsi = _appiattisci(base)
-    nuovi = testi_ai._chiama({"numeri_del_report": numeri, **contesto}, slot, testi_ai.ISTRUZIONI + REGOLE)
+    # Più richieste piccole invece di una grande: lo schema di risposta resta semplice.
+    chiavi = list(slot)
+    nuovi: dict = {}
+    for i in range(0, len(chiavi), PER_RICHIESTA):
+        parte = {k: slot[k] for k in chiavi[i:i + PER_RICHIESTA]}
+        nuovi.update(testi_ai._chiama({"numeri_del_report": numeri, **contesto}, parte,
+                                      testi_ai.ISTRUZIONI + REGOLE) or {})
     if not nuovi:
         return base, False
     out = copy.deepcopy(base)
