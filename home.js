@@ -50,6 +50,37 @@
   });
 
   var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Striscia dei marchi: scorrimento continuo da destra a sinistra a velocità costante.
+  // I marchi si ripetono finché la riga è più larga dello schermo, poi la serie viene
+  // duplicata (copia nascosta agli screen reader) e il CSS la sposta di metà: il giro è senza scatti.
+  if (!reduce) document.querySelectorAll('.hero-proof-row').forEach(function (row) {
+    var items = Array.prototype.slice.call(row.children);
+    if (!items.length) return;
+    var track = document.createElement('div'), group = document.createElement('div');
+    track.className = 'marquee-track'; group.className = 'marquee-group';
+    items.forEach(function (el) { group.appendChild(el); });
+    track.appendChild(group); row.appendChild(track); row.classList.add('is-marquee');
+    var lastW = 0, SPEED = 40; // pixel al secondo
+    function mute(n) { n.setAttribute('aria-hidden', 'true'); if (n.tagName === 'IMG') n.alt = ''; n.querySelectorAll('img').forEach(function (i) { i.alt = ''; }); return n; }
+    function build() {
+      var w = row.clientWidth;
+      if (!w || w === lastW) return;
+      lastW = w;
+      while (track.children.length > 1) track.removeChild(track.lastChild);
+      group.querySelectorAll('[data-rep]').forEach(function (n) { n.remove(); });
+      for (var k = 0; group.getBoundingClientRect().width < w && k < 6; k++) {
+        items.forEach(function (el) { var c = mute(el.cloneNode(true)); c.setAttribute('data-rep', ''); group.appendChild(c); });
+      }
+      track.appendChild(mute(group.cloneNode(true)));
+      track.style.setProperty('--marquee-dur', (group.getBoundingClientRect().width / SPEED).toFixed(2) + 's');
+    }
+    build();
+    window.addEventListener('load', function () { lastW = 0; build(); });
+    var rt;
+    window.addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(build, 150); }, { passive: true });
+  });
+
   if (reduce || !('IntersectionObserver' in window)) return;
 
   // Il valore finale è già nell'HTML: si riparte da 0 solo quando il numero entra nello schermo

@@ -107,6 +107,33 @@ h1, h2, h3 { margin: 0; text-wrap: balance; font-weight: 300; letter-spacing: -.
   .hero-proof img { height: calc(var(--h) * .74); max-width: 100%; }
 }
 
+/* Striscia dei marchi in movimento (attivata da home.js con .is-marquee):
+   una sola riga che scorre senza fine da destra a sinistra a velocità costante,
+   bordi sfumati, marchi in grigio che tornano a colori sotto il mouse,
+   scorrimento in pausa al passaggio del mouse. Senza JavaScript o con
+   "riduci movimento" resta la riga ferma qui sopra. */
+.hero-proof-row.is-marquee {
+  --gap: clamp(44px, 5vw, 76px); --fade: 12%;
+  display: block; overflow: hidden; padding-block: 14px; margin-block: -14px;
+  /* bordi sfumati a destra e a sinistra; la sfumatura in alto e in basso
+     nasconde i contorni del fondo pieno della traccia */
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 var(--fade), #000 calc(100% - var(--fade)), transparent), linear-gradient(180deg, transparent, #000 14px, #000 calc(100% - 14px), transparent);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(90deg, transparent, #000 var(--fade), #000 calc(100% - var(--fade)), transparent), linear-gradient(180deg, transparent, #000 14px, #000 calc(100% - 14px), transparent);
+  mask-composite: intersect;
+}
+/* il fondo pieno serve al mix-blend-mode dei marchi: dentro la traccia animata
+   il "multiply" si fonde con questo colore e i fondi bianchi dei loghi spariscono */
+.marquee-track { display: flex; width: max-content; padding-block: 14px; margin-block: -14px; background: var(--bg); animation: marquee var(--marquee-dur, 40s) linear infinite; will-change: transform; }
+.marquee-group { display: flex; flex: none; align-items: center; gap: var(--gap); padding-right: var(--gap); min-height: 40px; }
+.is-marquee:hover .marquee-track { animation-play-state: paused; }
+.is-marquee img { flex: none; max-width: none; transition: filter .45s, opacity .45s; }
+.is-marquee img:hover { filter: none; opacity: 1; }
+@keyframes marquee { to { transform: translate3d(-50%, 0, 0); } }
+@media (max-width: 780px) {
+  .hero-proof-row.is-marquee { --gap: 38px; --fade: 9%; }
+}
+
 section.block { padding-block: clamp(48px, 6vw, 80px); }
 section.alt { background: var(--bg-2); }
 .head { display: grid; grid-template-columns: 1.1fr 1fr; gap: 20px 64px; align-items: end; margin-bottom: clamp(40px, 5vw, 64px); }
@@ -381,57 +408,3 @@ footer.foot a:hover { color: var(--ink); }
 .sectors .more { border-color: transparent; background: none; color: var(--accent); text-decoration: none; }
 .sectors .more:hover { text-decoration: underline; }
 @media (max-width: 640px) { .sector { font-size: 12.5px; padding: 6px 13px; } }
-
-/* ---------- Il metodo: la strategia al centro accende le altre aree ----------
-   Visibile e completa di base. Quando entra nello schermo home.js aggiunge .in
-   e parte una sequenza breve, solo CSS: Strategy, poi il tronco in bronzo,
-   poi i rami che accendono Marketing, Data e Sales. */
-.leve-head { text-align: center; margin-bottom: clamp(36px, 5vw, 64px); }
-.leve-head .eyebrow::after { content: ""; width: 22px; height: 1px; background: currentColor; }
-.leve-head h2 { margin-top: 18px; font-size: clamp(36px, 4.8vw, 64px); line-height: 1.02; }
-.leve-head h2 em { font-style: normal; color: var(--accent); }
-
-.leve-map { --t: .5s; display: grid; justify-items: center; }
-.lv-core { display: grid; justify-items: center; text-align: center; text-decoration: none; max-width: 30em; }
-.lv-core small { font: 500 11px/1 var(--sans); letter-spacing: .26em; text-transform: uppercase; color: var(--accent); }
-.lv-core b { margin-top: 14px; font-weight: 300; font-size: clamp(48px, 6.4vw, 88px); line-height: .95; letter-spacing: -.05em; color: var(--accent); }
-.lv-core span { margin-top: 14px; color: var(--muted); font-size: 15.5px; }
-.lv-trunk { width: 2px; height: clamp(40px, 5vw, 64px); margin-top: 26px; background: var(--accent); transform-origin: top; }
-
-.lv-areas { position: relative; width: 100%; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
-/* ramo orizzontale: dal centro della prima al centro dell'ultima colonna */
-.lv-areas::before { content: ""; position: absolute; top: 0; left: calc(100% / 6); right: calc(100% / 6); height: 2px; background: var(--accent); }
-.lv { position: relative; display: grid; justify-items: center; text-align: center; gap: 8px; padding: 58px 18px 8px; text-decoration: none; }
-.lv::before { content: ""; position: absolute; top: 0; left: calc(50% - .5px); width: 1px; height: 34px; background: var(--ink); transform-origin: top; }
-.lv::after { content: ""; position: absolute; top: 30px; left: calc(50% - 4px); width: 8px; height: 8px; border-radius: 50%; background: var(--ink); }
-.lv b { font-weight: 300; font-size: clamp(30px, 3.2vw, 44px); line-height: 1; letter-spacing: -.045em; transition: color .3s; }
-.lv span { color: var(--muted); font-size: 15px; line-height: 1.45; max-width: 16em; }
-.lv:hover b, .lv-core:hover b { color: var(--ink); }
-.lv:hover::after { background: var(--accent); }
-
-.in.leve-map .lv-core { animation: fadeUp .6s var(--ease) both; }
-.in.leve-map .lv-trunk { animation: growY .35s .3s cubic-bezier(.6, 0, .3, 1) both; }
-.in.leve-map .lv-areas::before { animation: growX .4s .6s cubic-bezier(.3, 0, .2, 1) both; }
-.in.leve-map .lv::before { animation: growY .25s calc(.9s + var(--i) * .08s) ease-out both; }
-.in.leve-map .lv::after { animation: dotOn .35s calc(1s + var(--i) * .08s) var(--ease) both; }
-.in.leve-map .lv > * { animation: areaOn .55s calc(1.02s + var(--i) * .08s) var(--ease) both; }
-@keyframes growY { from { transform: scaleY(0); } }
-@keyframes growX { from { transform: scaleX(0); } }
-@keyframes dotOn { from { transform: scale(0); background: var(--accent); } }
-@keyframes areaOn { from { opacity: .18; transform: translateY(10px); } }
-
-@media (max-width: 780px) {
-  .leve-head { text-align: left; }
-  .leve-head .eyebrow::after { display: none; }
-  .leve-map { justify-items: start; }
-  .lv-core { justify-items: start; text-align: left; }
-  .lv-trunk { margin-left: 4px; height: 28px; }
-  /* su telefono il ramo diventa una colonna verticale a sinistra */
-  .lv-areas { grid-template-columns: minmax(0, 1fr); padding-left: 36px; }
-  .lv-areas::before { top: 0; bottom: 30px; left: 4px; right: auto; width: 2px; height: auto; transform-origin: top; }
-  .in.leve-map .lv-areas::before { animation-name: growY; }
-  .lv { justify-items: start; text-align: left; padding: 18px 0; gap: 6px; }
-  .lv::before { top: 31px; left: -32px; width: 24px; height: 1px; transform-origin: left; }
-  .lv::after { top: 27px; left: -12px; }
-  .in.leve-map .lv::before { animation-name: growX; }
-}
