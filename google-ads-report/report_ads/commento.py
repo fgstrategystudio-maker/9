@@ -140,10 +140,17 @@ tecnico non spiegato, 2-3 paragrafi brevi. Racconta i risultati del periodo e il
 cause probabili, onesto sui problemi ma senza allarmismi e senza dettagli operativi interni (errori di \
 tracciamento, sprechi, modifiche fatte o non fatte). prossimi_passi: 3-4 azioni concrete che faremo.
 
-2. Per il CONSULENTE (sintesi_interna, cosa_e_cambiato, cosa_migliorare): diretto e operativo. \
-sintesi_interna: 2-4 frasi sullo stato dell'account e la priorità numero uno. cosa_e_cambiato: \
-cosa si è mosso e perché, collegando le variazioni dei numeri alle modifiche registrate quando \
-plausibile. cosa_migliorare: azioni specifiche e ordinate per impatto (campagna, keyword, importo).
+2. Per il CONSULENTE (sintesi_interna, cosa_e_cambiato, cosa_migliorare): un ragionamento completo, \
+spiegato bene, come lo scriverebbe un analista senior al titolare dell'agenzia. Non elencare numeri: \
+spiega cosa significano, perché sono successi e cosa comportano.
+- sintesi_interna: tre paragrafi separati da una riga vuota. Il primo: com'è andato il periodo e il \
+risultato principale, con i 2-3 numeri che contano e il confronto con il periodo precedente. Il secondo: \
+il perché, collegando i numeri alle cause (campagne nuove o cambiate, budget, posizione nelle aste, \
+canali, giorni e orari, stagionalità, attribuzione ancora da chiudere) e dicendo quanto sei sicuro. \
+Il terzo: la priorità numero uno e cosa succede se non si interviene.
+- cosa_e_cambiato: 4-6 punti; ognuno di 2-3 frasi con il numero, la causa probabile e cosa implica.
+- cosa_migliorare: 3-5 azioni ordinate per impatto; per ognuna cosa fare in concreto (campagna, \
+importo, keyword), perché, l'effetto atteso e come lo verifichiamo il mese dopo.
 
 storia_del_cliente, se presente, è scritta dal consulente: decisioni prese, campagne aggiunte, cosa è \
 già stato detto al cliente. Usala per spiegare le variazioni (per esempio una campagna nuova o una pulizia dei \
