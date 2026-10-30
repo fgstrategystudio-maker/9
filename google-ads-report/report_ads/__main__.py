@@ -218,6 +218,9 @@ def main(argv: list[str] | None = None) -> int:
     logging.getLogger("httpx").setLevel(logging.WARNING)
     logging.getLogger("httpx2").setLevel(logging.WARNING)
     logging.getLogger("fontTools").setLevel(logging.WARNING)
+    # La libreria Google Ads scrive le richieste fallite con l'ID dell'account: i log sono pubblici.
+    logging.getLogger("google.ads.googleads").setLevel(logging.CRITICAL)
+    logging.getLogger("google.ads.googleads.client").setLevel(logging.CRITICAL)
     logging.getLogger("weasyprint").setLevel(logging.ERROR)
     oggi = date.fromisoformat(args.data) if args.data else date.today()
     momento = momento_automatico(oggi) if args.momento == "auto" else args.momento

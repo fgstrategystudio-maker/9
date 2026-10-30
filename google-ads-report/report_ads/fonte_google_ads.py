@@ -337,6 +337,7 @@ class FonteGoogleAds:
     def extra(self, cid: str, periodi: Periodi, regex_nome: str = "") -> dict:
         """Dati in più per i report Word/PowerPoint. Ogni blocco è indipendente: se una query non è
         disponibile si perde solo quel dato (nei log solo il nome del blocco, mai dati)."""
+        cid = pulisci_id(cid)
         risultato: dict = {"campagne": {}, "quota_nome": {}, "errori": []}
         q = f"""
             SELECT campaign.id, campaign.advertising_channel_type, metrics.top_impression_percentage,
