@@ -54,7 +54,9 @@
   // Striscia dei marchi: scorrimento continuo da destra a sinistra a velocità costante.
   // I marchi si ripetono finché la riga è più larga dello schermo, poi la serie viene
   // duplicata (copia nascosta agli screen reader) e il CSS la sposta di metà: il giro è senza scatti.
-  if (!reduce) document.querySelectorAll('.hero-proof-row').forEach(function (row) {
+  // Scorre anche con "riduci movimento" attivo (es. Windows con le animazioni di sistema spente):
+  // è un movimento lento e continuo, che si ferma passando sopra con il mouse.
+  document.querySelectorAll('.hero-proof-row').forEach(function (row) {
     var items = Array.prototype.slice.call(row.children);
     if (!items.length) return;
     var track = document.createElement('div'), group = document.createElement('div');
