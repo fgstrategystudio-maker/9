@@ -57,9 +57,9 @@ def controlla(a: Analisi) -> list[Controllo]:
     ))
     if not d.visite_stimate:
         risultati.append(Controllo(
-            "Visite: colonna Risultati di Google",
-            t.visite_in_conversioni == 0 or _uguali(t.visite_reali, t.visite_in_conversioni, 0.0, 0.5),
-            f"visite usate {_fmt(t.visite_reali)} · visite nella colonna Conversioni {_fmt(t.visite_in_conversioni)}",
+            "Visite: almeno quelle della colonna Conversioni",
+            t.visite_reali + 0.5 >= t.visite_in_conversioni,
+            f"visite usate {_fmt(t.visite_reali)} · di cui obiettivo principale {_fmt(t.visite_in_conversioni)}",
         ))
 
     det = d.dettaglio

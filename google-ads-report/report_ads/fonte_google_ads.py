@@ -158,8 +158,9 @@ class FonteGoogleAds:
         """Azioni per categoria: indicazioni stradali, contatti, ordini e visite al negozio.
 
         Come la colonna "Risultati" di Google Ads: si usa la colonna Conversioni, cioè solo le azioni
-        che sono obiettivi principali. Fanno eccezione le indicazioni stradali: se sono secondarie si
-        leggono da "tutte le conversioni", perché servono comunque a stimare le visite.
+        che sono obiettivi principali. Fanno eccezione le indicazioni stradali (se sono secondarie si
+        leggono da "tutte le conversioni", perché servono a stimare le visite) e le visite al negozio,
+        che si contano sempre tutte, come nella colonna "Visite in negozio".
         Le visite al negozio contate tra le Conversioni vanno poi tolte dalle azioni (vedi
         `visite_in_conversioni`), perché le azioni sono solo indicazioni, contatti e ordini.
         """
@@ -173,7 +174,10 @@ class FonteGoogleAds:
                 secondarie[campo] = secondarie.get(campo, 0.0) + tutte
 
         def chiudi(m: Metriche, secondarie: dict) -> None:
-            m.visite_reali = m.visite_in_conversioni or secondarie.get("visite_reali", 0.0)
+            # Visite al negozio: come la colonna "Visite in negozio" di Google Ads, cioè tutte, anche dove
+            # non sono un obiettivo principale (es. Performance Max con le visite come obiettivo secondario
+            # e campagna brand con le visite come principale: la colonna Conversioni ne vedrebbe solo una parte).
+            m.visite_reali = secondarie.get("visite_reali", 0.0) or m.visite_in_conversioni
             if m.indicazioni == 0:
                 m.indicazioni = secondarie.get("indicazioni", 0.0)
 
@@ -249,7 +253,7 @@ class FonteGoogleAds:
             elif categoria == "GET_DIRECTIONS":
                 m.indicazioni += row.metrics.conversions
                 indicazioni_tutte[nome] = indicazioni_tutte.get(nome, 0.0) + row.metrics.all_conversions
-        usa_visite_conv = any(m.visite_in_conversioni for m in canali.values())
+        usa_visite_conv = False  # visite: sempre tutte, come la colonna "Visite in negozio"
         usa_ind_conv = any(m.indicazioni for m in canali.values())
         for nome, m in canali.items():
             m.visite_reali = m.visite_in_conversioni if usa_visite_conv else visite_tutte.get(nome, 0.0)
@@ -464,7 +468,7 @@ class FonteGoogleAds:
         risultato = []
         for mese in sorted(mesi):
             m, sec = mesi[mese], secondarie.get(mese, {})
-            m.visite_reali = m.visite_in_conversioni or sec.get("visite_reali", 0.0)
+            m.visite_reali = sec.get("visite_reali", 0.0) or m.visite_in_conversioni
             if m.indicazioni == 0:
                 m.indicazioni = sec.get("indicazioni", 0.0)
             inizio, fine = max(mese, intervallo.inizio), min(_fine_mese(mese), intervallo.fine)
@@ -486,7 +490,7 @@ class FonteGoogleAds:
             elif categoria == "GET_DIRECTIONS":
                 ind += row.metrics.conversions
                 ind_tutte += row.metrics.all_conversions
-        return visite or visite_tutte, ind or ind_tutte
+        return visite_tutte or visite, ind or ind_tutte
 
     def scarica(self, customer_id: str, periodi: Periodi, dettaglio: bool = False) -> DatiAccount:
         cid = pulisci_id(customer_id)
