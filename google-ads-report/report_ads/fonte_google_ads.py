@@ -555,7 +555,11 @@ class FonteGoogleAds:
                 conversioni_tutte=row.metrics.all_conversions,
             ))
 
-        modifiche = self._modifiche(cid, periodi, corrente.campagne)
+        try:
+            modifiche = self._modifiche(cid, periodi, corrente.campagne)
+        except Exception as e:  # la cronologia è un di più: senza, il report parte lo stesso
+            log.warning("Cronologia modifiche non disponibile (%s)", type(e).__name__)
+            modifiche = []
 
         return DatiAccount(
             nome=nome, valuta=valuta, punteggio_ottimizzazione=punteggio,
@@ -565,8 +569,9 @@ class FonteGoogleAds:
         )
 
     def _modifiche(self, cid: str, periodi: Periodi, campagne: dict[str, Campagna]) -> list[Modifica]:
-        # La cronologia modifiche via API copre solo gli ultimi 30 giorni.
-        da = max(periodi.corrente.inizio, periodi.oggi - timedelta(days=29))
+        # La cronologia modifiche via API copre solo gli ultimi 30 giorni dalla data reale di oggi
+        # (non da quella simulata con --data): margine di un giorno per i fusi orari.
+        da = max(periodi.corrente.inizio, date.today() - timedelta(days=28))
         a = periodi.corrente.fine
         if da > a:
             return []
