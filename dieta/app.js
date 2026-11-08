@@ -2,7 +2,7 @@
 'use strict';
 
 // ---------- Storage ----------
-const APP_VERSION = '32';
+const APP_VERSION = '33';
 const KEY = 'dieta.v1';
 const MEALS = [
   { id: 'colazione', label: 'Colazione', icon: '☀️' },
@@ -3006,8 +3006,8 @@ function renderGoals(v) {
       <label class="field"><span>Peso attuale</span><input type="text" value="${w ? fmtNum(w.weight) + ' kg' : 'registralo in Corpo'}" disabled></label>
     </div>
     <label class="field"><span>Com'è la tua giornata tipo (sport escluso)</span><select id="pLife">${LIFESTYLE.map(([k, l]) => `<option value="${k}" ${+p.lifestyle === k ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
-    <label class="field"><span>Attività fissa di ogni giorno (kcal)</span><input type="number" inputmode="numeric" id="pBase" value="${p.baseActivity || ''}" placeholder="es. 200 per camminate e passi quotidiani"></label>
-    <p class="small muted" style="margin-top:-4px">Metti qui quello che fai tutti i giorni (es. 40 min a piedi ≈ 150–200 kcal). Gli allenamenti occasionali invece li aggiungi nel Diario, giorno per giorno.</p>
+    <label class="field"><span>Attività fissa di ogni giorno (kcal)</span><input type="number" inputmode="numeric" id="pBase" value="${p.baseActivity || ''}" placeholder="vuoto se fai meno di 6.000 passi al giorno"></label>
+    <p class="small muted" style="margin-top:-4px">Lo stile di vita comprende già i passi normali (fino a circa 5.000 al giorno): lascia vuoto. Metti qualcosa solo per i passi in più fatti ogni giorno: ~7.500 passi → 100 kcal, ~10.000 → 200. Gli allenamenti li aggiungi nel Diario, giorno per giorno.</p>
     <label class="field"><span>Obiettivo</span><select id="pGoal">${GOAL_TYPES.map(([k, l]) => `<option value="${k}" ${p.goalType === k ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
     <div class="calc" id="calcBox"></div>
     <label class="check"><input type="checkbox" id="gAuto" ${g.auto ? 'checked' : ''}> Aggiorna gli obiettivi da solo quando cambia il peso</label>
@@ -3294,9 +3294,42 @@ document.addEventListener('visibilitychange', () => {
     save();
   }
 })();
+// v33: lo stile di vita "sedentario" comprende già i passi di tutti i giorni, quindi l'attività fissa
+// era contata due volte. La togliamo una volta sola, abbassiamo l'obiettivo e mostriamo lo storico ricalcolato.
+let baseFix = null;
+(() => {
+  const p = db.profile;
+  if (db.settings.baseFixDone) return;
+  db.settings.baseFixDone = true;
+  if (!(p.baseActivity > 0)) { save(); return; }
+  const before = { base: p.baseActivity, kcal: db.goals.kcal, hist: balanceHistory().total, month: monthBalance(today().slice(0, 7)).total };
+  p.baseActivity = 0;
+  const w = latestBody('weight');
+  // l'obiettivo scende delle stesse kcal (così restano eventuali scelte fatte a mano), poi macro ricalcolati
+  const kcal = Math.max(p.sex === 'f' ? 1200 : 1500, Math.round((db.goals.kcal - before.base) / 10) * 10);
+  Object.assign(db.goals, { kcal, ...macrosFor(kcal, w?.weight, p.goalType) });
+  if (w) before.tdee = suggestGoals(p, w.weight).tdee;
+  save();
+  baseFix = { ...before, newKcal: db.goals.kcal, newHist: balanceHistory().total, newMonth: monthBalance(today().slice(0, 7)).total };
+})();
 render();
 importKeyFromLink();
-setTimeout(checkAchievements, 1200);
+if (baseFix) {
+  const f = baseFix, vsGoal = db.goals.deficitRef === 'goal';
+  const line = (label, a, b) => `<div><span>${label}</span><b>${a} → ${b}</b></div>`;
+  openSheet(`<h3>🔧 Fabbisogno corretto</h3>
+    <p>Ho tolto le <b>${r0(f.base)} kcal di attività fissa</b>: la tua giornata tipo (calcolata dallo stile di vita) comprende già i passi di tutti i giorni, quindi erano contate due volte.</p>
+    <div class="calc-rows">
+      ${f.tdee ? line('Fabbisogno giornaliero', r0(f.tdee + f.base), f.tdee) : ''}
+      ${line('Obiettivo calorie', f.kcal, f.newKcal)}
+      ${line('Bilancio di questo mese', fmtBalance(f.month), fmtBalance(f.newMonth))}
+      ${line('Bilancio totale', fmtBalance(f.hist), fmtBalance(f.newHist))}
+      ${vsGoal ? '' : `<div class="sum"><span>Grasso stimato perso in totale</span><b>${f.newHist <= 0 ? fatKg(f.newHist) : '0'} kg</b></div>`}
+    </div>
+    <p class="small muted">Lo storico è già ricalcolato. Le camminate lunghe, la palestra o la corsa segnale nel Diario il giorno in cui le fai.</p>
+    <button class="btn" id="bfOk">Ho capito</button>`, s => $('#bfOk', s).addEventListener('click', () => { closeSheet(); render(); }));
+}
+setTimeout(checkAchievements, baseFix ? 4000 : 1200);
 
 // ---------- Tasto indietro del telefono: torna alla schermata precedente invece di chiudere l'app ----------
 let lastBack = 0;
