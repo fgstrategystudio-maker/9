@@ -567,3 +567,12 @@ h1, h2, h3, .big, .balance-big, .score-num b { font-weight: 800; letter-spacing:
 .rep-goal { margin-top: 14px; background: var(--accent-soft); border-radius: 14px; padding: 12px 14px; }
 .rep-goal span { display: block; font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
 .rep-goal b { font-size: 16px; }
+
+/* Pasto passato: aggiungi altro */
+.mp-more { margin: 4px 0 6px; }
+.mp-more-row { display: flex; gap: 8px; align-items: center; }
+.mp-more-row input { flex: 1; }
+.mp-more-row .icon-act { flex: none; width: 46px; height: 46px; font-size: 20px; }
+.mp-more-row .icon-act.busy { animation: mpPulse 1s ease-in-out infinite; }
+@keyframes mpPulse { 50% { opacity: .4; transform: scale(.92); } }
+.mp-more .search-results { margin-top: 6px; }

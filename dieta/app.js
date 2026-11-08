@@ -2,7 +2,7 @@
 'use strict';
 
 // ---------- Storage ----------
-const APP_VERSION = '31';
+const APP_VERSION = '32';
 const KEY = 'dieta.v1';
 const MEALS = [
   { id: 'colazione', label: 'Colazione', icon: '☀️' },
@@ -1286,13 +1286,59 @@ function mealPreview({ title, items: src, meal, saved }) {
     $$('[data-dec]', s).forEach(b => b.addEventListener('click', () => { const it = items[+b.dataset.dec]; it.grams = Math.max(0, it.grams - 10); draw(s); }));
     $$('[data-inc]', s).forEach(b => b.addEventListener('click', () => { items[+b.dataset.inc].grams += 10; draw(s); }));
   };
+  const row = (x, i) => `<li><button data-pick="${i}"><span class="food-ico">${foodIcon(x.name)}</span><span class="grow"><span class="name">${esc(x.name)}</span><br><span class="small muted">${r0(x.grams)} g · ${r0(x.per100.kcal * x.grams / 100)} kcal</span></span><span class="add-mini">+</span></button></li>`;
+  // Aggiungere altri alimenti senza uscire: ricerca veloce (recenti + elenco) o descrizione all'AI
+  const bindMore = s => {
+    const q = $('#mpQ', s);
+    let picks = [];
+    const drawPicks = () => {
+      const term = normName(q.value.trim());
+      if (term.length < 2) { $('#mpRes', s).innerHTML = ''; return; }
+      const base = window.FOODS.map(([name, kcal, p, c, f, fib, portion]) => ({ name, grams: portion, per100: { kcal, p, c, f, fib } }));
+      const seen = new Set();
+      picks = [...db.recent, ...base].filter(x => { const k = normName(x.name); if (!k.includes(term) || seen.has(k)) return false; seen.add(k); return true; }).slice(0, 5);
+      $('#mpRes', s).innerHTML = picks.map(row).join('') + (hasAiKey() ? `<li><button data-ai="1"><span class="food-ico">✨</span><span class="grow"><span class="name">Chiedi all'AI: “${esc(q.value.trim())}”</span><br><span class="small muted">per piatti, quantità o più alimenti insieme</span></span></button></li>` : '');
+      $$('[data-pick]', s).forEach(b => b.addEventListener('click', () => addMore(s, cloneItems([picks[+b.dataset.pick]]))));
+      $('[data-ai]', s)?.addEventListener('click', () => askAi(s));
+    };
+    q.addEventListener('input', drawPicks);
+    q.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); if (hasAiKey()) askAi(s); else if (picks.length) addMore(s, cloneItems([picks[0]])); } });
+    $('#mpAi', s).addEventListener('click', () => askAi(s));
+  };
+  const addMore = (s, list) => {
+    items.push(...list);
+    $('#mpQ', s).value = ''; $('#mpRes', s).innerHTML = '';
+    draw(s); navigator.vibrate?.(15);
+    toast(list.length === 1 ? `Aggiunto: ${list[0].name}` : `Aggiunti ${list.length} alimenti`);
+  };
+  const askAi = async s => {
+    const text = $('#mpQ', s).value.trim();
+    if (!text) { $('#mpQ', s).focus(); return; }
+    if (!hasAiKey()) { toast('Serve la chiave AI: scegli dall’elenco'); return; }
+    const btn = $('#mpAi', s);
+    btn.disabled = true; btn.classList.add('busy');
+    $('#mpRes', s).innerHTML = '<li class="small muted" style="border:0">✨ Calcolo…</li>';
+    try {
+      const out = await analyzeFood({ prompt: `Ho mangiato: ${text}` });
+      const list = mapAiItems(out).map(({ portion, confidence, ...it }) => it);
+      if (!$('#mpQ', s)) return; // foglio chiuso nel frattempo
+      if (!list.length) { $('#mpRes', s).innerHTML = '<li class="small muted" style="border:0">Non ho riconosciuto alimenti: prova a scriverlo diversamente.</li>'; return; }
+      addMore(s, list);
+    } catch (err) {
+      if ($('#mpRes', s)) $('#mpRes', s).innerHTML = `<li class="small muted" style="border:0">Non riuscito: ${esc(err.message)}</li>`;
+    } finally { btn.disabled = false; btn.classList.remove('busy'); }
+  };
   openSheet(`<h3>${esc(title)}</h3>
     <div id="mpItems"></div>
+    <div class="mp-more">
+      <div class="mp-more-row"><input type="search" id="mpQ" placeholder="➕ Aggiungi altro, es. insalata, 1 mela" autocomplete="off" enterkeyhint="send"><button class="icon-act" id="mpAi" aria-label="Calcola con l'AI">✨</button></div>
+      <ul class="search-results" id="mpRes"></ul>
+    </div>
     <div class="totals" id="mpTot"></div>
     <p class="small muted">Aggiungi a ${curDate === today() ? 'oggi' : fmtDate(curDate, { weekday: 'long', day: 'numeric', month: 'long' })}:</p>
     <div class="meal-pick">${MEALS.map(m => `<button class="chip ${m.id === target ? 'on' : ''}" data-m="${m.id}">${m.label}</button>`).join('')}</div>
     <div class="btn-row">${saved ? '<button class="btn danger" id="mpDel">Elimina</button>' : '<button class="btn secondary" id="mpStar">⭐ Salva</button>'}<button class="btn" id="mpAdd">Aggiungi</button></div>`, s => {
-    draw(s);
+    draw(s); bindMore(s);
     $$('[data-m]', s).forEach(c => c.addEventListener('click', () => { target = c.dataset.m; $$('[data-m]', s).forEach(x => x.classList.toggle('on', x === c)); }));
     $('#mpAdd', s).addEventListener('click', () => {
       const valid = items.filter(i => i.grams > 0);
