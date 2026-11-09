@@ -2,7 +2,7 @@
 'use strict';
 
 // ---------- Storage ----------
-const APP_VERSION = '33';
+const APP_VERSION = '34';
 const KEY = 'dieta.v1';
 const MEALS = [
   { id: 'colazione', label: 'Colazione', icon: '☀️' },
@@ -521,7 +521,7 @@ function renderToday(v) {
           <div class="kc">${r0(n.kcal)}</div>
         </li>`;
       }).join('')}</ul>
-      <div class="small muted" style="margin-top:4px">P ${r0(mt.p)} g · C ${r0(mt.c)} g · G ${r0(mt.f)} g</div>`;
+      <div class="meal-foot"><span class="small muted">P ${r0(mt.p)} g · C ${r0(mt.c)} g · G ${r0(mt.f)} g</span><button class="edit-meal" data-editmeal="${m.id}">✏️ Modifica pasto</button></div>`;
     } else {
       const saved = db.savedMeals.map((sm, i) => ({ sm, i })).filter(x => x.sm.meal === m.id).slice(0, 2);
       html += `<div class="quick-chips">
@@ -553,6 +553,7 @@ function renderToday(v) {
     mealPreview({ title: sm.name, items: sm.items, meal: b.dataset.meal, saved: sm });
   }));
   bindQuickBar(v);
+  $$('[data-editmeal]', v).forEach(b => b.addEventListener('click', () => editMeal(curDate, b.dataset.editmeal)));
   $('#nBackup', v)?.addEventListener('click', () => shareBackup());
   $('#nBackupLater', v)?.addEventListener('click', () => { db.settings.backupSnooze = addDays(today(), 3); save(); render(); });
   $('#nReport', v)?.addEventListener('click', () => openReport(lastWeekStart()));
@@ -1024,8 +1025,10 @@ function editEntry(id) {
     ${porChips('data-ep')}
     <div class="nutri" id="eNutri"></div>
     <div class="meal-pick" style="margin-top:14px">${MEALS.map(m => `<button class="chip ${m.id === meal ? 'on' : ''}" data-m="${m.id}">${m.label}</button>`).join('')}</div>
+    <button class="btn ghost" id="eMeal" style="margin-top:8px">✏️ Modifica tutto il pasto</button>
     <div class="btn-row"><button class="btn danger" id="eDel">Elimina</button><button class="btn" id="eSave">Salva</button></div>`, s => {
     draw(s);
+    $('#eMeal', s).addEventListener('click', () => editMeal(curDate, e.meal));
     const gi = $('#eGrams', s);
     gi.addEventListener('input', () => { grams = num(gi.value) || 0; draw(s); });
     const base = e.grams;
@@ -1039,9 +1042,27 @@ function editEntry(id) {
     $('#eDel', s).addEventListener('click', () => {
       db.entries[curDate] = list.filter(x => x.id !== id); save(); closeSheet(); render(); toast('Eliminato');
     });
-    $('#eSave', s).addEventListener('click', () => {
-      e.name = $('#eName', s).value.trim() || e.name; e.grams = grams; e.meal = meal;
+    $('#eSave', s).addEventListener('click', async () => {
+      const name = $('#eName', s).value.trim() || e.name;
+      let recalced = false;
+      // nome cambiato (es. «tortelli» → «tonnarelli»): l'AI ricalcola calorie e macro per gli stessi grammi
+      if (name !== e.name && hasAiKey()) {
+        const btn = $('#eSave', s);
+        btn.disabled = true; btn.textContent = '↻ Ricalcolo…';
+        try {
+          const fresh = mapAiItems(await analyzeFood({ prompt: `Ho mangiato: ${r0(grams)} g di ${name}. Restituisci un solo alimento, con esattamente ${r0(grams)} grammi.` }))[0];
+          if (!fresh) throw new Error('nessun risultato');
+          e.per100 = fresh.per100;
+          if (typeof fresh.veg === 'boolean') e.veg = fresh.veg;
+          recalced = true;
+        } catch (err) {
+          btn.disabled = false; btn.textContent = 'Salva';
+          if (!confirm(`Non riesco a ricalcolare i valori (${err.message}). Salvo solo il nuovo nome?`)) return;
+        }
+      }
+      e.name = name; e.grams = grams; e.meal = meal;
       save(); closeSheet(); render();
+      if (recalced) toast(`Valori ricalcolati: ${name}`);
     });
   });
 }
@@ -1805,8 +1826,9 @@ const mapAiItems = out => (out.items || []).map(it => {
   };
 });
 
-function reviewResult(items, notes, preview) {
-  let meal = addMeal;
+// edit = { date, meal }: modifica un pasto già nel diario (le voci sostituiscono quelle esistenti)
+function reviewResult(items, notes, preview, edit = null) {
+  let meal = edit ? edit.meal : addMeal;
   // Cambiando il nome di una voce si ricalcolano calorie e macro di quella voce (stessi grammi)
   const recalcItem = async (s, i) => {
     const it = items[i];
@@ -1888,19 +1910,19 @@ function reviewResult(items, notes, preview) {
     const t = sumNutr(items);
     $('#rTot', s).innerHTML = `<span>Totale</span><span>${r0(t.kcal)} kcal · P ${r0(t.p)} · C ${r0(t.c)} · G ${r0(t.f)}</span>`;
   };
-  openSheet(`<h3>Ecco cosa ho trovato</h3>
+  openSheet(`<h3>${edit ? `✏️ Modifica ${MEALS.find(m => m.id === edit.meal).label.toLowerCase()} <small class="muted" style="font-weight:600;font-size:14px">· ${edit.date === today() ? 'oggi' : fmtDate(edit.date, { weekday: 'long', day: 'numeric', month: 'long' })}</small>` : 'Ecco cosa ho trovato'}</h3>
     ${preview ? `<img class="preview" src="${preview}" alt="" style="max-height:140px">` : ''}
     <div id="rItems"></div>
     <div class="totals" id="rTot"></div>
     ${notes ? `<p class="small muted" id="rNotes">${esc(notes)}</p>` : ''}
     <div class="fix-box">
-      <input type="text" id="rFix" placeholder="Qualcosa non va? es. «erano tonnarelli, non tortelli»" enterkeyhint="send" autocomplete="off">
+      <input type="text" id="rFix" placeholder="${edit ? 'Correggi o aggiungi: «aggiungi un\'insalata»' : 'Qualcosa non va? es. «erano tonnarelli, non tortelli»'}" enterkeyhint="send" autocomplete="off">
       <button class="qa-btn" id="rFixGo" aria-label="Correggi con l'AI">↻</button>
     </div>
-    <p class="small muted">Puoi anche cambiare il nome di una voce (calorie e macro si ricalcolano) o i grammi.</p>
+    <p class="small muted">Puoi anche cambiare il nome di una voce (calorie e macro si ricalcolano), i grammi o togliere una voce con ×.</p>
     <div class="meal-pick">${MEALS.map(m => `<button class="chip ${m.id === meal ? 'on' : ''}" data-m="${m.id}">${m.label}</button>`).join('')}</div>
-    <label class="check"><input type="checkbox" id="rStar"> ⭐ Salva anche come pasto, per rimetterlo con un tocco</label>
-    <div class="btn-row"><button class="btn secondary" id="rCancel">Annulla</button><button class="btn" id="rSave">Aggiungi al diario</button></div>`, s => {
+    ${edit ? '' : '<label class="check"><input type="checkbox" id="rStar"> ⭐ Salva anche come pasto, per rimetterlo con un tocco</label>'}
+    <div class="btn-row"><button class="btn secondary" id="rCancel">Annulla</button><button class="btn" id="rSave">${edit ? 'Salva modifiche' : 'Aggiungi al diario'}</button></div>`, s => {
     draw(s);
     $('#rFixGo', s).addEventListener('click', () => applyFix(s));
     $('#rFix', s).addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); applyFix(s); } });
@@ -1908,6 +1930,7 @@ function reviewResult(items, notes, preview) {
     $('#rCancel', s).addEventListener('click', closeSheet);
     $('#rSave', s).addEventListener('click', () => {
       const valid = items.filter(i => i.grams > 0 && i.name.trim());
+      if (edit) { saveMealEdit(edit, valid, meal); return; }
       if (!valid.length) { toast('Nessun alimento da aggiungere'); return; }
       const toAdd = valid.map(i => ({ name: i.name.trim(), grams: i.grams, per100: i.per100, veg: i.veg }));
       addEntries(toAdd, meal);
@@ -1916,6 +1939,31 @@ function reviewResult(items, notes, preview) {
       closeSheet(); toast(`Aggiunti ${valid.length} alimenti`); go('today');
     });
   });
+}
+
+// Apre un pasto già inserito per correggerlo: grammi, nomi (ricalcolo AI), voci da togliere o aggiungere
+function editMeal(date, mealId) {
+  const list = dayEntries(date).filter(e => e.meal === mealId);
+  if (!list.length) return;
+  const items = list.map(e => ({ name: e.name, grams: e.grams, per100: { ...e.per100 }, veg: e.veg, _id: e.id, _t: e.t }));
+  reviewResult(items, '', null, { date, meal: mealId });
+}
+function saveMealEdit(edit, valid, meal) {
+  const all = dayEntries(edit.date);
+  const old = all.filter(e => e.meal === edit.meal);
+  const t0 = Math.min(...old.map(e => e.t || Date.now()));
+  const fresh = valid.map(i => ({
+    id: i._id || uid(), name: i.name.trim(), grams: i.grams, per100: i.per100, meal, t: i._t || t0,
+    ...(typeof i.veg === 'boolean' ? { veg: i.veg } : {}),
+  }));
+  // le voci restano nella stessa posizione del diario
+  const at = all.findIndex(e => e.meal === edit.meal);
+  const rest = all.filter(e => e.meal !== edit.meal);
+  rest.splice(Math.min(at, rest.length), 0, ...fresh);
+  db.entries[edit.date] = rest;
+  justAdded = new Set(fresh.map(e => e.id));
+  save(); closeSheet(); render();
+  toast(fresh.length ? 'Pasto aggiornato ✓' : 'Pasto svuotato');
 }
 
 // ---------- Charts ----------

@@ -576,3 +576,7 @@ h1, h2, h3, .big, .balance-big, .score-num b { font-weight: 800; letter-spacing:
 .mp-more-row .icon-act.busy { animation: mpPulse 1s ease-in-out infinite; }
 @keyframes mpPulse { 50% { opacity: .4; transform: scale(.92); } }
 .mp-more .search-results { margin-top: 6px; }
+
+/* Modifica di un pasto già inserito */
+.meal-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 6px; }
+.edit-meal { border: 0; background: var(--accent-soft); color: var(--accent); font: inherit; font-size: 13px; font-weight: 700; padding: 7px 12px; border-radius: 999px; flex: none; }
