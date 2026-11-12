@@ -26,7 +26,7 @@ import os
 from PIL import Image, ImageDraw
 
 OUT = "assets/firma"
-FOTO = "assets/img/ritratto.jpg"
+RITRATTO = "assets/img/firma-avatar.png"   # il tondo della firma precedente
 
 # Palette del sito (home.css)
 AVORIO = (247, 246, 242)
@@ -63,31 +63,44 @@ def morbido(t):
 
 # ─────────────────────────────────────────────────────────── avatar
 
-def avatar(lato=156):
-    """Ritratto circolare su disco inchiostro, dentro un quadrato avorio.
+def avatar(lato=144):
+    """Il ritratto tondo della firma, con l'anello rifatto in bronzo.
 
-    Il cerchio e' cotto nel PNG invece di essere fatto con border-radius:
-    Outlook ignora border-radius e mostrerebbe un quadrato. Gli angoli sono
-    dell'avorio della scheda, quindi spariscono dentro di essa.
+    La sorgente e' il tondo della firma precedente: quell'inquadratura e'
+    gia' quella giusta - testa intera e un po' di spalle, con aria sopra -
+    e ritagliarne una nuova dal ritratto del sito veniva stretta.
+
+    Qui si tiene il disco della foto e si ridisegna solo l'anello, che
+    nell'originale e' l'oro della vecchia palette e accanto al bronzo del
+    resto della firma stonava. Lo spessore resta in proporzione a quello
+    di prima: dieci pixel su un raggio di 240.
+
+    Il cerchio e' cotto nel PNG invece di essere fatto con border-radius,
+    che Outlook ignora mostrando un quadrato; gli angoli restano
+    trasparenti, cosi' la scheda ci passa sotto.
     """
-    im = Image.open(FOTO).convert("RGB").crop((215, 70, 645, 500))
-    im = im.resize((lato * SS, lato * SS), Image.LANCZOS)
+    GRANDE = lato * SS
+    r = GRANDE / 2
+    spessore = round(r * 10 / 240)          # stesso rapporto dell'originale
 
-    tondo = maschera(lato, lato)
-    d = ImageDraw.Draw(tondo)
-    bordo = 3 * SS                      # il filo di bronzo attorno
-    d.ellipse([0, 0, lato * SS - 1, lato * SS - 1], fill=255)
+    foto = Image.open(RITRATTO).convert("RGB").resize((GRANDE, GRANDE),
+                                                      Image.LANCZOS)
 
-    fuori = tela(lato, lato)
-    fuori.paste(im.resize((lato, lato), Image.LANCZOS), (0, 0),
-                giu(tondo, lato, lato))
+    disco = Image.new("L", (GRANDE, GRANDE), 0)
+    ImageDraw.Draw(disco).ellipse([spessore, spessore,
+                                   GRANDE - 1 - spessore,
+                                   GRANDE - 1 - spessore], fill=255)
+    anello = Image.new("L", (GRANDE, GRANDE), 0)
+    ImageDraw.Draw(anello).ellipse([spessore / 2, spessore / 2,
+                                    GRANDE - 1 - spessore / 2,
+                                    GRANDE - 1 - spessore / 2],
+                                   outline=255, width=spessore)
 
-    anello = maschera(lato, lato)
-    da = ImageDraw.Draw(anello)
-    da.ellipse([bordo // 2, bordo // 2, lato * SS - 1 - bordo // 2,
-                lato * SS - 1 - bordo // 2], outline=255, width=bordo)
-    tinta(fuori, giu(anello, lato, lato), BRONZO)
+    fuori = Image.new("RGBA", (GRANDE, GRANDE), (0, 0, 0, 0))
+    fuori.paste(foto, (0, 0), disco)
+    fuori.paste(Image.new("RGB", (GRANDE, GRANDE), BRONZO), (0, 0), anello)
 
+    fuori = fuori.resize((lato, lato), Image.LANCZOS)
     fuori.save(f"{OUT}/firma-avatar.png")
     print("firma-avatar.png", fuori.size)
 

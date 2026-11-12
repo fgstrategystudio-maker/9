@@ -222,14 +222,6 @@ form input[type="checkbox"] { accent-color: var(--av-accent); }
 .sitefoot a { color: var(--av-muted) !important; text-decoration: none; }
 .sitefoot a:hover { color: var(--av-ink) !important; }
 
-/* ---------- Banner cookie ---------- */
-#cookie-banner { top: auto !important; left: 16px !important; right: 16px !important; bottom: 16px !important; max-width: 560px; margin-left: auto; background: var(--av-ink) !important; border: 0 !important; border-radius: 14px; padding: 18px 20px !important; box-shadow: 0 18px 50px rgba(18, 18, 18, .22); transform: translateY(140%); }
-#cookie-banner.show { transform: none !important; }
-#cookie-banner p { color: #C9C6BF !important; font-family: var(--av-sans) !important; }
-#cookie-banner a { color: var(--av-bg) !important; }
-.cookie-accept { background: var(--av-bg) !important; color: var(--av-ink) !important; border-radius: 999px !important; font-family: var(--av-sans) !important; font-weight: 500 !important; }
-.cookie-reject { color: rgba(247, 246, 242, .55) !important; font-family: var(--av-sans) !important; }
-
 /* ---------- Comparsa allo scorrimento (anim.js) ---------- */
 .fx-in { animation: av-up .9s var(--av-ease) both; animation-delay: var(--fx-d, 0ms); }
 @keyframes av-up { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }

@@ -207,7 +207,6 @@ h1{font-size:56px;line-height:1.03;letter-spacing:-.04em;margin:0 0 18px;color:v
 .compare-item span{font-size:15px;color:var(--muted)}
 @media (max-width:980px){.compare-grid{grid-template-columns:1fr}}
 
-
 @media (max-width: 980px){
   .page-hero{padding:44px 0 24px}
   .compare-card{padding:22px}
@@ -218,7 +217,6 @@ h1{font-size:56px;line-height:1.03;letter-spacing:-.04em;margin:0 0 18px;color:v
   .compare-card h3{font-size:24px}
   .compare-item{padding:14px 15px}
 }
-
 
 .home-service-cta,.precontact-cta{display:flex;justify-content:center;align-items:center;gap:16px;flex-wrap:wrap;margin-top:28px}
 .home-service-cta .btn,.precontact-cta .btn{min-width:180px}
@@ -269,7 +267,6 @@ h1{font-size:56px;line-height:1.03;letter-spacing:-.04em;margin:0 0 18px;color:v
   .logo-chip{flex-basis:110px;min-height:108px}
 }
 
-
 .lead-form-wrap{display:grid;grid-template-columns:minmax(0,.98fr) minmax(300px,.46fr);gap:22px;align-items:start}
 .lead-form-copy h2{display:none}
 .lead-form-copy p{margin:0;color:var(--muted);font-size:18px}
@@ -299,7 +296,6 @@ h1{font-size:56px;line-height:1.03;letter-spacing:-.04em;margin:0 0 18px;color:v
 .lead-form .consent{display:flex;gap:8px;align-items:flex-start;margin-top:12px}.lead-form .consent input{margin-top:3px;width:16px;height:16px}.lead-form .consent span{font-size:14px;letter-spacing:0;text-transform:none;color:var(--muted);font-weight:500}.lead-form .consent a{color:var(--blue);text-decoration:underline}.form-note{font-size:13px;color:var(--muted);margin-top:12px}.service-link-wrap{margin-top:auto;padding-top:12px;display:flex;align-items:flex-start;justify-content:flex-start}
 
 @media (max-width: 900px){.container{padding:0 24px}.logo{padding-left:0}.site-header .container{padding-left:24px;padding-right:24px}}
-
 
 .contact-box-main{font-size:28px!important;line-height:1.18;color:var(--blue)!important;font-weight:700;max-width:620px;margin-top:8px!important}
 .contact-box-sub{font-size:18px!important;line-height:1.6;color:var(--muted)!important;max-width:620px;margin-top:14px!important}
@@ -411,7 +407,6 @@ h1{font-size:56px;line-height:1.03;letter-spacing:-.04em;margin:0 0 18px;color:v
   .services-grid::-webkit-scrollbar{display:none}
   .services-grid .service-card{flex:0 0 78vw;min-width:78vw;width:78vw}
 }
-
 
 /* ════════════════════════════════════════════════════
    CONCEPT A — Dark Premium Theme
@@ -581,15 +576,6 @@ h1{font-size:56px;line-height:1.03;letter-spacing:-.04em;margin:0 0 18px;color:v
 @media(max-width:760px){.lang-sw{margin:10px 0 0 0;padding:8px 0 4px;border-left:none;border-top:1px solid rgba(255,255,255,0.15);width:100%;justify-content:center}}
 
 /* ── Cookie consent banner ── */
-#cookie-banner{position:fixed;top:0;left:0;right:0;z-index:9999;background:var(--bg-dark);border-bottom:1px solid rgba(255,255,255,.1);padding:16px 28px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;transform:translateY(-100%);transition:transform .45s cubic-bezier(.25,1,.4,1)}
-#cookie-banner.show{transform:translateY(0)}
-#cookie-banner p{margin:0;font-size:14px;color:rgba(255,255,255,.65);flex:1;min-width:220px;line-height:1.5}
-.cookie-actions{display:flex;align-items:center;gap:16px;flex-shrink:0}
-.cookie-accept{padding:9px 22px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;border:none;background:var(--gold);color:#fff;transition:opacity .15s}
-.cookie-accept:hover{opacity:.88}
-.cookie-reject{background:none;border:none;font-size:13px;color:rgba(255,255,255,.4);cursor:pointer;padding:4px;text-decoration:underline;transition:color .15s}
-.cookie-reject:hover{color:rgba(255,255,255,.7)}
-@media(max-width:640px){#cookie-banner{flex-direction:column;padding:16px 18px;gap:10px}.cookie-actions{width:100%;flex-direction:column;gap:8px}.cookie-accept{width:100%;text-align:center;padding:13px}.cookie-reject{font-size:12px}}
 
 /* ── Accessibility: skip-to-content ── */
 .skip-link{position:absolute;top:-100%;left:0;z-index:10000;background:var(--gold,#c8a96e);color:#fff;padding:10px 20px;font-weight:700;font-size:14px;text-decoration:none;border-radius:0 0 8px 0;transition:top .15s}
@@ -649,7 +635,6 @@ html{-webkit-overflow-scrolling:touch}
 .grazie-wrap p{color:#666;font-size:16px;line-height:1.7;margin-bottom:36px}
 .grazie-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
 @media(max-width:480px){.grazie-actions{flex-direction:column;align-items:stretch}}
-
 
 /* --- Mega menu Servizi (verticali raggruppate) --- */
 .nav-dropdown{max-height:80vh;overflow-y:auto}

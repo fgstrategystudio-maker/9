@@ -51,7 +51,7 @@
             'section figure, section form';
   var seen = [];
   document.querySelectorAll(sel).forEach(function (el) {
-    if (el.closest('.topbar') || el.closest('#cookie-banner')) return;
+    if (el.closest('.topbar') || el.closest('#fg-cookie')) return;
     // niente animazioni annidate: se un antenato è già animato, salta
     for (var i = 0; i < seen.length; i++) if (seen[i].contains(el)) return;
     seen.push(el);
