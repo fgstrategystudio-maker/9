@@ -55,10 +55,12 @@
 
      Perche' e' scritta cosi':
      - tabelle e stili in riga, perche' la posta toglie i fogli di stile;
-     - niente scheda sotto, niente fondo e niente bordo: la firma sta sul
-       fondo del messaggio, qualunque sia. Per lo stesso motivo la GIF ha
-       il fondo trasparente, o in tema scuro ci stamperebbe sopra un
-       rettangolo bianco;
+     - niente scheda sotto, niente fondo e niente bordo: il testo sta sul
+       fondo del messaggio, qualunque sia. La GIF invece ha il fondo
+       bianco opaco, perche' la trasparenza della GIF e' di un solo bit e
+       sgranerebbe i fili da un pixel. Sul bianco non si vede; in tema
+       scuro diventa un pannello. Il perche' della scelta e' in testa a
+       _build_firma.py;
      - niente media query, perche' la posta le toglie: la larghezza e'
        fluida e la colonna del testo non scende mai sotto i 180px, cosi'
        regge anche su uno schermo da 320px senza barra orizzontale;
@@ -85,7 +87,7 @@
        e la direzione arriva al marchio -->
   <tr>
     <td colspan="2" style="padding:12px 0 0 0;">
-      <img src="https://francescogizzi.com/assets/firma/firma-allineamento.gif" width="390" height="39" alt="" style="display:block;width:100%;max-width:390px;height:auto;border:0;outline:0;">
+      <img src="https://francescogizzi.com/assets/firma/firma-allineamento.gif" width="390" height="32" alt="" style="display:block;width:100%;max-width:390px;height:auto;border:0;outline:0;">
     </td>
   </tr>
 

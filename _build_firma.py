@@ -10,30 +10,35 @@ Vincoli della posta, che spiegano quasi ogni scelta qui dentro:
   fotogramma 1 e' sempre la composizione finita: l'animazione e' una luce
   che passa su un disegno gia' completo, non un disegno che si costruisce.
   Chi ha Outlook vede una grafica statica corretta, non un lavoro a meta'.
-- La GIF non ha trasparenza vera (solo 1 bit), e un filo di un pixel con
-  bordo seghettato si vede. Per questo il fondo e' opaco, dell'avorio
-  esatto della scheda: e' la scheda a permettere il trucco.
+- La GIF ha un solo bit di trasparenza: un pixel o e' pieno o e' vuoto,
+  le mezze tinte non esistono. Un filo da un pixel e' quasi tutto bordo,
+  e su fondo trasparente si sgrana in una fila di puntini. Per questo il
+  fondo qui e' BIANCO OPACO: sul bianco della posta non si vede, e le
+  linee restano sfumate e continue.
+  Il prezzo si paga in tema scuro: Gmail inverte la luminosita'
+  dell'immagine - per questo il bronzo resta bronzo e non diventa blu -
+  e il bianco diventa nero, cioe' un pannello scuro appena visibile sul
+  fondo della pagina. Nei client che non invertono resta chiaro. Si e'
+  scelto cosi' perche' la posta si legge su fondo chiaro quasi sempre,
+  e la versione trasparente sgranava le linee sempre.
+  Per ridurre quel pannello i fotogrammi sono ritagliati al disegno.
 - Gli asset sono in doppia risoluzione e vengono mostrati a meta': sugli
   schermi retina, dove si legge la posta, restano nitidi.
-
-Tavolozza ristretta e niente sfumature continue: la GIF ha 256 colori e le
-sfumature si impastano. Qui bastano otto tinte e il file resta leggero.
 
 Uso:  python3.13 _build_firma.py
 """
 import math
 import os
 
-from PIL import Image, ImageDraw
+from PIL import Image, ImageChops, ImageDraw
 
 OUT = "assets/firma"
 RITRATTO = "assets/img/ritratto.jpg"   # il ritratto pieno: le misure sotto sono sue
 
 # Palette del sito (home.css)
-FONDO = (255, 255, 255)     # la firma non ha piu' una scheda sotto:
-                            # il fondo e' trasparente, e questo e' il
-                            # colore di ripiego per chi la trasparenza
-                            # non la gestisce
+FONDO = (255, 255, 255)     # bianco opaco: sul fondo della posta sparisce,
+                            # e permette le mezze tinte che la trasparenza
+                            # della GIF non consente (vedi in testa)
 INCHIOSTRO = (18, 18, 18)
 ARMATURA = (58, 54, 47)     # i bracci del marchio: scuri sul chiaro,
                             # ancora visibili sullo scuro
@@ -60,24 +65,13 @@ def giu(m, w, h):
 
 
 def tinta(base, m, colore):
-    """Posa `colore` su `base`, con copertura piena o niente.
+    """Posa `colore` su `base` usando `m` come copertura.
 
-    La soglia non e' un dettaglio tecnico, e' cio' che tiene insieme le
-    linee. La GIF ha un solo bit di trasparenza: i pixel di bordo, quelli
-    coperti a meta', non possono restare a meta' e vengono buttati via.
-    Su una curva il bordo e' quasi tutta la linea, e quello che resta e'
-    una fila di puntini - invisibile su fondo chiaro, evidente su fondo
-    scuro, dove Gmail per di piu' inverte l'immagine e li accende.
-
-    Quindi niente mezze tinte: ogni pixel o e' disegno pieno o e' fondo.
-    La soglia sta a un quarto e non a meta': su una diagonale sottile
-    quasi nessun pixel e' coperto per meta', e tagliare li' smagrirebbe
-    la linea invece di renderla solida. I gradini li ricompone il
-    browser, che mostra l'immagine a meta' della sua misura e quindi
-    media quattro pixel in uno.
+    La copertura e' graduale, non tutto-o-niente: senza le mezze tinte un
+    filo da un pixel si sgrana. E' il motivo per cui il fondo e' opaco e
+    non trasparente, spiegato in testa al file.
     """
-    base.paste(Image.new("RGB", base.size, colore), (0, 0), m.point(
-        lambda v: 255 if v >= 64 else 0))
+    base.paste(Image.new("RGB", base.size, colore), (0, 0), m)
 
 
 def morbido(t):
@@ -238,13 +232,23 @@ def _traccia(d, punti, L, da, a):
         d.ellipse([x * SS - r, y * SS - r, x * SS + r, y * SS + r], fill=255)
 
 
+def _sfumatura():
+    """I fili nascono dal nulla invece che dal bordo tagliato."""
+    s = Image.new("L", (W, H), 255)
+    d = ImageDraw.Draw(s)
+    for x in range(0, 150):
+        d.line([(x, 0), (x, H)], fill=int(255 * morbido(x / 150)))
+    return s
+
+
 def _fili():
     """I quattro fili che convergono, piu' la spina di bronzo."""
     m = maschera(W, H)
     d = ImageDraw.Draw(m)
     for punti in _percorsi():
         _traccia(d, punti, _misure(punti), 2.1, 1.1)
-    fili = giu(m, W, H)
+    fili = Image.composite(giu(m, W, H), Image.new("L", (W, H), 0),
+                           _sfumatura())
 
     m2 = maschera(W, H)
     d2 = ImageDraw.Draw(m2)
@@ -323,7 +327,7 @@ def _nodo(f, forza):
     tinta(f, giu(m, W, H), c)
 
 
-def _impulso(percorsi, misure, testa, coda, largh):
+def _impulso(percorsi, misure, testa, coda, largh, sfumato):
     """I tre strati della coda, come maschere gia' pronte da tingere."""
     strati = []
     for lung, colore in coda:
@@ -338,8 +342,31 @@ def _impulso(percorsi, misure, testa, coda, largh):
                 vuoto = False
         if vuoto:
             continue
-        strati.append((giu(m, W, H), colore))
+        m = giu(m, W, H)
+        if sfumato:
+            m = Image.composite(m, Image.new("L", (W, H), 0), _sfumatura())
+        strati.append((m, colore))
     return strati
+
+
+def _stringi(frames, aria=3):
+    """Ritaglia i fotogrammi ai bordi del disegno, tutti allo stesso modo.
+
+    Il riquadro e' l'unione su tutti i fotogrammi, non solo sul primo:
+    il lampo sul nodo e quello sul marchio sporgono oltre il disegno a
+    riposo, e tagliare sul primo li amputerebbe.
+    """
+    box = None
+    bianco = Image.new("RGB", frames[0].size, FONDO)
+    for f in frames:
+        b = ImageChops.difference(f, bianco).getbbox()
+        box = b if box is None else (min(box[0], b[0]), min(box[1], b[1]),
+                                     max(box[2], b[2]), max(box[3], b[3]))
+    w, h = frames[0].size
+    box = (max(0, box[0] - aria), max(0, box[1] - aria),
+           min(w, box[2] + aria), min(h, box[3] + aria))
+    print(f"  banda ritagliata a {box[2]-box[0]}x{box[3]-box[1]}")
+    return [f.crop(box) for f in frames]
 
 
 def banda():
@@ -347,7 +374,7 @@ def banda():
 
     fermo = tela(W, H)
     tinta(fermo, fili, GRAFITE)
-    tinta(fermo, bracci, ARMATURA)
+    tinta(fermo, bracci, INCHIOSTRO)
     tinta(fermo, spina, BRONZO)
 
     percorsi = _percorsi()
@@ -364,7 +391,7 @@ def banda():
     for i in range(N):
         t = morbido((i + 1) / N)
         f = fermo.copy()
-        for m, c in _impulso(percorsi, misure, t, CODA_FILI, 2.0):
+        for m, c in _impulso(percorsi, misure, t, CODA_FILI, 2.0, True):
             tinta(f, m, c)
         _nodo(f, max(0.0, (i - 7) / 3))
         frames.append(f)
@@ -376,7 +403,7 @@ def banda():
     for i in range(N):
         t = morbido((i + 1) / N)
         f = fermo.copy()
-        for m, c in _impulso(spina_pt, spina_L, t, CODA_SPINA, 3.6):
+        for m, c in _impulso(spina_pt, spina_L, t, CODA_SPINA, 3.6, False):
             tinta(f, m, c)
         _nodo(f, max(0.0, 1 - i / 4))
         frames.append(f)
@@ -401,14 +428,16 @@ def banda():
         frames.append(f)
         durate.append(durata)
 
-    tinte = [GRAFITE, BRONZO, ARMATURA, ACCESO, LAMPO]
+    frames = _stringi(frames)
+
+    tinte = [GRAFITE, BRONZO, INCHIOSTRO, ACCESO, LAMPO]
     tinte += [c for _, c in CODA_FILI] + [c for _, c in CODA_SPINA]
     salva_gif(frames, durate, f"{OUT}/firma-allineamento.gif", tinte)
 
 
 # ──────────────────────────────────────────────────────────── uscita
 
-def tavolozza(tinte, passi=1):
+def tavolozza(tinte, passi=10):
     """Tavolozza fissa: il fondo esatto piu' una rampa verso ogni tinta.
 
     Serve perche' la quantizzazione automatica sposta il fondo di un paio
@@ -432,18 +461,33 @@ def tavolozza(tinte, passi=1):
 def salva_gif(frames, durate, path, tinte):
     tav = tavolozza(tinte)
     q = [f.quantize(palette=tav, dither=Image.NONE) for f in frames]
-    # Fotogrammi pieni e disposal 2, non il delta: col fondo trasparente il
-    # delta lascerebbe scie, perche' dove il fotogramma nuovo e' trasparente
-    # resta in vista quello vecchio. Costa in byte e si paga volentieri: e'
-    # cio' che permette alla banda di stare su qualsiasi fondo, compreso il
-    # tema scuro, senza stamparci sopra un rettangolo bianco.
     q[0].save(path, save_all=True, append_images=q[1:], duration=durate,
-              loop=0, optimize=False, disposal=2, transparency=0)
-    riletta = Image.open(path)
-    assert riletta.convert("RGBA").getpixel((1, 1))[3] == 0, \
-        f"{path}: il fondo non e' trasparente"
+              loop=0, optimize=True, disposal=1)
+    fondo = Image.open(path).convert("RGB").getpixel((1, 1))
+    assert fondo == FONDO, f"{path}: fondo {fondo}, atteso {FONDO}"
     kb = os.path.getsize(path) / 1024
     print(f"{path.split('/')[-1]}  {q[0].size}  {len(q)} fotogrammi  {kb:.0f} KB")
+
+
+def misure_html():
+    """Riporta nella firma le misure vere della banda.
+
+    Stanno scritte a mano nell'HTML - servono a Outlook, che ignora il
+    CSS - e se il disegno cambia proporzioni senza che cambino loro
+    l'immagine si deforma.
+    """
+    import re
+    g = Image.open(f"{OUT}/firma-allineamento.gif")
+    largo = 390
+    alto = round(largo * g.size[1] / g.size[0])
+    f = f"{OUT}/firma.html"
+    s = open(f, encoding="utf-8").read()
+    s2 = re.sub(r'(firma-allineamento\.gif" width=")\d+(" height=")\d+(")',
+                lambda m: f"{m.group(1)}{largo}{m.group(2)}{alto}{m.group(3)}", s)
+    assert s2 != s or f'width="{largo}" height="{alto}"' in s, "misure non trovate"
+    if s2 != s:
+        open(f, "w", encoding="utf-8").write(s2)
+    print(f"  banda nell'HTML: {largo}x{alto}")
 
 
 def pagina():
@@ -465,6 +509,7 @@ def main():
     os.makedirs(OUT, exist_ok=True)
     avatar()
     banda()
+    misure_html()
     pagina()
 
 
