@@ -21,19 +21,22 @@ sfumature si impastano. Qui bastano otto tinte e il file resta leggero.
 
 Uso:  python3.13 _build_firma.py
 """
+import math
 import os
 
 from PIL import Image, ImageDraw
 
 OUT = "assets/firma"
-RITRATTO = "assets/img/firma-avatar.png"   # il tondo della firma precedente
+RITRATTO = "assets/img/ritratto.jpg"   # il ritratto pieno: le misure sotto sono sue
 
 # Palette del sito (home.css)
 AVORIO = (247, 246, 242)
 INCHIOSTRO = (18, 18, 18)
 BRONZO = (138, 111, 78)
 LINEA = (222, 219, 211)
-GRAFITE = (138, 135, 127)   # inchiostro schiarito: quattro fili a tutto
+GRAFITE = (124, 121, 113)
+LAMPO = (58, 43, 27)        # il nodo quando le quattro correnti si uniscono
+ACCESO = (96, 72, 43)       # il bronzo del marchio quando l'impulso arriva   # inchiostro schiarito: quattro fili a tutto
                             # inchiostro peserebbero troppo accanto al testo
 
 SS = 4   # supersampling: si disegna in grande e si rimpicciolisce
@@ -63,28 +66,44 @@ def morbido(t):
 
 # ─────────────────────────────────────────────────────────── avatar
 
+# Misurati sul ritratto a 900x900, con una griglia sopra: l'asse del viso
+# (meta' fra gli occhi) e le due quote della testa. Il tondo della firma
+# precedente era tagliato con l'asse del viso 22px a sinistra del centro,
+# e si vedeva. Qui il cerchio si costruisce da queste tre misure, invece
+# che a occhio.
+VISO_X, CRANIO, MENTO = 428, 50, 378
+ARIA = 0.08          # quanta parte del cerchio resta sopra il cranio
+TESTA = 0.60         # quanta parte del cerchio occupa la testa
+
+
 def avatar(lato=144):
-    """Il ritratto tondo della firma, con l'anello rifatto in bronzo.
+    """Il ritratto tondo della firma, col viso centrato e l'anello bronzo.
 
-    La sorgente e' il tondo della firma precedente: quell'inquadratura e'
-    gia' quella giusta - testa intera e un po' di spalle, con aria sopra -
-    e ritagliarne una nuova dal ritratto del sito veniva stretta.
+    Il cerchio e' centrato sull'asse del viso, non sul centro della foto:
+    e' l'unica cosa che l'occhio verifica davvero in un'immagine tonda.
+    In verticale la testa sta un po' sopra la meta', con le spalle sotto,
+    come in un ritratto: il cranio a __ARIA__ dal bordo alto.
 
-    Qui si tiene il disco della foto e si ridisegna solo l'anello, che
-    nell'originale e' l'oro della vecchia palette e accanto al bronzo del
-    resto della firma stonava. Lo spessore resta in proporzione a quello
-    di prima: dieci pixel su un raggio di 240.
+    L'anello e' nel bronzo del sito, non nell'oro della vecchia palette,
+    che accanto al resto della firma stonava. Lo spessore resta quello di
+    prima in proporzione: dieci pixel su un raggio di 240.
 
     Il cerchio e' cotto nel PNG invece di essere fatto con border-radius,
     che Outlook ignora mostrando un quadrato; gli angoli restano
     trasparenti, cosi' la scheda ci passa sotto.
     """
-    GRANDE = lato * SS
-    r = GRANDE / 2
-    spessore = round(r * 10 / 240)          # stesso rapporto dell'originale
+    D = (MENTO - CRANIO) / TESTA
+    alto = CRANIO - ARIA * D
+    taglio = (VISO_X - D / 2, alto, VISO_X + D / 2, alto + D)
 
-    foto = Image.open(RITRATTO).convert("RGB").resize((GRANDE, GRANDE),
-                                                      Image.LANCZOS)
+    GRANDE = lato * SS
+    spessore = round(GRANDE / 2 * 10 / 240)   # stesso rapporto dell'originale
+
+    foto = Image.open(RITRATTO).convert("RGB")
+    assert min(taglio) >= 0 and max(taglio) <= min(foto.size), \
+        f"il cerchio esce dalla foto: {taglio}"
+    foto = foto.crop([round(v) for v in taglio]).resize((GRANDE, GRANDE),
+                                                        Image.LANCZOS)
 
     disco = Image.new("L", (GRANDE, GRANDE), 0)
     ImageDraw.Draw(disco).ellipse([spessore, spessore,
@@ -114,26 +133,72 @@ X_DRITTO, X_NODO, X_FINE = 170, 410, 800
 X_MARCHIO, SCALA_MARCHIO = 824, 0.56     # il marchio chiude la banda
 
 
-def _fili():
-    """I quattro fili che convergono, piu' la spina di bronzo."""
-    m = maschera(W, H)
-    d = ImageDraw.Draw(m)
+def _percorsi():
+    """I quattro tracciati, punto per punto: servono anche all'animazione."""
+    fuori = []
     for y0 in PARTENZE:
         punti = [(0, y0), (X_DRITTO, y0)]
         for i in range(1, 41):
             t = i / 40
             punti.append((X_DRITTO + t * (X_NODO - X_DRITTO),
                           y0 + (CY - y0) * morbido(t)))
+        fuori.append(punti)
+    return fuori
+
+
+def _misure(punti):
+    """Lunghezze cumulate lungo un tracciato."""
+    L = [0.0]
+    for (x1, y1), (x2, y2) in zip(punti, punti[1:]):
+        L.append(L[-1] + math.hypot(x2 - x1, y2 - y1))
+    return L
+
+
+def _tratto(punti, L, a, b):
+    """Il pezzo di tracciato fra le frazioni a e b della sua lunghezza.
+
+    Si ritaglia per lunghezza e non per indice perche' i segmenti della
+    curva non sono tutti uguali: andando per indice l'impulso rallenterebbe
+    dove i punti sono fitti.
+    """
+    tot = L[-1]
+    a, b = max(0.0, a) * tot, min(1.0, b) * tot
+    if b <= a:
+        return []
+    fuori = []
+    for i in range(len(punti) - 1):
+        if L[i + 1] < a or L[i] > b:
+            continue
+        passo = L[i + 1] - L[i]
+        if passo <= 0:
+            continue
+        (x1, y1), (x2, y2) = punti[i], punti[i + 1]
+        t0 = max(0.0, (a - L[i]) / passo)
+        t1 = min(1.0, (b - L[i]) / passo)
+        if not fuori:
+            fuori.append((x1 + (x2 - x1) * t0, y1 + (y2 - y1) * t0))
+        fuori.append((x1 + (x2 - x1) * t1, y1 + (y2 - y1) * t1))
+    return fuori
+
+
+def _sfumatura():
+    """I fili nascono dal nulla invece che dal bordo tagliato."""
+    s = Image.new("L", (W, H), 255)
+    d = ImageDraw.Draw(s)
+    for x in range(0, 150):
+        d.line([(x, 0), (x, H)], fill=int(255 * morbido(x / 150)))
+    return s
+
+
+def _fili():
+    """I quattro fili che convergono, piu' la spina di bronzo."""
+    m = maschera(W, H)
+    d = ImageDraw.Draw(m)
+    for punti in _percorsi():
         d.line([(x * SS, y * SS) for x, y in punti], fill=255,
                width=int(1.6 * SS), joint="curve")
-    fili = giu(m, W, H)
-
-    # I fili nascono dal nulla invece che dal bordo tagliato.
-    sfuma = Image.new("L", (W, H), 255)
-    ds = ImageDraw.Draw(sfuma)
-    for x in range(0, 150):
-        ds.line([(x, 0), (x, H)], fill=int(255 * morbido(x / 150)))
-    fili = Image.composite(fili, Image.new("L", (W, H), 0), sfuma)
+    fili = Image.composite(giu(m, W, H), Image.new("L", (W, H), 0),
+                           _sfumatura())
 
     m2 = maschera(W, H)
     d2 = ImageDraw.Draw(m2)
@@ -172,13 +237,66 @@ def _bracci_banda(d):
         d.ellipse([x - r, y - r, x + r, y + r], fill=255)
 
 
-def _fusto_banda(d):
+def _fusto_banda(d, k=1.0):
+    """Il fusto di bronzo del marchio. k lo ingrossa quando l'impulso arriva:
+    a questa misura il fusto e' due pixel, e un cambio di sola tinta non si
+    vedrebbe."""
     p, s = _posa_marchio()
-    d.line([p(50, 56), p(50, 8)], fill=255, width=int(8 * s * SS))
+    d.line([p(50, 56), p(50, 8)], fill=255, width=int(8 * k * s * SS))
     for q in ((50, 56), (50, 8)):
         x, y = p(*q)
-        r = 4 * s * SS
+        r = 4 * k * s * SS
         d.ellipse([x - r, y - r, x + r, y + r], fill=255)
+
+
+# L'impulso e' un pezzo di linea ridisegnato piu' scuro, non una pallina
+# che ci scorre sopra: su un filo di un pixel una pallina diventa una
+# perlina, un tratto piu' scuro si legge come corrente che passa. Tre
+# lunghezze sovrapposte fanno la coda, dalla piu' lunga e chiara alla piu'
+# corta e densa. Nessuna tinta e' piu' chiara della linea sotto: un pezzo
+# piu' chiaro sembrerebbe un buco, non un riflesso.
+CODA_FILI = ((0.22, (156, 139, 116)), (0.12, BRONZO), (0.05, (104, 80, 54)))
+CODA_SPINA = ((0.17, (122, 97, 67)), (0.09, (92, 71, 47)), (0.04, (58, 43, 27)))
+
+
+def _nodo(f, forza):
+    """Il lampo sul punto di convergenza.
+
+    Senza, fra l'arrivo della corrente sui fili e la partenza lungo la
+    spina restava un battito vuoto, e il passaggio sembrava un salto.
+    E' anche il momento che conta: quattro cose che diventano una.
+    """
+    if forza <= 0:
+        return
+    forza = min(1.0, forza)
+    m = maschera(W, H)
+    r = (4.5 + 3.5 * forza) * SS
+    ImageDraw.Draw(m).ellipse([X_NODO * SS - r, CY * SS - r,
+                               X_NODO * SS + r, CY * SS + r], fill=255)
+    c = tuple(round(BRONZO[k] + (LAMPO[k] - BRONZO[k]) * forza) for k in range(3))
+    tinta(f, giu(m, W, H), c)
+
+
+def _impulso(percorsi, misure, testa, coda, largh, sfumato):
+    """I tre strati della coda, come maschere gia' pronte da tingere."""
+    strati = []
+    for lung, colore in coda:
+        m = maschera(W, H)
+        d = ImageDraw.Draw(m)
+        vuoto = True
+        for punti, L in zip(percorsi, misure):
+            p = _tratto(punti, L, testa - lung, testa)
+            if len(p) >= 2:
+                d.line([(x * SS, y * SS) for x, y in p], fill=255,
+                       width=int(largh * SS), joint="curve")
+                vuoto = False
+        if vuoto:
+            continue
+        m = giu(m, W, H)
+        if sfumato:
+            m = Image.composite(m, Image.new("L", (W, H), 0), _sfumatura())
+        strati.append((m, colore))
+    return strati
 
 
 def banda():
@@ -189,34 +307,60 @@ def banda():
     tinta(fermo, bracci, INCHIOSTRO)
     tinta(fermo, spina, BRONZO)
 
-    # La luce che corre: un nodo scuro con una scia corta che si spegne
-    # dentro il bronzo della riga. Le tinte non salgono mai sopra il bronzo:
-    # un eco piu' chiaro della riga sembrerebbe un buco, non un riflesso.
-    echi = [(0, (74, 56, 36), 4.6), (6, (90, 69, 46), 4.3),
-            (12, (106, 83, 56), 3.9), (18, (119, 94, 65), 3.5),
-            (24, (130, 104, 73), 3.1), (30, BRONZO, 2.7)]
+    percorsi = _percorsi()
+    misure = [_misure(p) for p in percorsi]
+    spina_pt = [[(X_NODO, CY), (X_FINE, CY)]]
+    spina_L = [_misure(spina_pt[0])]
 
-    frames = [fermo]                      # fotogramma 1: disegno finito
-    durate = [1800]                       # e una lunga pausa prima di partire
-    PASSI = 26
-    for i in range(PASSI):
-        t = morbido(i / (PASSI - 1))
-        testa = X_NODO + t * (X_FINE - X_NODO)
+    # Fotogramma 1: il disegno finito. Outlook si ferma qui.
+    frames, durate = [fermo], [1100]
+
+    # 1. La corrente sale lungo i quattro fili tutta insieme. Prima era
+    #    ferma meta' banda, e il movimento si notava appena.
+    N = 14
+    for i in range(N):
+        t = morbido((i + 1) / N)
         f = fermo.copy()
-        d = ImageDraw.Draw(f)
-        for dietro, colore, r in reversed(echi):
-            x = testa - dietro
-            if x <= X_NODO:
-                continue
-            # verso la fine la luce si spegne invece di sbattere sul bordo
-            if t > 0.8 and dietro == 0:
-                r *= 1 - (t - 0.8) / 0.2 * 0.6
-            d.ellipse([x - r, CY - r, x + r, CY + r], fill=colore)
+        for m, c in _impulso(percorsi, misure, t, CODA_FILI, 2.0, True):
+            tinta(f, m, c)
+        _nodo(f, max(0.0, (i - 9) / 4))
         frames.append(f)
         durate.append(45)
 
-    salva_gif(frames, durate, f"{OUT}/firma-allineamento.gif",
-              [GRAFITE, BRONZO, INCHIOSTRO] + [c for _, c, _ in echi])
+    # 2. Dal nodo in poi corre una sola linea: le quattro cose sono
+    #    diventate una direzione.
+    N = 16
+    for i in range(N):
+        t = morbido((i + 1) / N)
+        f = fermo.copy()
+        for m, c in _impulso(spina_pt, spina_L, t, CODA_SPINA, 3.6, False):
+            tinta(f, m, c)
+        _nodo(f, max(0.0, 1 - i / 4))
+        frames.append(f)
+        durate.append(45)
+
+    # 3. L'arrivo: il marchio si accende. E' il senso dell'animazione -
+    #    le quattro discipline arrivano da qualche parte - e serve anche
+    #    a chiudere lo sguardo sul marchio invece che sul bordo.
+    for forza, durata in ((1.0, 90), (1.0, 70), (0.7, 60), (0.42, 60), (0.2, 60), (0.0, 60)):
+        f = fermo.copy()
+        if forza:
+            m = maschera(W, H)
+            d = ImageDraw.Draw(m)
+            _fusto_banda(d, k=1 + 0.5 * forza)
+            p, s = _posa_marchio()
+            r = (4 + 7 * forza) * s * SS
+            x, y = p(50, 56)
+            d.ellipse([x - r, y - r, x + r, y + r], fill=255)
+            acceso = tuple(round(BRONZO[k] + (ACCESO[k] - BRONZO[k]) * forza)
+                           for k in range(3))
+            tinta(f, giu(m, W, H), acceso)
+        frames.append(f)
+        durate.append(durata)
+
+    tinte = [GRAFITE, BRONZO, INCHIOSTRO, ACCESO, LAMPO]
+    tinte += [c for _, c in CODA_FILI] + [c for _, c in CODA_SPINA]
+    salva_gif(frames, durate, f"{OUT}/firma-allineamento.gif", tinte)
 
 
 # ──────────────────────────────────────────────────────────── uscita
