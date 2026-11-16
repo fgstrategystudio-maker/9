@@ -287,6 +287,7 @@ footer.foot .wrap { display: flex; flex-wrap: wrap; justify-content: space-betwe
 footer.foot nav { display: flex; flex-wrap: wrap; gap: 20px; }
 footer.foot a { text-decoration: none; }
 footer.foot a:hover { color: var(--ink); }
+footer.foot .payoff { display: block; margin-top: 7px; color: var(--accent); }
 
 @media (max-width: 1080px) {
   .nav .links { display: none; }

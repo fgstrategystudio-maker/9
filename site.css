@@ -221,6 +221,7 @@ form input[type="checkbox"] { accent-color: var(--av-accent); }
 .sf-links { display: flex; flex-wrap: wrap; gap: 20px; }
 .sitefoot a { color: var(--av-muted) !important; text-decoration: none; }
 .sitefoot a:hover { color: var(--av-ink) !important; }
+.sitefoot .payoff { display: block; margin-top: 7px; color: var(--av-accent) !important; }
 
 /* ---------- Comparsa allo scorrimento (anim.js) ---------- */
 .fx-in { animation: av-up .9s var(--av-ease) both; animation-delay: var(--fx-d, 0ms); }
