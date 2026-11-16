@@ -35,6 +35,8 @@ FONDO = (255, 255, 255)     # la firma non ha piu' una scheda sotto:
                             # colore di ripiego per chi la trasparenza
                             # non la gestisce
 INCHIOSTRO = (18, 18, 18)
+ARMATURA = (58, 54, 47)     # i bracci del marchio: scuri sul chiaro,
+                            # ancora visibili sullo scuro
 BRONZO = (138, 111, 78)
 LINEA = (222, 219, 211)
 GRAFITE = (108, 105, 97)
@@ -58,8 +60,24 @@ def giu(m, w, h):
 
 
 def tinta(base, m, colore):
-    """Posa `colore` su `base` usando `m` come copertura."""
-    base.paste(Image.new("RGB", base.size, colore), (0, 0), m)
+    """Posa `colore` su `base`, con copertura piena o niente.
+
+    La soglia non e' un dettaglio tecnico, e' cio' che tiene insieme le
+    linee. La GIF ha un solo bit di trasparenza: i pixel di bordo, quelli
+    coperti a meta', non possono restare a meta' e vengono buttati via.
+    Su una curva il bordo e' quasi tutta la linea, e quello che resta e'
+    una fila di puntini - invisibile su fondo chiaro, evidente su fondo
+    scuro, dove Gmail per di piu' inverte l'immagine e li accende.
+
+    Quindi niente mezze tinte: ogni pixel o e' disegno pieno o e' fondo.
+    La soglia sta a un quarto e non a meta': su una diagonale sottile
+    quasi nessun pixel e' coperto per meta', e tagliare li' smagrirebbe
+    la linea invece di renderla solida. I gradini li ricompone il
+    browser, che mostra l'immagine a meta' della sua misura e quindi
+    media quattro pixel in uno.
+    """
+    base.paste(Image.new("RGB", base.size, colore), (0, 0), m.point(
+        lambda v: 255 if v >= 64 else 0))
 
 
 def morbido(t):
@@ -130,7 +148,6 @@ def avatar(lato=108):
 # ─────────────────────────────────────────── banda "allineamento"
 
 W, H = 880, 88          # spazio di disegno
-USCITA = (780, 78)      # mostrata a 390x39, cioe' il doppio esatto
 CY = H // 2
 PARTENZE = (19, 35, 53, 69)
 X_DRITTO, X_NODO, X_FINE = 170, 410, 800
@@ -144,8 +161,12 @@ def _percorsi():
         punti = [(0, y0), (X_DRITTO, y0)]
         for i in range(1, 41):
             t = i / 40
+            # Non smoothstep: quella arriva al centro con pendenza zero,
+            # e i quattro fili restano appaiati per l'ultimo terzo,
+            # fondendosi in una sbarra grigia invece di confluire. Questa
+            # parte piatta e arriva in diagonale: si incontrano in un punto.
             punti.append((X_DRITTO + t * (X_NODO - X_DRITTO),
-                          y0 + (CY - y0) * morbido(t)))
+                          y0 + (CY - y0) * t ** 2))
         fuori.append(punti)
     return fuori
 
@@ -185,13 +206,36 @@ def _tratto(punti, L, a, b):
     return fuori
 
 
-def _sfumatura():
-    """I fili nascono dal nulla invece che dal bordo tagliato."""
-    s = Image.new("L", (W, H), 255)
-    d = ImageDraw.Draw(s)
-    for x in range(0, 150):
-        d.line([(x, 0), (x, H)], fill=int(255 * morbido(x / 150)))
-    return s
+def _fitto(punti, L, passo=1.5):
+    """Ridistribuisce i punti di un tracciato a distanza regolare."""
+    tot = L[-1]
+    n = max(2, int(tot / passo))
+    fuori = []
+    j = 0
+    for i in range(n + 1):
+        d = tot * i / n
+        while j < len(L) - 2 and L[j + 1] < d:
+            j += 1
+        seg = L[j + 1] - L[j]
+        t = 0 if seg <= 0 else (d - L[j]) / seg
+        (x1, y1), (x2, y2) = punti[j], punti[j + 1]
+        fuori.append((x1 + (x2 - x1) * t, y1 + (y2 - y1) * t))
+    return fuori
+
+
+def _traccia(d, punti, L, da, a):
+    """Disegna un tracciato con spessore che passa da `da` ad `a`.
+
+    I quattro fili arrivano al nodo quasi sovrapposti. A spessore
+    costante, e con le tinte piene che servono alla trasparenza, li'
+    si fondono in un grumo grigio invece di confluire. Assottigliandoli
+    mentre si avvicinano, la confluenza torna a leggersi.
+    """
+    fitti = _fitto(punti, L)
+    for i, (x, y) in enumerate(fitti):
+        t = i / (len(fitti) - 1)
+        r = (da + (a - da) * t) / 2 * SS
+        d.ellipse([x * SS - r, y * SS - r, x * SS + r, y * SS + r], fill=255)
 
 
 def _fili():
@@ -199,10 +243,8 @@ def _fili():
     m = maschera(W, H)
     d = ImageDraw.Draw(m)
     for punti in _percorsi():
-        d.line([(x * SS, y * SS) for x, y in punti], fill=255,
-               width=int(1.9 * SS), joint="curve")
-    fili = Image.composite(giu(m, W, H), Image.new("L", (W, H), 0),
-                           _sfumatura())
+        _traccia(d, punti, _misure(punti), 2.1, 1.1)
+    fili = giu(m, W, H)
 
     m2 = maschera(W, H)
     d2 = ImageDraw.Draw(m2)
@@ -281,7 +323,7 @@ def _nodo(f, forza):
     tinta(f, giu(m, W, H), c)
 
 
-def _impulso(percorsi, misure, testa, coda, largh, sfumato):
+def _impulso(percorsi, misure, testa, coda, largh):
     """I tre strati della coda, come maschere gia' pronte da tingere."""
     strati = []
     for lung, colore in coda:
@@ -296,10 +338,7 @@ def _impulso(percorsi, misure, testa, coda, largh, sfumato):
                 vuoto = False
         if vuoto:
             continue
-        m = giu(m, W, H)
-        if sfumato:
-            m = Image.composite(m, Image.new("L", (W, H), 0), _sfumatura())
-        strati.append((m, colore))
+        strati.append((giu(m, W, H), colore))
     return strati
 
 
@@ -308,7 +347,7 @@ def banda():
 
     fermo = tela(W, H)
     tinta(fermo, fili, GRAFITE)
-    tinta(fermo, bracci, INCHIOSTRO)
+    tinta(fermo, bracci, ARMATURA)
     tinta(fermo, spina, BRONZO)
 
     percorsi = _percorsi()
@@ -325,7 +364,7 @@ def banda():
     for i in range(N):
         t = morbido((i + 1) / N)
         f = fermo.copy()
-        for m, c in _impulso(percorsi, misure, t, CODA_FILI, 2.0, True):
+        for m, c in _impulso(percorsi, misure, t, CODA_FILI, 2.0):
             tinta(f, m, c)
         _nodo(f, max(0.0, (i - 7) / 3))
         frames.append(f)
@@ -337,7 +376,7 @@ def banda():
     for i in range(N):
         t = morbido((i + 1) / N)
         f = fermo.copy()
-        for m, c in _impulso(spina_pt, spina_L, t, CODA_SPINA, 3.6, False):
+        for m, c in _impulso(spina_pt, spina_L, t, CODA_SPINA, 3.6):
             tinta(f, m, c)
         _nodo(f, max(0.0, 1 - i / 4))
         frames.append(f)
@@ -362,15 +401,14 @@ def banda():
         frames.append(f)
         durate.append(durata)
 
-    tinte = [GRAFITE, BRONZO, INCHIOSTRO, ACCESO, LAMPO]
+    tinte = [GRAFITE, BRONZO, ARMATURA, ACCESO, LAMPO]
     tinte += [c for _, c in CODA_FILI] + [c for _, c in CODA_SPINA]
-    frames = [f.resize(USCITA, Image.LANCZOS) for f in frames]
     salva_gif(frames, durate, f"{OUT}/firma-allineamento.gif", tinte)
 
 
 # ──────────────────────────────────────────────────────────── uscita
 
-def tavolozza(tinte, passi=6):
+def tavolozza(tinte, passi=1):
     """Tavolozza fissa: il fondo esatto piu' una rampa verso ogni tinta.
 
     Serve perche' la quantizzazione automatica sposta il fondo di un paio
@@ -384,6 +422,7 @@ def tavolozza(tinte, passi=6):
             t = i / passi
             colori.append(tuple(round(FONDO[k] + (c[k] - FONDO[k]) * t)
                                 for k in range(3)))
+    assert len(colori) <= 256
     p = Image.new("P", (1, 1))
     dati = [v for c in colori[:256] for v in c]
     p.putpalette(dati + [0] * (768 - len(dati)))
