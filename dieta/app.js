@@ -2,7 +2,7 @@
 'use strict';
 
 // ---------- Storage ----------
-const APP_VERSION = '36';
+const APP_VERSION = '37';
 const KEY = 'dieta.v1';
 // Icone dei comandi: SVG con lo stesso tratto della barra in basso
 const ICONS = {
@@ -266,6 +266,7 @@ function openSheet(html, onMount) {
   s.hidden = false; $('#sheetBackdrop').hidden = false;
   s.scrollTop = 0;
   document.body.style.overflow = 'hidden';
+  bindDateFields(s);
   onMount && onMount(s);
 }
 function runSheetCleanup() {
@@ -378,6 +379,51 @@ function render() {
   ({ today: renderToday, add: renderAdd, progress: renderProgress, body: renderBody, goals: renderGoals })[tab](v);
   animateView(v);
 }
+
+// ---------- Selettore data ----------
+// Campo che apre un calendario sotto di sé (niente finestra del sistema), con scorciatoie.
+// Il valore resta in un <input type="hidden" id=…>, così chi legge $('#id').value non cambia.
+function dateField(id, label, value, { min = '', max = '', quick = [], placeholder = 'Scegli una data' } = {}) {
+  return `<div class="field date-field" data-min="${min}" data-max="${max}" data-ph="${esc(placeholder)}" data-quick='${esc(JSON.stringify(quick))}'>
+    <span class="df-label">${label}</span>
+    <input type="hidden" id="${id}" value="${value || ''}">
+    <button type="button" class="df-btn" aria-expanded="false">${ico('calendar', 18)}<span class="df-val"></span><span class="df-chev" aria-hidden="true">›</span></button>
+    <div class="df-pop" hidden></div>
+  </div>`;
+}
+function bindDateFields(root) {
+  $$('.date-field', root).forEach(f => {
+    const inp = $('input', f), btn = $('.df-btn', f), pop = $('.df-pop', f);
+    const min = f.dataset.min, max = f.dataset.max;
+    const quick = JSON.parse(f.dataset.quick || '[]');
+    let month = (inp.value || (max && max < today() ? max : today())).slice(0, 7);
+    const ok = d => (!min || d >= min) && (!max || d <= max);
+    const label = () => {
+      $('.df-val', f).textContent = inp.value ? cap(fmtDate(inp.value, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })) : f.dataset.ph;
+      $('.df-val', f).classList.toggle('muted', !inp.value);
+    };
+    const set = v => { inp.value = v || ''; label(); inp.dispatchEvent(new Event('change', { bubbles: true })); toggle(false); };
+    const toggle = open => { pop.hidden = !open; btn.setAttribute('aria-expanded', open); f.classList.toggle('open', open); if (open) draw(); };
+    const draw = () => {
+      const [y, m] = month.split('-').map(Number);
+      const lead = (new Date(y, m - 1, 1).getDay() + 6) % 7, n = new Date(y, m, 0).getDate();
+      const days = Array.from({ length: n }, (_, i) => `${month}-${String(i + 1).padStart(2, '0')}`);
+      const canPrev = !min || `${shiftMonth(month, -1)}-31` >= min, canNext = !max || `${shiftMonth(month, 1)}-01` <= max;
+      pop.innerHTML = `${quick.length ? `<div class="df-quick">${quick.map(([l, v], i) => `<button type="button" class="chip" data-q="${i}" ${v && !ok(v) ? 'disabled' : ''}>${esc(l)}</button>`).join('')}</div>` : ''}
+        <div class="df-head"><button type="button" class="icon-btn" data-mv="-1" aria-label="Mese precedente" ${canPrev ? '' : 'disabled'}>‹</button>
+          <b>${cap(monthName(month, true))}</b>
+          <button type="button" class="icon-btn" data-mv="1" aria-label="Mese successivo" ${canNext ? '' : 'disabled'}>›</button></div>
+        <div class="df-grid">${['L', 'M', 'M', 'G', 'V', 'S', 'D'].map(x => `<span class="wd">${x}</span>`).join('')}${'<span></span>'.repeat(lead)}
+          ${days.map(d => `<button type="button" data-d="${d}" class="${d === inp.value ? 'sel' : ''} ${d === today() ? 'today' : ''}" ${ok(d) ? '' : 'disabled'}>${+d.slice(8)}</button>`).join('')}</div>`;
+      $$('[data-mv]', pop).forEach(b => b.addEventListener('click', () => { month = shiftMonth(month, +b.dataset.mv); draw(); }));
+      $$('[data-d]', pop).forEach(b => b.addEventListener('click', () => set(b.dataset.d)));
+      $$('[data-q]', pop).forEach(b => b.addEventListener('click', () => { const v = quick[+b.dataset.q][1]; if (v) month = v.slice(0, 7); set(v); }));
+    };
+    btn.addEventListener('click', () => toggle(pop.hidden));
+    label();
+  });
+}
+const plusMonths = n => { const d = parseYmd(today()); d.setMonth(d.getMonth() + n); return ymd(d); };
 
 // ---------- Calendario ----------
 let calMonth = null; // 'YYYY-MM'
@@ -525,6 +571,18 @@ function renderToday(v) {
 
   html += nudgesHtml();
   html += quickBar();
+  const exList = dayExercise(curDate);
+  html += `<div class="card">
+    <div class="meal-head">
+      <h2>Attività fisica ${exKcal ? `<small>−${r0(exKcal)} kcal</small>` : ''}</h2>
+      <button class="add-mini" id="addExercise">+ Allenamento</button>
+    </div>
+    ${exList.length ? `<ul class="items">${exList.map(x => `<li data-ex="${x.id}">
+      <div class="grow"><div class="name">${esc(x.name)}</div><div class="sub">${x.minutes ? r0(x.minutes) + ' min' : ''}${x.intensity ? ' · ' + esc(x.intensity) : ''}</div></div>
+      <div class="kc">−${r0(x.kcal)}</div></li>`).join('')}</ul>` : `<div class="empty">Nessun allenamento registrato.</div>`}
+    ${db.profile.baseActivity ? `<div class="small muted" style="margin-top:6px">Attività di tutti i giorni (${r0(db.profile.baseActivity)} kcal) già inclusa nell'obiettivo.</div>` : ''}
+  </div>`;
+
 
   for (const m of MEALS) {
     const list = dayEntries(curDate).filter(e => e.meal === m.id);
@@ -550,27 +608,12 @@ function renderToday(v) {
       <div class="meal-foot"><span class="small muted">P ${r0(mt.p)} · C ${r0(mt.c)} · G ${r0(mt.f)} g</span>
         <span class="meal-foot-acts"><button class="edit-meal" data-save="${m.id}" aria-label="Salva ${m.label.toLowerCase()} tra i pasti salvati">${ico('star', 15)} Salva</button><button class="edit-meal" data-editmeal="${m.id}">${ico('pencil', 15)} Modifica</button></span></div>`;
     } else {
-      const saved = db.savedMeals.map((sm, i) => ({ sm, i })).filter(x => x.sm.meal === m.id).slice(0, 2);
       html += `<div class="quick-chips">
-        ${saved.map(x => `<button class="qchip" data-qsm="${x.i}" data-meal="${m.id}">⭐ ${esc(x.sm.name)} · ${r0(sumNutr(x.sm.items).kcal)}</button>`).join('')}
-        ${yList.length ? `<button class="qchip" data-copy="${m.id}">↺ Come ieri · ${r0(sumNutr(yList).kcal)} kcal</button>` : ''}
-        ${!saved.length && !yList.length ? `<button class="qchip ghost" data-add="${m.id}">${ico('plus', 15)} Aggiungi ${m.label.toLowerCase()}</button>` : ''}
+        ${yList.length ? `<button class="qchip" data-copy="${m.id}">↺ Come ieri · ${r0(sumNutr(yList).kcal)} kcal</button>` : `<button class="qchip ghost" data-add="${m.id}">${ico('plus', 15)} Aggiungi ${m.label.toLowerCase()}</button>`}
       </div>`;
     }
     html += `</div>`;
   }
-
-  const exList = dayExercise(curDate);
-  html += `<div class="card">
-    <div class="meal-head">
-      <h2>Attività fisica ${exKcal ? `<small>−${r0(exKcal)} kcal</small>` : ''}</h2>
-      <button class="add-mini" id="addExercise">+ Allenamento</button>
-    </div>
-    ${exList.length ? `<ul class="items">${exList.map(x => `<li data-ex="${x.id}">
-      <div class="grow"><div class="name">${esc(x.name)}</div><div class="sub">${x.minutes ? r0(x.minutes) + ' min' : ''}${x.intensity ? ' · ' + esc(x.intensity) : ''}</div></div>
-      <div class="kc">−${r0(x.kcal)}</div></li>`).join('')}</ul>` : `<div class="empty">Nessun allenamento registrato.</div>`}
-    ${db.profile.baseActivity ? `<div class="small muted" style="margin-top:6px">Attività di tutti i giorni (${r0(db.profile.baseActivity)} kcal) già inclusa nell'obiettivo.</div>` : ''}
-  </div>`;
 
   html += `<div class="card">
     <h2>Acqua <small>${fmtNum(water / 1000, 2)} / ${fmtNum(g.water / 1000, 1)} L</small></h2>
@@ -2244,7 +2287,7 @@ function startForm() {
     <p class="small muted">Se hai già tenuto il conto altrove, inserisci il deficit accumulato dall'inizio del mese fino al giorno indicato (escluso). L'app aggiunge i giorni da quella data in poi.</p>
     <label class="field"><span>Deficit accumulato (kcal)</span><input type="number" inputmode="numeric" id="sKcal" value="${cur ? cur.kcal : ''}" placeholder="es. 11700"></label>
     <p class="small muted" style="margin-top:-4px">Scrivi il numero senza segno per un deficit. Se eri in surplus, mettilo con il meno (es. −500).</p>
-    <label class="field"><span>Fino al giorno (escluso)</span><input type="date" id="sUntil" value="${cur?.until || today()}" min="${month}-01" max="${today()}"></label>
+    ${dateField('sUntil', 'Fino al giorno (escluso)', cur?.until || today(), { min: `${month}-01`, max: today(), quick: [['Oggi', today()]] })}
     <div class="btn-row">${cur ? '<button class="btn danger" id="sDel">Rimuovi</button>' : ''}<button class="btn" id="sSave">Salva</button></div>`, s => {
     $('#sSave', s).addEventListener('click', () => {
       const kcal = num($('#sKcal', s).value);
@@ -2995,7 +3038,7 @@ function bodyForm(date, newDate) {
   const rec = existing || { date: newDate || today() };
   const last = latestBody('weight');
   openSheet(`<h3>${existing ? 'Modifica misurazione' : 'Nuova misurazione'}</h3>
-    <label class="field"><span>Data</span><input type="date" id="bDate" value="${rec.date}" max="${today()}"></label>
+    ${dateField('bDate', 'Data', rec.date, { max: today(), quick: [['Oggi', today()], ['Ieri', addDays(today(), -1)]] })}
     <div class="grid2">${BODY_FIELDS.filter(f => !f.circ).map(f => `<label class="field"><span>${f.label}${f.unit ? ' (' + f.unit + ')' : ''}</span>
       <input type="number" inputmode="decimal" step="${f.step}" data-f="${f.k}" value="${rec[f.k] ?? ''}" placeholder="${f.k === 'weight' && last ? fmtNum(last.weight) : ''}"></label>`).join('')}</div>
     <h3 style="font-size:16px;margin:6px 0 4px">Circonferenze</h3>
@@ -3130,7 +3173,7 @@ function renderGoals(v) {
     <h2 style="margin-top:6px">Obiettivi a lungo termine</h2>
     <div class="grid2">
       ${field('gWT', 'Peso obiettivo (kg)', g.weightTarget, 'step="0.1"')}
-      <label class="field"><span>Entro il</span><input type="date" id="gWTD" value="${g.weightTargetDate || ''}"></label>
+      ${dateField('gWTD', 'Entro il', g.weightTargetDate, { min: today(), placeholder: 'Nessuna scadenza', quick: [['Tra 1 mese', plusMonths(1)], ['3 mesi', plusMonths(3)], ['6 mesi', plusMonths(6)], ['Nessuna', '']] })}
       ${field('gBF', 'Massa grassa obiettivo (%)', g.bodyFatTarget, 'step="0.1"')}
     </div>
     <h2 style="margin-top:6px">Obiettivi del mese</h2>
@@ -3191,6 +3234,7 @@ function renderGoals(v) {
   <p class="center small muted">Versione ${APP_VERSION} · ${esc(location.host)}</p>
   </section>`;
   bindSubnav(v, 'goals');
+  bindDateFields(v);
 
   const readProfile = () => ({
     name: $('#pName', v).value.trim(), sex: $('#pSex', v).value, age: num($('#pAge', v).value) || p.age, height: num($('#pH', v).value) || p.height,
