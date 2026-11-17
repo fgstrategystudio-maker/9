@@ -274,7 +274,8 @@ label.check input { width: 20px; height: 20px; accent-color: var(--accent); }
 :root { --ok: #3fa34d; }
 .cal-btn { color: var(--accent); display: inline-flex; align-items: center; justify-content: center; margin-left: 4px; }
 .cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-.cal-head h3 { margin: 0; text-transform: capitalize; }
+.cal-head h3 { margin: 0; }
+.cal-head h3::first-letter { text-transform: uppercase; }
 .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px 2px; text-align: center; }
 .cal-grid .wd { font-size: 12px; font-weight: 700; color: var(--muted); padding: 4px 0; }
 .cal-day { border: 0; background: none; padding: 4px 0; border-radius: 12px; display: flex; flex-direction: column; align-items: center; gap: 3px; min-height: 64px; }
@@ -614,3 +615,44 @@ input:focus-visible, textarea:focus-visible, select:focus-visible { outline: non
 .icon-act .ico, .qa-btn .ico { display: block; }
 .icon-act.add .ico { stroke-width: 2.4; }
 .big-action .ic { display: grid; place-items: center; height: 32px; }
+
+/* ---------- v36 · esperienza riordinata ---------- */
+/* Selettore delle sezioni (Progressi, Obiettivi): resta sotto la barra in cima */
+.subnav {
+  position: sticky; top: var(--top-h, 60px); z-index: 4;
+  display: flex; gap: 4px; padding: 4px; margin: 0 -4px 14px;
+  background: color-mix(in srgb, var(--line) 70%, var(--bg)); border-radius: 14px;
+  box-shadow: 0 6px 12px -10px rgba(0,0,0,.35);
+}
+.subnav button { flex: 1; border: 0; background: none; min-height: 40px; border-radius: 10px; font-weight: 700; font-size: 14px; color: color-mix(in srgb, var(--muted) 70%, var(--text)); transition: background .18s ease, color .18s ease; }
+.subnav button.on { background: var(--card); color: var(--text); box-shadow: var(--shadow); }
+section[data-sec] > :last-child { margin-bottom: 0; }
+.sec-in { animation: secIn .22s cubic-bezier(.2,.8,.2,1); }
+@keyframes secIn { from { opacity: 0; transform: translateY(6px); } }
+@media (prefers-reduced-motion: reduce) { .sec-in { animation: none; } }
+.range-seg { margin-bottom: 12px; }
+#openCal { margin-bottom: 12px; }
+.btn .ico { flex: none; }
+
+/* Pasti: un solo "+" in alto, Salva e Modifica in fondo */
+.meal-foot { flex-wrap: wrap; row-gap: 8px; }
+.meal-foot-acts { display: inline-flex; gap: 6px; margin-left: auto; }
+.qchip.ghost { border-style: dashed; background: transparent; color: var(--accent); display: inline-flex; align-items: center; gap: 6px; }
+
+/* Periodo: pillole piccole sotto il selettore delle sezioni */
+.range-seg { display: flex; align-items: center; gap: 6px; margin: 0 0 12px; overflow-x: auto; scrollbar-width: none; }
+.range-seg::-webkit-scrollbar { display: none; }
+.range-seg > span { font-size: 13px; font-weight: 600; color: var(--muted); margin-right: 2px; }
+.range-seg button { border: 1px solid var(--line); background: transparent; border-radius: 99px; min-height: 34px; padding: 0 12px; font-size: 13px; font-weight: 600; color: color-mix(in srgb, var(--muted) 70%, var(--text)); white-space: nowrap; }
+.range-seg button.on { background: var(--accent-soft); border-color: transparent; color: color-mix(in srgb, var(--accent) 85%, var(--text)); }
+
+/* Aspetto: colori */
+.swatches { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.swatch { border: 0; background: none; padding: 6px 0; border-radius: 14px; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.sw-dot { position: relative; width: 48px; height: 48px; border-radius: 50%; box-shadow: inset 0 0 0 1px var(--line); display: grid; place-items: center; overflow: hidden; }
+.sw-dot i { width: 22px; height: 22px; border-radius: 50%; }
+.sw-dot b { position: absolute; bottom: 7px; width: 6px; height: 6px; border-radius: 50%; }
+.sw-dot b:nth-of-type(1) { left: 12px; } .sw-dot b:nth-of-type(2) { left: 21px; } .sw-dot b:nth-of-type(3) { left: 30px; }
+.swatch.on .sw-dot { box-shadow: 0 0 0 2px var(--card), 0 0 0 4px var(--accent); }
+.sw-name { font-size: 12px; font-weight: 600; color: color-mix(in srgb, var(--muted) 70%, var(--text)); }
+.swatch.on .sw-name { color: var(--text); }

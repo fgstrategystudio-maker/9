@@ -2,7 +2,7 @@
 'use strict';
 
 // ---------- Storage ----------
-const APP_VERSION = '35';
+const APP_VERSION = '36';
 const KEY = 'dieta.v1';
 // Icone dei comandi: SVG con lo stesso tratto della barra in basso
 const ICONS = {
@@ -13,6 +13,9 @@ const ICONS = {
   mic: '<rect x="9" y="3" width="6" height="11.5" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3"/>',
   image: '<rect x="3.5" y="5" width="17" height="14" rx="3"/><circle cx="9" cy="10" r="1.6"/><path d="M20.5 15.5l-4.5-4.5-8 8"/>',
   barcode: '<path d="M4 6v12M7.5 6v12M10 6v12M13.5 6v12M16 6v12M20 6v12"/>',
+  calendar: '<rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
+  share: '<path d="M12 15V4M7.5 8.5L12 4l4.5 4.5"/><path d="M5 13v5.5a1.5 1.5 0 0 0 1.5 1.5h11a1.5 1.5 0 0 0 1.5-1.5V13"/>',
+  scale: '<rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="M8.5 9a4 4 0 0 1 7 0"/><path d="M12 9l1.4-2"/>',
 };
 const ico = (name, size = 20) => `<svg class="ico" viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name]}</svg>`;
 
@@ -337,6 +340,29 @@ $('#nextDay').addEventListener('click', () => { if (curDate < today()) { curDate
 $('#dateLabel').addEventListener('click', () => openCalendar());
 $('#calBtn').addEventListener('click', () => openCalendar());
 
+// Sotto-sezioni di una scheda: selettore che resta in alto, una sezione visibile alla volta
+const subTab = { progress: 'panoramica', goals: 'obiettivi' };
+try { subTab.progress = localStorage.getItem('dieta.sub.progress') || subTab.progress; } catch {}
+const subnav = (scope, items) => `<div class="subnav" role="tablist">${items.map(([id, label]) => `<button role="tab" data-sub="${id}">${label}</button>`).join('')}</div>`;
+function showSub(v, scope) {
+  $$('[data-sec]', v).forEach(sec => { sec.hidden = sec.dataset.sec !== subTab[scope]; });
+  $$('[data-sub]', v).forEach(b => { const on = b.dataset.sub === subTab[scope]; b.classList.toggle('on', on); b.setAttribute('aria-selected', on); });
+}
+function bindSubnav(v, scope) {
+  showSub(v, scope);
+  $$('[data-sub]', v).forEach(b => b.addEventListener('click', () => {
+    if (subTab[scope] === b.dataset.sub) return;
+    subTab[scope] = b.dataset.sub;
+    if (scope === 'progress') try { localStorage.setItem('dieta.sub.progress', subTab.progress); } catch {}
+    showSub(v, scope);
+    window.scrollTo({ top: 0 });
+    const sec = $(`[data-sec="${subTab[scope]}"]`, v);
+    if (sec && !reduceMotion()) { sec.classList.remove('sec-in'); void sec.offsetWidth; sec.classList.add('sec-in'); }
+  }));
+}
+// Apre una scheda direttamente su una sua sezione
+const goSub = (t, sec) => { subTab[t] = sec; go(t); };
+
 function render() {
   $('#title').textContent = TITLES[tab];
   if (tab !== 'today') { $('#miniSum').hidden = true; miniObs?.disconnect(); }
@@ -500,18 +526,6 @@ function renderToday(v) {
   html += nudgesHtml();
   html += quickBar();
 
-  const exList = dayExercise(curDate);
-  html += `<div class="card">
-    <div class="meal-head">
-      <h2>Attività fisica ${exKcal ? `<small>−${r0(exKcal)} kcal</small>` : ''}</h2>
-      <button class="add-mini" id="addExercise">+ Allenamento</button>
-    </div>
-    ${exList.length ? `<ul class="items">${exList.map(x => `<li data-ex="${x.id}">
-      <div class="grow"><div class="name">${esc(x.name)}</div><div class="sub">${x.minutes ? r0(x.minutes) + ' min' : ''}${x.intensity ? ' · ' + esc(x.intensity) : ''}</div></div>
-      <div class="kc">−${r0(x.kcal)}</div></li>`).join('')}</ul>` : `<div class="empty">Nessun allenamento registrato.</div>`}
-    ${db.profile.baseActivity ? `<div class="small muted" style="margin-top:6px">Attività di tutti i giorni (${r0(db.profile.baseActivity)} kcal) già inclusa nell'obiettivo.</div>` : ''}
-  </div>`;
-
   for (const m of MEALS) {
     const list = dayEntries(curDate).filter(e => e.meal === m.id);
     const mt = sumNutr(list);
@@ -520,7 +534,7 @@ function renderToday(v) {
     html += `<div class="card meal-card" id="meal-${m.id}">
       <div class="meal-head">
         <h2><span class="meal-ico">${m.icon}</span>${m.label} ${list.length ? `<small><span data-count="${r0(mt.kcal)}" data-key="meal-${curDate}-${m.id}">${r0(mt.kcal)}</span> kcal</small>` : ''}</h2>
-        <span class="meal-actions">${list.length ? `<button class="icon-act" data-save="${m.id}" aria-label="Salva pasto">${ico('star', 19)}</button>` : ''}<button class="icon-act" data-cam="${m.id}" aria-label="Foto del pasto">${ico('camera', 19)}</button><button class="icon-act add" data-add="${m.id}" aria-label="Aggiungi a ${m.label}">${ico('plus', 20)}</button></span>
+        <button class="icon-act add" data-add="${m.id}" aria-label="Aggiungi a ${m.label}">${ico('plus', 20)}</button>
       </div>
       ${list.length ? `<div class="meal-share"><i style="width:${Math.min(100, share * 100)}%"></i></div>` : ''}`;
     if (list.length) {
@@ -533,17 +547,30 @@ function renderToday(v) {
           <div class="kc">${r0(n.kcal)}</div>
         </li>`;
       }).join('')}</ul>
-      <div class="meal-foot"><span class="small muted">P ${r0(mt.p)} g · C ${r0(mt.c)} g · G ${r0(mt.f)} g</span><button class="edit-meal" data-editmeal="${m.id}">${ico('pencil', 15)} Modifica pasto</button></div>`;
+      <div class="meal-foot"><span class="small muted">P ${r0(mt.p)} · C ${r0(mt.c)} · G ${r0(mt.f)} g</span>
+        <span class="meal-foot-acts"><button class="edit-meal" data-save="${m.id}" aria-label="Salva ${m.label.toLowerCase()} tra i pasti salvati">${ico('star', 15)} Salva</button><button class="edit-meal" data-editmeal="${m.id}">${ico('pencil', 15)} Modifica</button></span></div>`;
     } else {
       const saved = db.savedMeals.map((sm, i) => ({ sm, i })).filter(x => x.sm.meal === m.id).slice(0, 2);
       html += `<div class="quick-chips">
         ${saved.map(x => `<button class="qchip" data-qsm="${x.i}" data-meal="${m.id}">⭐ ${esc(x.sm.name)} · ${r0(sumNutr(x.sm.items).kcal)}</button>`).join('')}
         ${yList.length ? `<button class="qchip" data-copy="${m.id}">↺ Come ieri · ${r0(sumNutr(yList).kcal)} kcal</button>` : ''}
-        ${!saved.length && !yList.length ? '<span class="empty" style="padding:0">Niente ancora.</span>' : ''}
+        ${!saved.length && !yList.length ? `<button class="qchip ghost" data-add="${m.id}">${ico('plus', 15)} Aggiungi ${m.label.toLowerCase()}</button>` : ''}
       </div>`;
     }
     html += `</div>`;
   }
+
+  const exList = dayExercise(curDate);
+  html += `<div class="card">
+    <div class="meal-head">
+      <h2>Attività fisica ${exKcal ? `<small>−${r0(exKcal)} kcal</small>` : ''}</h2>
+      <button class="add-mini" id="addExercise">+ Allenamento</button>
+    </div>
+    ${exList.length ? `<ul class="items">${exList.map(x => `<li data-ex="${x.id}">
+      <div class="grow"><div class="name">${esc(x.name)}</div><div class="sub">${x.minutes ? r0(x.minutes) + ' min' : ''}${x.intensity ? ' · ' + esc(x.intensity) : ''}</div></div>
+      <div class="kc">−${r0(x.kcal)}</div></li>`).join('')}</ul>` : `<div class="empty">Nessun allenamento registrato.</div>`}
+    ${db.profile.baseActivity ? `<div class="small muted" style="margin-top:6px">Attività di tutti i giorni (${r0(db.profile.baseActivity)} kcal) già inclusa nell'obiettivo.</div>` : ''}
+  </div>`;
 
   html += `<div class="card">
     <h2>Acqua <small>${fmtNum(water / 1000, 2)} / ${fmtNum(g.water / 1000, 1)} L</small></h2>
@@ -554,7 +581,7 @@ function renderToday(v) {
   </div>`;
 
   if (!weighed) {
-    html += `<button class="btn secondary" id="quickWeigh">⚖ Registra peso e misure di ${curDate === today() ? 'oggi' : 'questo giorno'}</button>`;
+    html += `<button class="btn secondary" id="quickWeigh">${ico('scale', 18)} Registra peso e misure di ${curDate === today() ? 'oggi' : 'questo giorno'}</button>`;
   }
   v.innerHTML = html;
 
@@ -598,13 +625,13 @@ function renderToday(v) {
   qw && qw.addEventListener('click', () => bodyForm(null, curDate));
   $('#addExercise', v).addEventListener('click', () => exerciseForm());
   $('#backToday', v)?.addEventListener('click', () => { curDate = today(); render(); });
-  $('#balanceLine', v)?.addEventListener('click', () => go('progress'));
+  $('#balanceLine', v)?.addEventListener('click', () => goSub('progress', 'peso'));
   $('#closedOk', v)?.addEventListener('click', () => { db.settings.closedSeen = prevMonth; save(); render(); });
   if ($('.month-closed', v) && !db.achievements[`closed-${prevMonth}`]) {
     db.achievements[`closed-${prevMonth}`] = today(); save();
     if (monthBalance(prevMonth).total < 0) setTimeout(() => confetti(), 300);
   }
-  $('#closedDetail', v)?.addEventListener('click', () => { db.settings.closedSeen = prevMonth; save(); go('progress'); });
+  $('#closedDetail', v)?.addEventListener('click', () => { db.settings.closedSeen = prevMonth; save(); goSub('progress', 'peso'); });
   $$('[data-ex]', v).forEach(li => li.addEventListener('click', () => exerciseForm(li.dataset.ex)));
 }
 
@@ -1460,8 +1487,7 @@ function parseMealRef(text) {
 function requireKey() {
   if (hasAiKey()) return true;
   toast('Inserisci prima una chiave AI in Obiettivi → Impostazioni (Gemini è gratis)');
-  go('goals');
-  setTimeout(() => $('#settingsCard')?.scrollIntoView({ behavior: 'smooth' }), 100);
+  goSub('goals', 'impostazioni');
   return false;
 }
 
@@ -2056,26 +2082,50 @@ function renderProgress(v) {
   const dim = new Date(parseYmd(t).getFullYear(), parseYmd(t).getMonth() + 1, 0).getDate();
   const daysLeft = dim - parseYmd(t).getDate();
 
-  let html = monthResultsCard();
-  html += insightsCard();
+  const rangeSeg = `<div class="range-seg" role="radiogroup" aria-label="Periodo"><span>Periodo</span>${[[7, '7 g'], [30, '30 g'], [90, '3 mesi'], [365, '1 anno']].map(([n, l]) => `<button role="radio" aria-checked="${n === progressRange}" data-r="${n}" class="${n === progressRange ? 'on' : ''}">${l}</button>`).join('')}</div>`;
+
+  // Obiettivi del mese
+  let monthGoals = `<div class="card"><h2>Obiettivi di ${monthName} <small>${daysLeft} giorni rimasti</small></h2>`;
+  const dit = g.monthDaysInTarget || 0;
+  if (dit) monthGoals += `<div class="goal-progress">${macroBar('Giorni in target', ms.inTarget, dit, 'var(--accent)', 'giorni')}</div>`;
+  if (g.monthWeight != null) {
+    const startM = db.body.filter(b => b.weight != null && b.date < mStart).sort((a, b) => a.date.localeCompare(b.date)).pop()
+      || db.body.filter(b => b.weight != null && b.date >= mStart).sort((a, b) => a.date.localeCompare(b.date))[0];
+    if (startM && lastW) {
+      const need = startM.weight - g.monthWeight;
+      const done = startM.weight - lastW.weight;
+      const p = need !== 0 ? Math.max(0, Math.min(100, (done / need) * 100)) : 100;
+      monthGoals += `<div class="goal-progress" style="margin-top:10px"><div class="macro"><div class="top"><span>Peso a fine mese: ${fmtNum(g.monthWeight)} kg</span><span><b>${fmtNum(lastW.weight)}</b> kg</span></div>
+        <div class="bar"><i style="width:${p}%;background:var(--accent)"></i></div></div>
+        <div class="small muted" style="margin-top:4px">Mancano ${fmtNum(Math.abs(lastW.weight - g.monthWeight))} kg</div></div>`;
+    } else monthGoals += `<p class="small muted">Registra il peso per seguire l'obiettivo di fine mese (${fmtNum(g.monthWeight)} kg).</p>`;
+  }
+  monthGoals += `<div class="small muted" style="margin-top:10px">Media del mese: ${r0(ms.kcal)} kcal · P ${r0(ms.p)} g · ${ms.logged} giorni registrati</div>`;
+  if (!dit && g.monthWeight == null) monthGoals += `<button class="add-mini" id="setMonthGoals" style="margin-top:10px">Imposta gli obiettivi del mese</button>`;
+  monthGoals += `</div>`;
+
+  let html = subnav('progress', [['panoramica', 'Panoramica'], ['cibo', 'Alimentazione'], ['peso', 'Peso e bilancio']]);
+
+  // 1 · Panoramica: come sta andando il mese, cosa ha notato l'app, cosa fare
+  html += `<section data-sec="panoramica">`;
+  html += monthResultsCard();
   html += reportCard();
-  html += `<p class="small muted" style="margin:0 0 6px">Periodo per riepilogo, analisi e grafici:</p>`;
-  html += `<div class="seg">${[[7, '7 giorni'], [30, '30 giorni'], [90, '3 mesi'], [365, '1 anno']].map(([n, l]) => `<button data-r="${n}" class="${n === progressRange ? 'on' : ''}">${l}</button>`).join('')}</div>`;
+  html += insightsCard();
+  html += monthGoals;
+  html += weightGoalCard();
+  html += `<button class="btn secondary" id="openCal">${ico('calendar', 18)} Calendario giorno per giorno</button>`;
+  html += `</section>`;
+
+  // 2 · Alimentazione: medie, qualità della dieta, calorie, macro, cibi più frequenti
+  html += `<section data-sec="cibo">${rangeSeg}`;
   html += `<div class="card"><h2>Riepilogo <small>ultimi ${RANGE_LABEL[progressRange]}</small></h2><div class="stats">
     <div class="stat"><div class="v">${r0(s.kcal)}</div><div class="k">kcal medie / giorno (obiettivo ${r0(g.kcal)})</div></div>
     <div class="stat"><div class="v">${s.inTarget}<span class="muted" style="font-size:15px">/${s.logged}</span></div><div class="k">giorni verdi (nel target)</div></div>
-    <div class="stat"><div class="v">${signed(s.dW, 'kg')}</div><div class="k">variazione peso</div></div>
-    <div class="stat"><div class="v">${signed(s.dBF, '%')}</div><div class="k">variazione massa grassa</div></div>
     <div class="stat"><div class="v">${r0(s.p)} g</div><div class="k">proteine medie (obiettivo ${r0(g.protein)})</div></div>
     <div class="stat"><div class="v">${s.logged}<span class="muted" style="font-size:15px">/${s.days.length}</span></div><div class="k">giorni registrati</div></div>
     <div class="stat"><div class="v">${s.workouts}</div><div class="k">allenamenti</div></div>
     <div class="stat"><div class="v">${fmtNum(s.burned, 0)}</div><div class="k">kcal bruciate con lo sport</div></div>
   </div></div>`;
-
-  html += analysisCard();
-  html += `<button class="btn secondary" id="openCal" style="margin-bottom:12px">📅 Calendario giorno per giorno</button>`;
-  html += balanceCard();
-
   if (progressRange <= 90) {
     html += `<div class="card"><h2>Calorie giornaliere</h2>${barChart(s.days.map(d => ({ date: d, v: dayTotals(d).kcal, b: dayBudget(d) })), g.kcal)}</div>`;
   } else {
@@ -2086,7 +2136,6 @@ function renderProgress(v) {
     }
     html += `<div class="card"><h2>Calorie medie settimanali</h2>${barChart(weeks, g.kcal)}</div>`;
   }
-
   if (s.logged) {
     html += `<div class="card"><h2>Distribuzione macro <small>media</small></h2>
       <div class="bar" style="height:14px;display:flex">
@@ -2097,37 +2146,26 @@ function renderProgress(v) {
       <div class="legend"><span><i style="background:var(--prot)"></i>Proteine ${pct(s.p * 4)}% · ${r0(s.p)} g</span><span><i style="background:var(--carb)"></i>Carboidrati ${pct(s.c * 4)}% · ${r0(s.c)} g</span><span><i style="background:var(--fat)"></i>Grassi ${pct(s.f * 9)}% · ${r0(s.f)} g</span></div>
     </div>`;
   }
-
-  const wPts = db.body.filter(b => b.weight != null && b.date >= from).sort((a, b) => a.date.localeCompare(b.date)).map(b => ({ date: b.date, y: b.weight }));
-  html += `<div class="card"><h2>Peso ${lastW ? `<small>${fmtNum(lastW.weight)} kg</small>` : ''}</h2>${wPts.length ? lineChart(wPts, { target: g.weightTarget, unit: 'kg' }) : '<p class="muted small">Nessuna pesata in questo periodo.</p>'}</div>`;
-
-  // Obiettivi del mese
-  html += `<div class="card"><h2>Obiettivi di ${monthName} <small>${daysLeft} giorni rimasti</small></h2>`;
-  const dit = g.monthDaysInTarget || 0;
-  if (dit) {
-    html += `<div class="goal-progress">${macroBar('Giorni in target', ms.inTarget, dit, 'var(--accent)', 'giorni')}</div>`;
-  }
-  if (g.monthWeight != null) {
-    const startM = db.body.filter(b => b.weight != null && b.date < mStart).sort((a, b) => a.date.localeCompare(b.date)).pop()
-      || db.body.filter(b => b.weight != null && b.date >= mStart).sort((a, b) => a.date.localeCompare(b.date))[0];
-    if (startM && lastW) {
-      const need = startM.weight - g.monthWeight;
-      const done = startM.weight - lastW.weight;
-      const p = need !== 0 ? Math.max(0, Math.min(100, (done / need) * 100)) : 100;
-      html += `<div class="goal-progress" style="margin-top:10px"><div class="macro"><div class="top"><span>Peso a fine mese: ${fmtNum(g.monthWeight)} kg</span><span><b>${fmtNum(lastW.weight)}</b> kg</span></div>
-        <div class="bar"><i style="width:${p}%;background:var(--accent)"></i></div></div>
-        <div class="small muted" style="margin-top:4px">Mancano ${fmtNum(Math.abs(lastW.weight - g.monthWeight))} kg</div></div>`;
-    } else html += `<p class="small muted">Registra il peso per seguire l'obiettivo di fine mese (${fmtNum(g.monthWeight)} kg).</p>`;
-  }
-  html += `<div class="small muted" style="margin-top:10px">Media del mese: ${r0(ms.kcal)} kcal · P ${r0(ms.p)} g · ${ms.logged} giorni registrati</div>`;
-  if (!dit && g.monthWeight == null) html += `<p class="small muted">Imposta gli obiettivi mensili nella scheda Obiettivi.</p>`;
-  html += `</div>`;
-
-  html += weightGoalCard();
+  html += analysisCard();
   html += freqCard();
+  html += `</section>`;
+
+  // 3 · Peso e bilancio: andamento del peso e deficit calorico
+  const wPts = db.body.filter(b => b.weight != null && b.date >= from).sort((a, b) => a.date.localeCompare(b.date)).map(b => ({ date: b.date, y: b.weight }));
+  html += `<section data-sec="peso">${rangeSeg}`;
+  html += `<div class="card"><h2>Peso ${lastW ? `<small>${fmtNum(lastW.weight)} kg</small>` : ''}</h2>
+    <div class="stats" style="margin-bottom:12px">
+      <div class="stat"><div class="v">${signed(s.dW, 'kg')}</div><div class="k">peso negli ultimi ${RANGE_LABEL[progressRange]}</div></div>
+      <div class="stat"><div class="v">${signed(s.dBF, '%')}</div><div class="k">massa grassa</div></div>
+    </div>
+    ${wPts.length ? lineChart(wPts, { target: g.weightTarget, unit: 'kg' }) : '<p class="muted small">Nessuna pesata in questo periodo.</p>'}</div>`;
+  html += balanceCard();
+  html += `</section>`;
   v.innerHTML = html;
   $$('[data-r]', v).forEach(b => b.addEventListener('click', () => { progressRange = +b.dataset.r; anaMode = 'range'; render(); }));
+  bindSubnav(v, 'progress');
   $('#openCal', v).addEventListener('click', openCalendar);
+  $('#setMonthGoals', v)?.addEventListener('click', () => goSub('goals', 'obiettivi'));
   $('#insAll', v)?.addEventListener('click', () => { insightsAll = true; render(); });
   $$('[data-rep]', v).forEach(b => b.addEventListener('click', () => openReport(b.dataset.rep)));
   $$('[data-am]', v).forEach(b => b.addEventListener('click', () => { anaMode = b.dataset.am; render(); }));
@@ -2774,7 +2812,7 @@ function reportCard() {
   const past = Object.keys(db.reports || {}).sort().reverse().filter(k => k !== ws).slice(0, 4);
   if (!enough && !past.length) return '';
   return `<div class="card"><h2>📝 Resoconto settimanale</h2>
-    ${enough ? `<button class="report-row" data-rep="${ws}"><span class="grow"><b>${db.reports?.[ws] ? esc(db.reports[ws].title) : 'Settimana ' + weekLabel(ws)}</b><br><small class="muted">${weekLabel(ws)} · ${db.reports?.[ws] ? 'leggi il resoconto' : 'genera il resoconto con l’AI'}</small></span><span class="add-mini on">${db.reports?.[ws] ? 'Leggi' : 'Genera'}</span></button>` : ''}
+    ${enough ? `<button class="report-row" data-rep="${ws}"><span class="grow"><b>${db.reports?.[ws] ? esc(db.reports[ws].title) : 'Settimana ' + weekLabel(ws)}</b><br><small class="muted">${db.reports?.[ws] ? weekLabel(ws) : 'Cosa è andato bene e cosa migliorare'}</small></span><span class="add-mini on">${db.reports?.[ws] ? 'Leggi' : 'Genera'}</span></button>` : ''}
     ${past.map(k => `<button class="report-row" data-rep="${k}"><span class="grow"><b>${esc(db.reports[k].title)}</b><br><small class="muted">${weekLabel(k)}</small></span><span class="muted">›</span></button>`).join('')}
   </div>`;
 }
@@ -3055,7 +3093,8 @@ function renderGoals(v) {
   const curPal = st.palette || 'salvia';
   const curScheme = st.scheme === 'dark' || (st.scheme !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
   const geminiModels = st.geminiModels?.length ? st.geminiModels : [st.geminiModel || GEMINI_DEFAULT_MODEL];
-  v.innerHTML = `
+  v.innerHTML = `${subnav('goals', [['obiettivi', 'Obiettivi'], ['impostazioni', 'Impostazioni']])}
+  <section data-sec="obiettivi">
   <div class="card">
     <h2>Il tuo fabbisogno</h2>
     <label class="field"><span>Come ti chiami? (facoltativo, per il saluto)</span><input type="text" id="pName" value="${esc(p.name || '')}" maxlength="30" autocomplete="given-name"></label>
@@ -3101,6 +3140,8 @@ function renderGoals(v) {
     </div>
     <button class="btn" id="saveGoals">Salva obiettivi</button>
   </div>
+  </section>
+  <section data-sec="impostazioni">
   <div class="card" id="settingsCard">
     <h2>Intelligenza artificiale</h2>
     <p class="small muted" style="margin-top:0">Serve per riconoscere i cibi da foto e testo. Ricerca, codice a barre e tutto il resto funzionano anche senza.</p>
@@ -3132,28 +3173,24 @@ function renderGoals(v) {
   </div>
   <div class="card">
     <h2>Aspetto</h2>
-    <p class="small muted" style="margin-top:0">Tocca una combinazione per provarla subito.</p>
-    ${PALETTES.map(([id, name, light, dark]) => `<div class="pal-group"><b>${name}</b><div class="pal-row">
-      ${[['light', 'Chiaro', light], ['dark', 'Scuro', dark]].map(([sc, label, c]) => `<button class="pal-tile ${id === curPal && sc === curScheme ? 'on' : ''}" data-pal="${id}" data-sc="${sc}">
-        <span class="mock" style="background:${c.bg}">
-          <span class="mcard" style="background:${c.card}"><span class="ring" style="border-color:${c.accent}"></span>
-            <span class="bars"><i style="background:${c.prot};width:80%"></i><i style="background:${c.carb};width:60%"></i><i style="background:${c.fat};width:45%"></i></span></span>
-          <span class="mbtn" style="background:${c.accent};color:${c.on}">+ Aggiungi</span>
-        </span>
-        <span class="lbl">${label}${id === curPal && sc === curScheme ? '<span class="check">✓</span>' : ''}</span>
-      </button>`).join('')}
-    </div></div>`).join('')}
-    <label class="check"><input type="checkbox" id="autoScheme" ${st.scheme === 'auto' ? 'checked' : ''}> Passa da solo tra chiaro e scuro seguendo il telefono</label>
+    <div class="seg" role="radiogroup" aria-label="Tema">${[['light', 'Chiaro'], ['dark', 'Scuro'], ['auto', 'Automatico']].map(([k, l]) => `<button role="radio" data-scheme="${k}" aria-checked="${(st.scheme || 'auto') === k}" class="${(st.scheme || 'auto') === k ? 'on' : ''}">${l}</button>`).join('')}</div>
+    <div class="swatches" role="radiogroup" aria-label="Colori">
+      ${PALETTES.map(([id, name, light, dark]) => { const c = curScheme === 'dark' ? dark : light; return `<button class="swatch ${id === curPal ? 'on' : ''}" role="radio" aria-checked="${id === curPal}" data-pal="${id}">
+        <span class="sw-dot" style="background:${c.bg}"><i style="background:${c.accent}"></i><b style="background:${c.prot}"></b><b style="background:${c.carb}"></b><b style="background:${c.fat}"></b></span>
+        <span class="sw-name">${name.split(' ')[0]}</span></button>`; }).join('')}
+    </div>
   </div>
   <div class="card">
     <h2>Dati e backup</h2>
     <p class="small muted" style="margin-top:0">I dati sono salvati solo su questo telefono. Il backup (senza le chiavi AI) si invia a WhatsApp, Drive o email e serve anche per passare a un altro telefono.</p>
     <p class="small"><b>Ultimo backup:</b> ${db.settings.lastBackup ? `${fmtDate(db.settings.lastBackup, { day: 'numeric', month: 'long' })} (${daysAgo(db.settings.lastBackup)})` : 'mai'}</p>
-    <button class="btn" id="shareData">📤 Invia backup</button>
+    <button class="btn" id="shareData">${ico('share', 18)} Invia backup</button>
     <div class="btn-row" style="margin-top:8px"><button class="btn secondary" id="exportData">Scarica file</button><button class="btn secondary" id="importData">Ripristina</button></div>
     <button class="btn danger" id="wipe" style="margin-top:6px">Cancella tutti i dati</button>
   </div>
-  <p class="center small muted">Versione ${APP_VERSION} · ${esc(location.host)}</p>`;
+  <p class="center small muted">Versione ${APP_VERSION} · ${esc(location.host)}</p>
+  </section>`;
+  bindSubnav(v, 'goals');
 
   const readProfile = () => ({
     name: $('#pName', v).value.trim(), sex: $('#pSex', v).value, age: num($('#pAge', v).value) || p.age, height: num($('#pH', v).value) || p.height,
@@ -3264,15 +3301,8 @@ function renderGoals(v) {
     } catch (err) { toast(err.message); }
     b.disabled = false; b.textContent = 'Prova';
   });
-  $$('[data-pal]', v).forEach(b => b.addEventListener('click', () => {
-    db.settings.palette = b.dataset.pal;
-    db.settings.scheme = b.dataset.sc;
-    save(); applyPalette(); render();
-  }));
-  $('#autoScheme', v).addEventListener('change', e => {
-    db.settings.scheme = e.target.checked ? 'auto' : curScheme;
-    save(); applyPalette(); render();
-  });
+  $$('[data-pal]', v).forEach(b => b.addEventListener('click', () => { db.settings.palette = b.dataset.pal; save(); applyPalette(); render(); }));
+  $$('[data-scheme]', v).forEach(b => b.addEventListener('click', () => { db.settings.scheme = b.dataset.scheme; save(); applyPalette(); render(); }));
   $('#exportData', v).addEventListener('click', () => { downloadBackup(); render(); });
   $('#shareData', v).addEventListener('click', () => shareBackup());
   $('#importData', v).addEventListener('click', () => $('#importInput').click());
@@ -3372,6 +3402,10 @@ let baseFix = null;
   save();
   baseFix = { ...before, newKcal: db.goals.kcal, newHist: balanceHistory().total, newMonth: monthBalance(today().slice(0, 7)).total };
 })();
+// il selettore delle sezioni si ferma subito sotto la barra in cima, qualunque sia la sua altezza
+const topbarH = () => document.documentElement.style.setProperty('--top-h', `${$('.topbar').offsetHeight}px`);
+new ResizeObserver(topbarH).observe($('.topbar'));
+topbarH();
 render();
 importKeyFromLink();
 if (baseFix) {
