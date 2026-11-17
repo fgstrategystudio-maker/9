@@ -546,10 +546,10 @@ h1, h2, h3, .big, .balance-big, .score-num b { font-weight: 800; letter-spacing:
 .res-item.busy, #rItems.busy { opacity: .55; pointer-events: none; transition: opacity .2s; }
 
 /* Scoperte, backup, resoconto */
-.insight { display: flex; gap: 12px; padding: 10px 12px; border-radius: 14px; background: var(--bg); margin-bottom: 8px; border-left: 4px solid var(--accent); }
-.insight.warn { border-left-color: var(--warn); }
-.insight.good { border-left-color: var(--ok); }
-.insight .ins-ico { font-size: 24px; line-height: 1.2; }
+.insight { display: flex; align-items: flex-start; gap: 12px; padding: 12px; border-radius: 14px; background: var(--bg); margin-bottom: 8px; }
+.insight .ins-ico { flex: none; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font-size: 21px; background: color-mix(in srgb, var(--accent) 16%, transparent); }
+.insight.warn .ins-ico { background: color-mix(in srgb, var(--warn) 20%, transparent); }
+.insight.good .ins-ico { background: color-mix(in srgb, var(--ok) 20%, transparent); }
 .insight b { display: block; font-size: 15px; }
 .insight p { margin: 2px 0 0; font-size: 13px; color: var(--muted); }
 .nudge { display: flex; align-items: center; gap: 10px; padding: 12px; animation: sugin .3s ease-out; }
@@ -565,8 +565,7 @@ h1, h2, h3, .big, .balance-big, .score-num b { font-weight: 800; letter-spacing:
 .rep-h { margin: 16px 0 6px; font-size: 15px; }
 .rep-list { margin: 0; padding-left: 20px; line-height: 1.55; font-size: 14px; }
 .rep-goal { margin-top: 14px; background: var(--accent-soft); border-radius: 14px; padding: 12px 14px; }
-.rep-goal span { display: block; font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
-.rep-goal b { font-size: 16px; }
+.rep-goal { font-size: 15px; line-height: 1.5; }
 
 /* Pasto passato: aggiungi altro */
 .mp-more { margin: 4px 0 6px; }
@@ -579,4 +578,39 @@ h1, h2, h3, .big, .balance-big, .score-num b { font-weight: 800; letter-spacing:
 
 /* Modifica di un pasto già inserito */
 .meal-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 6px; }
-.edit-meal { border: 0; background: var(--accent-soft); color: var(--accent); font: inherit; font-size: 13px; font-weight: 700; padding: 7px 12px; border-radius: 999px; flex: none; }
+.edit-meal { border: 0; background: var(--accent-soft); color: var(--accent); font: inherit; font-size: 13px; font-weight: 700; min-height: 38px; padding: 0 14px; border-radius: 999px; flex: none; display: inline-flex; align-items: center; gap: 6px; }
+
+/* ---------- Rifinitura v35 (impeccable · polish) ---------- */
+/* Verde leggibile come testo: --ok resta per pallini e barre, --ok-text per numeri e parole */
+:root { --ok-text: #2b7a37; --warn-text: #93630a; }
+@media (prefers-color-scheme: dark) { :root:not([data-scheme="light"]) { --ok-text: #5fc46c; --warn-text: #e8b44a; --danger: #f07a70; } }
+:root[data-scheme="dark"] { --ok-text: #5fc46c; --warn-text: #e8b44a; --danger: #f07a70; }
+.good, .ring .big.good, .veg-big > b, .results .res.good .v span { color: var(--ok-text); }
+
+/* Superfici del browser nei colori dell'app */
+::selection { background: color-mix(in srgb, var(--accent) 28%, transparent); color: var(--text); }
+input, textarea { caret-color: var(--accent); }
+input[type=checkbox], input[type=radio], input[type=range] { accent-color: var(--accent); }
+:focus { outline: none; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 10px; }
+input:focus-visible, textarea:focus-visible, select:focus-visible { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent); }
+
+/* Numeri allineati (non "ballano" quando cambiano) */
+.ring .big, .stat .v, .items .kc, .macro .top, .kc, .balance-big, .balance-line b, .hrow, .rec-time, .totals { font-variant-numeric: tabular-nums; }
+
+/* Testo secondario più leggibile su barre e selettori */
+.tabbar button { font-size: 12px; color: color-mix(in srgb, var(--muted) 72%, var(--text)); }
+.tabbar button.active { color: color-mix(in srgb, var(--accent) 85%, var(--text)); }
+.seg button { color: color-mix(in srgb, var(--muted) 70%, var(--text)); }
+
+/* Aree di tocco più comode (min. 40 px) */
+.icon-btn { width: 40px; height: 40px; }
+.icon-act { width: 40px; height: 40px; }
+.meal-actions { display: inline-flex; gap: 8px; }
+.chip { min-height: 38px; }
+.add-mini { min-height: 34px; }
+.qchip { min-height: 38px; }
+.seg button { min-height: 38px; }
+.icon-act .ico, .qa-btn .ico { display: block; }
+.icon-act.add .ico { stroke-width: 2.4; }
+.big-action .ic { display: grid; place-items: center; height: 32px; }

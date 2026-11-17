@@ -2,8 +2,20 @@
 'use strict';
 
 // ---------- Storage ----------
-const APP_VERSION = '34';
+const APP_VERSION = '35';
 const KEY = 'dieta.v1';
+// Icone dei comandi: SVG con lo stesso tratto della barra in basso
+const ICONS = {
+  star: '<path d="M12 3.6l2.5 5.2 5.7.8-4.1 4 1 5.6L12 16.5l-5.1 2.7 1-5.6-4.1-4 5.7-.8z"/>',
+  camera: '<path d="M4 8.5h3.2L9 6h6l1.8 2.5H20a0 0 0 0 1 0 0V19H4z"/><circle cx="12" cy="13.2" r="3.4"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  pencil: '<path d="M4.5 19.5l1-4.2L15.8 5a2 2 0 0 1 2.9 0l.3.3a2 2 0 0 1 0 2.9L8.7 18.5z"/><path d="M14 6.8l3.2 3.2"/>',
+  mic: '<rect x="9" y="3" width="6" height="11.5" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3"/>',
+  image: '<rect x="3.5" y="5" width="17" height="14" rx="3"/><circle cx="9" cy="10" r="1.6"/><path d="M20.5 15.5l-4.5-4.5-8 8"/>',
+  barcode: '<path d="M4 6v12M7.5 6v12M10 6v12M13.5 6v12M16 6v12M20 6v12"/>',
+};
+const ico = (name, size = 20) => `<svg class="ico" viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name]}</svg>`;
+
 const MEALS = [
   { id: 'colazione', label: 'Colazione', icon: '☀️' },
   { id: 'pranzo', label: 'Pranzo', icon: '🍽️' },
@@ -508,7 +520,7 @@ function renderToday(v) {
     html += `<div class="card meal-card" id="meal-${m.id}">
       <div class="meal-head">
         <h2><span class="meal-ico">${m.icon}</span>${m.label} ${list.length ? `<small><span data-count="${r0(mt.kcal)}" data-key="meal-${curDate}-${m.id}">${r0(mt.kcal)}</span> kcal</small>` : ''}</h2>
-        <span class="meal-actions">${list.length ? `<button class="icon-act" data-save="${m.id}" aria-label="Salva pasto">⭐</button>` : ''}<button class="icon-act" data-cam="${m.id}" aria-label="Foto del pasto">📷</button><button class="icon-act add" data-add="${m.id}" aria-label="Aggiungi a ${m.label}">+</button></span>
+        <span class="meal-actions">${list.length ? `<button class="icon-act" data-save="${m.id}" aria-label="Salva pasto">${ico('star', 19)}</button>` : ''}<button class="icon-act" data-cam="${m.id}" aria-label="Foto del pasto">${ico('camera', 19)}</button><button class="icon-act add" data-add="${m.id}" aria-label="Aggiungi a ${m.label}">${ico('plus', 20)}</button></span>
       </div>
       ${list.length ? `<div class="meal-share"><i style="width:${Math.min(100, share * 100)}%"></i></div>` : ''}`;
     if (list.length) {
@@ -521,7 +533,7 @@ function renderToday(v) {
           <div class="kc">${r0(n.kcal)}</div>
         </li>`;
       }).join('')}</ul>
-      <div class="meal-foot"><span class="small muted">P ${r0(mt.p)} g · C ${r0(mt.c)} g · G ${r0(mt.f)} g</span><button class="edit-meal" data-editmeal="${m.id}">✏️ Modifica pasto</button></div>`;
+      <div class="meal-foot"><span class="small muted">P ${r0(mt.p)} g · C ${r0(mt.c)} g · G ${r0(mt.f)} g</span><button class="edit-meal" data-editmeal="${m.id}">${ico('pencil', 15)} Modifica pasto</button></div>`;
     } else {
       const saved = db.savedMeals.map((sm, i) => ({ sm, i })).filter(x => x.sm.meal === m.id).slice(0, 2);
       html += `<div class="quick-chips">
@@ -682,8 +694,8 @@ function quickBar() {
     <div class="qa-bar">
       <span class="qa-ico">✨</span>
       <input id="qaInput" type="search" enterkeyhint="send" placeholder="Cosa hai mangiato?" autocomplete="off" aria-label="Cosa hai mangiato">
-      ${speechSupported() ? '<button id="qaMic" class="qa-btn ghost" aria-label="Detta cosa hai mangiato">🎤</button>' : ''}
-      <button id="qaCam" class="qa-btn" aria-label="Fotografa il pasto">📷</button>
+      ${speechSupported() ? `<button id="qaMic" class="qa-btn ghost" aria-label="Detta cosa hai mangiato">${ico('mic')}</button>` : ''}
+      <button id="qaCam" class="qa-btn" aria-label="Fotografa il pasto">${ico('camera')}</button>
     </div>
     <div class="qa-meals">${MEALS.map(m => `<button class="chip ${m.id === t ? 'on' : ''}" data-qm="${m.id}">${m.icon} ${m.label}</button>`).join('')}</div>
     <div id="qaSug" class="qa-sug" hidden></div>
@@ -1025,7 +1037,7 @@ function editEntry(id) {
     ${porChips('data-ep')}
     <div class="nutri" id="eNutri"></div>
     <div class="meal-pick" style="margin-top:14px">${MEALS.map(m => `<button class="chip ${m.id === meal ? 'on' : ''}" data-m="${m.id}">${m.label}</button>`).join('')}</div>
-    <button class="btn ghost" id="eMeal" style="margin-top:8px">✏️ Modifica tutto il pasto</button>
+    <button class="btn ghost" id="eMeal" style="margin-top:8px">${ico('pencil', 17)} Modifica tutto il pasto</button>
     <div class="btn-row"><button class="btn danger" id="eDel">Elimina</button><button class="btn" id="eSave">Salva</button></div>`, s => {
     draw(s);
     $('#eMeal', s).addEventListener('click', () => editMeal(curDate, e.meal));
@@ -1072,9 +1084,9 @@ function renderAdd(v) {
   v.innerHTML = `
     <div class="meal-pick">${MEALS.map(m => `<button class="chip ${m.id === addMeal ? 'on' : ''}" data-m="${m.id}">${m.icon} ${m.label}</button>`).join('')}</div>
     <div class="big-actions three">
-      <button class="big-action primary" id="takePhoto"><span class="ic">📷</span>Foto</button>
-      <button class="big-action" id="pickPhoto"><span class="ic">🖼️</span>Galleria</button>
-      <button class="big-action" id="scanCode"><span class="ic">▥</span>Codice a barre</button>
+      <button class="big-action primary" id="takePhoto"><span class="ic">${ico('camera', 28)}</span>Foto</button>
+      <button class="big-action" id="pickPhoto"><span class="ic">${ico('image', 28)}</span>Galleria</button>
+      <button class="big-action" id="scanCode"><span class="ic">${ico('barcode', 28)}</span>Codice a barre</button>
     </div>
     <div class="card">
       <h2>Pasti salvati <small>${db.savedMeals.length || ''}</small></h2>
@@ -2362,7 +2374,7 @@ function analysisCard() {
     <div class="score-wrap">
       <svg width="128" height="128" viewBox="0 0 128 128"><circle cx="64" cy="64" r="${R}" fill="none" stroke="var(--line)" stroke-width="11"/>
         <circle class="ring-prog" data-to="${C * (1 - sc.score / 10)}" cx="64" cy="64" r="${R}" fill="none" stroke="${scoreCol}" stroke-width="11" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C}" transform="rotate(-90 64 64)"/></svg>
-      <div class="score-num"><b data-count="${sc.score}" data-dec="1">${fmtNum(sc.score, 1)}</b><small>/10</small><span style="color:${scoreCol}">${sc.label}</span></div>
+      <div class="score-num"><b data-count="${sc.score}" data-dec="1">${fmtNum(sc.score, 1)}</b><small>/10</small><span style="color:${scoreCol.replace('--ok', '--ok-text').replace('--warn', '--warn-text')}">${sc.label}</span></div>
     </div>
     <div class="parts">${sc.parts.map(p => `<div class="prow"><div class="mtop"><span>${p.label}</span><span><b>${fmtNum(p.pts, 1)}</b><small class="muted">/${fmtNum(p.max, 1)}</small></span></div>
       <div class="bar"><i style="width:${p.pts / p.max * 100}%;background:${p.pts / p.max >= 0.75 ? 'var(--ok)' : p.pts / p.max >= 0.4 ? 'var(--warn)' : 'var(--danger)'}"></i></div><small class="muted">${p.tip}</small></div>`).join('')}</div>
@@ -2707,7 +2719,7 @@ function insightsCard() {
   if (!ins.list.length) return ins.days < 7 ? `<div class="card"><h2>💡 Scoperte</h2><p class="small muted" style="margin:0">Dopo 7 giorni registrati qui compariranno le scoperte sulle tue abitudini (ora ${ins.days}).</p></div>` : '';
   const shown = insightsAll ? ins.list : ins.list.slice(0, 3);
   return `<div class="card"><h2>💡 Scoperte <small>ultimi 60 giorni</small></h2>
-    ${shown.map(x => `<div class="insight ${x.tone}"><span class="ins-ico">${x.icon}</span><div><b>${esc(x.title)}</b><p>${esc(x.text)}</p></div></div>`).join('')}
+    ${shown.map(x => `<div class="insight ${x.tone}"><span class="ins-ico" aria-hidden="true">${x.icon}</span><div><b>${esc(x.title)}</b><p>${esc(x.text)}</p></div></div>`).join('')}
     ${!insightsAll && ins.list.length > 3 ? `<button class="btn ghost" id="insAll">Mostra tutte (${ins.list.length})</button>` : ''}
   </div>`;
 }
@@ -2782,7 +2794,7 @@ async function openReport(ws, regenerate = false) {
     ${r.good?.length ? `<h4 class="rep-h">✅ Cosa è andato bene</h4><ul class="rep-list">${r.good.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
     ${r.improve?.length ? `<h4 class="rep-h">🎯 Da migliorare</h4><ul class="rep-list">${r.improve.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
     ${r.tips?.length ? `<h4 class="rep-h">💡 Consigli per la prossima settimana</h4>${r.tips.map(t => `<div class="insight info"><div><b>${esc(t.tip)}</b><p>${esc(t.why)}</p></div></div>`).join('')}` : ''}
-    ${r.next_week_goal ? `<div class="rep-goal"><span>Obiettivo della settimana</span><b>${esc(r.next_week_goal)}</b></div>` : ''}
+    ${r.next_week_goal ? `<div class="rep-goal"><b>🎯 Obiettivo della settimana:</b> ${esc(r.next_week_goal)}</div>` : ''}
     <div class="btn-row" style="margin-top:12px"><button class="btn secondary" id="repRegen">↻ Rigenera</button><button class="btn" id="repOk">Ok</button></div>`, s => {
     $('#repOk', s).addEventListener('click', () => { closeSheet(); render(); });
     $('#repRegen', s).addEventListener('click', () => openReport(ws, true));
