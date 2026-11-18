@@ -1,0 +1,212 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  font-family: var(--font-sans);
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Testa ── */
+.testa { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.titolo {
+  font-family: var(--font-sans);
+  font-stretch: 112%;
+  font-weight: 700;
+  font-size: clamp(30px, 4vw, 44px);
+  letter-spacing: -0.025em;
+  line-height: 1;
+}
+.azioniTesta { display: flex; gap: 4px; }
+.quiet {
+  display: inline-flex; align-items: center; gap: 7px; min-height: 40px; padding: 0 12px;
+  border: 0; border-radius: var(--r-sm); background: transparent; color: var(--ink-2);
+  font: 600 14px/1 var(--font-sans); cursor: pointer; transition: background .15s, color .15s;
+}
+.quiet:hover { background: var(--panel-2); color: var(--ink); }
+.quiet:focus-visible, .link:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* L'assistente è il primo strumento: niente card nella card, solo un piano chiaro */
+.composer :global(.panel) {
+  border: 1.5px solid var(--ink);
+  border-radius: var(--r-lg);
+  box-shadow: none;
+  background: var(--panel);
+}
+.composer :global(.panel-title) { letter-spacing: 0; text-transform: none; font-size: 17px; font-weight: 700; color: var(--ink); }
+.composer :global(.panel-title) svg { color: var(--accent); }
+
+/* ── Il punto ── */
+.punto { display: flex; flex-direction: column; gap: 14px; max-width: 1080px; }
+.frase {
+  font-size: clamp(19px, 2vw, 24px);
+  line-height: 1.45;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  color: var(--ink-2);
+  max-width: 62ch;
+  text-wrap: pretty;
+}
+.n { font-weight: 700; color: var(--ink); white-space: nowrap; }
+.pos { color: var(--pos); }
+.neg { color: var(--accent); }
+.warn { color: var(--warn); }
+
+.fatti {
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-top: 14px; border-top: 1.5px solid var(--ink);
+}
+.fatti > div { padding: 12px 18px 0 0; display: flex; flex-direction: column; gap: 2px; }
+.fatti > div + div { padding-left: 18px; border-left: 1px solid var(--hair); }
+.fatti dt { font-size: 13px; font-weight: 600; color: var(--ink-3); }
+.fatti dd { font-size: 26px; font-weight: 700; font-stretch: 108%; letter-spacing: -0.02em; line-height: 1.15; }
+.fatti span { font-size: 13px; color: var(--ink-3); }
+
+.avvisi { list-style: none; display: flex; flex-direction: column; margin-top: 10px; }
+.avvisi li {
+  display: flex; align-items: baseline; gap: 14px;
+  padding: 11px 0; border-top: 1px solid var(--hair); font-size: 15px; line-height: 1.45;
+}
+.avvisi li::before { content: ""; flex: none; width: 8px; height: 8px; border-radius: 50%; transform: translateY(-1px); background: var(--ink-3); }
+.av_danger::before { background: var(--accent) !important; }
+.av_warn::before { background: var(--warn) !important; }
+.av_info::before { background: var(--info) !important; }
+.avTesto { flex: 1 1 0; min-width: 0; }
+.avvisi li .link { flex: none; }
+.link {
+  border: 0; background: none; padding: 6px 0; min-height: 32px; cursor: pointer;
+  font: 600 14px/1.2 var(--font-sans); color: var(--accent-ink);
+  text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px;
+}
+.link:hover { color: var(--accent); }
+
+/* ── Blocchi ── */
+.blocco { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.bloccoTesta { display: flex; flex-direction: column; gap: 4px; padding-top: 14px; border-top: 1.5px solid var(--ink); }
+.bloccoTesta h2 { font-size: 22px; font-weight: 700; font-stretch: 108%; letter-spacing: -0.02em; line-height: 1.2; }
+.bloccoTesta p { font-size: 15px; color: var(--ink-3); max-width: 70ch; }
+.sotto { font-size: 15px; font-weight: 700; margin-top: 8px; }
+.nota { font-size: 13.5px; color: var(--ink-3); }
+.due { display: grid; grid-template-columns: 1.1fr 1fr; gap: 40px; }
+
+/* ── Orario (firma) ── */
+.orarioWrap { overflow-x: auto; margin: 0 -4px; padding: 0 4px; }
+.orario { width: 100%; min-width: 980px; border-collapse: collapse; font-size: 13.5px; }
+.orario th, .orario td { padding: 0; text-align: right; vertical-align: middle; }
+.orario thead th {
+  font-size: 12.5px; font-weight: 600; color: var(--ink-3); padding: 0 4px 10px; text-align: center;
+  border-bottom: 1px solid var(--ink);
+}
+.orario thead th small { display: block; font-size: 11px; font-weight: 500; }
+.orario thead th.oggi { color: var(--accent-ink); }
+.orario tbody td { height: 48px; padding: 4px 2px; border-bottom: 1px solid var(--hair-soft); }
+.orario tbody th { border-bottom: 1px solid var(--hair-soft); }
+.colNome { text-align: left !important; width: 200px; padding: 8px 12px 8px 0 !important; position: sticky; left: 0; background: var(--canvas); z-index: 1; }
+.colOra { width: 56px; padding-right: 12px !important; font-weight: 700; color: var(--ink); }
+.nome { display: block; font-weight: 700; font-size: 14.5px; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 190px; }
+.meta { display: block; font-size: 12.5px; color: var(--ink-3); font-weight: 400; }
+td.oggi, th.oggi { background: color-mix(in oklab, var(--accent) 6%, transparent); }
+.cella {
+  display: flex; align-items: center; justify-content: center; height: 38px; border-radius: 4px;
+  font-size: 12.5px; font-weight: 700;
+}
+.cella.ultima { box-shadow: inset -3px 0 0 var(--ink); }
+.g0 { background: var(--panel-2); color: var(--ink-2); }
+.g1 { background: var(--g1); color: var(--g1-ink); }
+.g2 { background: var(--g2); color: var(--g2-ink); }
+.g3 { background: var(--g3); color: var(--g3-ink); }
+.g4 { background: var(--g4); color: var(--g4-ink); }
+.g5 { background: var(--g5); color: var(--g5-ink); }
+.ipotesi .cella { background: transparent !important; color: var(--ink-2) !important; outline: 1.5px dashed var(--ink-3); outline-offset: -2px; }
+.ipotesi .nome { color: var(--ink-2); font-style: italic; }
+.orario tfoot th { font-size: 13.5px; font-weight: 600; color: var(--ink-2); }
+.orario tfoot td { height: 36px; padding: 0 6px; font-weight: 600; color: var(--ink-2); text-align: center; border-bottom: 1px solid var(--hair-soft); }
+.orario tfoot tr:first-child th, .orario tfoot tr:first-child td { border-top: 1px solid var(--ink); }
+.rigaCassa td, .rigaCassa th { font-weight: 700 !important; color: var(--ink); border-bottom: 0 !important; }
+.rigaCassa td.neg { color: var(--accent); }
+.orario td.warn { color: var(--warn); }
+.orario td.neg { color: var(--accent); }
+.vuoto { text-align: left !important; color: var(--ink-3); padding: 18px 0 !important; }
+
+/* Il momento in movimento: le celle si riempiono una volta, da sinistra */
+@media (prefers-reduced-motion: no-preference) {
+  .cella { animation: riempi .5s cubic-bezier(.16,1,.3,1) both; animation-delay: calc(var(--i, 0) * 28ms); }
+}
+@keyframes riempi { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+
+.mesiMobile { display: none; }
+
+.legenda { display: flex; align-items: center; gap: 10px 16px; flex-wrap: wrap; font-size: 13.5px; color: var(--ink-3); }
+.rampa { display: inline-flex; gap: 2px; }
+.rampa i { width: 22px; height: 12px; border-radius: 2px; }
+.legenda .link { margin-left: auto; }
+.trattative { border-top: 1px solid var(--hair); padding-top: 12px; }
+.trattative :global(.pipe-row), .trattative :global(.pipe-head) { padding-left: 0; padding-right: 0; }
+
+/* ── Classifica €/h ── */
+.classifica { list-style: none; display: flex; flex-direction: column; }
+.classifica li { padding: 12px 0; border-bottom: 1px solid var(--hair-soft); display: flex; flex-direction: column; gap: 6px; }
+.clTesta { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.clOra { font-size: 20px; font-weight: 700; font-stretch: 108%; letter-spacing: -0.02em; white-space: nowrap; }
+.barra { height: 8px; background: var(--panel-2); border-radius: 2px; overflow: hidden; }
+.barra i { display: block; height: 100%; border-radius: 2px; }
+
+/* ── Libro dei conti ── */
+.libro { display: flex; flex-direction: column; }
+.libro > div { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding: 10px 0; border-bottom: 1px solid var(--hair-soft); }
+.libro dt { font-size: 15px; font-weight: 600; }
+.libro dt small { display: block; font-size: 13px; font-weight: 400; color: var(--ink-3); margin-top: 2px; }
+.libro dd { font-size: 17px; font-weight: 700; white-space: nowrap; }
+.libro .totale { border-bottom: 1.5px solid var(--ink); }
+.libro .totale dd { font-size: 20px; }
+.pct { width: 64px !important; display: inline-block; margin: 0 4px; padding: 4px 6px !important; min-height: 0 !important; }
+.f24 { display: flex; flex-direction: column; }
+.f24Riga { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--hair-soft); font-size: 15px; font-weight: 600; flex-wrap: wrap; }
+.f24Riga small { display: block; font-size: 13px; font-weight: 400; color: var(--ink-3); }
+.campi { display: flex; gap: 8px; }
+.campi :global(.input) { width: 108px; }
+
+/* ── Anno ── */
+.anno { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 6px; height: 220px; align-items: stretch; }
+.annoCol { display: grid; grid-template-rows: 18px 1fr 22px; gap: 4px; text-align: center; outline: none; border-radius: 4px; }
+.annoCol:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.annoVal { font-size: 11.5px; font-weight: 700; color: var(--ink-2); opacity: 0; transition: opacity .15s; }
+.annoCol:hover .annoVal, .annoCol:focus-visible .annoVal, .annoOggi .annoVal { opacity: 1; }
+.annoBarra { display: flex; align-items: flex-end; border-bottom: 1px solid var(--ink); }
+.annoBarra i { display: block; width: 100%; border-radius: 3px 3px 0 0; }
+.t_reale { background: var(--ink); }
+.t_stimato, .t_proiezione { background: var(--g3); }
+.t_mancante { background: transparent; }
+.annoMese { font-size: 12.5px; font-weight: 600; color: var(--ink-3); }
+.annoOggi .annoMese { color: var(--accent-ink); }
+.swReale, .swPrev { display: inline-block; width: 12px; height: 12px; border-radius: 2px; vertical-align: -1px; margin-right: 4px; }
+.swReale { background: var(--ink); }
+.swPrev { background: var(--g3); }
+
+/* ── Telefono ── */
+@media (max-width: 900px) {
+  .due { grid-template-columns: 1fr; }
+  .fatti { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 14px; }
+  .fatti > div:nth-child(3) { padding-left: 0; border-left: 0; }
+}
+@media (max-width: 760px) {
+  .root { gap: 32px; }
+  .orarioWrap { display: none; }
+  .mesiMobile { display: flex; flex-direction: column; list-style: none; }
+  .mesiMobile li { padding: 12px 0; border-bottom: 1px solid var(--hair-soft); display: flex; flex-direction: column; gap: 6px; }
+  .oggiMobile .mmMese { color: var(--accent-ink); }
+  .mmTesta { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+  .mmMese { font-size: 17px; font-weight: 700; }
+  .mmCassa { font-size: 15px; font-weight: 700; }
+  .mmRiga { display: flex; gap: 6px 14px; flex-wrap: wrap; font-size: 14px; color: var(--ink-2); }
+  .mmChi { display: flex; gap: 6px; flex-wrap: wrap; }
+  .chip { font-size: 12.5px; font-weight: 700; padding: 4px 8px; border-radius: 4px; }
+  .chipIpotesi { background: transparent !important; color: var(--ink-2) !important; outline: 1.5px dashed var(--ink-3); outline-offset: -1.5px; }
+  .legenda .link { margin-left: 0; }
+  .anno { height: 180px; gap: 3px; }
+  .annoMese { font-size: 11px; }
+  .annoVal { display: none; }
+  .fatti dd { font-size: 22px; }
+  .frase { font-size: 19px; }
+  .campi :global(.input) { width: 96px; }
+}

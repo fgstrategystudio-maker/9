@@ -16,7 +16,7 @@
   --panel-2: #F6F1E7;
   --ink: #272019;
   --ink-2: #6E6456;
-  --ink-3: #9A8F7E;
+  --ink-3: #6F6453;
   --hair: #E4DAC6;
   --hair-soft: #ECE3D2;
   --accent: #B5654A;
@@ -69,7 +69,7 @@
   --panel-2: #29231D;
   --ink: #F0E8DB;
   --ink-2: #BCB09E;
-  --ink-3: #8F8474;
+  --ink-3: #9A8F7F;
   --hair: #3A3229;
   --hair-soft: #2E2721;
   --accent: #D27E60;
@@ -251,7 +251,6 @@ button { cursor: pointer; font-family: inherit; }
   background: var(--panel);
   border: 1px solid var(--hair);
   border-radius: var(--r-lg);
-  box-shadow: var(--sh-sm);
   position: relative;
 }
 .panel-pad { padding: var(--card-pad); }
@@ -264,11 +263,10 @@ button { cursor: pointer; font-family: inherit; }
   flex-wrap: wrap;
 }
 .panel-title {
-  font-size: 12px;
+  font-size: 16px;
   font-weight: 700;
-  letter-spacing: .14em;
-  text-transform: uppercase;
-  color: var(--ink-2);
+  letter-spacing: -.01em;
+  color: var(--ink);
   display: flex;
   align-items: center;
   gap: 9px;
@@ -463,7 +461,7 @@ button { cursor: pointer; font-family: inherit; }
 .stat-strip { display: flex; gap: 26px; align-items: flex-end; flex-wrap: wrap; }
 .stat-strip .si { text-align: right; }
 .stat-strip .si .v { font-family: var(--font-serif); font-size: 22px; font-weight: 500; letter-spacing: -.02em; line-height: 1; }
-.stat-strip .si .l { font-size: 11px; color: var(--ink-3); margin-top: 5px; text-transform: uppercase; letter-spacing: .08em; font-weight: 600; }
+.stat-strip .si .l { font-size: 12.5px; color: var(--ink-3); margin-top: 5px; font-weight: 600; }
 
 /* deadline list specifics */
 .dl-row { grid-template-columns: 1fr auto; gap: 16px; }
@@ -567,15 +565,14 @@ button { cursor: pointer; font-family: inherit; }
 
 /* ── Animazioni e navigazione della Dashboard ───────────────────── */
 @media (prefers-reduced-motion: no-preference) {
-  .scroll-reveal { opacity: 0; transform: translateY(18px); transition: opacity .6s var(--ease), transform .6s var(--ease); }
-  .scroll-reveal.in-view { opacity: 1; transform: none; }
-  .statbar-fill { animation: growX 1s var(--ease) both; }
-  .table tbody tr.row-in { animation: reveal .5s var(--ease) both; animation-delay: calc(var(--i, 0) * 45ms); }
-  .kpi-grid .kpi.reveal { animation-delay: calc(var(--i, 0) * 55ms); }
+  /* Un solo momento animato: il riepilogo del mese (numero e storico) */
+  .sum-hero .statbar-fill { animation: growX .9s cubic-bezier(.16,1,.3,1) both; }
+  .storia i { animation: growY .9s cubic-bezier(.16,1,.3,1) both; animation-delay: calc(var(--i, 0) * 50ms); }
   .anim-in { animation: reveal .4s var(--ease) both; }
   .pulse-dot { animation: pulseDot 1.6s ease-in-out infinite; }
 }
 @keyframes growX { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes growY { from { transform: scaleY(0); } to { transform: scaleY(1); } }
 @keyframes pulseDot { 0%, 100% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--accent) 45%, transparent); } 50% { box-shadow: 0 0 0 6px transparent; } }
 
 
@@ -589,7 +586,7 @@ button { cursor: pointer; font-family: inherit; }
   .tempo-card .tc-nome { font-weight: 600; color: var(--ink); font-size: 14px; }
   .tempo-card .tc-ora { font-family: var(--font-serif); font-size: 22px; font-weight: 500; white-space: nowrap; }
   .tempo-card .tc-riga { font-size: 12px; color: var(--ink-3); margin-top: 4px; }
-  .panel-title { white-space: normal; letter-spacing: .08em; }
+  .panel-title { white-space: normal; }
 }
 @media (max-width: 560px) {
   .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
@@ -608,7 +605,7 @@ button { cursor: pointer; font-family: inherit; }
   background: linear-gradient(165deg, color-mix(in oklab, var(--accent-wash) 85%, var(--panel)) 0%, var(--panel) 75%);
   border-right: 1px solid var(--hair-soft);
 }
-.sum-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); }
+.sum-eyebrow { font-size: 14px; font-weight: 600; color: var(--ink-2); }
 .sum-big, .sum-stat, .sum-row, .goal {
   font: inherit; color: inherit; background: none; border: 0; text-align: left; cursor: pointer;
 }
@@ -633,7 +630,7 @@ button { cursor: pointer; font-family: inherit; }
 .sum-group:first-child { border-left: 0; }
 .sum-gtitle {
   display: flex; align-items: center; gap: 7px; padding: 0 18px 6px;
-  font-size: 10.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3);
+  font-size: 14px; font-weight: 700; color: var(--ink);
 }
 .sum-gtitle svg { color: var(--accent); }
 .sum-row {
@@ -655,12 +652,6 @@ button { cursor: pointer; font-family: inherit; }
 .goal { flex: 1 1 200px; display: grid; gap: 6px; padding: 2px 0; }
 .goal-top { display: flex; justify-content: space-between; gap: 10px; font-size: 12.5px; font-weight: 600; color: var(--ink-2); }
 .goal-top b span { color: var(--ink-3); font-weight: 500; }
-@media (prefers-reduced-motion: no-preference) {
-  .sum-row { animation: reveal .45s var(--ease) both; animation-delay: calc(120ms + var(--i, 0) * 45ms); }
-  .sum-stat { animation: reveal .45s var(--ease) both; }
-  .sum-trio .sum-stat:nth-child(2) { animation-delay: 60ms; }
-  .sum-trio .sum-stat:nth-child(3) { animation-delay: 120ms; }
-}
 @media (max-width: 1100px) {
   .summary { grid-template-columns: minmax(0, 1fr); }
   .sum-hero { border-right: 0; border-bottom: 1px solid var(--hair-soft); }
@@ -767,9 +758,6 @@ button { cursor: pointer; font-family: inherit; }
 .nota-info .nota-ico { background: var(--info-wash); color: var(--info); }
 .nota-testo { flex: 1; min-width: 0; line-height: 1.4; }
 .nota .btn { flex: none; }
-@media (prefers-reduced-motion: no-preference) {
-  .nota { animation: reveal .4s var(--ease) both; animation-delay: calc(var(--i, 0) * 60ms); }
-}
 @media (max-width: 640px) {
   .nota { flex-wrap: wrap; }
   .nota-testo { flex-basis: calc(100% - 42px); }
@@ -830,4 +818,42 @@ button { cursor: pointer; font-family: inherit; }
 @media (max-width: 640px) {
   .lrow.f24-pagato { grid-template-columns: 1fr; }
   .f24-campi { justify-content: flex-start; }
+}
+
+/* ── Superfici del browser e telefono ──────────────────────────── */
+html { scrollbar-color: var(--hair) transparent; accent-color: var(--accent); }
+::selection { background: color-mix(in oklab, var(--accent) 28%, transparent); color: var(--ink); }
+.input, .textarea, .select { caret-color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.btn-primary { background: var(--accent-ink); }
+.btn-primary:hover { background: color-mix(in oklab, var(--accent-ink) 85%, #000); }
+:root[data-theme="dark"] .btn-primary { background: var(--accent); color: var(--canvas); }
+:root[data-theme="dark"] .btn-primary:hover { background: var(--accent-ink); }
+@media (max-width: 760px) {
+  /* sotto i 16px iOS ingrandisce la pagina quando tocchi un campo */
+  .input, .textarea, .select { font-size: 16px; }
+  .btn { min-height: 44px; }
+}
+
+/* Storico del lordo nel riepilogo: il numero del mese con i mesi prima */
+.storia { display: grid; grid-template-columns: repeat(var(--n, 6), minmax(0, 1fr)); gap: 6px; align-items: end; height: 74px; }
+.storia > span { display: grid; grid-template-rows: 1fr auto; gap: 4px; height: 100%; text-align: center; font-size: 11.5px; color: var(--ink-3); }
+.storia > span > b { display: flex; align-items: flex-end; height: 100%; }
+.storia i { display: block; width: 100%; border-radius: 3px 3px 0 0; background: color-mix(in oklab, var(--accent) 35%, var(--panel)); transform-origin: bottom; }
+.storia .ora i { background: var(--accent); }
+.storia .ora { color: var(--accent-ink); font-weight: 700; }
+.storia .prev i { background: transparent; box-shadow: inset 0 0 0 1.5px var(--accent); }
+
+@media (max-width: 640px) {
+  .tab-bar { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 2px; padding: 6px 0; }
+  .tab-bar button { flex-direction: column; gap: 3px; padding: 8px 2px; min-height: 52px; font-size: 11.5px; justify-content: center; }
+  .tab-bar button .lungo { display: none; }
+  .topbar-actions .btn span { display: none; }
+  .topbar-actions .btn { flex: none; padding: 0 12px; }
+  .topbar { flex-direction: row; align-items: center; }
+}
+@media (min-width: 641px) { .tab-bar button .corto { display: none; } }
+@media (max-width: 680px) {
+  .stat-strip { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 18px; width: 100%; }
+  .stat-strip .si { text-align: left; }
 }

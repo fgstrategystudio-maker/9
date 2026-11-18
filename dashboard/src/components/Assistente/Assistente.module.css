@@ -208,8 +208,7 @@
 
 /* In cima alla Dashboard: sempre aperto, in evidenza */
 .inCima {
-  border-color: color-mix(in oklab, var(--accent) 35%, var(--hair));
-  box-shadow: 0 0 0 4px color-mix(in oklab, var(--accent) 8%, transparent), var(--sh);
+  border: 1.5px solid color-mix(in oklab, var(--accent) 55%, var(--hair));
 }
 .inCima textarea { min-height: 64px; font-size: 15px; }
 
@@ -225,3 +224,6 @@
 .meseCta { margin-left: auto; font-weight: 700; color: var(--accent-ink); white-space: nowrap; }
 @media (max-width: 560px) { .meseCta { display: none; } }
 @media (max-width: 640px) { .inCima .head :global(.panel-note) { display: none; } }
+
+.esempio { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; }
+.esempio svg { color: var(--accent); flex: none; }

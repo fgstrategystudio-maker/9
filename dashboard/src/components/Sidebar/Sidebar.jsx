@@ -11,7 +11,7 @@ const NAV_ITEMS = [
   { id: "setup", label: "Setup", icon: "sliders" },
 ];
 
-export default function Sidebar({ view, onNavigate, tema, onTema }) {
+export default function Sidebar({ view, onNavigate, tema, onTema, versione, onVersione }) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -50,6 +50,13 @@ export default function Sidebar({ view, onNavigate, tema, onTema }) {
           ))}
         </div>
         <div className={styles.foot}>
+          <div className={styles.versione} role="group" aria-label="Versione della dashboard">
+            <span>Dashboard</span>
+            <div>
+              <button className={versione === "a" ? styles.vOn : ""} aria-pressed={versione === "a"} onClick={() => { onVersione("a"); onNavigate("dashboard"); setOpen(false); }}>Classica</button>
+              <button className={versione === "b" ? styles.vOn : ""} aria-pressed={versione === "b"} onClick={() => { onVersione("b"); onNavigate("dashboard"); setOpen(false); }}>Orario</button>
+            </div>
+          </div>
           <button className={styles.navItem} onClick={onTema} aria-label={tema === "dark" ? "Passa al tema chiaro" : "Passa al tema scuro"}>
             <Icon name={tema === "dark" ? "sun" : "moon"} size={18} />
             {tema === "dark" ? "Tema chiaro" : "Tema scuro"}

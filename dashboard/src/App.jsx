@@ -4,12 +4,14 @@ import { INITIAL_COMMESSE, INITIAL_SETUP, INITIAL_NETWORK, INITIAL_REDDITI_ANNUA
 import Sidebar from "./components/Sidebar/Sidebar";
 import PinGate from "./components/PinGate/PinGate";
 import styles from "./App.module.css";
+import "./components/DashboardB/tema.css";
 import { loadFromSupabase, enableSync } from "./lib/supabase";
 import { daysSinceLastBackup, exportData } from "./lib/backup";
 
 // Le pagine si scaricano solo quando servono: la schermata del PIN parte subito
 const caricaDashboard = () => import("./components/Dashboard/Dashboard");
 const Dashboard = lazy(caricaDashboard);
+const DashboardB = lazy(() => import("./components/DashboardB/DashboardB"));
 const Commesse = lazy(() => import("./components/Commesse/Commesse"));
 const Fiscale = lazy(() => import("./components/Fiscale/Fiscale"));
 const Setup = lazy(() => import("./components/Setup/Setup"));
@@ -88,6 +90,14 @@ export default function App() {
   const [network, setNetwork] = useLocalStorage("network", INITIAL_NETWORK);
   const [view, setView] = useState("dashboard");
   const [tema, setTema] = useState(temaIniziale);
+  // Due versioni della dashboard: "a" (attuale, ottimizzata) e "b" (Orario)
+  const [versione, setVersioneState] = useState(() => {
+    try { return localStorage.getItem("dashVersione") === "b" ? "b" : "a"; } catch { return "a"; }
+  });
+  const setVersione = (v) => {
+    setVersioneState(v);
+    try { localStorage.setItem("dashVersione", v); } catch { /* storage non disponibile */ }
+  };
 
   useEffect(() => { document.documentElement.dataset.theme = tema; }, [tema]);
   const cambiaTema = () => setTema((t) => {
@@ -149,8 +159,8 @@ export default function App() {
   if (!unlocked) return <PinGate onUnlock={handleUnlock} />;
 
   return (
-    <div className={styles.layout}>
-      <Sidebar view={view} onNavigate={setView} tema={tema} onTema={cambiaTema} />
+    <div className={styles.layout} data-versione={versione}>
+      <Sidebar view={view} onNavigate={setView} tema={tema} onTema={cambiaTema} versione={versione} onVersione={setVersione} />
       <main className={styles.main}>
         <div className={styles.mainInner}>
         {loadError && (
@@ -173,8 +183,11 @@ export default function App() {
           </div>
         )}
         <Suspense fallback={<div className="lazy-wait" role="status">Caricamento…</div>}>
-        {view === "dashboard" && (
+        {view === "dashboard" && versione === "a" && (
           <Dashboard commesse={commesse} setCommesse={setCommesse} setup={setup} setSetup={setSetup} theme={tema} />
+        )}
+        {view === "dashboard" && versione === "b" && (
+          <DashboardB commesse={commesse} setCommesse={setCommesse} setup={setup} setSetup={setSetup} />
         )}
         {view === "commesse" && (
           <Commesse

@@ -235,3 +235,16 @@
 }
 
 .foot .navItem { width: 100%; margin-bottom: 12px; }
+
+/* Scelta della versione della dashboard */
+.versione { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+.versione > span { font-size: 11px; font-weight: 600; color: var(--rail-ink-2); padding-left: 2px; }
+.versione > div { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; padding: 3px; border-radius: 10px; background: var(--rail-2); border: 1px solid var(--rail-hair); }
+.versione button {
+  min-height: 34px; border: 0; border-radius: 8px; background: transparent; cursor: pointer;
+  font: 600 13px/1 var(--font-sans); color: var(--rail-ink-2); transition: background .2s, color .2s;
+}
+.versione button:hover { color: var(--rail-ink); }
+.versione button.vOn { background: var(--rail-active); color: #fff; }
+.versione button:focus-visible { outline: 2px solid var(--rail-active); outline-offset: 2px; }
+:global(:root[data-theme="dark"]) .versione button.vOn { color: #121214; }

@@ -7,39 +7,23 @@ import {
 import {
   formatCurrency,
   daysUntil,
-  getStatoColor,
   getStatoTone,
   calcNetto,
   getCommessaLordoMensile,
-  getMeseCorrente,
   getLordoPerMese,
-  sumLordoAnno,
   pagamentiDelMese,
-  stessoMese,
   chiaveMese,
-  statPagamentiCommessa,
-  oreCommessaMese,
   orarioRealeCommessa,
-  mesiRimanenti,
-  valoreResiduo,
   calcPatrimonio,
   dataBreve,
-  pipelineCommessa,
-  lordoPipelineMesi,
-  creaPianoF24,
   icsPromemoria,
-  serieOrarioClienti,
-  importoCompetenzaMese,
 } from "../../utils/helpers";
 import Icon from "../Icon";
+import { calcolaDashboard, calcolaNote, fmtN, MESI_SHORT } from "./calcoli";
+import { PipelineEditor, ReportMese } from "./Parti";
 import Assistente from "../Assistente/Assistente";
 import styles from "./Dashboard.module.css";
 
-const MESI_IT = [
-  "Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno",
-  "Luglio","Agosto","Settembre","Ottobre","Novembre","Dicembre",
-];
-const MESI_SHORT = ["Gen","Feb","Mar","Apr","Mag","Giu","Lug","Ago","Set","Ott","Nov","Dic"];
 
 // Palette grafici — design system Crema & Terracotta
 const C = {
@@ -61,10 +45,7 @@ const TOOLTIP_STYLE = {
   boxShadow: "0 2px 4px rgba(60,44,28,.05), 0 18px 40px -16px rgba(60,44,28,.20)",
 };
 
-const STATO_ORDER = ["In corso","In scadenza","Da chiarire","Sospeso","Concluso","Perso"];
 
-const nf = new Intl.NumberFormat("it-IT");
-const fmtN = (n) => nf.format(Math.round(n ?? 0));
 
 // Formattazione assi in migliaia senza tick duplicati (es. 0,5k invece di due "0k")
 const kfmt = (v) => {
@@ -95,74 +76,11 @@ export default function Dashboard({ commesse, setCommesse, setup, setSetup, them
   });
   const setTab = (t) => { setTabState(t); try { localStorage.setItem("dashTab", t); } catch { /* storage non disponibile */ } };
   const [tutteNote, setTutteNote] = useState(false);
-  const rootRef = useRef(null);
 
-  // Le sezioni compaiono mentre scorri (una volta sola). Un solo observer per
-  // tutta la vita della pagina: se venisse ricreato a ogni render, le sezioni
-  // già marcate resterebbero nascoste per sempre (bug dopo il caricamento cloud).
-  const ioRef = useRef(null);
-  useEffect(() => {
-    if (!("IntersectionObserver" in window)) return;
-    const io = new IntersectionObserver((entries) => {
-      entries.forEach((e) => {
-        // visibile, oppure già superata (salto veloce dalla barra delle sezioni)
-        if (e.isIntersecting || e.boundingClientRect.bottom < 0) { e.target.classList.add("in-view"); io.unobserve(e.target); }
-      });
-    }, { rootMargin: "0px 0px -6% 0px" });
-    ioRef.current = io;
-    // Rete di sicurezza: dopo qualche secondo tutto è comunque visibile
-    const t = setTimeout(() => {
-      rootRef.current?.querySelectorAll(".scroll-reveal:not(.in-view)").forEach((el) => {
-        if (el.getBoundingClientRect().top < window.innerHeight * 1.5) el.classList.add("in-view");
-      });
-    }, 2500);
-    return () => { io.disconnect(); ioRef.current = null; clearTimeout(t); };
-  }, []);
-  useEffect(() => {
-    const root = rootRef.current, io = ioRef.current;
-    if (!root || !io) return;
-    const vh = window.innerHeight;
-    root.querySelectorAll("section.panel").forEach((el) => {
-      if (el.dataset.rev) return;
-      el.dataset.rev = "1";
-      if (el.getBoundingClientRect().top < vh) return; // già visibile: niente animazione
-      el.classList.add("scroll-reveal");
-      io.observe(el);
-    });
-  });
-  const now = new Date();
-  const anno = now.getFullYear();
-  const meseIdx = now.getMonth();
-
-  const attive = commesse.filter(
-    (c) => c.stato === "In corso" || c.stato === "In scadenza"
-  );
-  const hasSplit = commesse.some((c) => c.splitMezzoMese);
-
-  const lordoMensileAttivo = getLordoPerMese(meseIdx, anno, commesse);
-  const nettoMensileAttivo = calcNetto(lordoMensileAttivo, setup.fattoreNetto);
-
-  const statoCount = STATO_ORDER.map((s) => ({
-    name: s,
-    value: commesse.filter((c) => c.stato === s).length,
-    color: getStatoColor(s),
-  })).filter((s) => s.value > 0);
-  const statoTotal = statoCount.reduce((s, e) => s + e.value, 0);
-
-
-  // Commesse attive con scadenza entro la finestra: in arrivo (giorni > 0) e
-  // scadute (giorni <= 0, oggi o passate). Le scadute NON spariscono da sole:
-  // restano finche non confermi tu la chiusura.
-  const conScadenza = commesse
-    .filter((c) => {
-      if (c.stato !== "In corso" && c.stato !== "In scadenza") return false;
-      if (!c.fine) return false;
-      const days = daysUntil(c.fine);
-      return days !== null && days <= setup.alertScadenzaGiorni;
-    })
-    .sort((a, b) => daysUntil(a.fine) - daysUntil(b.fine));
-  const scadute = conScadenza.filter((c) => daysUntil(c.fine) <= 0);
-  const inScadenza = conScadenza.filter((c) => daysUntil(c.fine) > 0);
+  const D = calcolaDashboard(commesse, setup);
+  const {
+    storia6, anno, meseIdx, attive, hasSplit, lordoMensileAttivo, nettoMensileAttivo, statoCount, statoTotal, inScadenza, oreDisponibili, righeTempo, oreTotali, oreLibere, saturazione, attiveSenzaOre, lordoOraMedio, nettoOraMedio, lordoOraReale, residuoTotale, pipeline, simulate, scenarioAttivo, commesseScenario, tempo12, oreLibere12, barData, hasIncassatoReale, sortedStorico, meseCorrente, meseCorrManc, meseRegistrato, lordoMese, nettoMese, nomeMese, costiFissiMensili, totaleCostiFissi, totaleCostiAnnuali, totaleCostiAnnualiMensile, cassaIniziale, cryptoAggiornato, patrimonio, cassaData, usciteMensili, mesiAutonomia, profittoMensile, breakEvenLordo, ytdLordo, ytdNetto, ytdMesi, ytdProfitto, lordoAnnoCorrente, annoPrecImporto, yoyDeltaPct, yoyDeltaAbs, annualData, totReale, totProiezione, totAnno, mesiMancanti, contoAnno, taxRate, f24Override, modoTasse, tasseMaturate, accontiVersati, keyGiugno, giugnoPagato, debitoFiscale, cassaLibera, prossimiF24, pipelinePesata, pipelinePiena, orario12, oreLibere12Scenario, riserve, riserveVendibili, cashFlowData, fineCassa, fineRiserve, mesiAutonomiaRiserve, cassaFinale, cassaFinaleScenario, tasseCash, goals, serieClientiDati, datiClienti,
+  } = D;
 
   function handleConfermaScaduta(c) {
     const giorni = daysUntil(c.fine);
@@ -170,291 +88,7 @@ export default function Dashboard({ commesse, setCommesse, setup, setSetup, them
     if (!confirm(`Confermi che «${c.cliente}» (${quando}) è conclusa? Verrà archiviata come Conclusa e tolta dalle scadenze.`)) return;
     setCommesse((prev) => prev.map((x) => (x.id === c.id ? { ...x, stato: "Concluso" } : x)));
   }
-
-  // — Tempo e guadagno orario —
-  const oreDisponibili = setup.oreMeseDisponibili ?? 160;
-  const righeTempo = attive
-    .map((c) => {
-      const ore = oreCommessaMese(c, meseIdx, anno) || Number(c.oreMensili) || 0;
-      const lordo = getCommessaLordoMensile(c) || 0;
-      const reale = orarioRealeCommessa(c);
-      return {
-        c, ore, lordo,
-        lordoOra: ore > 0 && lordo ? Math.round(lordo / ore) : null,
-        nettoOra: ore > 0 && lordo ? Math.round((lordo * setup.fattoreNetto) / ore) : null,
-        realeOra: reale ? reale.lordoOra : null,
-        realeMesi: reale ? reale.mesi : 0,
-        mesi: mesiRimanenti(c),
-        residuo: valoreResiduo(c),
-      };
-    })
-    .sort((a, b) => (b.lordoOra ?? -1) - (a.lordoOra ?? -1));
-  const oreTotali = righeTempo.reduce((s, r) => s + r.ore, 0);
-  const oreLibere = Math.max(0, oreDisponibili - oreTotali);
-  const saturazione = oreDisponibili > 0 ? Math.round((oreTotali / oreDisponibili) * 100) : 0;
   const satColor = saturazione <= 60 ? P.pos : saturazione <= 85 ? P.warn : P.danger;
-  const attiveSenzaOre = righeTempo.filter((r) => !r.ore).length;
-  // €/h medio: solo sulle commesse con ore stimate (pesato sulle ore)
-  const lordoConOre = righeTempo.filter((r) => r.ore > 0).reduce((s, r) => s + r.lordo, 0);
-  const lordoOraMedio = oreTotali > 0 ? Math.round(lordoConOre / oreTotali) : null;
-  const nettoOraMedio = lordoOraMedio != null ? Math.round(lordoOraMedio * setup.fattoreNetto) : null;
-  // €/h reale dell'anno: dai pagamenti registrati insieme alle ore lavorate
-  const realeAnno = commesse.reduce((acc, c) => {
-    const r = orarioRealeCommessa(c, anno);
-    return r ? { ore: acc.ore + r.ore, importo: acc.importo + r.importo } : acc;
-  }, { ore: 0, importo: 0 });
-  const lordoOraReale = realeAnno.ore > 0 ? Math.round(realeAnno.importo / realeAnno.ore) : null;
-  const residuoTotale = righeTempo.reduce((s, r) => s + (r.residuo || 0), 0);
-
-  // Trattative in pipeline: quelle con "simula" entrano nello scenario
-  const pipeline = setup.pipeline || [];
-  const simulate = pipeline.filter((p) => p.simula && Number(p.lordoMensile) > 0);
-  const scenarioAttivo = simulate.length > 0;
-  const commesseSimulate = simulate.map(pipelineCommessa);
-  const commesseScenario = scenarioAttivo ? [...commesse, ...commesseSimulate] : commesse;
-  const mesi12 = Array.from({ length: 12 }, (_, i) => { const d = new Date(anno, meseIdx + i, 1); return { m: d.getMonth(), y: d.getFullYear() }; });
-
-  // Prossimi 12 mesi: ore impegnate, ore libere e lordo previsto (+ scenario)
-  const tempo12 = mesi12.map(({ m, y }) => {
-    const impegnate = commesse.reduce((s, c) => s + oreCommessaMese(c, m, y), 0);
-    const libereBase = Math.max(0, oreDisponibili - impegnate);
-    const scenario = Math.min(libereBase, commesseSimulate.reduce((s, c) => s + oreCommessaMese(c, m, y), 0));
-    return {
-      mese: `${MESI_SHORT[m]}${y !== anno ? " '" + String(y).slice(2) : ""}`,
-      impegnate,
-      scenario,
-      libere: libereBase - scenario,
-      libereBase,
-      lordo: getLordoPerMese(m, y, commesse),
-      lordoScenario: scenarioAttivo ? getLordoPerMese(m, y, commesseScenario) : null,
-    };
-  });
-  const oreLibere12 = tempo12.reduce((s, t) => s + t.libereBase, 0);
-
-  const barData = commesse
-    .filter((c) => getCommessaLordoMensile(c) || statPagamentiCommessa(c, anno))
-    .map((c) => {
-      const stat = statPagamentiCommessa(c, anno);
-      return {
-        nome: c.cliente.length > 12 ? c.cliente.slice(0, 11) + "…" : c.cliente,
-        Lordo: getCommessaLordoMensile(c) || 0,
-        Netto: calcNetto(getCommessaLordoMensile(c) || 0, setup.fattoreNetto),
-        // media mensile realmente incassata nei mesi con pagamenti registrati
-        Incassato: stat ? stat.mediaMensile : null,
-        mesiIncassati: stat ? stat.mesi : 0,
-      };
-    });
-  const hasIncassatoReale = barData.some((d) => d.Incassato != null);
-
-  const revenueHistory = setup.incassatoStorico || [];
-  const sortedStorico = [...revenueHistory].sort((a, b) =>
-    (chiaveMese(a.mese) || "").localeCompare(chiaveMese(b.mese) || "")
-  );
-
-  const meseCorrente = getMeseCorrente();
-  const meseCorrManc = !revenueHistory.some(
-    (r) => stessoMese(r.mese, meseCorrente)
-  );
-  // Mese corrente già registrato nello storico? Allora i box del mese mostrano
-  // l'incassato reale; altrimenti la previsione dai contratti.
-  const meseRegistrato = revenueHistory.find(
-    (r) => stessoMese(r.mese, meseCorrente)
-  ) || null;
-  const lordoMese = meseRegistrato ? meseRegistrato.lordo : lordoMensileAttivo;
-  const nettoMese = meseRegistrato ? meseRegistrato.netto : nettoMensileAttivo;
-  const nomeMese = meseCorrente.split(" ")[0];
-
-  const costiFissi = setup.costiFissi || [];
-  const costiFissiMensili = costiFissi.filter((c) => c.tipo !== "annuale");
-  const costiAnnuali = costiFissi.filter((c) => c.tipo === "annuale");
-  const totaleCostiFissi = costiFissiMensili.reduce((s, c) => s + c.importo, 0);
-  const totaleCostiAnnuali = costiAnnuali.reduce((s, c) => s + (c.importoAnnuale || c.importo * 12), 0);
-  const totaleCostiAnnualiMensile = Math.round(totaleCostiAnnuali / 12);
-
-  const cassaIniziale    = setup.cassaIniziale ?? 0;
-  const cryptoAggiornato = setup.cryptoAggiornato ?? null;
-  const patrimonio       = calcPatrimonio(setup);
-
-  // Cash flow: parte dalla cassa reale alla sua data. Il saldo include già
-  // gli incassi fino a quel giorno, quindi la proiezione inizia dal mese
-  // successivo. Uscite = costi fissi mensili + spese annuali spalmate.
-  const cassaData = setup.cassaData || null;
-  const inizioCash = cassaData
-    ? (() => { const [y, m] = cassaData.split("-").map(Number); return new Date(y, m, 1); })()
-    : new Date(anno, meseIdx, 1);
-  const usciteMensili = totaleCostiFissi + totaleCostiAnnualiMensile;
-  // Mesi di autonomia: quanti mesi copre la cassa con le sole uscite
-  const mesiAutonomia = usciteMensili > 0 ? Math.floor(cassaIniziale / usciteMensili) : null;
-
-  const profittoMensile = nettoMese - totaleCostiFissi;
-  const breakEvenLordo = totaleCostiFissi > 0
-    ? Math.round(totaleCostiFissi / setup.fattoreNetto)
-    : null;
-
-  // YTD su tutti i mesi effettivamente registrati nello storico (incluso il mese
-  // corrente se gia incassato): cosi il totale coincide sempre con la somma delle righe.
-  const ytdLordo = sortedStorico.reduce((s, r) => s + r.lordo, 0);
-  const ytdNetto = sortedStorico.reduce((s, r) => s + r.netto, 0);
-  const ytdMesi = sortedStorico.length;
-  const ytdProfitto = totaleCostiFissi > 0
-    ? ytdNetto - totaleCostiFissi * ytdMesi
-    : null;
-
-  // — Confronto anno su anno (lordo) —
-  const lordoAnnoCorrente = sumLordoAnno(revenueHistory, anno);
-  const redditiAnnuali = setup.redditiAnnuali || [];
-  const annoPrecImporto = redditiAnnuali.find((r) => r.anno === anno - 1)?.importo ?? null;
-  const yoyDeltaPct = annoPrecImporto ? Math.round(((lordoAnnoCorrente - annoPrecImporto) / annoPrecImporto) * 100) : null;
-  const yoyDeltaAbs = annoPrecImporto != null ? lordoAnnoCorrente - annoPrecImporto : null;
-
-  // — Panoramica annuale —
-  const annualData = MESI_IT.map((nome, i) => {
-    const label = `${nome} ${anno}`;
-    const recorded = revenueHistory.find(
-      (r) => stessoMese(r.mese, label)
-    );
-    let tipo, lordo;
-    if (recorded) {
-      tipo = "reale";
-      lordo = recorded.lordo;
-    } else if (i < meseIdx) {
-      tipo = "mancante";
-      lordo = 0;
-    } else if (i === meseIdx) {
-      tipo = "stimato";
-      lordo = getLordoPerMese(i, anno, commesse);
-    } else {
-      tipo = "proiezione";
-      lordo = getLordoPerMese(i, anno, commesse);
-    }
-    return { mese: MESI_SHORT[i], lordo, tipo, netto: calcNetto(lordo, setup.fattoreNetto) };
-  });
-
-  const totReale = annualData.filter((d) => d.tipo === "reale").reduce((s, d) => s + d.netto, 0);
-  const totProiezione = annualData.filter((d) => d.tipo !== "reale" && d.tipo !== "mancante").reduce((s, d) => s + d.netto, 0);
-  const totAnno = totReale + totProiezione;
-  const mesiMancanti = annualData.filter((d) => d.tipo === "mancante").length;
-
-  // Conto dell'anno: entrate (reali + previste) meno tasse, costi e spese annuali
-  const contoAnno = (() => {
-    const lordo = annualData.reduce((s, d) => s + d.lordo, 0);
-    const netto = annualData.reduce((s, d) => s + d.netto, 0);
-    const costiFissiAnno = totaleCostiFissi * 12;
-    return {
-      lordo, netto, tasse: lordo - netto, costiFissiAnno, speseAnnuali: totaleCostiAnnuali,
-      risparmio: netto - costiFissiAnno - totaleCostiAnnuali,
-    };
-  })();
-
-  // — Tasse e F24 (stima, metodo storico) —
-  const taxRate = 1 - setup.fattoreNetto;
-  const lordoAnnoNoto = (y) => {
-    if (y === anno) return contoAnno.lordo;
-    const dichiarato = redditiAnnuali.find((r) => r.anno === y)?.importo;
-    if (dichiarato != null) return dichiarato;
-    const st = sumLordoAnno(revenueHistory, y);
-    if (st > 0) return st;
-    // anni futuri: lordo previsto dai contratti
-    if (y > anno) return MESI_IT.reduce((s, _, m) => s + getLordoPerMese(m, y, commesse), 0);
-    return null;
-  };
-  const tasseAnno = (y) => { const l = lordoAnnoNoto(y); return l == null ? null : Math.round(l * taxRate); };
-  const f24Override = setup.f24 || {};
-  const modoTasse = setup.cashTasse || "f24";
-  const tasseMaturate = Math.round(lordoAnnoCorrente * taxRate);
-  const f24Pagati = setup.f24Pagati || {};
-  const pianoF24 = creaPianoF24(tasseAnno, f24Override, f24Pagati);
-  // Acconti per l'anno in corso già versati (giugno, e novembre se passato)
-  const accontiVersati = pianoF24.accontiVersati(anno, meseIdx);
-  const keyGiugno = `${anno}-06`;
-  const giugnoPagato = f24Pagati[keyGiugno] || {};
-  const debitoFiscale = Math.max(0, tasseMaturate - accontiVersati);
-  const cassaLibera = cassaIniziale - debitoFiscale;
-  // Scadenze F24 di giugno e novembre nei prossimi 12 mesi (anche senza stima,
-  // così puoi inserire l'importo del commercialista)
-  const prossimiF24 = mesi12
-    .filter(({ m }) => m === 5 || m === 10)
-    .map(({ m, y }) => {
-      const f = pianoF24(m, y);
-      const key = `${y}-${String(m + 1).padStart(2, "0")}`;
-      return {
-        key, m, y, data: `${key}-30`,
-        importo: f?.importo ?? null,
-        manuale: !!f?.manuale,
-        voce: m === 10 ? `2° acconto ${y}` : `saldo ${y - 1} + 1° acconto ${y}`,
-      };
-    });
-
-  // — Pipeline e scenario —
-  const pipelinePesata = pipeline.reduce((s, p) => s + lordoPipelineMesi(p, mesi12) * (Number(p.probabilita) || 0) / 100, 0);
-  const pipelinePiena = pipeline.reduce((s, p) => s + lordoPipelineMesi(p, mesi12), 0);
-  // €/h medio sui prossimi 12 mesi (solo commesse con ore stimate)
-  const orario12 = (lista) => {
-    let lordo = 0, ore = 0;
-    mesi12.forEach(({ m, y }) => lista.forEach((c) => {
-      const o = oreCommessaMese(c, m, y);
-      if (o > 0) { ore += o; lordo += importoCompetenzaMese(c, m, y); }
-    }));
-    return ore > 0 ? Math.round(lordo / ore) : null;
-  };
-  const oreLibere12Scenario = tempo12.reduce((s, t) => s + t.libere, 0);
-
-  // — Cash flow: parte dalla cassa reale; con "f24" entra il lordo e le tasse
-  // escono alle scadenze di giugno e novembre, altrimenti entra il netto —
-  const calcCash = (lista, mesi = 12) => Array.from({ length: mesi }, (_, i) => {
-    const d     = new Date(inizioCash.getFullYear(), inizioCash.getMonth() + i, 1);
-    const mIdx  = d.getMonth();
-    const y     = d.getFullYear();
-    const label = `${MESI_IT[mIdx]} ${y}`;
-    const recorded = revenueHistory.find(r => stessoMese(r.mese, label));
-    const lordo = recorded ? recorded.lordo : getLordoPerMese(mIdx, y, lista);
-    const netto = recorded ? recorded.netto : calcNetto(lordo, setup.fattoreNetto);
-    const f24 = modoTasse === "f24" ? pianoF24(mIdx, y) : null;
-    const tasse = f24?.importo || 0;
-    const entrate = modoTasse === "f24" ? lordo : netto;
-    const tipo  = recorded ? "reale" : "proiezione";
-    // da chi arrivano i soldi del mese (solo per i mesi previsti)
-    const dettaglio = recorded ? [] : lista
-      .map((c) => ({ nome: c.cliente, v: importoCompetenzaMese(c, mIdx, y), concluso: c.stato === "Concluso" }))
-      .filter((d) => d.v > 0);
-    return { mese: `${MESI_SHORT[mIdx]}${y !== anno ? " '" + String(y).slice(2) : ""}`, entrate, costi: usciteMensili, tasse, flusso: entrate - usciteMensili - tasse, tipo, dettaglio };
-  }).map((row, i, arr) => ({
-    ...row,
-    // cassa accumulata = saldo di partenza + somma dei flussi fino a questo mese
-    cassa: cassaIniziale + arr.slice(0, i + 1).reduce((s, r) => s + r.flusso, 0),
-  }));
-  // Riserve vendibili: crypto e beni (es. carte Pokémon) al prezzo realistico di vendita
-  const riserve = [
-    { id: "crypto", nome: "Crypto", valore: patrimonio.crypto, pct: setup.cryptoRealizzo ?? 95 },
-    ...patrimonio.altri.map((a) => ({ id: a.id, nome: a.nome, valore: a.valore, pct: a.realizzo ?? 80 })),
-  ].filter((r) => r.valore > 0);
-  const riserveVendibili = Math.round(riserve.reduce((s, r) => s + (r.valore * r.pct) / 100, 0));
-  const cashFlowData = calcCash(commesse).map((r) => ({ ...r, cassaRiserve: riserveVendibili > 0 ? r.cassa + riserveVendibili : null }));
-  if (scenarioAttivo) calcCash(commesseScenario).forEach((r, i) => { cashFlowData[i].cassaScenario = r.cassa; });
-  // Fino a quando bastano i soldi: proiezione su 3 anni con i contratti attuali
-  const lungo = calcCash(commesse, 36);
-  const fineCassa = lungo.find((r) => r.cassa < 0) || null;
-  const fineRiserve = lungo.find((r) => r.cassa + riserveVendibili < 0) || null;
-  const mesiAutonomiaRiserve = usciteMensili > 0 ? Math.floor((cassaIniziale + riserveVendibili) / usciteMensili) : null;
-  const cassaFinale = cashFlowData[cashFlowData.length - 1]?.cassa ?? cassaIniziale;
-  const cassaFinaleScenario = scenarioAttivo ? cashFlowData[cashFlowData.length - 1].cassaScenario : null;
-  const tasseCash = cashFlowData.reduce((s, r) => s + r.tasse, 0);
-
-  // — Obiettivi —
-  const obiettivi = setup.obiettivi || {};
-  const goals = [
-    obiettivi.lordoAnno ? { id: "lordo", label: `Lordo ${anno}`, val: contoAnno.lordo, target: obiettivi.lordoAnno, fmt: (v) => `${fmtN(v)} €`, nota: `registrato ${fmtN(lordoAnnoCorrente)} € + previsto` } : null,
-    obiettivi.orarioMin ? { id: "orario", label: "€/h medio", val: lordoOraReale ?? lordoOraMedio ?? 0, target: obiettivi.orarioMin, fmt: (v) => `${fmtN(v)} €/h`, nota: lordoOraReale != null ? "reale dell'anno" : "stimato dai contratti" } : null,
-    obiettivi.oreLibereMin ? { id: "ore", label: "Ore libere/mese", val: oreLibere, target: obiettivi.oreLibereMin, fmt: (v) => `${fmtN(v)} h`, nota: nomeMese } : null,
-  ].filter(Boolean);
-
-  // — Andamento €/h per cliente —
-  const serieClientiDati = serieOrarioClienti(commesse);
-  const datiClienti = serieClientiDati.righe.map((r) => {
-    const [y, m] = r.k.split("-");
-    return { ...r, mese: `${MESI_SHORT[Number(m) - 1]} '${y.slice(2)}` };
-  });
-
   const scaricaPromemoria = () => {
     const blob = new Blob([icsPromemoria(window.location.origin)], { type: "text/calendar;charset=utf-8" });
     const a = document.createElement("a");
@@ -484,48 +118,7 @@ export default function Dashboard({ commesse, setCommesse, setup, setSetup, them
     setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" }), cambia ? 90 : 0);
   };
 
-  // — Da sapere: poche frasi su ciò che richiede attenzione, in ordine di urgenza —
-  const PESO = { danger: 0, warn: 1, info: 2 };
-  const giorniA = (iso) => { const [y, m, d] = iso.split("-").map(Number); return Math.round((new Date(y, m - 1, d) - new Date(anno, meseIdx, now.getDate())) / 864e5); };
-  const note = [];
-  scadute.forEach((c) => {
-    const g = Math.abs(daysUntil(c.fine));
-    note.push({ k: `scad-${c.id}`, livello: "danger", icon: "alert", testo: `«${c.cliente}» è ${g === 0 ? "scaduta oggi" : `scaduta da ${g} giorni`}: è conclusa?`, azione: { label: "Conferma chiusura", fn: () => handleConfermaScaduta(c) } });
-  });
-  if (fineCassa) {
-    note.push({ k: "cassa", livello: "danger", icon: "flow", vai: "sez-cash",
-      testo: riserveVendibili > 0
-        ? `Con i contratti attuali la cassa finisce a ${fineCassa.mese}. Vendendo crypto e beni (≈ ${fmtN(riserveVendibili)} €) ${fineRiserve ? `arrivi a ${fineRiserve.mese}` : "copri oltre 3 anni"}.`
-        : `Con i contratti attuali la cassa finisce a ${fineCassa.mese}: servono nuove commesse prima di allora.` });
-  }
-  prossimiF24.filter((f) => f.importo > 0 && giorniA(f.data) >= 0 && giorniA(f.data) <= 60).forEach((f) => {
-    note.push({ k: `f24-${f.key}`, livello: "warn", icon: "receipt", vai: "sez-tasse",
-      testo: `F24 del ${dataBreve(f.data)}: ${fmtN(f.importo)} € (${f.manuale ? "importo reale" : "stima"}). Cassa libera dalle tasse oggi: ${fmtN(cassaLibera)} €.` });
-  });
-  if (inScadenza.length > 0) {
-    const ore = inScadenza.reduce((s, c) => s + (Number(c.oreMensili) || 0), 0);
-    const fee = inScadenza.reduce((s, c) => s + (getCommessaLordoMensile(c) || 0), 0);
-    const nomi = inScadenza.map((c) => c.cliente).join(", ");
-    note.push({ k: "fine", livello: "info", icon: "calendar", vai: "sez-liberi",
-      testo: `${nomi} ${inScadenza.length === 1 ? "finisce" : "finiscono"} entro ${setup.alertScadenzaGiorni} giorni: ${ore ? `liberano ${fmtN(ore)} h/mese` : "liberano tempo"}${fee ? ` e tolgono ${fmtN(fee)} €/mese` : ""}. Rinnovo o nuovo cliente?` });
-  }
-  if (attiveSenzaOre > 0) {
-    note.push({ k: "ore", livello: "warn", icon: "clock", azione: { label: "Inserisci le ore", fn: () => setDrill("tempo") },
-      testo: `${attiveSenzaOre} ${attiveSenzaOre === 1 ? "commessa è senza" : "commesse sono senza"} stima delle ore: tempo libero ed €/h sono incompleti.` });
-  }
-  serieClientiDati.clienti.forEach((c) => {
-    const punti = serieClientiDati.righe.map((r) => r[c.id]).filter((v) => v != null);
-    if (punti.length >= 2 && punti[punti.length - 1] < punti[0] * 0.9) {
-      note.push({ k: `calo-${c.id}`, livello: "warn", icon: "trend", vai: "sez-clienti",
-        testo: `Con ${c.nome} il tuo €/h reale è sceso da ${fmtN(punti[0])} a ${fmtN(punti[punti.length - 1])} €/h: lavori di più per lo stesso compenso.` });
-    }
-  });
-  if (saturazione > 85) note.push({ k: "sat", livello: "warn", icon: "clock", vai: "sez-tempo", testo: `Sei al ${saturazione}% delle ore disponibili: poco spazio per nuovi clienti.` });
-  if (obiettivi.lordoAnno && contoAnno.lordo < obiettivi.lordoAnno) {
-    note.push({ k: "obiettivo", livello: "info", icon: "target", vai: "sez-pipeline",
-      testo: `Per l'obiettivo di ${fmtN(obiettivi.lordoAnno)} € nel ${anno} mancano ${fmtN(obiettivi.lordoAnno - contoAnno.lordo)} € rispetto a quanto previsto.` });
-  }
-  note.sort((a, b) => PESO[a.livello] - PESO[b.livello]);
+  const note = calcolaNote(D, { conferma: handleConfermaScaduta, inserisciOre: () => setDrill("tempo") });
   const noteVisibili = tutteNote ? note : note.slice(0, 3);
 
   const gruppi = [
@@ -545,28 +138,22 @@ export default function Dashboard({ commesse, setCommesse, setup, setSetup, them
     ] },
     { titolo: "Patrimonio", icon: "wallet", righe: [
       { id: "patrimonio", label: "Patrimonio totale", value: `${fmtN(patrimonio.totale)} €`, tone: "ink", sub: `crypto ${fmtN(patrimonio.crypto)}${patrimonio.totaleAltri ? ` · beni ${fmtN(patrimonio.totaleAltri)}` : ""}` },
-      { id: "patrimonio", label: "Cassa sul conto", value: `${fmtN(patrimonio.cassa)} €`, tone: "info", sub: `libera dalle tasse ${fmtN(cassaLibera)} €${cassaData ? ` · al ${dataBreve(cassaData)}` : ""}` },
+      { id: "patrimonio", label: "Cassa sul conto", value: `${fmtN(patrimonio.cassa)} €`, tone: "info", sub: `libera dalle tasse ${fmtN(cassaLibera)} €` },
       { id: "sez-cash", label: "Cassa fra 12 mesi", value: `${fmtN(cassaFinale)} €`, tone: cassaFinale >= 0 ? "pos" : "danger", sub: riserveVendibili > 0 ? `${fmtN(cassaFinale + riserveVendibili)} € vendendo crypto e beni` : "cash flow" },
       { id: "sez-cash", label: "Autonomia senza incassi", value: mesiAutonomia != null ? `${mesiAutonomia} mesi` : "—", tone: "ink", sub: mesiAutonomiaRiserve != null && riserveVendibili > 0 ? `${mesiAutonomiaRiserve} mesi vendendo le riserve` : "solo con la cassa" },
     ] },
   ];
 
   return (
-    <div className="view-enter grid" style={{ gap: "var(--gap)" }} ref={rootRef}>
+    <div className="view-enter grid" style={{ gap: "var(--gap)" }} >
       <header className="topbar" style={{ marginBottom: 0 }}>
-        <div>
-          <div className="page-eyebrow">
-            Panoramica generale
-            <span className="badge"><span className="badge-dot"></span>anno fiscale {anno}</span>
-          </div>
-          <h1 className="page-title">Dashboard</h1>
-        </div>
+        <h1 className="page-title">{meseCorrente}</h1>
         <div className="topbar-actions">
           <button className="btn btn-ghost" onClick={() => window.print()} title="Apre la stampa: scegli «Salva come PDF»">
-            <Icon name="file" size={16} /> Report PDF
+            <Icon name="file" size={16} /><span>Report PDF</span>
           </button>
           <button className="btn btn-ghost" onClick={scaricaPromemoria} title="Evento ricorrente il 1° di ogni mese alle 9:00">
-            <Icon name="bell" size={16} /> Promemoria mensile
+            <Icon name="bell" size={16} /><span>Promemoria</span>
           </button>
         </div>
       </header>
@@ -580,7 +167,7 @@ export default function Dashboard({ commesse, setCommesse, setup, setSetup, them
       {/* Il mese in un colpo d'occhio */}
       <section className="panel summary" id="sez-mese">
         <div className="sum-hero">
-          <div className="sum-eyebrow">{meseCorrente} · {meseRegistrato ? "incassato" : "previsto dai contratti"}</div>
+          <div className="sum-eyebrow">{meseRegistrato ? "Lordo incassato" : "Lordo previsto dai contratti"}</div>
           <button className="sum-big" onClick={() => setDrill("lordoAttivo")} aria-label="Dettaglio lordo del mese">
             <span className="num"><AnimatedNumber value={fmtN(lordoMese)} /></span>
             <span className="cur">€ lordi</span>
@@ -594,6 +181,14 @@ export default function Dashboard({ commesse, setCommesse, setup, setSetup, them
             ) : (
               <span>{nomeMese} non ancora registrato · {attive.length} {attive.length === 1 ? "commessa attiva" : "commesse attive"}</span>
             )}
+          </div>
+          <div className="storia" role="img" aria-label="Lordo degli ultimi sei mesi">
+            {storia6.map((x, i) => (
+              <span key={i} className={(x.corrente ? "ora" : "") + (x.prev ? " prev" : "")} title={`${MESI_SHORT[x.m]} ${x.y}: ${fmtN(x.lordo)} €${x.prev ? " previsti" : ""}`}>
+                <b><i style={{ height: `${Math.max(x.lordo ? 4 : 0, (x.lordo / Math.max(1, ...storia6.map((z) => z.lordo))) * 100)}%`, "--i": i }} /></b>
+                {MESI_SHORT[x.m]}
+              </span>
+            ))}
           </div>
           <div className="sum-trio">
             <SumStat label="Netto" value={nettoMese} tone="pos" sub={meseRegistrato ? `incassato · previsto ${fmtN(nettoMensileAttivo)}` : `previsto · lordo × ${Math.round(setup.fattoreNetto * 100)}%`} onClick={() => setDrill("nettoAttivo")} />
@@ -666,9 +261,9 @@ export default function Dashboard({ commesse, setCommesse, setup, setSetup, them
 
       {/* Il resto, diviso per argomento */}
       <div className="tab-bar" role="tablist" aria-label="Approfondimenti">
-        {TABS.map(([id, label, icon]) => (
+        {TABS.map(([id, label, icon, corto]) => (
           <button key={id} role="tab" aria-selected={tab === id} className={tab === id ? "on" : ""} onClick={() => setTab(id)}>
-            <Icon name={icon} size={15} />{label}
+            <Icon name={icon} size={15} /><span className="lungo">{label}</span><span className="corto">{corto}</span>
           </button>
         ))}
       </div>
@@ -1823,7 +1418,7 @@ function AnimatedNumber({ value }) {
     const step = (t) => {
       const k = Math.min(1, (t - t0) / dur);
       const e = 1 - Math.pow(1 - k, 3);
-      el.textContent = nf.format(Math.round(from + (target - from) * e));
+      el.textContent = fmtN(from + (target - from) * e);
       if (k < 1) raf = requestAnimationFrame(step);
       else { el.textContent = value; prev.current = target; }
     };
@@ -1834,11 +1429,11 @@ function AnimatedNumber({ value }) {
 }
 
 const TABS = [
-  ["tempo", "Tempo e €/h", "clock"],
-  ["cassa", "Cassa e tasse", "flow"],
-  ["anno", "Anno", "bars"],
-  ["pipeline", "Pipeline", "funnel"],
-  ["commesse", "Commesse", "folder"],
+  ["tempo", "Tempo e €/h", "clock", "Tempo"],
+  ["cassa", "Cassa e tasse", "flow", "Cassa"],
+  ["anno", "Anno", "bars", "Anno"],
+  ["pipeline", "Pipeline", "funnel", "Pipeline"],
+  ["commesse", "Commesse", "folder", "Commesse"],
 ];
 
 // Cifra secondaria del riepilogo (netto, profitto, tasse)
@@ -1876,114 +1471,5 @@ function CashTooltip({ active, payload }) {
       {r.cassaRiserve != null && riga("Con riserve vendute", r.cassaRiserve, "#9CC496")}
       {r.cassaScenario != null && riga("Cassa con scenario", r.cassaScenario, "#E2BE6E")}
     </div>
-  );
-}
-
-// Trattative: modifica in linea, probabilità e "simula"
-function PipelineEditor({ pipeline, setSetup, fattoreNetto, mediaOra }) {
-  const aggiorna = (id, patch) => setSetup((prev) => ({ ...prev, pipeline: (prev.pipeline || []).map((p) => (p.id === id ? { ...p, ...patch } : p)) }));
-  const togli = (id) => setSetup((prev) => ({ ...prev, pipeline: (prev.pipeline || []).filter((p) => p.id !== id) }));
-  const aggiungi = () => setSetup((prev) => {
-    const lista = prev.pipeline || [];
-    const d = new Date();
-    const inizio = `${d.getFullYear() + (d.getMonth() === 11 ? 1 : 0)}-${String(((d.getMonth() + 1) % 12) + 1).padStart(2, "0")}-01`;
-    return { ...prev, pipeline: [...lista, { id: Math.max(0, ...lista.map((p) => p.id || 0)) + 1, cliente: "", lordoMensile: "", oreMensili: "", probabilita: 50, inizio, mesi: 6, simula: false }] };
-  });
-  const num = (v) => (v === "" ? "" : Number(v));
-  return (
-    <div className="pipe">
-      {pipeline.length > 0 && (
-        <div className="pipe-head">
-          <span>Cliente / progetto</span><span>€/mese</span><span>Ore/mese</span><span>Inizio</span><span>Mesi</span><span>Probabilità</span><span>Simula</span><span></span>
-        </div>
-      )}
-      {pipeline.map((p, i) => {
-        const ora = Number(p.oreMensili) > 0 && Number(p.lordoMensile) > 0 ? Math.round(p.lordoMensile / p.oreMensili) : null;
-        return (
-          <div key={p.id} className="pipe-row anim-in" style={{ "--i": i }}>
-            <span className="pc-nome">
-              <input className="input" placeholder="es. Rossi srl" value={p.cliente} onChange={(e) => aggiorna(p.id, { cliente: e.target.value })} aria-label="Cliente" />
-              {ora != null && (
-                <small className={mediaOra != null && ora < mediaOra ? "t-warn" : "t-pos"}>
-                  {fmtN(ora)} €/h lordi · {fmtN(ora * fattoreNetto)} netti{mediaOra != null ? (ora >= mediaOra ? " · sopra la tua media" : " · sotto la tua media") : ""}
-                </small>
-              )}
-            </span>
-            <label className="pf"><span className="pl">€/mese</span><input className="input num" type="number" min="0" placeholder="€" value={p.lordoMensile} onChange={(e) => aggiorna(p.id, { lordoMensile: num(e.target.value) })} /></label>
-            <label className="pf"><span className="pl">Ore/mese</span><input className="input num" type="number" min="0" placeholder="h" value={p.oreMensili} onChange={(e) => aggiorna(p.id, { oreMensili: num(e.target.value) })} /></label>
-            <label className="pf"><span className="pl">Inizio</span><input className="input" type="month" value={(p.inizio || "").slice(0, 7)} onChange={(e) => aggiorna(p.id, { inizio: e.target.value ? `${e.target.value}-01` : "" })} /></label>
-            <label className="pf"><span className="pl">Mesi</span><input className="input num" type="number" min="1" value={p.mesi} onChange={(e) => aggiorna(p.id, { mesi: num(e.target.value) })} /></label>
-            <span className="pc-prob">
-              <input type="range" min="0" max="100" step="5" value={p.probabilita ?? 50} onChange={(e) => aggiorna(p.id, { probabilita: Number(e.target.value) })} aria-label="Probabilità" />
-              <b className="num">{p.probabilita ?? 50}%</b>
-            </span>
-            <label className="pc-sim"><input type="checkbox" checked={!!p.simula} onChange={(e) => aggiorna(p.id, { simula: e.target.checked })} /><span>Simula</span></label>
-            <button className="btn btn-quiet" title="Rimuovi" onClick={() => togli(p.id)} aria-label="Rimuovi trattativa"><Icon name="trash" size={14} /></button>
-          </div>
-        );
-      })}
-      <div style={{ padding: "12px var(--card-pad) 0" }}>
-        <button className="btn btn-ghost" onClick={aggiungi}><Icon name="plus" size={14} /> Aggiungi trattativa</button>
-      </div>
-    </div>
-  );
-}
-
-// Report del mese: invisibile a schermo, è ciò che esce con "Report PDF"
-function ReportMese({ r }) {
-  const riga = (l, v, b) => <tr key={l} style={b ? { fontWeight: 700 } : null}><td>{l}</td><td className="r">{v}</td></tr>;
-  return createPortal(
-    <div className="print-report">
-      <h1>Report di {r.mese}</h1>
-      <p className="pr-sub">Freelance Dashboard · generato il {new Date().toLocaleDateString("it-IT")}</p>
-      <h2>Il mese</h2>
-      <table><tbody>
-        {riga(r.meseRegistrato ? "Lordo incassato" : "Lordo previsto", `${fmtN(r.lordo)} €`, true)}
-        {riga("Netto", `${fmtN(r.netto)} €`)}
-        {riga("Costi fissi del mese", `${fmtN(r.costi)} €`)}
-        {riga("Profitto", `${fmtN(r.profitto)} €`, true)}
-        {riga("Tasse da accantonare", `${fmtN(r.tasse)} €`)}
-        {riga("€/h medio (lordo / netto)", r.ora != null ? `${fmtN(r.ora)} / ${fmtN(r.oraNetto)} €/h` : "—")}
-        {riga("Ore impegnate / libere", `${fmtN(r.oreImpegnate)} h / ${fmtN(r.oreLibere)} h`)}
-      </tbody></table>
-      <h2>Commesse attive</h2>
-      <table>
-        <thead><tr><th>Commessa</th><th className="r">Ore/mese</th><th className="r">Lordo/mese</th><th className="r">€/h</th><th className="r">Fine</th><th className="r">Da incassare</th></tr></thead>
-        <tbody>{r.righe.map((x) => (
-          <tr key={x.c.id}><td>{x.c.cliente}</td><td className="r">{x.ore ? `${fmtN(x.ore)} h` : "—"}</td><td className="r">{x.lordo ? `${fmtN(x.lordo)} €` : "—"}</td><td className="r">{x.lordoOra != null ? `${fmtN(x.lordoOra)} €` : "—"}</td><td className="r">{x.c.fine ? dataBreve(x.c.fine) : "—"}</td><td className="r">{x.residuo != null ? `${fmtN(x.residuo)} €` : "—"}</td></tr>
-        ))}</tbody>
-      </table>
-      <h2>Tasse e F24</h2>
-      <table><tbody>
-        {riga(`Tasse maturate nel ${r.anno}`, `${fmtN(r.tasseMaturate)} €`)}
-        {riga("Da tenere da parte oggi", `${fmtN(r.debito)} €`, true)}
-        {r.f24.map((f) => riga(`F24 ${dataBreve(f.data)} · ${f.voce}`, f.importo != null ? `${fmtN(f.importo)} €${f.manuale ? "" : " (stima)"}` : "—"))}
-      </tbody></table>
-      <h2>Patrimonio</h2>
-      <table><tbody>
-        {riga("Cassa sul conto", `${fmtN(r.patrimonio.cassa)} €`)}
-        {riga("Cassa libera dalle tasse", `${fmtN(r.cassaLibera)} €`)}
-        {riga("Crypto", `${fmtN(r.patrimonio.crypto)} €`)}
-        {r.patrimonio.altri.map((a) => riga(a.nome, `${fmtN(a.valore)} €`))}
-        {riga("Totale", `${fmtN(r.patrimonio.totale)} €`, true)}
-      </tbody></table>
-      <h2>Cash flow · prossimi 12 mesi</h2>
-      <table>
-        <thead><tr><th>Mese</th><th className="r">Entrate</th><th className="r">Uscite</th><th className="r">F24</th><th className="r">Cassa</th></tr></thead>
-        <tbody>{r.cash.map((x) => (
-          <tr key={x.mese}><td>{x.mese}</td><td className="r">{fmtN(x.entrate)} €</td><td className="r">{fmtN(x.costi)} €</td><td className="r">{x.tasse ? `${fmtN(x.tasse)} €` : "—"}</td><td className="r">{fmtN(x.cassa)} €</td></tr>
-        ))}</tbody>
-      </table>
-      <h2>Conto dell&apos;anno {r.anno}</h2>
-      <table><tbody>
-        {riga("Entrate lorde", `${fmtN(r.conto.lordo)} €`)}
-        {riga("Tasse e contributi", `− ${fmtN(r.conto.tasse)} €`)}
-        {riga("Costi fissi (12 mesi)", `− ${fmtN(r.conto.costiFissiAnno)} €`)}
-        {riga("Spese annuali", `− ${fmtN(r.conto.speseAnnuali)} €`)}
-        {riga("Risparmio dell'anno", `${fmtN(r.conto.risparmio)} €`, true)}
-      </tbody></table>
-      <p className="pr-sub">Stime: tasse con aliquota complessiva {Math.round(r.taxRate * 100)}% e metodo storico; i mesi futuri vengono dai contratti.</p>
-    </div>,
-    document.body
   );
 }

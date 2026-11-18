@@ -344,12 +344,12 @@ export default function Assistente({ commesse, setCommesse, setup, setSetup, see
               className={modalita === "veloce" ? styles.modAttiva : styles.mod}
               onClick={() => setModalita("veloce")}
               type="button"
-            >⚡ Veloce</button>
+            >Veloce</button>
             <button
               className={modalita === "preciso" ? styles.modAttiva : styles.mod}
               onClick={() => setModalita("preciso")}
               type="button"
-            >🎯 Preciso</button>
+            >Preciso</button>
             <span className={styles.modHint}>
               {modalita === "veloce"
                 ? "1–2 secondi, ideale tutti i giorni"
@@ -361,7 +361,7 @@ export default function Assistente({ commesse, setCommesse, setup, setSetup, see
             <div className={styles.esempi}>
               {!meseDaRegistrare && (
                 <button className={styles.esempio} style={{ fontWeight: 600 }} onClick={() => setTesto(templateMese(commesse, meseCorrente))}>
-                  📅 Aggiornamento di {meseCorrente.split(" ")[0].toLowerCase()} (una riga per commessa)
+                  <Icon name="calendar" size={13} /> Aggiornamento di {meseCorrente.split(" ")[0].toLowerCase()} (una riga per commessa)
                 </button>
               )}
               {(!sempreAperto || mostraEsempi) && ESEMPI.map((e) => (
