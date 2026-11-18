@@ -1,0 +1,153 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-18T22:00:00Z",
+  "title": "Design System: Freelance Dashboard · Olivetti",
+  "extensions": {
+    "scope": "Versione Olivetti: :root[data-versione=\"olivetti\"] (chiaro) e [data-theme=\"dark\"] (scuro) in src/components/DashboardC/temi.css. Le versioni Pagine rosa, Standard, Orario e Classica restano selezionabili ma non fanno parte di questo sistema.",
+    "cssVariables": {
+      "grigio-macchina": "--canvas", "grigio-macchina-2": "--canvas-2 / --accent-wash", "bianco-carta": "--panel", "carta-ombra": "--panel-2",
+      "nero-tasti": "--ink / --accent / --accent-ink", "inchiostro-2": "--ink-2", "inchiostro-3": "--ink-3", "filo": "--hair", "filo-tenue": "--hair-soft",
+      "giallo-pintori": "--tempo / --rail-active", "petrolio": "--pos / --pos-ink", "petrolio-velo": "--pos-wash",
+      "blu-cassa": "--cassa / --warn / --info", "blu-cassa-velo": "--warn-wash / --info-wash", "rosso-allarme": "--danger", "rosso-allarme-velo": "--danger-wash",
+      "ora-g1": "--g1", "ora-g2": "--g2", "ora-g3": "--g3", "ora-g4": "--g4", "ora-g5": "--g5",
+      "rail": "--rail", "rail-2": "--rail-2", "rail-ink": "--rail-ink", "rail-ink-2": "--rail-ink-2", "rail-filo": "--rail-hair",
+      "radius": "--r-sm 6px / --r 10px / --r-lg 14px"
+    },
+    "colorMeta": {
+      "grigio-macchina": { "role": "neutral", "displayName": "Grigio macchina", "canonical": "#E9E7E1", "tonalRamp": ["#1F1E1B", "#3A3833", "#57554F", "#77746D", "#99968E", "#BDBAB2", "#E1DED6", "#F4F3EF"] },
+      "bianco-carta": { "role": "neutral", "displayName": "Bianco carta", "canonical": "#FBFAF7", "tonalRamp": ["#22211E", "#3D3C38", "#5C5A55", "#7D7B75", "#A09E97", "#C6C4BD", "#F1EFEA", "#FBFAF7"] },
+      "nero-tasti": { "role": "primary", "displayName": "Nero dei tasti", "canonical": "#1B1C1E", "tonalRamp": ["#141516", "#1B1C1E", "#26272A", "#34353A", "#44454A", "#66675F", "#A9A7A0", "#ECEAE4"] },
+      "giallo-pintori": { "role": "secondary", "displayName": "Giallo Pintori (tempo)", "canonical": "#F2B705", "tonalRamp": ["#3D2D00", "#644B00", "#8D6A00", "#B98B00", "#F2B705", "#F8CF55", "#FBE29A", "#FDF3D2"] },
+      "ora-g4": { "role": "secondary", "displayName": "Scala dell'ora, verde acqua → petrolio (€/h)", "canonical": "#2F7F72", "tonalRamp": ["#0E302B", "#164E46", "#22695F", "#2F7F72", "#6FB2A5", "#A9D5CB", "#DCEFEA", "#F0F8F6"] },
+      "petrolio": { "role": "secondary", "displayName": "Petrolio (guadagno positivo)", "canonical": "#22695F", "tonalRamp": ["#0E302B", "#164E46", "#22695F", "#2F7F72", "#6FB2A5", "#A9D5CB", "#DCEFEA", "#F0F8F6"] },
+      "blu-cassa": { "role": "tertiary", "displayName": "Blu cassa (cassa e F24)", "canonical": "#2357A6", "tonalRamp": ["#0D2041", "#163566", "#2357A6", "#3A6EC0", "#6B93D6", "#8FB0EE", "#C3D4F3", "#E1E9F6"] },
+      "rosso-allarme": { "role": "tertiary", "displayName": "Rosso allarme", "canonical": "#C8302A", "tonalRamp": ["#3A1E1B", "#62201C", "#962620", "#C8302A", "#E2564C", "#FF7A6E", "#F5B9B3", "#F9E0DD"] },
+      "filo": { "role": "neutral", "displayName": "Filo", "canonical": "#D3D0C8", "tonalRamp": ["#2A2B2F", "#34353A", "#66675F", "#9C9A94", "#BDBAB2", "#D3D0C8", "#E4E1DA", "#F1EFEA"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Targhetta del mese", "purpose": "Titolo della pagina: il mese corrente." },
+      "headline": { "displayName": "Numero di risposta", "purpose": "La cifra di ciascuna delle tre risposte; unità a 0.45em, 600, inchiostro-3." },
+      "title": { "displayName": "Titolo di blocco", "purpose": "Titoli dei blocchi, sempre in minuscolo." },
+      "key-figure": { "displayName": "Cifra del tasto", "purpose": "Ore libere sul tasto del mese." },
+      "body": { "displayName": "Riepilogo", "purpose": "Riga di riepilogo con numeri cliccabili, max 90ch." },
+      "body-sm": { "displayName": "Riga di registro", "purpose": "Tabelle, registri, avvisi." },
+      "label": { "displayName": "Banda", "purpose": "Testo delle bande colorate delle tre risposte, minuscolo." },
+      "key-label": { "displayName": "Nome del mese sul tasto", "purpose": "Unica etichetta in maiuscolo (+0.04em)." },
+      "caption": { "displayName": "Nota", "purpose": "Note, intestazioni di colonna (600), legende in inchiostro-3." }
+    },
+    "darkMode": {
+      "selector": ":root[data-versione=\"olivetti\"][data-theme=\"dark\"]",
+      "note": "Stessi ruoli. I token con prefisso dark- nel frontmatter sostituiscono i chiari; giallo-pintori e il testo rail restano invariati. La scala g1–g5 si inverte in luminosità (g5 più chiaro); testo chiaro su g1–g3, scuro (#141516) su g4–g5. Pulsante primario: fondo #ECEAE4, testo #141516; banda cassa con testo #141516."
+    },
+    "shadows": [
+      { "name": "key-base", "value": "inset 0 -3px 0 rgba(0,0,0,.55)", "purpose": "Base del pulsante primario a riposo." },
+      { "name": "key-base-pressed", "value": "inset 0 -1px 0 rgba(0,0,0,.55)", "purpose": "Pulsante primario premuto." },
+      { "name": "raised", "value": "0 1px 0 rgba(0,0,0,.08), 0 8px 18px -10px rgba(0,0,0,.25)", "purpose": "Token --sh: elementi che fluttuano o hover del banner dell'assistente; mai sui blocchi." },
+      { "name": "current-mark", "value": "inset 0 0 0 2px var(--ink)", "purpose": "Segna il mese corrente nelle mini-serie (1.5px sulla colonna gialla dell'anno)." },
+      { "name": "none", "value": "none", "purpose": "Token --sh-sm: blocchi, risposte, tasti e pulsanti ghost sono piatti." }
+    ],
+    "motion": [
+      { "name": "key-press", "value": "transform .12s ease-out, box-shadow .12s, border-color .12s, background .12s", "purpose": "Pressione di tasti e pulsante primario: discesa di 2px (active) o 3px (premuto)." },
+      { "name": "answer-hover", "value": "border-color .2s, transform .2s cubic-bezier(.16,1,.3,1)", "purpose": "Hover delle tre risposte." },
+      { "name": "ease-standard", "value": "cubic-bezier(.22,.61,.36,1)", "purpose": "Easing globale (--ease) per pulsanti e barre degli obiettivi (.4s)." },
+      { "name": "reveal-value", "value": "opacity .15s", "purpose": "Valore della colonna annuale in hover/focus." },
+      { "name": "theme", "value": "background-color .3s, color .3s", "purpose": "Passaggio chiaro/scuro." }
+    ],
+    "breakpoints": [
+      { "name": "stack", "value": "1000px", "purpose": "Sotto: tre risposte, due colonne e dettaglio diventano una colonna; il divisorio nero diventa orizzontale." },
+      { "name": "phone", "value": "760px", "purpose": "Sotto: tastiera scorrevole con scroll-snap (tasti 84×96px), pulsanti dell'intestazione solo icona, blocchi a 16px." }
+    ]
+  },
+  "components": [
+    {
+      "name": "Pulsante primario (Chiedi)",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Il tasto nero dell'azione principale: base interna spessa, si schiaccia alla pressione.",
+      "html": "<button class=\"ds-btn-primary\">Chiedi</button>",
+      "css": ".ds-btn-primary { font-family: 'Albert Sans', system-ui, sans-serif; font-size: 13.5px; font-weight: 600; letter-spacing: -.01em; padding: 10px 16px; border: 0; border-radius: 10px; background: #1B1C1E; color: #FBFAF7; box-shadow: inset 0 -3px 0 rgba(0,0,0,.55); cursor: pointer; transition: transform .12s ease-out, box-shadow .12s; } .ds-btn-primary:hover { transform: translateY(-1px); } .ds-btn-primary:active { transform: translateY(2px); box-shadow: inset 0 -1px 0 rgba(0,0,0,.55); } .ds-btn-primary:focus-visible { outline: 2px solid #1B1C1E; outline-offset: 2px; }"
+    },
+    {
+      "name": "Pulsante ghost",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Azioni secondarie dell'intestazione (Report PDF, Promemoria); piatto, bordo filo.",
+      "html": "<button class=\"ds-btn-ghost\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z\"/><path d=\"M14 3v5h5\"/></svg>Report PDF</button>",
+      "css": ".ds-btn-ghost { display: inline-flex; align-items: center; gap: 8px; font-family: 'Albert Sans', system-ui, sans-serif; font-size: 13.5px; font-weight: 600; padding: 10px 16px; border-radius: 10px; background: #FBFAF7; color: #1B1C1E; border: 1px solid #D3D0C8; cursor: pointer; transition: transform .15s cubic-bezier(.22,.61,.36,1), border-color .2s; } .ds-btn-ghost:hover { border-color: #66675F; transform: translateY(-1px); } .ds-btn-ghost:focus-visible { outline: 2px solid #1B1C1E; outline-offset: 2px; }"
+    },
+    {
+      "name": "Campo numerico",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Importi F24 e percentuali di vendita; cifre tabellari.",
+      "html": "<input class=\"ds-input\" type=\"number\" placeholder=\"1660\" aria-label=\"Importo F24\">",
+      "css": ".ds-input { font-family: 'Albert Sans', system-ui, sans-serif; font-variant-numeric: tabular-nums; font-size: 14px; color: #1B1C1E; background: #FBFAF7; border: 1px solid #D3D0C8; border-radius: 10px; padding: 9px 12px; width: 120px; transition: border-color .2s, box-shadow .2s; } .ds-input::placeholder { color: #66675F; } .ds-input:focus { outline: none; border-color: #1B1C1E; box-shadow: 0 0 0 3px #E1DED6; }"
+    },
+    {
+      "name": "Tasto del mese",
+      "kind": "custom",
+      "refersTo": "month-key",
+      "description": "Firma Olivetti: dodici tasti premibili con ore libere, cassa e F24; il premuto è giallo e abbassato.",
+      "html": "<div class=\"ds-tasti\"><button class=\"ds-tasto ds-premuto\" aria-selected=\"true\"><span class=\"ds-mese\">Nov <small>2026</small></span><span class=\"ds-ore\">136<small>h</small></span><span class=\"ds-cassa\">17k</span></button><button class=\"ds-tasto\"><span class=\"ds-mese\">Dic</span><span class=\"ds-ore\">132<small>h</small></span><span class=\"ds-cassa\">24k</span></button><button class=\"ds-tasto\"><span class=\"ds-mese\">Giu</span><span class=\"ds-ore\">160<small>h</small></span><span class=\"ds-cassa\">20k<b class=\"ds-f24\"> F24</b></span></button></div>",
+      "css": ".ds-tasti { display: flex; gap: 6px; font-family: 'Albert Sans', system-ui, sans-serif; font-variant-numeric: tabular-nums; } .ds-tasto { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; width: 84px; min-height: 104px; padding: 10px 8px 12px; text-align: left; cursor: pointer; color: #1B1C1E; background: #FBFAF7; border: 1px solid #D3D0C8; border-bottom-width: 4px; border-radius: 10px; transition: transform .12s ease-out, border-color .12s, background .12s; } .ds-tasto:hover { border-color: #66675F; } .ds-tasto:active { transform: translateY(2px); } .ds-tasto:focus-visible { outline: 2px solid #1B1C1E; outline-offset: 2px; } .ds-mese { font-size: 12.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; } .ds-mese small { font-size: 10.5px; font-weight: 600; color: #66675F; letter-spacing: 0; } .ds-ore { font-size: 24px; font-weight: 700; letter-spacing: -0.03em; line-height: 1.05; margin-top: 4px; } .ds-ore small { font-size: 12px; font-weight: 600; } .ds-cassa { font-size: 12.5px; font-weight: 600; color: #44454A; } .ds-f24 { font-size: 10.5px; font-weight: 700; color: #2357A6; } .ds-premuto { background: #F2B705; border-color: #1B1C1E; border-bottom-width: 1px; transform: translateY(3px); } .ds-premuto .ds-cassa, .ds-premuto .ds-mese small, .ds-premuto .ds-f24 { color: #1B1C1E; }"
+    },
+    {
+      "name": "Le tre risposte",
+      "kind": "card",
+      "refersTo": "answer-band-ora",
+      "description": "Un solo corpo diviso in tre colonne uguali da fili neri, ognuna con il suo campo di colore pieno in testa.",
+      "html": "<section class=\"ds-tre\"><button class=\"ds-risp\"><span class=\"ds-banda ds-ora\">la tua ora</span><span class=\"ds-num\">327<small> €/h</small></span><span class=\"ds-sub\">284 netti</span></button><button class=\"ds-risp\"><span class=\"ds-banda ds-tempo\">il tuo tempo</span><span class=\"ds-num\">136<small> h libere</small></span><span class=\"ds-sub\">24 h di lavoro su 160</span></button><button class=\"ds-risp\"><span class=\"ds-banda ds-cassa\">i tuoi soldi</span><span class=\"ds-num\">giugno 2028</span><span class=\"ds-sub\">la cassa basta fino a qui</span></button></section>",
+      "css": ".ds-tre { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); background: #FBFAF7; border: 1px solid #D3D0C8; border-radius: 14px; overflow: hidden; font-family: 'Albert Sans', system-ui, sans-serif; font-variant-numeric: tabular-nums; } .ds-risp { display: flex; flex-direction: column; gap: 6px; text-align: left; padding: 0 20px 18px; border: 0; background: transparent; color: #1B1C1E; font: inherit; cursor: pointer; transition: background .2s; } .ds-risp + .ds-risp { border-left: 1px solid #1B1C1E; } .ds-risp:hover { background: #F1EFEA; } .ds-risp:focus-visible { outline: 2px solid #1B1C1E; outline-offset: -3px; } .ds-banda { margin: 0 -20px 10px; padding: 10px 20px; font-size: 13px; font-weight: 700; text-transform: lowercase; letter-spacing: .01em; } .ds-ora { background: #2F7F72; color: #FFFFFF; } .ds-tempo { background: #F2B705; color: #1B1C1E; } .ds-cassa { background: #2357A6; color: #FFFFFF; } .ds-num { font-size: 36px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.05; } .ds-num small { font-size: .45em; font-weight: 600; letter-spacing: 0; color: #66675F; } .ds-sub { font-size: 13px; color: #66675F; }"
+    },
+    {
+      "name": "Chip del €/h",
+      "kind": "chip",
+      "refersTo": "rate-chip",
+      "description": "Il valore dell'ora su cinque gradini verde acqua → petrolio.",
+      "html": "<span class=\"ds-chip ds-g1\">0</span> <span class=\"ds-chip ds-g2\">120</span> <span class=\"ds-chip ds-g3\">173</span> <span class=\"ds-chip ds-g4\">320</span> <span class=\"ds-chip ds-g5\">578</span>",
+      "css": ".ds-chip { display: inline-block; min-width: 46px; padding: 3px 8px; border-radius: 6px; font-family: 'Albert Sans', system-ui, sans-serif; font-variant-numeric: tabular-nums; font-weight: 700; font-size: 13px; text-align: center; } .ds-g1 { background: #DCEFEA; color: #1B1C1E; } .ds-g2 { background: #A9D5CB; color: #1B1C1E; } .ds-g3 { background: #6FB2A5; color: #1B1C1E; } .ds-g4 { background: #2F7F72; color: #FFFFFF; } .ds-g5 { background: #164E46; color: #FFFFFF; }"
+    },
+    {
+      "name": "Registro dei conti",
+      "kind": "card",
+      "refersTo": "block",
+      "description": "Blocco bianco carta con righe a filo tenue e totale chiuso da 2px nero.",
+      "html": "<section class=\"ds-blocco\"><h2 class=\"ds-titolo\">soldi</h2><dl class=\"ds-libro\"><div><dt>Costi fissi mensili<small>4 voci · ogni mese</small></dt><dd>1120 €</dd></div><div><dt>Cassa sul conto<small>al 18 nov 2026</small></dt><dd>17.200 €</dd></div><div class=\"ds-totale\"><dt>Da tenere da parte · cassa libera</dt><dd>2635 € · 14.565 €</dd></div></dl></section>",
+      "css": ".ds-blocco { background: #FBFAF7; border: 1px solid #D3D0C8; border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 14px; font-family: 'Albert Sans', system-ui, sans-serif; font-variant-numeric: tabular-nums; color: #1B1C1E; } .ds-titolo { font-size: 19px; font-weight: 800; letter-spacing: -0.02em; text-transform: lowercase; margin: 0; } .ds-libro { margin: 0; } .ds-libro > div { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding: 9px 0; border-bottom: 1px solid #E4E1DA; } .ds-libro dt { font-size: 14px; font-weight: 600; } .ds-libro dt small { display: block; font-size: 12.5px; font-weight: 400; color: #66675F; margin-top: 1px; } .ds-libro dd { margin: 0; font-size: 15px; font-weight: 700; white-space: nowrap; } .ds-libro .ds-totale { border-bottom: 2px solid #1B1C1E; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "La macchina d'ufficio",
+    "overview": "La dashboard è disegnata come un oggetto della grafica d'ufficio italiana (Pintori, Ballmer, Lettera 22): un corpo grigio macchina, fogli bianco carta, tasti neri, e pochi campi di colore pieno che dicono subito di cosa si parla. Non è un cruscotto di card KPI tutte uguali né un pannello finanziario blu generico: tre risposte con lo stesso peso stanno in un solo corpo, e sotto c'è una tastiera di dodici mesi da premere.\n\nLa densità è quella di un registro: numeri tabellari pesanti, righe separate da fili sottili, totali chiusi da una riga nera spessa. Il colore non decora: ogni tinta è un ruolo (tempo, valore dell'ora, cassa, allarme) e resta tale ovunque compaia. La profondità viene dal gesto del tasto, non dalle ombre: le superfici sono piatte, i tasti hanno una base più spessa e si abbassano quando li premi.\n\nIl sistema vale in chiaro e in scuro con gli stessi ruoli; in scuro i campi d'accento si schiariscono e la scala del €/h si inverte (più chiaro = più alto). L'app offre anche altre versioni selezionabili (\"Pagine rosa\", \"Standard\", Orario, Classica): questo documento descrive solo Olivetti.",
+    "keyCharacteristics": [
+      "Grigio macchina come fondo, bianco carta per i blocchi, nero dei tasti per testo e azioni.",
+      "Colore pieno solo come ruolo: giallo = tempo, verde acqua→petrolio = €/h, blu = cassa, rosso = allarmi.",
+      "Una sola famiglia, Albert Sans, con cifre tabellari e pesi 700–800 per i numeri.",
+      "Angoli 6/10/14px; tasti con base inferiore di 4px che si schiaccia alla pressione.",
+      "Piatto per default: nessuna ombra sui blocchi, separazione con fili e campi di colore."
+    ],
+    "rules": [
+      { "name": "La Regola Un Colore, Una Grandezza", "body": "Giallo = tempo (ore libere, mese premuto, mese corrente). Verde acqua→petrolio = €/h e guadagno. Blu = cassa, F24 compresi. Rosso = solo allarmi. Una tinta non cambia mai grandezza, e una grandezza non cambia mai tinta.", "section": "colors" },
+      { "name": "La Regola del Campo Pieno", "body": "Il colore entra come campo pieno a tutta larghezza (le bande delle tre risposte, il tasto premuto, le barre), non come sottolineatura, bordino laterale o icona colorata.", "section": "colors" },
+      { "name": "La Regola del Rosso Raro", "body": "Se nulla è in allarme, sullo schermo non c'è rosso.", "section": "colors" },
+      { "name": "La Regola dei Numeri Pesanti", "body": "Ogni cifra significativa è tabellare e in 700–800; il testo intorno resta 400–600. Il numero è sempre la cosa più nera della riga.", "section": "typography" },
+      { "name": "La Regola del Minuscolo", "body": "Titoli dei blocchi e bande parlano in minuscolo; il maiuscolo è riservato ai nomi dei mesi sui tasti.", "section": "typography" },
+      { "name": "La Regola del Tasto", "body": "La profondità si guadagna con la pressione: un elemento premibile ha una base più spessa e si abbassa di 2–3px quando lo premi. Niente ombre sfumate per dire \"cliccabile\".", "section": "elevation" }
+    ],
+    "dos": [
+      "**Do** usare il giallo Pintori solo per il tempo e per il mese premuto o corrente, sempre con testo nero dei tasti.",
+      "**Do** esprimere il €/h con la scala g1–g5 a cinque gradini, testo nero su g1–g3 e bianco su g4–g5 (invertito in scuro).",
+      "**Do** colorare di blu cassa ogni evento di cassa, F24 compresi.",
+      "**Do** dare a ogni elemento premibile la base inferiore spessa e la discesa di 2–3px alla pressione (.12s ease-out).",
+      "**Do** chiudere ogni totale di registro con una riga di 2px nero dei tasti.",
+      "**Do** tenere cifre tabellari in 700–800 e titoli dei blocchi in minuscolo 19/800."
+    ],
+    "donts": [
+      "**Don't** usare il rosso per altro che allarmi (cassa negativa, avvisi danger).",
+      "**Don't** colorare gli F24 di arancio o giallo: sono cassa, quindi blu.",
+      "**Don't** aggiungere ombre sfumate a blocchi, risposte o tasti a riposo.",
+      "**Don't** spezzare le tre risposte in tre card separate con pesi diversi: è un solo corpo con tre colonne uguali.",
+      "**Don't** introdurre un secondo carattere o un serif: Albert Sans fa tutto."
+    ]
+  }
+}
