@@ -32,7 +32,7 @@ export default function DashboardC({ variante = "olivetti", commesse, setCommess
     attive, righeTempo, oreTotali, oreLibere, oreDisponibili, lordoOraMedio, lordoOraReale,
     mesi12, tempo12, cashFlowData, fineCassa, fineRiserve, riserve, riserveVendibili, cassaIniziale, cassaData,
     patrimonio, debitoFiscale, cassaLibera, tasseMaturate, accontiVersati, prossimiF24, f24Override, taxRate,
-    contoAnno, annualData, annoPrecImporto, yoyDeltaPct, totaleCostiFissi, totaleCostiAnnuali, totaleCostiAnnualiMensile,
+    contoAnno, annualData, annoPrecImporto, yoyDeltaPct, lordoAnnoCorrente, totaleCostiFissi, totaleCostiAnnuali, totaleCostiAnnualiMensile,
     usciteMensili, pipeline, mesiAutonomia, mesiAutonomiaRiserve, goals, serieClientiDati, statoCount, statoTotal,
     costiFissiMensili, saturazione, aliquotaEffettiva, taxRateF24,
   } = D;
@@ -430,7 +430,7 @@ export default function DashboardC({ variante = "olivetti", commesse, setCommess
         <h2><Icon name="bars" size={15} />{anno}, mese per mese</h2>
         <p>
           {euro(lordoAnnoC)} lordi tra registrati e previsti
-          {yoyDeltaPct != null && <> · <span className={yoyDeltaPct >= 0 ? s.pos : s.neg}>{yoyDeltaPct >= 0 ? "+" : "−"}{Math.abs(yoyDeltaPct)}%</span> sul {anno - 1} ({fmtN(annoPrecImporto)} €)</>}
+          {yoyDeltaPct != null && <> · registrato finora {fmtN(lordoAnnoCorrente)} €, <span className={yoyDeltaPct >= 0 ? s.pos : s.neg}>{yoyDeltaPct >= 0 ? "+" : "−"}{Math.abs(yoyDeltaPct)}%</span> su tutto il {anno - 1} ({fmtN(annoPrecImporto)} €)</>}
           {" "}· risparmio dell&apos;anno <span className={risparmioAnnoC >= 0 ? s.pos : s.neg}>{euro(risparmioAnnoC)}</span> (tasse al {Math.round(taxRateF24 * 100)}%)
         </p>
       </div>
