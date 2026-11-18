@@ -12,6 +12,13 @@ import s from "./DashboardB.module.css";
 // righe in fondo dicono ore libere, entrate, F24 e cassa mese per mese.
 
 const RAMPA = 5; // gradini di colore per il €/h
+// Scale di colore tra cui scegliere (valori in DashboardB.module.css)
+const SCALE = [
+  { id: "blu", nome: "Blu" },
+  { id: "salvia", nome: "Salvia" },
+  { id: "terracotta", nome: "Terracotta" },
+  { id: "oro", nome: "Oro" },
+];
 
 const meseLungo = (r) => (r ? `${MESI_IT[r.m].toLowerCase()} ${r.y}` : null);
 // 2071 → "2,1k", 750 → "750"
@@ -36,6 +43,7 @@ export default function DashboardB({ commesse, setCommesse, setup, setSetup }) {
   const [trattativeAperte, setTrattativeAperte] = useState(false);
   const [drill, setDrill] = useState(null);
   const D = calcolaDashboard(commesse, setup);
+  const scala = SCALE.some((x) => x.id === setup.scalaColori) ? setup.scalaColori : "blu";
   const {
     anno, meseIdx, meseCorrente, nomeMese, meseCorrManc, meseRegistrato, lordoMese, nettoMese,
     attive, righeTempo, oreTotali, oreLibere, oreDisponibili, lordoOraMedio, nettoOraMedio, lordoOraReale,
@@ -141,7 +149,7 @@ export default function DashboardB({ commesse, setCommesse, setup, setSetup }) {
   };
 
   return (
-    <div className={s.root}>
+    <div className={s.root} data-scala={scala}>
       <header className={s.testa}>
         <h1 className="page-title">{meseCorrente}</h1>
         <div className={s.azioniTesta}>
@@ -215,6 +223,36 @@ export default function DashboardB({ commesse, setCommesse, setup, setSetup }) {
             ))}
           </ul>
         )}
+      </section>
+
+      {/* L'anno */}
+      <section className={s.blocco}>
+        <div className={s.bloccoTesta}>
+          <h2><Icon name="bars" size={15} />{anno}, mese per mese</h2>
+          <p>
+            {fmtN(contoAnno.lordo)} € lordi tra registrati e previsti
+            {yoyDeltaPct != null && <> · <span className={yoyDeltaPct >= 0 ? s.pos : s.neg}>{yoyDeltaPct >= 0 ? "+" : ""}{yoyDeltaPct}%</span> sul {anno - 1} ({fmtN(annoPrecImporto)} €)</>}
+            {" "}· risparmio dell&apos;anno <span className={contoAnno.risparmio >= 0 ? s.pos : s.neg}>{fmtN(contoAnno.risparmio)} €</span>
+          </p>
+        </div>
+        <div className={s.anno} role="img" aria-label={`Lordo per mese nel ${anno}`}>
+          {annualData.map((d, i) => (
+            <div key={i} className={s.annoCol + (i === meseIdx ? " " + s.annoOggi : "")} tabIndex={0}
+              title={`${MESI_IT[i]}: ${fmtN(d.lordo)} € lordi (${d.tipo === "reale" ? "registrato" : d.tipo === "mancante" ? "non registrato" : "previsto"})`}>
+              <span className={s.annoVal}>{d.lordo ? breve(d.lordo) : ""}</span>
+              <span className={s.annoBarra}>
+                <i className={s["t_" + d.tipo]} style={{ height: `${Math.max(d.lordo ? 3 : 0, (d.lordo / maxAnno) * 100)}%` }} />
+              </span>
+              <span className={s.annoMese}>{MESI_IT[i].slice(0, 3)}</span>
+            </div>
+          ))}
+        </div>
+        <div className={s.legenda}>
+          <span><i className={s.sw} style={{ background: "var(--g4)" }} />registrato</span>
+          <span><i className={s.sw} style={{ background: "var(--accent)" }} />questo mese, stimato</span>
+          <span><i className={s.sw} style={{ boxShadow: "inset 0 0 0 1.5px var(--g4)" }} />previsto dai contratti</span>
+          <span>Costi dell&apos;anno {fmtN(contoAnno.costiFissiAnno + totaleCostiAnnuali)} € · tasse {fmtN(contoAnno.tasse)} €</span>
+        </div>
       </section>
 
       {/* Firma: l'orario dei prossimi 12 mesi */}
@@ -343,6 +381,16 @@ export default function DashboardB({ commesse, setCommesse, setup, setSetup }) {
           <span>€/h</span>
           <span className={s.rampa} aria-hidden="true">{Array.from({ length: RAMPA }, (_, i) => <i key={i} className={s["g" + (i + 1)]} />)}</span>
           <span>{ore.length ? `da ${fmtN(oraMin)} a ${fmtN(oraMax)} €/h` : "inserisci le ore delle commesse"}</span>
+          <span className={s.scelta} role="radiogroup" aria-label="Colori della scala">
+            Colori
+            {SCALE.map((x) => (
+              <button key={x.id} role="radio" aria-checked={scala === x.id} title={x.nome}
+                className={s.scalaBtn + (scala === x.id ? " " + s.scalaOn : "")} data-scala={x.id}
+                onClick={() => setSetup((prev) => ({ ...prev, scalaColori: x.id }))}>
+                <i /><i /><i /><span>{x.nome}</span>
+              </button>
+            ))}
+          </span>
           <button className={s.link} onClick={() => setTrattativeAperte((v) => !v)} aria-expanded={trattativeAperte}>
             {trattativeAperte ? "Chiudi le trattative" : `Trattative e ipotesi${pipeline.length ? ` (${pipeline.length})` : ""}`}
           </button>
@@ -462,36 +510,6 @@ export default function DashboardB({ commesse, setCommesse, setup, setSetup }) {
           <p className={s.nota}>Stima: aliquota {Math.round(taxRate * 100)}%, acconti 50% a giugno e 50% a novembre. Scrivi gli importi reali negli spazi.</p>
         </section>
       </div>
-
-      {/* L'anno */}
-      <section className={s.blocco}>
-        <div className={s.bloccoTesta}>
-          <h2><Icon name="bars" size={15} />{anno}, mese per mese</h2>
-          <p>
-            {fmtN(contoAnno.lordo)} € lordi tra registrati e previsti
-            {yoyDeltaPct != null && <> · <span className={yoyDeltaPct >= 0 ? s.pos : s.neg}>{yoyDeltaPct >= 0 ? "+" : ""}{yoyDeltaPct}%</span> sul {anno - 1} ({fmtN(annoPrecImporto)} €)</>}
-            {" "}· risparmio dell&apos;anno <span className={contoAnno.risparmio >= 0 ? s.pos : s.neg}>{fmtN(contoAnno.risparmio)} €</span>
-          </p>
-        </div>
-        <div className={s.anno} role="img" aria-label={`Lordo per mese nel ${anno}`}>
-          {annualData.map((d, i) => (
-            <div key={i} className={s.annoCol + (i === meseIdx ? " " + s.annoOggi : "")} tabIndex={0}
-              title={`${MESI_IT[i]}: ${fmtN(d.lordo)} € lordi (${d.tipo === "reale" ? "registrato" : d.tipo === "mancante" ? "non registrato" : "previsto"})`}>
-              <span className={s.annoVal}>{d.lordo ? breve(d.lordo) : ""}</span>
-              <span className={s.annoBarra}>
-                <i className={s["t_" + d.tipo]} style={{ height: `${Math.max(d.lordo ? 3 : 0, (d.lordo / maxAnno) * 100)}%` }} />
-              </span>
-              <span className={s.annoMese}>{MESI_IT[i].slice(0, 3)}</span>
-            </div>
-          ))}
-        </div>
-        <div className={s.legenda}>
-          <span><i className={s.sw} style={{ background: "var(--ink-2)" }} />registrato</span>
-          <span><i className={s.sw} style={{ background: "var(--accent)" }} />questo mese, stimato</span>
-          <span><i className={s.sw} style={{ boxShadow: "inset 0 0 0 1.5px var(--ink-3)" }} />previsto dai contratti</span>
-          <span>Costi dell&apos;anno {fmtN(contoAnno.costiFissiAnno + totaleCostiAnnuali)} € · tasse {fmtN(contoAnno.tasse)} €</span>
-        </div>
-      </section>
 
       <KpiDrillModal drill={drill} onClose={() => setDrill(null)} commesse={commesse} setCommesse={setCommesse}
         setup={setup} setSetup={setSetup} meseCorrente={meseCorrente} meseRegistrato={meseRegistrato} />

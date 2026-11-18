@@ -155,9 +155,9 @@ td.oggi, th.oggi { background: color-mix(in oklab, var(--accent) 7%, transparent
 .annoCol:hover .annoVal, .annoCol:focus-visible .annoVal, .annoOggi .annoVal { opacity: 1; }
 .annoBarra { display: flex; align-items: flex-end; border-bottom: 1px solid var(--hair); }
 .annoBarra i { display: block; width: 100%; border-radius: 4px 4px 0 0; }
-.t_reale { background: var(--ink-2); }
+.t_reale { background: var(--g4); }
 .t_stimato { background: var(--accent); }
-.t_proiezione { background: transparent; box-shadow: inset 0 0 0 1.5px var(--ink-3); }
+.t_proiezione { background: color-mix(in oklab, var(--g4) 12%, transparent); box-shadow: inset 0 0 0 1.5px var(--g4); }
 .t_mancante { background: transparent; }
 .annoMese { font-size: 12px; font-weight: 600; color: var(--ink-3); }
 .annoOggi .annoMese { color: var(--accent-ink); }
@@ -197,3 +197,27 @@ td.oggi, th.oggi { background: color-mix(in oklab, var(--accent) 7%, transparent
 }
 .suggerito > span { flex: 1 1 260px; }
 .suggerito :global(.btn) { flex: none; }
+
+/* ── Scale di colore (scelta dall'utente) ── */
+[data-scala="blu"] { --g1: #E3E9F0; --g2: #C2CFDD; --g3: #8FA4BC; --g4: #4F6683; --g5: #2B3E57; }
+[data-scala="salvia"] { --g1: #E6EDDF; --g2: #C7D8BC; --g3: #9BBA8C; --g4: #567452; --g5: #34502F; }
+[data-scala="terracotta"] { --g1: #F4E4DA; --g2: #E8C6B2; --g3: #D69D80; --g4: #A65A40; --g5: #6E3322; }
+[data-scala="oro"] { --g1: #F6ECD5; --g2: #EBD3A3; --g3: #D3AE62; --g4: #8E6618; --g5: #5C410C; }
+:global(:root[data-theme="dark"]) [data-scala="blu"] { --g1: #1E2733; --g2: #2C3A4D; --g3: #455A75; --g4: #8DA3BE; --g5: #C6D3E3; }
+:global(:root[data-theme="dark"]) [data-scala="salvia"] { --g1: #232D1F; --g2: #33452C; --g3: #4E6B45; --g4: #86AA7B; --g5: #BFD9B3; }
+:global(:root[data-theme="dark"]) [data-scala="terracotta"] { --g1: #3A2720; --g2: #5C3626; --g3: #8B4F38; --g4: #D07F62; --g5: #EDB79E; }
+:global(:root[data-theme="dark"]) [data-scala="oro"] { --g1: #30281A; --g2: #4A3B1E; --g3: #7A5F27; --g4: #D2AC5C; --g5: #EED9A6; }
+
+.scelta { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.scalaBtn {
+  display: inline-flex; align-items: center; gap: 1px; padding: 5px 8px 5px 6px; min-height: 32px; cursor: pointer;
+  border: 1px solid var(--hair); border-radius: 99px; background: var(--panel); color: var(--ink-2);
+  font: 600 12px/1 var(--font-sans); transition: border-color .2s, color .2s;
+}
+.scalaBtn i { width: 10px; height: 14px; }
+.scalaBtn i:nth-child(1) { background: var(--g2); border-radius: 4px 0 0 4px; }
+.scalaBtn i:nth-child(2) { background: var(--g3); }
+.scalaBtn i:nth-child(3) { background: var(--g5); border-radius: 0 4px 4px 0; }
+.scalaBtn span { margin-left: 6px; }
+.scalaBtn:hover { border-color: var(--ink-3); color: var(--ink); }
+.scalaOn { border-color: var(--ink); color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
