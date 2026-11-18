@@ -82,7 +82,11 @@ export default function DashboardC({ variante = "olivetti", commesse, setCommess
   };
 
   const prossimoF24 = prossimiF24.find((f) => f.importo > 0) || null;
-  const maxAnno = Math.max(1, ...annualData.map((d) => d.lordo));
+  // L'anno con lo stesso lordo del mese in corso usato da riepilogo e tabella
+  const annoDati = annualData.map((d, i) => (i === meseIdx && d.tipo !== "reale" ? { ...d, lordo: mesi[0].entrate } : d));
+  const lordoAnnoC = annoDati.reduce((t, d) => t + d.lordo, 0);
+  const risparmioAnnoC = Math.round(lordoAnnoC * (1 - taxRateF24)) - contoAnno.costiFissiAnno - contoAnno.speseAnnuali;
+  const maxAnno = Math.max(1, ...annoDati.map((d) => d.lordo));
   const sel = mesi[scelto];
   // Un solo lordo e una sola aliquota per il mese: il lordo è quello della tabella
   // del mese (registrato dove c'è, contratti altrove), le tasse usano l'aliquota
@@ -400,9 +404,12 @@ export default function DashboardC({ variante = "olivetti", commesse, setCommess
           </div>
         ))}
       </div>
-      {riserve.length > 0 && (
-        <>
-          <h3 className={s.sotto}>Riserve vendibili</h3>
+    </section>
+  );
+
+  const riserveBlocco = riserve.length > 0 && (
+    <section className={s.blocco}>
+      <div className={s.testaBlocco}><h2><Icon name="wallet" size={15} />Riserve vendibili</h2><p>quanto incasseresti vendendo, e quanti mesi in più ti danno</p></div>
           <dl className={s.libro}>
             {riserve.map((r) => (
               <div key={r.id}>
@@ -414,8 +421,6 @@ export default function DashboardC({ variante = "olivetti", commesse, setCommess
             ))}
             <div className={s.totale}><dt>Mesi di autonomia senza incassi<small>{mesiAutonomia ?? "—"} con la sola cassa</small></dt><dd>{mesiAutonomiaRiserve ?? "—"}</dd></div>
           </dl>
-        </>
-      )}
     </section>
   );
 
@@ -424,13 +429,13 @@ export default function DashboardC({ variante = "olivetti", commesse, setCommess
       <div className={s.testaBlocco}>
         <h2><Icon name="bars" size={15} />{anno}, mese per mese</h2>
         <p>
-          {euro(contoAnno.lordo)} lordi tra registrati e previsti
+          {euro(lordoAnnoC)} lordi tra registrati e previsti
           {yoyDeltaPct != null && <> · <span className={yoyDeltaPct >= 0 ? s.pos : s.neg}>{yoyDeltaPct >= 0 ? "+" : "−"}{Math.abs(yoyDeltaPct)}%</span> sul {anno - 1} ({fmtN(annoPrecImporto)} €)</>}
-          {" "}· risparmio dell&apos;anno <span className={contoAnno.risparmio >= 0 ? s.pos : s.neg}>{euro(contoAnno.risparmio)}</span>
+          {" "}· risparmio dell&apos;anno <span className={risparmioAnnoC >= 0 ? s.pos : s.neg}>{euro(risparmioAnnoC)}</span> (tasse al {Math.round(taxRateF24 * 100)}%)
         </p>
       </div>
       <div className={s.anno} role="img" aria-label={`Lordo per mese nel ${anno}`}>
-        {annualData.map((d, i) => (
+        {annoDati.map((d, i) => (
           <div key={i} className={s.annoCol + (i === meseIdx ? " " + s.annoOggi : "")} tabIndex={0}
             title={`${MESI_IT[i]}: ${fmtN(d.lordo)} € lordi (${d.tipo === "reale" ? "registrato" : d.tipo === "mancante" ? "non registrato" : "previsto"})`}>
             <span className={s.annoVal}>{d.lordo ? breve(d.lordo) : ""}</span>
@@ -495,6 +500,7 @@ export default function DashboardC({ variante = "olivetti", commesse, setCommess
         <div className={s.colonna}>
           {annoBlocco}
           {commesseBlocco}
+          {riserveBlocco}
         </div>
         {soldi}
       </div>
