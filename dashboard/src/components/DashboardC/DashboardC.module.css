@@ -34,9 +34,12 @@
 .rNome { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--ink-2); }
 .rBarra { height: 6px; background: var(--panel-2); border-radius: 99px; overflow: hidden; }
 .rBarra i { display: block; height: 100%; border-radius: 99px; }
-.rTempo { display: flex; align-items: flex-end; gap: 3px; height: 54px; margin-top: auto; padding-top: 8px; }
-.rTempo i { flex: 1; background: var(--tempo); border-radius: 2px 2px 0 0; min-height: 2px; }
-.rTempo i:first-child { box-shadow: inset 0 0 0 2px var(--ink); }
+.rVis { display: flex; align-items: flex-end; gap: 3px; height: 54px; margin-top: auto; padding-top: 8px; }
+.rVis i { flex: 1; background: var(--tempo); border-radius: 2px 2px 0 0; }
+.rVis i:first-child { box-shadow: inset 0 0 0 2px var(--ink); }
+.rVisCassa i { background: var(--cassa); }
+.rVisCassa i.sotto0 { background: var(--danger); }
+.rVisLab { font-size: 11.5px; color: var(--ink-3); }
 
 /* ── Avvisi e obiettivi ── */
 .avvisi { list-style: none; display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--hair); border-radius: var(--r-lg); padding: 4px 18px; }
@@ -65,6 +68,7 @@
 .sotto { font-size: 15px; font-weight: 700; }
 .nota { font-size: 12.5px; color: var(--ink-3); }
 .due { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+.colonna { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
 
 /* tabelle */
 .scorri { overflow-x: auto; }
@@ -110,8 +114,6 @@
 .tOre { font-size: 24px; font-weight: 700; letter-spacing: -0.03em; line-height: 1.05; margin-top: 4px; }
 .tOre small { font-size: 12px; font-weight: 600; margin-left: 1px; }
 .tCassa { font-size: 12.5px; font-weight: 600; color: var(--ink-2); }
-.tBarra { position: absolute; left: 8px; right: 8px; bottom: 6px; height: 3px; background: color-mix(in oklab, var(--cassa) 15%, transparent); border-radius: 99px; overflow: hidden; }
-.tBarra i { display: block; height: 100%; background: var(--cassa); }
 .tF24 { font-size: 10.5px; font-weight: 700; color: var(--warn); }
 .premuto .tF24 { color: var(--tempo-ink); }
 
@@ -178,10 +180,18 @@
 .stati i { display: block; height: 100%; }
 
 /* ═══════════ Olivetti ═══════════ */
+/* Le tre risposte in un solo corpo macchina, ogni colonna con il suo campo di
+   colore pieno in testa (Pintori): verde acqua = ora, giallo = tempo, blu = cassa */
+.olivetti .tre { gap: 0; background: var(--panel); border: 1px solid var(--hair); border-radius: var(--r-lg); overflow: hidden; }
+.olivetti .risposta { border: 0; border-radius: 0; background: transparent; padding-top: 0; }
+.olivetti .risposta + .risposta { border-left: 1px solid var(--ink); }
+.olivetti .risposta:hover { background: var(--panel-2); }
+.olivetti .rLab { margin: 0 -20px 10px; padding: 10px 20px; background: var(--g4); color: var(--g4-ink); font-size: 13px; text-transform: lowercase; letter-spacing: .01em; }
 .olivetti .rLab svg { display: none; }
-.olivetti .rLab::before { content: ""; width: 14px; height: 14px; border-radius: 3px; background: var(--g4); }
-.olivetti .risposta:nth-child(2) .rLab::before { background: var(--tempo); }
-.olivetti .risposta:nth-child(3) .rLab::before { background: var(--cassa); }
+.olivetti .risposta:nth-child(2) .rLab { background: var(--tempo); color: var(--tempo-ink); }
+.olivetti .risposta:nth-child(3) .rLab { background: var(--cassa); color: #FFFFFF; }
+:global(:root[data-theme="dark"]) .olivetti .risposta:nth-child(3) .rLab { color: #141516; }
+.olivetti .risposta:focus-visible { outline-offset: -3px; }
 .olivetti .rNum { font-weight: 800; }
 .olivetti .testaBlocco h2 { text-transform: lowercase; font-size: 19px; font-weight: 800; letter-spacing: -0.02em; }
 
@@ -208,6 +218,7 @@
 /* ── Telefono ── */
 @media (max-width: 1000px) {
   .tre { grid-template-columns: 1fr; }
+  .olivetti .risposta + .risposta { border-left: 0; border-top: 1px solid var(--ink); }
   .due { grid-template-columns: 1fr; }
   .dettaglio { grid-template-columns: 1fr; }
 }

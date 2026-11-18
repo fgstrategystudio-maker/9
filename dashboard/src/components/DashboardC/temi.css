@@ -11,9 +11,9 @@
   --panel: #FBFAF7; --panel-2: #F1EFEA;
   --ink: #1B1C1E; --ink-2: #44454A; --ink-3: #66675F;
   --hair: #D3D0C8; --hair-soft: #E4E1DA;
-  --accent: #1B1C1E; --accent-ink: #1B1C1E; --accent-wash: #FFF1C2;
+  --accent: #1B1C1E; --accent-ink: #1B1C1E; --accent-wash: #E1DED6;
   --pos: #22695F; --pos-ink: #22695F; --pos-wash: #DCEFEA;
-  --warn: #94640F; --warn-wash: #FBEFD0;
+  --warn: #2357A6; --warn-wash: #E1E9F6; /* gli F24 sono eventi di cassa: blu */
   --danger: #C8302A; --danger-wash: #F9E0DD;
   --info: #2357A6; --info-wash: #E1E9F6;
   --rail: #1B1C1E; --rail-2: #26272A; --rail-ink: #ECEAE4; --rail-ink-2: #A9A7A0; --rail-hair: #34353A; --rail-active: #F2B705;
@@ -28,9 +28,9 @@
   --panel: #1D1E20; --panel-2: #26272A;
   --ink: #ECEAE4; --ink-2: #C9C7C1; --ink-3: #9C9A94;
   --hair: #34353A; --hair-soft: #2A2B2F;
-  --accent: #ECEAE4; --accent-ink: #ECEAE4; --accent-wash: #3A3112;
+  --accent: #ECEAE4; --accent-ink: #ECEAE4; --accent-wash: #26272A;
   --pos: #6FC2B3; --pos-ink: #6FC2B3; --pos-wash: #17302C;
-  --warn: #E5B04D; --warn-wash: #33290F;
+  --warn: #8FB0EE; --warn-wash: #1B2436;
   --danger: #FF7A6E; --danger-wash: #3A1E1B;
   --info: #8FB0EE; --info-wash: #1B2436; --cassa: #8FB0EE;
   --rail: #0E0F10; --rail-2: #18191B; --rail-hair: #26272A;
@@ -113,7 +113,12 @@
 
 /* testo dei pulsanti principali leggibile su ogni accento */
 :root[data-versione="olivetti"] .btn-primary { background: #1B1C1E; color: #FBFAF7; }
-:root[data-versione="olivetti"][data-theme="dark"] .btn-primary { background: #F2B705; color: #1B1C1E; }
+:root[data-versione="olivetti"][data-theme="dark"] .btn-primary { background: #ECEAE4; color: #141516; }
+/* "Chiedi" è un tasto: base più spessa, si abbassa quando lo premi */
+:root[data-versione="olivetti"] .btn-primary { border: 0; border-radius: 10px; box-shadow: inset 0 -3px 0 rgba(0,0,0,.55); transition: transform .12s ease-out, box-shadow .12s; }
+:root[data-versione="olivetti"] .btn-primary:active { transform: translateY(2px); box-shadow: inset 0 -1px 0 rgba(0,0,0,.55); }
+/* il mese come targhetta */
+:root[data-versione="olivetti"] .page-title { font-size: clamp(40px, 5vw, 64px); font-weight: 800; letter-spacing: -0.04em; }
 :root[data-versione="rosa"] .btn-primary { background: #1D3E8A; color: #FCEFE6; }
 :root[data-versione="rosa"][data-theme="dark"] .btn-primary { background: #9DB4F0; color: #1C1513; }
 :root[data-versione="standard"] .btn-primary { background: #2563EB; color: #FFFFFF; }

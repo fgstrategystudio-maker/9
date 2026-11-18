@@ -28,8 +28,8 @@ export default function DashboardC({ variante = "olivetti", commesse, setCommess
   const [tuttiAvvisi, setTuttiAvvisi] = useState(false);
   const D = calcolaDashboard(commesse, setup);
   const {
-    anno, meseIdx, meseCorrente, meseCorrManc, meseRegistrato, lordoMese, nettoMese, profittoMensile,
-    attive, righeTempo, oreTotali, oreLibere, oreDisponibili, lordoOraMedio, nettoOraMedio, lordoOraReale,
+    anno, meseIdx, meseCorrente, meseCorrManc, meseRegistrato, lordoMese, nettoMese,
+    attive, righeTempo, oreTotali, oreLibere, oreDisponibili, lordoOraMedio, lordoOraReale,
     mesi12, tempo12, cashFlowData, fineCassa, fineRiserve, riserve, riserveVendibili, cassaIniziale, cassaData,
     patrimonio, debitoFiscale, cassaLibera, tasseMaturate, accontiVersati, prossimiF24, f24Override, taxRate,
     contoAnno, annualData, annoPrecImporto, yoyDeltaPct, totaleCostiFissi, totaleCostiAnnuali, totaleCostiAnnualiMensile,
@@ -69,7 +69,6 @@ export default function DashboardC({ variante = "olivetti", commesse, setCommess
   const oraMin = tutteOre.length ? Math.min(...tutteOre) : 0;
   const oraMax = tutteOre.length ? Math.max(...tutteOre) : 0;
   const gradino = (ora) => (ora == null ? 0 : oraMax === oraMin ? 5 : 1 + Math.round(((ora - oraMin) / (oraMax - oraMin)) * 4));
-  const maxCassa = Math.max(1, ...mesi.map((x) => Math.abs(x.cassa ?? 0) + riserveVendibili));
   const maxLibere = Math.max(1, oreDisponibili);
 
   // — Commesse: €/h di adesso e variazione rispetto al mese reale precedente —
@@ -85,7 +84,18 @@ export default function DashboardC({ variante = "olivetti", commesse, setCommess
   const prossimoF24 = prossimiF24.find((f) => f.importo > 0) || null;
   const maxAnno = Math.max(1, ...annualData.map((d) => d.lordo));
   const sel = mesi[scelto];
-  const tasseMese = Math.round(lordoMese * taxRate);
+  // Un solo lordo e una sola aliquota per il mese: il lordo è quello della tabella
+  // del mese (registrato dove c'è, contratti altrove), le tasse usano l'aliquota
+  // effettiva dei tuoi F24 quando c'è (altrimenti quella del Setup).
+  const fattoreEff = 1 - taxRateF24;
+  const lordoDelMese = meseRegistrato ? lordoMese : mesi[0].entrate;
+  const nettoDelMese = meseRegistrato ? nettoMese : Math.round(lordoDelMese * fattoreEff);
+  const profittoDelMese = nettoDelMese - totaleCostiFissi;
+  const tasseMese = Math.round(lordoDelMese * taxRateF24);
+  const nettoOra = (lordo) => (lordo != null ? Math.round(lordo * fattoreEff) : null);
+  // Cassa a fine mese e ore di lavoro nei 12 mesi (per le tre risposte)
+  const maxCassaMesi = Math.max(1, ...mesi.map((x) => Math.abs(x.cassa ?? 0)));
+  const maxImpegnate = Math.max(1, ...mesi.map((x) => x.impegnate));
 
   const setOverride = (key, val) => setSetup((prev) => {
     const o = { ...(prev.f24 || {}) };
@@ -117,7 +127,7 @@ export default function DashboardC({ variante = "olivetti", commesse, setCommess
       <button className={s.risposta} onClick={() => setDrill("orario")}>
         <span className={s.rLab}><Icon name="clock" size={14} />La tua ora</span>
         <span className={s.rNum}>{lordoOraMedio != null ? fmtN(lordoOraMedio) : "—"}<small> €/h</small></span>
-        <span className={s.rSub}>{nettoOraMedio != null ? `${fmtN(nettoOraMedio)} netti` : "inserisci le ore"}{lordoOraReale != null ? ` · reale ${anno} ${fmtN(lordoOraReale)}` : ""}</span>
+        <span className={s.rSub}>{lordoOraMedio != null ? `${fmtN(nettoOra(lordoOraMedio))} netti` : "inserisci le ore"}{lordoOraReale != null ? ` · reale ${anno} ${fmtN(lordoOraReale)}` : ""}</span>
         <span className={s.rMini}>
           {perOra.slice(0, 3).map((r) => (
             <span key={r.c.id} className={s.rRiga}>
@@ -132,18 +142,27 @@ export default function DashboardC({ variante = "olivetti", commesse, setCommess
         <span className={s.rLab}><Icon name="calendar" size={14} />Il tuo tempo</span>
         <span className={s.rNum}>{fmtN(oreLibere)}<small> h libere</small></span>
         <span className={s.rSub}>{fmtN(oreTotali)} h di lavoro su {oreDisponibili} a {MESI_IT[meseIdx].toLowerCase()} · {saturazione}%</span>
-        <span className={s.rTempo} aria-hidden="true">
-          {mesi.map((x) => <i key={x.i} style={{ height: `${(x.libere / maxLibere) * 100}%` }} title={`${MESI_IT[x.m]}: ${fmtN(x.libere)} h libere`} />)}
+        <span className={s.rVis} role="img" aria-label="Ore di lavoro nei prossimi 12 mesi">
+          {mesi.map((x) => <i key={x.i} style={{ height: `${Math.max(x.impegnate ? 6 : 0, (x.impegnate / maxImpegnate) * 100)}%` }} title={`${MESI_IT[x.m]}: ${fmtN(x.impegnate)} h di lavoro, ${fmtN(x.libere)} libere`} />)}
         </span>
+        <span className={s.rVisLab}>ore di lavoro nei prossimi 12 mesi: quando calano hai tempo da vendere</span>
       </button>
       <button className={s.risposta} onClick={() => vaiA("vc-soldi")}>
         <span className={s.rLab}><Icon name="wallet" size={14} />I tuoi soldi</span>
-        <span className={s.rNum + (fineCassa ? " " + s.neg : "")}>{fineCassa ? meseLungo(fineCassa) : "oltre 3 anni"}</span>
+        <span className={s.rNum}>{fineCassa ? meseLungo(fineCassa) : "oltre 3 anni"}</span>
         <span className={s.rSub}>
           {fineCassa ? "la cassa basta fino a qui" : "la cassa regge con i contratti attuali"}
           {fineCassa && riserveVendibili > 0 && ` · vendendo crypto e beni: ${fineRiserve ? meseLungo(fineRiserve) : "oltre 3 anni"}`}
         </span>
         <span className={s.rSub}>Cassa {euro(cassaIniziale)} · libera dalle tasse {euro(cassaLibera)}</span>
+        <span className={s.rVis + " " + s.rVisCassa} role="img" aria-label="Cassa a fine mese nei prossimi 12 mesi">
+          {mesi.map((x) => (
+            <i key={x.i} className={x.cassa != null && x.cassa < 0 ? s.sotto0 : undefined}
+              style={{ height: `${Math.max(4, (Math.abs(x.cassa ?? 0) / maxCassaMesi) * 100)}%` }}
+              title={`${MESI_IT[x.m]}: cassa ${x.cassa != null ? euro(x.cassa) : "—"}`} />
+          ))}
+        </span>
+        <span className={s.rVisLab}>cassa a fine mese nei prossimi 12 mesi</span>
       </button>
     </section>
   );
@@ -226,7 +245,6 @@ export default function DashboardC({ variante = "olivetti", commesse, setCommess
             <span className={s.tCassa + (x.cassa != null && x.cassa < 0 ? " " + s.neg : "")}>
               {x.cassa != null ? breve(x.cassa) : "—"}{x.f24 > 0 && <b className={s.tF24} title={`F24 ${euro(x.f24)}`}> F24</b>}
             </span>
-            <span className={s.tBarra} aria-hidden="true"><i style={{ width: `${Math.max(0, ((x.cassa ?? 0) / maxCassa) * 100)}%` }} /></span>
           </button>
         ))}
       </div>
@@ -253,7 +271,7 @@ export default function DashboardC({ variante = "olivetti", commesse, setCommess
                   <td><span className={s.nome}>{r.c.cliente}</span>{r.variabile > 0 && <span className={s.meta}>fisso + variabile</span>}</td>
                   <td className={s.r + " " + s.big}>{r.lordoOra != null ? fmtN(r.lordoOra) : "—"}</td>
                   <td className={s.r + " " + (v == null ? "" : v >= 0 ? s.pos : s.neg)}>{v == null ? "—" : `${v >= 0 ? "▲ +" : "▼ −"}${Math.abs(v)}%`}</td>
-                  <td className={s.r}>{r.nettoOra != null ? fmtN(r.nettoOra) : "—"}</td>
+                  <td className={s.r}>{r.lordoOra != null ? fmtN(nettoOra(r.lordoOra)) : "—"}</td>
                   <td className={s.r}>{r.ore ? `${fmtN(r.ore)}${r.oreReali ? "*" : ""}` : "—"}</td>
                   <td className={s.r}>{r.lordo ? fmtN(r.lordo) : "—"}</td>
                   <td className={s.r}>{r.c.fine ? dataBreve(r.c.fine) : "—"}</td>
@@ -339,7 +357,7 @@ export default function DashboardC({ variante = "olivetti", commesse, setCommess
                 <td className={s.r}>{r.ore ? `${fmtN(r.ore)}${r.oreReali ? " (reali)" : ""}` : "—"}</td>
                 <td className={s.r}>{r.lordo ? euro(r.lordo) : "—"}</td>
                 <td className={s.r}><span className={`${s.chip} ${s["g" + gradino(r.lordoOra)]}`}>{r.lordoOra != null ? fmtN(r.lordoOra) : "—"}</span></td>
-                <td className={s.r}>{r.nettoOra != null ? fmtN(r.nettoOra) : "—"}</td>
+                <td className={s.r}>{r.lordoOra != null ? fmtN(nettoOra(r.lordoOra)) : "—"}</td>
                 <td className={s.r}>{r.c.fine ? dataBreve(r.c.fine) : "—"}</td>
               </tr>
             ))}
@@ -462,9 +480,9 @@ export default function DashboardC({ variante = "olivetti", commesse, setCommess
       </div>
 
       <p className={s.riassunto}>
-        {MESI_IT[meseIdx]}: <button className={s.nBtn} onClick={() => setDrill("lordoAttivo")}>{euro(lordoMese)}</button> lordi {meseRegistrato ? "incassati" : "previsti"},{" "}
-        <button className={s.nBtn} onClick={() => setDrill("nettoAttivo")}>{euro(nettoMese)}</button> netti,{" "}
-        <button className={s.nBtn} onClick={() => setDrill("profitto")}>{euro(profittoMensile)}</button> di profitto dopo i costi fissi · tasse da parte {euro(tasseMese)}
+        {MESI_IT[meseIdx]}: <button className={s.nBtn} onClick={() => setDrill("lordoAttivo")}>{euro(lordoDelMese)}</button> lordi {meseRegistrato ? "incassati" : "tra registrati e previsti"},{" "}
+        <button className={s.nBtn} onClick={() => setDrill("nettoAttivo")}>{euro(nettoDelMese)}</button> netti,{" "}
+        <button className={s.nBtn} onClick={() => setDrill("profitto")}>{euro(profittoDelMese)}</button> di profitto dopo i costi fissi · tasse da parte {euro(tasseMese)} ({Math.round(taxRateF24 * 100)}%{aliquotaEffettiva != null ? ", dai tuoi F24" : ""})
         {prossimoF24 && <> · prossimo F24 {euro(prossimoF24.importo)} il {dataBreve(prossimoF24.data)}</>}
         {" "}· {attive.length} {attive.length === 1 ? "commessa attiva" : "commesse attive"}
       </p>
@@ -474,16 +492,18 @@ export default function DashboardC({ variante = "olivetti", commesse, setCommess
       {obiettivi}
       {firma}
       <div className={s.due}>
-        {annoBlocco}
+        <div className={s.colonna}>
+          {annoBlocco}
+          {commesseBlocco}
+        </div>
         {soldi}
       </div>
-      {commesseBlocco}
 
       <KpiDrillModal drill={drill} onClose={() => setDrill(null)} commesse={commesse} setCommesse={setCommesse}
         setup={setup} setSetup={setSetup} meseCorrente={meseCorrente} meseRegistrato={meseRegistrato} />
       <ReportMese r={{
-        mese: meseCorrente, meseRegistrato, lordo: lordoMese, netto: nettoMese, costi: totaleCostiFissi, profitto: profittoMensile,
-        tasse: tasseMese, ora: lordoOraMedio, oraNetto: nettoOraMedio, oreImpegnate: oreTotali, oreLibere, righe: righeTempo,
+        mese: meseCorrente, meseRegistrato, lordo: lordoDelMese, netto: nettoDelMese, costi: totaleCostiFissi, profitto: profittoDelMese,
+        tasse: tasseMese, ora: lordoOraMedio, oraNetto: nettoOra(lordoOraMedio), oreImpegnate: oreTotali, oreLibere, righe: righeTempo,
         anno, tasseMaturate, debito: debitoFiscale, f24: prossimiF24, patrimonio, cassaLibera, cash: cashFlowData, conto: contoAnno, taxRate,
       }} />
     </div>
