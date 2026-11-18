@@ -183,7 +183,8 @@ export function sumLordoAnno(incassatoStorico, anno) {
 }
 
 export function getCommessaLordoMensile(commessa) {
-  if (commessa.lordoMensile) return commessa.lordoMensile;
+  // fee fissa + variabile medio al mese (provvigioni, extra a consumo…)
+  if (commessa.lordoMensile) return commessa.lordoMensile + (Number(commessa.variabileMensile) || 0);
   if (commessa.lordoProgetto && commessa.inizio && commessa.fine) {
     const mesi = monthsBetween(commessa.inizio, commessa.fine);
     return mesi > 0 ? Math.round(commessa.lordoProgetto / mesi) : commessa.lordoProgetto;
@@ -327,7 +328,7 @@ export function valoreResiduo(c, oggi = new Date()) {
   if (c.stato !== "In corso" && c.stato !== "In scadenza") return 0;
   const mesi = mesiRimanenti(c, oggi);
   if (mesi == null) return null;
-  if (c.lordoMensile) return c.lordoMensile * mesi;
+  if (c.lordoMensile) return getCommessaLordoMensile(c) * mesi;
   if (c.lordoProgetto) return mesi > 0 ? c.lordoProgetto : 0;
   return null;
 }
@@ -357,7 +358,9 @@ export function templateMese(commesse, mese) {
   const attive = (commesse || []).filter((c) => c.stato === "In corso" || c.stato === "In scadenza");
   const righe = attive.map((c) => {
     const fine = c.fine ? `finisce ${formatDate(c.fine)}` : "finisce il …";
-    const fee = c.lordoMensile ? `poi ${fmtNum(c.lordoMensile)} €/mese` : c.lordoProgetto ? `progetto ${fmtNum(c.lordoProgetto)} €` : "poi … €/mese";
+    const fee = c.lordoMensile
+      ? `poi ${fmtNum(c.lordoMensile)} €/mese fissi${c.variabileMensile ? ` + circa ${fmtNum(c.variabileMensile)} di variabile` : ""}`
+      : c.lordoProgetto ? `progetto ${fmtNum(c.lordoProgetto)} €` : "poi … €/mese";
     const ore = c.oreMensili ? `${c.oreMensili} ore/mese` : "… ore/mese";
     return `- ${c.cliente}: incassato … € lordi, lavorate … ore; ${fine}, ${fee}, ${ore}`;
   });
@@ -483,4 +486,23 @@ export function serieOrarioClienti(commesse) {
   }
   const righe = Object.values(perMese).sort((a, b) => a.k.localeCompare(b.k));
   return { clienti, righe };
+}
+
+// Variabile suggerito: quanto i pagamenti degli ultimi 3 mesi registrati superano
+// in media la fee fissa. null se non c'è un extra o la commessa non ha fee fissa.
+export function variabileSuggerito(c) {
+  const fisso = Number(c.lordoMensile) || 0;
+  if (!fisso) return null;
+  const perMese = {};
+  for (const p of c.pagamenti || []) {
+    const k = chiaveMese(p.mese);
+    if (k) perMese[k] = (perMese[k] || 0) + (Number(p.importo) || 0);
+  }
+  const ultimi = Object.keys(perMese).sort().slice(-3);
+  if (!ultimi.length) return null;
+  const extra = ultimi.map((k) => Math.max(0, perMese[k] - fisso));
+  const media = Math.round(extra.reduce((a, b) => a + b, 0) / ultimi.length);
+  if (media <= 0) return null;
+  const ultimo = ultimi[ultimi.length - 1];
+  return { media, mesi: ultimi.length, ultimoMese: ultimo, ultimoTotale: perMese[ultimo] };
 }

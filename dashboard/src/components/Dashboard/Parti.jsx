@@ -209,7 +209,12 @@ export function KpiDrillModal({ drill, onClose, commesse, setCommesse, setup, se
             <div key={c.id} style={rowStyle}>
               <div><div className="nm">{c.cliente}</div><div className="meta">{mensile ? "fee mensile" : "progetto · mensilizzato"}</div></div>
               {mensile ? (
-                <input className="input num" style={{ width: 130 }} type="number" min="0" value={c.lordoMensile ?? ""} onChange={(e) => setCommessaField(c.id, "lordoMensile", e.target.value)} />
+                <span style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", justifyContent: "flex-end" }}>
+                  <label style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--ink-3)" }}>fisso
+                    <input className="input num" style={{ width: 110 }} type="number" min="0" value={c.lordoMensile ?? ""} onChange={(e) => setCommessaField(c.id, "lordoMensile", e.target.value)} /></label>
+                  <label style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--ink-3)" }}>+ variabile
+                    <input className="input num" style={{ width: 100 }} type="number" min="0" placeholder="0" value={c.variabileMensile ?? ""} onChange={(e) => setCommessaField(c.id, "variabileMensile", e.target.value)} /></label>
+                </span>
               ) : (
                 <span className="num" style={{ color: "var(--ink-2)" }}>{val ? money(val) : "—"}</span>
               )}

@@ -6,7 +6,7 @@ import {
   getLordoPerMese, sumLordoAnno, stessoMese, chiaveMese, statPagamentiCommessa,
   oreCommessaMese, orarioRealeCommessa, mesiRimanenti, valoreResiduo, calcPatrimonio,
   dataBreve, pipelineCommessa, lordoPipelineMesi, creaPianoF24, serieOrarioClienti,
-  importoCompetenzaMese,
+  importoCompetenzaMese, variabileSuggerito,
 } from "../../utils/helpers";
 
 export const MESI_IT = [
@@ -63,6 +63,8 @@ export function calcolaDashboard(commesse, setup, now = new Date()) {
       const reale = orarioRealeCommessa(c);
       return {
         c, ore, lordo,
+        variabile: Number(c.variabileMensile) || 0,
+        suggerito: c.variabileMensile ? null : variabileSuggerito(c),
         lordoOra: ore > 0 && lordo ? Math.round(lordo / ore) : null,
         nettoOra: ore > 0 && lordo ? Math.round((lordo * setup.fattoreNetto) / ore) : null,
         realeOra: reale ? reale.lordoOra : null,

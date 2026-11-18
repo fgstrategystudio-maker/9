@@ -1,5 +1,6 @@
 import { useState } from "react";
 import styles from "./CommessaModal.module.css";
+import { variabileSuggerito } from "../../utils/helpers";
 
 const STATI = ["In corso", "In scadenza", "Da chiarire", "Sospeso", "Concluso", "Perso"];
 const TIPI = ["Mensile", "Progetto", "Da definire"];
@@ -14,6 +15,7 @@ const EMPTY = {
   incasso: "",
   stato: "In corso",
   lordoMensile: "",
+  variabileMensile: "",
   lordoProgetto: "",
   oreMensili: "",
   upsellTarget: "",
@@ -28,6 +30,7 @@ export default function CommessaModal({ initial, onSave, onClose }) {
     return {
       ...initial,
       lordoMensile: initial.lordoMensile ?? "",
+      variabileMensile: initial.variabileMensile ?? "",
       lordoProgetto: initial.lordoProgetto ?? "",
       oreMensili: initial.oreMensili ?? "",
       upsellTarget: initial.upsellTarget ?? "",
@@ -49,6 +52,7 @@ export default function CommessaModal({ initial, onSave, onClose }) {
       ...form,
       id: initial?.id ?? null,
       lordoMensile: form.lordoMensile !== "" ? Number(form.lordoMensile) : null,
+      variabileMensile: form.variabileMensile !== "" && Number(form.variabileMensile) > 0 ? Number(form.variabileMensile) : null,
       lordoProgetto: form.lordoProgetto !== "" ? Number(form.lordoProgetto) : null,
       oreMensili: form.oreMensili !== "" ? Number(form.oreMensili) : null,
       upsellTarget: form.upsellTarget !== "" ? Number(form.upsellTarget) : null,
@@ -147,6 +151,19 @@ export default function CommessaModal({ initial, onSave, onClose }) {
             </Field>
           </div>
 
+          {form.lordoMensile !== "" && (
+            <Field label="Variabile medio al mese (€), oltre al fisso">
+              <input
+                type="number"
+                className={styles.input}
+                value={form.variabileMensile}
+                onChange={(e) => set("variabileMensile", e.target.value)}
+                placeholder={(() => { const v = initial ? variabileSuggerito(initial) : null; return v ? `es. ${v.media} (media degli ultimi ${v.mesi} mesi)` : "es. 1500 se ogni mese si aggiunge un extra"; })()}
+                min="0"
+              />
+            </Field>
+          )}
+
           <div className={styles.row}>
             <Field label="Ore dedicate al mese (stima)">
               <input
@@ -164,7 +181,7 @@ export default function CommessaModal({ initial, onSave, onClose }) {
                 className={styles.input}
                 value={(() => {
                   const ore = Number(form.oreMensili);
-                  const lordoMese = form.lordoMensile !== "" ? Number(form.lordoMensile) : null;
+                  const lordoMese = form.lordoMensile !== "" ? Number(form.lordoMensile) + (Number(form.variabileMensile) || 0) : null;
                   if (!ore || ore <= 0 || !lordoMese) return "—";
                   return `${Math.round(lordoMese / ore)} €/h lordo`;
                 })()}

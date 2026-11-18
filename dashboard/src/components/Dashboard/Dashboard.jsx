@@ -339,7 +339,10 @@ export default function Dashboard({ commesse, setCommesse, setup, setSetup, them
                           <div style={{ fontSize: 12, color: "var(--ink-3)" }}>{r.c.tipo === "Progetto" ? "progetto" : "mensile"}{r.c.servizio ? ` · ${r.c.servizio}` : ""}</div>
                         </td>
                         <td className="r num">{r.ore ? `${fmtN(r.ore)} h` : <span style={{ color: "var(--warn)" }}>manca</span>}</td>
-                        <td className="r num">{r.lordo ? `${fmtN(r.lordo)} €` : "—"}</td>
+                        <td className="r num">
+                          {r.lordo ? `${fmtN(r.lordo)} €` : "—"}
+                          {r.variabile > 0 && <div style={{ fontSize: 11.5, color: "var(--ink-3)" }}>di cui {fmtN(r.variabile)} variabile</div>}
+                        </td>
                         <td className="r num" style={{ fontWeight: 700, color: r.lordoOra == null ? "var(--ink-3)" : sopraMedia ? "var(--pos-ink)" : "var(--warn)" }}>{r.lordoOra != null ? `${fmtN(r.lordoOra)} €` : "—"}</td>
                         <td className="r num" style={{ color: "var(--ink-2)" }}>{r.nettoOra != null ? `${fmtN(r.nettoOra)} €` : "—"}</td>
                         <td className="r num" style={{ color: "var(--ink-2)" }} title={r.realeMesi ? `media su ${r.realeMesi} ${r.realeMesi === 1 ? "mese" : "mesi"} con ore registrate` : "nessun mese con ore lavorate registrate"}>{r.realeOra != null ? `${fmtN(r.realeOra)} €` : "—"}</td>
@@ -363,6 +366,14 @@ export default function Dashboard({ commesse, setCommesse, setup, setSetup, them
             <p style={{ color: "var(--ink-3)", fontSize: 13, padding: "0 var(--card-pad) var(--card-pad)" }}>Nessuna commessa attiva.</p>
           )}
           <p style={{ color: "var(--ink-3)", fontSize: 12, padding: "10px var(--card-pad) var(--card-pad)" }}>
+            {righeTempo.filter((r) => r.suggerito).map((r) => (
+              <span key={r.c.id} className="variabile-hint">
+                {r.c.cliente}: ultimo mese {fmtN(r.suggerito.ultimoTotale)} €, oltre la fee fissa di {fmtN(r.c.lordoMensile)} €.{" "}
+                <button className="btn btn-ghost" onClick={() => setCommesse((prev) => prev.map((x) => (x.id === r.c.id ? { ...x, variabileMensile: r.suggerito.media } : x)))}>
+                  Conta {fmtN(r.suggerito.media)} €/mese di variabile
+                </button>
+              </span>
+            ))}
             €/h verde = sopra la tua media, ocra = sotto. Il «reale» arriva dai mesi in cui dici all&apos;assistente anche le ore lavorate.
             {attiveSenzaOre > 0 && ` ${attiveSenzaOre} ${attiveSenzaOre === 1 ? "commessa è senza" : "commesse sono senza"} stima ore: il tempo libero è sovrastimato.`}
           </p>

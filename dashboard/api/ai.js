@@ -58,6 +58,7 @@ const AZIONI_SCHEMA = {
               lordoProgetto: { type: 'number' },
               oreMensili: { type: 'number' },
               upsellTarget: { type: 'number' },
+              variabileMensile: { type: 'number' },
               stato: { type: 'string' },
               tipo: { type: 'string' },
               inizio: { type: 'string' },
@@ -111,6 +112,7 @@ Una volta al mese l'utente scrive, per ogni commessa, cose come: incassato lordo
 - incassato del mese → registra_pagamento (con "ore" se le ha dette). Se il mese non è indicato, è il mese corrente; se l'utente scrive a inizio mese parlando del mese appena chiuso, usa quel mese.
 - data di fine / durata ("finisce a marzo", "altri 3 mesi") → aggiorna_commessa con "fine" (ultimo giorno del mese indicato, YYYY-MM-DD).
 - quanto percepirà d'ora in poi (fee mensile) → aggiorna_commessa "lordoMensile" se diverso da quello attuale; per un progetto a corpo usa "lordoProgetto".
+- commessa con fee fissa + parte variabile ricorrente (provvigioni, extra a consumo, budget gestito…): "lordoMensile" resta la parte fissa, "variabileMensile" è la media del variabile al mese. Se l'utente dice che il variabile si somma ogni mese (es. "Domò ha 1.690 fissi più il variabile, questo mese 5.600 in tutto"), registra il pagamento reale e proponi aggiorna_commessa "variabileMensile" = media dell'extra sopra il fisso negli ultimi mesi (con i dati del contesto; se c'è un solo mese usa quello e dillo). Un extra una tantum NON è variabile: in quel caso non toccare variabileMensile.
 - ore previste al mese d'ora in poi → aggiorna_commessa "oreMensili" se diverse. Se dice solo le ore lavorate questo mese e non ha una stima, puoi usarle anche come oreMensili.
 - commessa finita → aggiorna_commessa stato "Concluso" (e fine se nota). Cliente nuovo → nuova_commessa.
 - lavoro già concluso ma pagato più avanti (es. "finito a ottobre, mi pagano a novembre") → stato "Concluso", "fine" = quando è finito il lavoro, "incasso" = data (YYYY-MM-DD, anche ultimo giorno del mese) in cui arriva il pagamento: l'importo conta nel mese dell'incasso.

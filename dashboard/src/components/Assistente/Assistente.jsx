@@ -9,11 +9,11 @@ const nf = new Intl.NumberFormat("it-IT");
 const fmtN = (n) => nf.format(Math.round(n ?? 0));
 
 const STATI = ["In corso", "In scadenza", "Da chiarire", "Sospeso", "Concluso", "Perso"];
-const CAMPI_NUM = ["lordoMensile", "lordoProgetto", "oreMensili", "upsellTarget"];
+const CAMPI_NUM = ["lordoMensile", "variabileMensile", "lordoProgetto", "oreMensili", "upsellTarget"];
 const CAMPI_STR = ["stato", "tipo", "inizio", "fine", "incasso", "priorita", "servizio", "note"];
 const CAMPI_BOOL = ["splitMezzoMese"];
 const LABEL_CAMPO = {
-  lordoMensile: "Fee lorda mensile", lordoProgetto: "Lordo progetto", oreMensili: "Ore/mese",
+  lordoMensile: "Fee lorda mensile (fissa)", variabileMensile: "Variabile medio al mese", lordoProgetto: "Lordo progetto", oreMensili: "Ore/mese",
   upsellTarget: "Upsell target", stato: "Stato", tipo: "Tipo", inizio: "Inizio", fine: "Fine", incasso: "Incasso previsto",
   splitMezzoMese: "Split 50/50", priorita: "Priorità", servizio: "Servizio", note: "Note",
 };
@@ -83,7 +83,7 @@ export default function Assistente({ commesse, setCommesse, setup, setSetup, see
       fattoreNetto: setup.fattoreNetto,
       commesse: commesse.map((c) => ({
         id: c.id, cliente: c.cliente, servizio: c.servizio, tipo: c.tipo, stato: c.stato,
-        lordoMensile: c.lordoMensile, lordoProgetto: c.lordoProgetto,
+        lordoMensile: c.lordoMensile, variabileMensile: c.variabileMensile || null, lordoProgetto: c.lordoProgetto,
         inizio: c.inizio, fine: c.fine, incasso: c.incasso || null, oreMensili: c.oreMensili,
         upsellTarget: c.upsellTarget, splitMezzoMese: !!c.splitMezzoMese,
         pagamenti: (c.pagamenti || []).map((p) => ({ mese: p.mese, importo: p.importo, nota: p.nota })),
@@ -258,7 +258,7 @@ export default function Assistente({ commesse, setCommesse, setup, setSetup, see
           cliente: String(k.cliente).trim(), servizio: k.servizio || "", tipo: k.tipo === "Progetto" ? "Progetto" : "Mensile",
           stato: STATI.includes(k.stato) ? k.stato : "In corso", priorita: "Media",
           inizio: k.inizio || null, fine: k.fine || null,
-          lordoMensile: num(k.lordoMensile), lordoProgetto: num(k.lordoProgetto), oreMensili: num(k.oreMensili),
+          lordoMensile: num(k.lordoMensile), variabileMensile: num(k.variabileMensile), lordoProgetto: num(k.lordoProgetto), oreMensili: num(k.oreMensili),
           upsellTarget: null, splitMezzoMese: false, note: "", pagamenti: [],
         };
         setCommesse((prev) => [...prev, { ...nuova, id: Math.max(0, ...prev.map((c) => Number(c.id) || 0)) + 1 }]);

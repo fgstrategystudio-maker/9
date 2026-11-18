@@ -3,7 +3,7 @@ import Assistente from "../Assistente/Assistente";
 import Icon from "../Icon";
 import { calcolaDashboard, calcolaNote, fmtN, MESI_IT } from "../Dashboard/calcoli";
 import { PipelineEditor, ReportMese, KpiDrillModal } from "../Dashboard/Parti";
-import { importoCompetenzaMese, oreCommessaMese, pipelineCommessa, dataBreve, icsPromemoria } from "../../utils/helpers";
+import { importoCompetenzaMese, oreCommessaMese, pipelineCommessa, dataBreve, icsPromemoria, stessoMese } from "../../utils/helpers";
 import s from "./DashboardB.module.css";
 
 // Versione "Orario": la dashboard come un orario dei prossimi 12 mesi.
@@ -68,11 +68,17 @@ export default function DashboardB({ commesse, setCommesse, setup, setSetup }) {
     ...simulate.map((p) => ({ ...pipelineCommessa(p), ipotesi: true, probabilita: p.probabilita })),
   ].map((c) => {
     const ore = Number(c.oreMensili) || 0;
-    const fee = Number(c.lordoMensile) || 0;
+    const fee = (Number(c.lordoMensile) || 0) + (Number(c.variabileMensile) || 0);
     const ora = ore > 0 && fee > 0 ? Math.round(fee / ore) : null;
     return {
       c, ora,
-      celle: mesi12.map(({ m, y }) => ({ v: importoCompetenzaMese(c, m, y), ore: oreCommessaMese(c, m, y) })),
+      celle: mesi12.map(({ m, y }, i) => {
+        // mese in corso: se il pagamento è già registrato vale quello reale (fisso + variabile)
+        const pagato = i === 0 && !c.ipotesi
+          ? (c.pagamenti || []).filter((p) => stessoMese(p.mese, `${MESI_IT[m]} ${y}`)).reduce((t, p) => t + (Number(p.importo) || 0), 0)
+          : 0;
+        return { v: pagato || importoCompetenzaMese(c, m, y), ore: oreCommessaMese(c, m, y), reale: pagato > 0 };
+      }),
     };
   }).sort((a, b) => (b.ora ?? -1) - (a.ora ?? -1));
   const ore = righe.map((r) => r.ora).filter((v) => v != null);
@@ -248,7 +254,7 @@ export default function DashboardB({ commesse, setCommesse, setup, setSetup }) {
                       <td key={i} className={i === 0 ? s.oggi : undefined}>
                         {piena && (
                           <span className={`${s.cella} ${s["g" + gradino(r.ora)]}${fine ? " " + s.ultima : ""}`} style={{ "--i": i }}
-                            title={`${r.c.cliente} · ${MESI_IT[mesi12[i].m]} ${mesi12[i].y}: ${fmtN(cella.v)} €${cella.ore ? `, ${fmtN(cella.ore)} h` : ""}`}>
+                            title={`${r.c.cliente} · ${MESI_IT[mesi12[i].m]} ${mesi12[i].y}: ${fmtN(cella.v)} €${cella.reale ? " incassati" : r.c.variabileMensile ? ` (${fmtN(r.c.lordoMensile)} fissi + ${fmtN(r.c.variabileMensile)} variabile)` : ""}${cella.ore ? `, ${fmtN(cella.ore)} h` : ""}`}>
                             {breve(cella.v)}
                           </span>
                         )}
@@ -365,12 +371,23 @@ export default function DashboardB({ commesse, setCommesse, setup, setSetup }) {
                 </div>
                 <div className={s.barra}><i className={s["g" + gradino(r.lordoOra)]} style={{ width: r.lordoOra ? `${(r.lordoOra / maxOra) * 100}%` : 0 }} /></div>
                 <div className={s.meta}>
-                  {r.ore ? `${fmtN(r.ore)} h/mese` : "ore da stimare"} · {r.lordo ? `${fmtN(r.lordo)} €/mese` : "senza fee"}
+                  {r.ore ? `${fmtN(r.ore)} h/mese` : "ore da stimare"} · {r.lordo ? (r.variabile ? `${fmtN(r.c.lordoMensile)} fissi + ${fmtN(r.variabile)} variabile` : `${fmtN(r.lordo)} €/mese`) : "senza fee"}
                   {r.nettoOra != null && ` · ${fmtN(r.nettoOra)} netti`}
                   {r.realeOra != null && ` · reale ${fmtN(r.realeOra)}`}
                   {r.mesi != null && ` · ${r.mesi === 0 ? "scaduta" : `${r.mesi} ${r.mesi === 1 ? "mese" : "mesi"}`}`}
                 </div>
                 {andamento(r.c.id)}
+                {r.suggerito && (
+                  <div className={s.suggerito}>
+                    <span>
+                      A {MESI_IT[Number(r.suggerito.ultimoMese.slice(5)) - 1].toLowerCase()} hai incassato {fmtN(r.suggerito.ultimoTotale)} €, oltre la fee fissa di {fmtN(r.c.lordoMensile)} €.
+                      {" "}Se ogni mese si aggiunge un variabile, contalo: in media +{fmtN(r.suggerito.media)} € {r.suggerito.mesi > 1 ? `negli ultimi ${r.suggerito.mesi} mesi` : "(un solo mese registrato)"}.
+                    </span>
+                    <button className="btn btn-ghost" onClick={() => setCommesse((prev) => prev.map((x) => (x.id === r.c.id ? { ...x, variabileMensile: r.suggerito.media } : x)))}>
+                      Conta {fmtN(r.suggerito.media)} €/mese di variabile
+                    </button>
+                  </div>
+                )}
               </li>
             ))}
             {perOra.length === 0 && <li className={s.meta}>Nessuna commessa attiva.</li>}

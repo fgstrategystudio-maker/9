@@ -190,3 +190,10 @@ td.oggi, th.oggi { background: color-mix(in oklab, var(--accent) 7%, transparent
   .azioniTesta :global(.btn) span { display: none; }
 }
 .bloccoTesta p span { white-space: nowrap; }
+
+.suggerito {
+  display: flex; align-items: center; gap: 10px 14px; flex-wrap: wrap; margin-top: 4px;
+  padding: 10px 12px; border-radius: 10px; background: var(--warn-wash); font-size: 13px; color: var(--ink);
+}
+.suggerito > span { flex: 1 1 260px; }
+.suggerito :global(.btn) { flex: none; }
