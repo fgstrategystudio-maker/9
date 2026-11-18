@@ -237,3 +237,20 @@
 }
 .tab td.r, .tab th.r { white-space: nowrap; }
 .tabListino td:first-child { min-width: 140px; }
+
+/* Riserve modificabili: nome sopra, valore · vendi al · incasseresti sotto */
+.riserve { display: flex; flex-direction: column; gap: 4px; align-items: stretch; }
+.riserve > :global(.btn) { align-self: flex-start; margin-top: 6px; }
+.risTesta { display: none; }
+.risRiga {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) 40px; gap: 8px 10px; align-items: end;
+  grid-template-areas: "nome nome nome via" "val pct inc inc"; padding: 12px 0; border-bottom: 1px solid var(--hair-soft);
+}
+.risNome { grid-area: nome; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.risNome b { font-size: 14px; }
+.risNome small { font-size: 12.5px; color: var(--ink-3); }
+.risRiga > :global(.btn) { grid-area: via; align-self: start; justify-self: end; }
+.risCampo:nth-of-type(1) { grid-area: val; }
+.risCampo:nth-of-type(2) { grid-area: pct; }
+.risCampo span { display: block; font-size: 12.5px; font-weight: 600; color: var(--ink-3); margin-bottom: 3px; }
+.risIncasso { grid-area: inc; text-align: right; font-weight: 700; white-space: nowrap; padding-bottom: 9px; }

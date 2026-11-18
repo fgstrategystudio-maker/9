@@ -30,7 +30,7 @@ export default function DashboardC({ variante = "olivetti", commesse, setCommess
   const {
     anno, meseIdx, meseCorrente, meseCorrManc, meseRegistrato, lordoMese, nettoMese,
     attive, righeTempo, oreTotali, oreLibere, oreDisponibili, lordoOraMedio, lordoOraReale,
-    mesi12, tempo12, cashFlowData, fineCassa, fineRiserve, riserve, riserveVendibili, cassaIniziale, cassaData,
+    mesi12, tempo12, cashFlowData, fineCassa, fineRiserve, riserveVendibili, cassaIniziale, cassaData,
     patrimonio, debitoFiscale, cassaLibera, tasseMaturate, accontiVersati, prossimiF24, f24Override, taxRate,
     contoAnno, annualData, annoPrecImporto, yoyDeltaPct, lordoAnnoCorrente, totaleCostiFissi, totaleCostiAnnuali, totaleCostiAnnualiMensile,
     usciteMensili, pipeline, mesiAutonomia, mesiAutonomiaRiserve, goals, serieClientiDati, statoCount, statoTotal,
@@ -112,9 +112,6 @@ export default function DashboardC({ variante = "olivetti", commesse, setCommess
     ...prev,
     f24Pagati: { ...(prev.f24Pagati || {}), [keyGiugno]: { ...((prev.f24Pagati || {})[keyGiugno] || {}), [campo]: val === "" ? null : Number(val) } },
   }));
-  const setRealizzo = (id, pct) => setSetup((prev) => (id === "crypto"
-    ? { ...prev, cryptoRealizzo: pct }
-    : { ...prev, altriAsset: (prev.altriAsset || []).map((a) => (a.id === id ? { ...a, realizzo: pct } : a)) }));
   const scaricaPromemoria = () => {
     const blob = new Blob([icsPromemoria(window.location.origin)], { type: "text/calendar;charset=utf-8" });
     const a = document.createElement("a");
@@ -407,20 +404,64 @@ export default function DashboardC({ variante = "olivetti", commesse, setCommess
     </section>
   );
 
-  const riserveBlocco = riserve.length > 0 && (
-    <section className={s.blocco}>
-      <div className={s.testaBlocco}><h2><Icon name="wallet" size={15} />Riserve vendibili</h2><p>quanto incasseresti vendendo, e quanti mesi in più ti danno</p></div>
-          <dl className={s.libro}>
-            {riserve.map((r) => (
-              <div key={r.id}>
-                <dt>{r.nome}<small>valore {fmtN(r.valore)} €, vendi al
-                  <input className={"input num " + s.pct} type="number" min="0" max="100" value={r.pct} aria-label={`Percentuale di vendita ${r.nome}`}
-                    onChange={(e) => setRealizzo(r.id, Math.min(100, Number(e.target.value) || 0))} />%</small></dt>
-                <dd>{euro((r.valore * r.pct) / 100)}</dd>
-              </div>
-            ))}
-            <div className={s.totale}><dt>Mesi di autonomia senza incassi<small>{mesiAutonomia ?? "—"} con la sola cassa</small></dt><dd>{mesiAutonomiaRiserve ?? "—"}</dd></div>
-          </dl>
+  // Riserve: crypto e beni modificabili in qualsiasi momento; ogni modifica
+  // ricalcola patrimonio, fine cassa con le riserve, autonomia e avvisi.
+  const oggiIso = new Date().toISOString().slice(0, 10);
+  const numero = (v) => (v === "" ? 0 : Math.max(0, Number(v) || 0));
+  const setCrypto = (patch) => setSetup((prev) => ({ ...prev, ...patch, cryptoAggiornato: new Date().toLocaleDateString("it-IT") }));
+  const setBene = (id, patch) => setSetup((prev) => ({
+    ...prev, altriAsset: (prev.altriAsset || []).map((x) => (x.id === id ? { ...x, ...patch, aggiornato: oggiIso } : x)),
+  }));
+  const togliBene = (b) => {
+    if (!confirm(`Togliere «${b.nome || "bene"}» dalle riserve?`)) return;
+    setSetup((prev) => ({ ...prev, altriAsset: (prev.altriAsset || []).filter((x) => x.id !== b.id) }));
+  };
+  const aggiungiBene = () => setSetup((prev) => {
+    const beni = prev.altriAsset || [];
+    return { ...prev, altriAsset: [...beni, { id: Math.max(0, ...beni.map((x) => Number(x.id) || 0)) + 1, nome: "", valore: 0, realizzo: 80, aggiornato: oggiIso }] };
+  });
+  const voci = [
+    { id: "crypto", nome: "Crypto", valore: Number(setup.crypto) || 0, pct: setup.cryptoRealizzo ?? 95, data: setup.cryptoAggiornato, fisso: true },
+    ...(setup.altriAsset || []).map((x) => ({ id: x.id, nome: x.nome, valore: Number(x.valore) || 0, pct: x.realizzo ?? 80, data: x.aggiornato, bene: x })),
+  ];
+  const riserveBlocco = (
+    <section className={s.blocco} id="vc-riserve">
+      <div className={s.testaBlocco}>
+        <h2><Icon name="wallet" size={15} />Riserve vendibili</h2>
+        <p>cambia i valori quando vuoi: si aggiorna tutto</p>
+      </div>
+      <div className={s.riserve}>
+        <div className={s.risTesta} aria-hidden="true"><span>Voce</span><span>Valore</span><span>Vendi al</span><span>Incasseresti</span><span></span></div>
+        {voci.map((v) => (
+          <div key={v.id} className={s.risRiga}>
+            <span className={s.risNome}>
+              {v.fisso ? <b>{v.nome}</b> : (
+                <input className="input" value={v.nome} placeholder="es. Orologio" aria-label="Nome del bene"
+                  onChange={(e) => setBene(v.id, { nome: e.target.value })} />
+              )}
+              <small>{v.data ? `aggiornato al ${dataBreve(v.data)}` : "mai aggiornato"}</small>
+            </span>
+            <label className={s.risCampo}><span>Valore</span>
+              <input className="input num" type="number" min="0" step="50" value={v.valore || ""} placeholder="0" aria-label={`Valore ${v.nome || "bene"} in euro`}
+                onChange={(e) => (v.fisso ? setCrypto({ crypto: numero(e.target.value) }) : setBene(v.id, { valore: numero(e.target.value) }))} />
+            </label>
+            <label className={s.risCampo}><span>Vendi al %</span>
+              <input className="input num" type="number" min="0" max="100" value={v.pct} aria-label={`Percentuale di vendita ${v.nome || "bene"}`}
+                onChange={(e) => { const pct = Math.min(100, numero(e.target.value)); if (v.fisso) setCrypto({ cryptoRealizzo: pct }); else setBene(v.id, { realizzo: pct }); }} />
+            </label>
+            <span className={s.risIncasso}>{euro((v.valore * v.pct) / 100)}</span>
+            {v.fisso ? <span /> : (
+              <button className="btn btn-quiet" onClick={() => togliBene(v.bene)} aria-label={`Togli ${v.nome || "bene"}`}><Icon name="trash" size={15} /></button>
+            )}
+          </div>
+        ))}
+        <button className="btn btn-ghost" onClick={aggiungiBene}><Icon name="plus" size={15} /> Aggiungi un bene</button>
+      </div>
+      <dl className={s.libro}>
+        <div><dt>Patrimonio totale<small>cassa {fmtN(cassaIniziale)} + riserve {fmtN(patrimonio.crypto + patrimonio.totaleAltri)} €</small></dt><dd>{euro(patrimonio.totale)}</dd></div>
+        <div><dt>Vendendo tutto oggi incasseresti</dt><dd>{euro(riserveVendibili)}</dd></div>
+        <div className={s.totale}><dt>Mesi di autonomia senza incassi<small>{mesiAutonomia ?? "—"} con la sola cassa{fineRiserve || fineCassa ? ` · con le riserve la cassa basta fino a ${fineRiserve ? meseLungo(fineRiserve) : "oltre 3 anni"}` : ""}</small></dt><dd>{mesiAutonomiaRiserve ?? "—"}</dd></div>
+      </dl>
     </section>
   );
 
