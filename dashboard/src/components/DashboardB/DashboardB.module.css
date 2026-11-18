@@ -221,3 +221,4 @@ td.oggi, th.oggi { background: color-mix(in oklab, var(--accent) 7%, transparent
 .scalaBtn span { margin-left: 6px; }
 .scalaBtn:hover { border-color: var(--ink-3); color: var(--ink); }
 .scalaOn { border-color: var(--ink); color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.reale { display: block; font-family: var(--font-sans); font-size: 10.5px; font-weight: 600; color: var(--ink-3); }

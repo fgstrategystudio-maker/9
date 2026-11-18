@@ -3,7 +3,7 @@ import Assistente from "../Assistente/Assistente";
 import Icon from "../Icon";
 import { calcolaDashboard, calcolaNote, fmtN, MESI_IT } from "../Dashboard/calcoli";
 import { PipelineEditor, ReportMese, KpiDrillModal } from "../Dashboard/Parti";
-import { importoCompetenzaMese, oreCommessaMese, pipelineCommessa, dataBreve, icsPromemoria, stessoMese } from "../../utils/helpers";
+import { importoCompetenzaMese, oreCommessaMese, pipelineCommessa, dataBreve, icsPromemoria, registroMese } from "../../utils/helpers";
 import s from "./DashboardB.module.css";
 
 // Versione "Orario": la dashboard come un orario dei prossimi 12 mesi.
@@ -55,6 +55,7 @@ export default function DashboardB({ commesse, setCommesse, setup, setSetup }) {
   } = D;
 
   const tasseMese = Math.round(lordoMese * taxRate);
+  const giaIncassato = commesse.reduce((t, c) => t + registroMese(c, meseIdx, anno).importo, 0);
   const conferma = (c) => {
     if (!confirm(`Confermi che «${c.cliente}» è conclusa? Verrà archiviata come Conclusa.`)) return;
     setCommesse((prev) => prev.map((x) => (x.id === c.id ? { ...x, stato: "Concluso" } : x)));
@@ -77,16 +78,15 @@ export default function DashboardB({ commesse, setCommesse, setup, setSetup }) {
   ].map((c) => {
     const ore = Number(c.oreMensili) || 0;
     const fee = (Number(c.lordoMensile) || 0) + (Number(c.variabileMensile) || 0);
-    const ora = ore > 0 && fee > 0 ? Math.round(fee / ore) : null;
+    // mese in corso: incassato e ore registrati (anche 0 € con sole ore) vincono sulla stima
+    const reg = c.ipotesi ? { presente: false, importo: 0, ore: 0 } : registroMese(c, meseIdx, anno);
+    const oraReale = reg.ore > 0 ? Math.round(reg.importo / reg.ore) : null;
+    const ora = oraReale ?? (ore > 0 && fee > 0 ? Math.round(fee / ore) : null);
     return {
-      c, ora,
-      celle: mesi12.map(({ m, y }, i) => {
-        // mese in corso: se il pagamento è già registrato vale quello reale (fisso + variabile)
-        const pagato = i === 0 && !c.ipotesi
-          ? (c.pagamenti || []).filter((p) => stessoMese(p.mese, `${MESI_IT[m]} ${y}`)).reduce((t, p) => t + (Number(p.importo) || 0), 0)
-          : 0;
-        return { v: pagato || importoCompetenzaMese(c, m, y), ore: oreCommessaMese(c, m, y), reale: pagato > 0 };
-      }),
+      c, ora, oraReale, reg,
+      celle: mesi12.map(({ m, y }, i) => (i === 0 && reg.presente
+        ? { v: reg.importo, ore: reg.ore || oreCommessaMese(c, m, y), reale: true }
+        : { v: importoCompetenzaMese(c, m, y), ore: oreCommessaMese(c, m, y), reale: false })),
     };
   }).sort((a, b) => (b.ora ?? -1) - (a.ora ?? -1));
   const ore = righe.map((r) => r.ora).filter((v) => v != null);
@@ -166,7 +166,7 @@ export default function DashboardB({ commesse, setCommesse, setup, setSetup }) {
       {/* Il punto della situazione, in frasi */}
       <section className={s.punto} aria-label="Il punto">
         <p className={s.frase}>
-          {nomeMese}: <N onClick={() => setDrill("lordoAttivo")}>{fmtN(lordoMese)} €</N> lordi {meseRegistrato ? "incassati" : "previsti"} (<N onClick={() => setDrill("nettoAttivo")}>{fmtN(nettoMese)}</N> netti, <N onClick={() => setDrill("profitto")}>{fmtN(profittoMensile)}</N> di profitto dopo i costi fissi)
+          {nomeMese}: <N onClick={() => setDrill("lordoAttivo")}>{fmtN(lordoMese)} €</N> lordi {meseRegistrato ? "incassati" : "previsti"}{!meseRegistrato && giaIncassato > 0 && <> dai contratti, <N>{fmtN(giaIncassato)} €</N> già registrati</>} (<N onClick={() => setDrill("nettoAttivo")}>{fmtN(nettoMese)}</N> netti, <N onClick={() => setDrill("profitto")}>{fmtN(profittoMensile)}</N> di profitto dopo i costi fissi)
           {" "}da {attive.length} {attive.length === 1 ? "commessa" : "commesse"}, con <N>{fmtN(oreTotali)} ore</N> di lavoro
           {lordoOraMedio != null && <>: <N onClick={() => setDrill("orario")}>{fmtN(lordoOraMedio)} €/h</N> ({fmtN(nettoOraMedio)} netti)</>}.
           {" "}Ti restano <N tono="pos" onClick={() => setDrill("tempo")}>{fmtN(oreLibere)} ore libere</N> su {oreDisponibili}.
@@ -282,18 +282,21 @@ export default function DashboardB({ commesse, setCommesse, setup, setSetup }) {
                     <span className={s.nome}>{r.c.cliente}</span>
                     <span className={s.meta}>
                       {r.c.ipotesi ? `ipotesi · ${r.c.probabilita ?? 50}%` : r.c.stato === "Concluso" ? "saldo progetto" : r.c.fine ? `fino a ${dataBreve(r.c.fine)}` : "senza fine"}
+                      {r.reg.ore > 0 && ` · ${fmtN(r.reg.ore)} h a ${MESI_IT[meseIdx].slice(0, 3).toLowerCase()}`}
                     </span>
                   </th>
-                  <td className={s.colOra}>{r.ora != null ? fmtN(r.ora) : "—"}</td>
+                  <td className={s.colOra} title={r.oraReale != null ? `€/h reale di ${MESI_IT[meseIdx].toLowerCase()}: ${fmtN(r.reg.importo)} € in ${fmtN(r.reg.ore)} ore` : "€/h stimato: compenso al mese diviso le ore al mese previste"}>
+                    {r.ora != null ? fmtN(r.ora) : "—"}{r.oraReale != null && <small className={s.reale}>reale</small>}
+                  </td>
                   {r.celle.map((cella, i) => {
-                    const piena = cella.v > 0;
+                    const piena = cella.v > 0 || cella.reale;
                     const fine = piena && !(r.celle[i + 1]?.v > 0);
                     return (
                       <td key={i} className={i === 0 ? s.oggi : undefined}>
                         {piena && (
                           <span className={`${s.cella} ${s["g" + gradino(r.ora)]}${fine ? " " + s.ultima : ""}`} style={{ "--i": i }}
                             title={`${r.c.cliente} · ${MESI_IT[mesi12[i].m]} ${mesi12[i].y}: ${fmtN(cella.v)} €${cella.reale ? " incassati" : r.c.variabileMensile ? ` (${fmtN(r.c.lordoMensile)} fissi + ${fmtN(r.c.variabileMensile)} variabile)` : ""}${cella.ore ? `, ${fmtN(cella.ore)} h` : ""}`}>
-                            {breve(cella.v)}
+                            {cella.reale && cella.v === 0 ? "0 €" : breve(cella.v)}
                           </span>
                         )}
                       </td>
@@ -353,7 +356,7 @@ export default function DashboardB({ commesse, setCommesse, setup, setSetup }) {
             const t = tempo12[i];
             const r = cassaDi(m, y);
             const cassa = r ? (scenarioAttivo ? r.cassaScenario : r.cassa) : null;
-            const chi = righe.filter((x) => x.celle[i].v > 0);
+            const chi = righe.filter((x) => x.celle[i].v > 0 || x.celle[i].reale);
             return (
               <li key={i} className={i === 0 ? s.oggiMobile : undefined}>
                 <div className={s.mmTesta}>
@@ -368,7 +371,7 @@ export default function DashboardB({ commesse, setCommesse, setup, setSetup }) {
                 {chi.length > 0 && (
                   <div className={s.mmChi}>
                     {chi.map((x) => (
-                      <span key={x.c.id} className={`${s.chip} ${s["g" + gradino(x.ora)]}${x.c.ipotesi ? " " + s.chipIpotesi : ""}`}>{x.c.cliente} {breve(x.celle[i].v)}</span>
+                      <span key={x.c.id} className={`${s.chip} ${s["g" + gradino(x.ora)]}${x.c.ipotesi ? " " + s.chipIpotesi : ""}`}>{x.c.cliente} {x.celle[i].reale && x.celle[i].v === 0 ? "0 €" : breve(x.celle[i].v)}</span>
                     ))}
                   </div>
                 )}
@@ -419,7 +422,7 @@ export default function DashboardB({ commesse, setCommesse, setup, setSetup }) {
                 </div>
                 <div className={s.barra}><i className={s["g" + gradino(r.lordoOra)]} style={{ width: r.lordoOra ? `${(r.lordoOra / maxOra) * 100}%` : 0 }} /></div>
                 <div className={s.meta}>
-                  {r.ore ? `${fmtN(r.ore)} h/mese` : "ore da stimare"} · {r.lordo ? (r.variabile ? `${fmtN(r.c.lordoMensile)} fissi + ${fmtN(r.variabile)} variabile` : `${fmtN(r.lordo)} €/mese`) : "senza fee"}
+                  {r.ore ? (r.oreReali ? `${fmtN(r.ore)} h registrate a ${nomeMese.toLowerCase()}${r.oreStima ? ` (stima ${fmtN(r.oreStima)})` : ""}` : `${fmtN(r.ore)} h/mese`) : "ore da stimare"} · {r.lordo ? (r.variabile ? `${fmtN(r.c.lordoMensile)} fissi + ${fmtN(r.variabile)} variabile` : `${fmtN(r.lordo)} €/mese`) : "senza fee"}
                   {r.nettoOra != null && ` · ${fmtN(r.nettoOra)} netti`}
                   {r.realeOra != null && ` · reale ${fmtN(r.realeOra)}`}
                   {r.mesi != null && ` · ${r.mesi === 0 ? "scaduta" : `${r.mesi} ${r.mesi === 1 ? "mese" : "mesi"}`}`}

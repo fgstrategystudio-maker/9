@@ -338,7 +338,10 @@ export default function Dashboard({ commesse, setCommesse, setup, setSetup, them
                           <div style={{ fontWeight: 600, color: "var(--ink)" }}>{r.c.cliente}</div>
                           <div style={{ fontSize: 12, color: "var(--ink-3)" }}>{r.c.tipo === "Progetto" ? "progetto" : "mensile"}{r.c.servizio ? ` · ${r.c.servizio}` : ""}</div>
                         </td>
-                        <td className="r num">{r.ore ? `${fmtN(r.ore)} h` : <span style={{ color: "var(--warn)" }}>manca</span>}</td>
+                        <td className="r num">
+                        {r.ore ? `${fmtN(r.ore)} h` : <span style={{ color: "var(--warn)" }}>manca</span>}
+                        {r.oreReali && <div style={{ fontSize: 11.5, color: "var(--ink-3)" }}>registrate</div>}
+                      </td>
                         <td className="r num">
                           {r.lordo ? `${fmtN(r.lordo)} €` : "—"}
                           {r.variabile > 0 && <div style={{ fontSize: 11.5, color: "var(--ink-3)" }}>di cui {fmtN(r.variabile)} variabile</div>}

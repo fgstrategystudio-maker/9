@@ -506,3 +506,15 @@ export function variabileSuggerito(c) {
   const ultimo = ultimi[ultimi.length - 1];
   return { media, mesi: ultimi.length, ultimoMese: ultimo, ultimoTotale: perMese[ultimo] };
 }
+
+// Quanto è registrato su una commessa in un mese: incassato, ore lavorate e se
+// esiste almeno una voce (anche 0 € con sole ore).
+export function registroMese(c, monthIdx, year) {
+  const k = `${year}-${String(monthIdx + 1).padStart(2, "0")}`;
+  const voci = (c.pagamenti || []).filter((p) => chiaveMese(p.mese) === k);
+  return {
+    presente: voci.length > 0,
+    importo: voci.reduce((t, p) => t + (Number(p.importo) || 0), 0),
+    ore: voci.reduce((t, p) => t + (Number(p.ore) || 0), 0),
+  };
+}

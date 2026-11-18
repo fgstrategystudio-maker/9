@@ -6,7 +6,7 @@ import {
   getLordoPerMese, sumLordoAnno, stessoMese, chiaveMese, statPagamentiCommessa,
   oreCommessaMese, orarioRealeCommessa, mesiRimanenti, valoreResiduo, calcPatrimonio,
   dataBreve, pipelineCommessa, lordoPipelineMesi, creaPianoF24, serieOrarioClienti,
-  importoCompetenzaMese, variabileSuggerito,
+  importoCompetenzaMese, variabileSuggerito, registroMese,
 } from "../../utils/helpers";
 
 export const MESI_IT = [
@@ -58,15 +58,20 @@ export function calcolaDashboard(commesse, setup, now = new Date()) {
   const oreDisponibili = setup.oreMeseDisponibili ?? 160;
   const righeTempo = attive
     .map((c) => {
-      const ore = oreCommessaMese(c, meseIdx, anno) || Number(c.oreMensili) || 0;
+      const oreStima = oreCommessaMese(c, meseIdx, anno) || Number(c.oreMensili) || 0;
       const lordo = getCommessaLordoMensile(c) || 0;
       const reale = orarioRealeCommessa(c);
+      // mese in corso: se hai registrato le ore, valgono quelle (e l'incassato vero)
+      const reg = registroMese(c, meseIdx, anno);
+      const oreReali = reg.ore > 0;
+      const ore = oreReali ? reg.ore : oreStima;
+      const lordoOraBase = oreReali ? reg.importo : lordo;
       return {
-        c, ore, lordo,
+        c, ore, oreStima, oreReali, lordo, lordoMeseReale: reg.presente ? reg.importo : null,
         variabile: Number(c.variabileMensile) || 0,
         suggerito: c.variabileMensile ? null : variabileSuggerito(c),
-        lordoOra: ore > 0 && lordo ? Math.round(lordo / ore) : null,
-        nettoOra: ore > 0 && lordo ? Math.round((lordo * setup.fattoreNetto) / ore) : null,
+        lordoOra: ore > 0 && (lordo || oreReali) ? Math.round(lordoOraBase / ore) : null,
+        nettoOra: ore > 0 && (lordo || oreReali) ? Math.round((lordoOraBase * setup.fattoreNetto) / ore) : null,
         realeOra: reale ? reale.lordoOra : null,
         realeMesi: reale ? reale.mesi : 0,
         mesi: mesiRimanenti(c),
@@ -79,7 +84,7 @@ export function calcolaDashboard(commesse, setup, now = new Date()) {
   const saturazione = oreDisponibili > 0 ? Math.round((oreTotali / oreDisponibili) * 100) : 0;
   const attiveSenzaOre = righeTempo.filter((r) => !r.ore).length;
   // €/h medio: solo sulle commesse con ore stimate (pesato sulle ore)
-  const lordoConOre = righeTempo.filter((r) => r.ore > 0).reduce((s, r) => s + r.lordo, 0);
+  const lordoConOre = righeTempo.filter((r) => r.ore > 0).reduce((s, r) => s + (r.oreReali ? r.lordoMeseReale : r.lordo), 0);
   const lordoOraMedio = oreTotali > 0 ? Math.round(lordoConOre / oreTotali) : null;
   const nettoOraMedio = lordoOraMedio != null ? Math.round(lordoOraMedio * setup.fattoreNetto) : null;
   // €/h reale dell'anno: dai pagamenti registrati insieme alle ore lavorate
@@ -100,7 +105,11 @@ export function calcolaDashboard(commesse, setup, now = new Date()) {
 
   // Prossimi 12 mesi: ore impegnate, ore libere e lordo previsto (+ scenario)
   const tempo12 = mesi12.map(({ m, y }) => {
-    const impegnate = commesse.reduce((s, c) => s + oreCommessaMese(c, m, y), 0);
+    // nel mese in corso contano le ore registrate, dove ci sono
+    const impegnate = commesse.reduce((s, c) => {
+      const reg = m === meseIdx && y === anno ? registroMese(c, m, y) : null;
+      return s + (reg && reg.ore > 0 ? reg.ore : oreCommessaMese(c, m, y));
+    }, 0);
     const libereBase = Math.max(0, oreDisponibili - impegnate);
     const scenario = Math.min(libereBase, commesseSimulate.reduce((s, c) => s + oreCommessaMese(c, m, y), 0));
     return {
@@ -109,7 +118,10 @@ export function calcolaDashboard(commesse, setup, now = new Date()) {
       scenario,
       libere: libereBase - scenario,
       libereBase,
-      lordo: getLordoPerMese(m, y, commesse),
+      // mese in corso: incassato registrato per commessa dove c'è, altrimenti contratto
+      lordo: m === meseIdx && y === anno
+        ? commesse.reduce((t, c) => { const reg = registroMese(c, m, y); return t + (reg.presente ? reg.importo : importoCompetenzaMese(c, m, y)); }, 0)
+        : getLordoPerMese(m, y, commesse),
       lordoScenario: scenarioAttivo ? getLordoPerMese(m, y, commesseScenario) : null,
     };
   });
