@@ -469,9 +469,9 @@ export default function DashboardB({ commesse, setCommesse, setup, setSetup }) {
           ))}
         </div>
         <div className={s.legenda}>
-          <span><i className={s.sw} style={{ background: "var(--pos)" }} />registrato</span>
-          <span><i className={s.sw} style={{ background: "var(--warn)" }} />questo mese, stimato</span>
-          <span><i className={s.sw} style={{ background: "var(--info)" }} />previsto dai contratti</span>
+          <span><i className={s.sw} style={{ background: "var(--ink-2)" }} />registrato</span>
+          <span><i className={s.sw} style={{ background: "var(--accent)" }} />questo mese, stimato</span>
+          <span><i className={s.sw} style={{ boxShadow: "inset 0 0 0 1.5px var(--ink-3)" }} />previsto dai contratti</span>
           <span>Costi dell&apos;anno {fmtN(contoAnno.costiFissiAnno + totaleCostiAnnuali)} € · tasse {fmtN(contoAnno.tasse)} €</span>
         </div>
       </section>
