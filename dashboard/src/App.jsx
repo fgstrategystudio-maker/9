@@ -93,10 +93,10 @@ export default function App() {
   const [network, setNetwork] = useLocalStorage("network", INITIAL_NETWORK);
   const [view, setView] = useState("dashboard");
   const [tema, setTema] = useState(temaIniziale);
-  // Versioni della dashboard: "b" Orario (predefinita), "a" Classica e le tre
-  // direzioni a confronto: Olivetti, Pagine rosa, Standard
+  // Versioni della dashboard: Olivetti (predefinita, scelta dall'utente),
+  // "b" Orario, "a" Classica, Pagine rosa e Standard
   const [versione, setVersioneState] = useState(() => {
-    try { const v = localStorage.getItem("dashVersione"); return VERSIONI.includes(v) ? v : "b"; } catch { return "b"; }
+    try { const v = localStorage.getItem("dashVersione"); return VERSIONI.includes(v) ? v : "olivetti"; } catch { return "olivetti"; }
   });
   useEffect(() => { document.documentElement.dataset.versione = versione; }, [versione]);
   const setVersione = (v) => {

@@ -53,7 +53,7 @@ export default function Sidebar({ view, onNavigate, tema, onTema, versione, onVe
           <div className={styles.versione} role="group" aria-label="Versione della dashboard">
             <span>Dashboard</span>
             <div>
-              {[["b", "Orario"], ["a", "Classica"], ["olivetti", "Olivetti"], ["rosa", "Rosa"], ["standard", "Standard"]].map(([id, nome]) => (
+              {[["olivetti", "Olivetti"], ["b", "Orario"], ["a", "Classica"], ["rosa", "Rosa"], ["standard", "Standard"]].map(([id, nome]) => (
                 <button key={id} className={versione === id ? styles.vOn : ""} aria-pressed={versione === id}
                   onClick={() => { onVersione(id); onNavigate("dashboard"); setOpen(false); }}>{nome}</button>
               ))}
