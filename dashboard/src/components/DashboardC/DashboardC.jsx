@@ -34,7 +34,7 @@ export default function DashboardC({ variante = "olivetti", commesse, setCommess
     patrimonio, debitoFiscale, cassaLibera, tasseMaturate, accontiVersati, prossimiF24, f24Override, taxRate,
     contoAnno, annualData, annoPrecImporto, yoyDeltaPct, totaleCostiFissi, totaleCostiAnnuali, totaleCostiAnnualiMensile,
     usciteMensili, pipeline, mesiAutonomia, mesiAutonomiaRiserve, goals, serieClientiDati, statoCount, statoTotal,
-    costiFissiMensili, saturazione,
+    costiFissiMensili, saturazione, aliquotaEffettiva, taxRateF24,
   } = D;
 
   const conferma = (c) => {
@@ -61,7 +61,8 @@ export default function DashboardC({ variante = "olivetti", commesse, setCommess
       libere: tempo12[i].libere, impegnate: tempo12[i].impegnate,
       entrate: corrente ? voci.reduce((t, x) => t + x.v, 0) : tempo12[i].lordo,
       f24: cf?.tasse || 0, uscite: cf?.costi ?? usciteMensili,
-      cassa: cf ? cf.cassa : null,
+      // il cash flow parte dal mese dopo la data della cassa: nel mese in corso vale la cassa di oggi
+      cassa: cf ? cf.cassa : corrente ? cassaIniziale : null,
     };
   });
   const tutteOre = mesi.flatMap((x) => x.voci.map((v) => v.ora)).filter((v) => v != null);
@@ -357,7 +358,7 @@ export default function DashboardC({ variante = "olivetti", commesse, setCommess
         <button onClick={() => setDrill("speseAnnuali")}><dt>Spese annuali<small>promemoria · non le stai pagando ora</small></dt><dd>{euro(totaleCostiAnnuali)}</dd></button>
         <button onClick={() => setDrill("equivMensile")}><dt>Equivalente mensile<small>se le spalmassi ogni mese · nel cash flow</small></dt><dd>{euro(totaleCostiAnnualiMensile)}</dd></button>
         <button onClick={() => setDrill("patrimonio")}><dt>Cassa sul conto<small>{cassaData ? `al ${dataBreve(cassaData)}` : "aggiornala con l'assistente"}</small></dt><dd>{euro(cassaIniziale)}</dd></button>
-        <button onClick={() => setDrill("tasse")}><dt>Tasse {anno} maturate<small>{Math.round(taxRate * 100)}% del lordo{accontiVersati ? `, versati ${fmtN(accontiVersati)}` : ""}</small></dt><dd>{euro(tasseMaturate)}</dd></button>
+        <button onClick={() => setDrill("tasse")}><dt>Tasse {anno} maturate<small>{Math.round(taxRateF24 * 100)}% del lordo · {aliquotaEffettiva != null ? "aliquota effettiva dai tuoi F24" : "aliquota del Setup"}{accontiVersati ? `, versati ${fmtN(accontiVersati)}` : ""}</small></dt><dd>{euro(tasseMaturate)}</dd></button>
         <div className={s.totale}><dt>Da tenere da parte · cassa libera</dt><dd>{euro(debitoFiscale)} · {euro(cassaLibera)}</dd></div>
       </dl>
       <h3 className={s.sotto}>F24</h3>

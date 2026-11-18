@@ -254,11 +254,25 @@ export function calcolaDashboard(commesse, setup, now = new Date()) {
     if (y > anno) return MESI_IT.reduce((s, _, m) => s + getLordoPerMese(m, y, commesse), 0);
     return null;
   };
-  const tasseAnno = (y) => { const l = lordoAnnoNoto(y); return l == null ? null : Math.round(l * taxRate); };
   const f24Override = setup.f24 || {};
-  const modoTasse = setup.cashTasse || "f24";
-  const tasseMaturate = Math.round(lordoAnnoCorrente * taxRate);
   const f24Pagati = setup.f24Pagati || {};
+  // Aliquota effettiva dagli F24 reali: gli acconti dell'anno (giugno + novembre)
+  // valgono il 100% delle tasse dell'anno prima (metodo storico). Se li hai
+  // inseriti, le stime usano quella invece dell'aliquota generica del Setup.
+  const aliquotaEffettiva = (() => {
+    const v = (x) => (x != null && x !== "" ? Number(x) : null);
+    const giugno = v(f24Pagati[`${anno}-06`]?.acconto);
+    if (giugno == null) return null;
+    const novembre = v(f24Override[`${anno}-11`]) ?? v(f24Pagati[`${anno}-11`]?.importo) ?? giugno;
+    const lordoPrec = lordoAnnoNoto(anno - 1);
+    if (!lordoPrec) return null;
+    const r = (giugno + novembre) / lordoPrec;
+    return r > 0 && r < 0.6 ? r : null;
+  })();
+  const taxRateF24 = aliquotaEffettiva ?? taxRate;
+  const tasseAnno = (y) => { const l = lordoAnnoNoto(y); return l == null ? null : Math.round(l * taxRateF24); };
+  const modoTasse = setup.cashTasse || "f24";
+  const tasseMaturate = Math.round(lordoAnnoCorrente * taxRateF24);
   const pianoF24 = creaPianoF24(tasseAnno, f24Override, f24Pagati);
   // Acconti per l'anno in corso già versati (giugno, e novembre se passato)
   const accontiVersati = pianoF24.accontiVersati(anno, meseIdx);
@@ -361,7 +375,7 @@ export function calcolaDashboard(commesse, setup, now = new Date()) {
   });
 
   return {
-    setup, now, storia6, anno, meseIdx, attive, hasSplit, lordoMensileAttivo, nettoMensileAttivo, statoCount, statoTotal, conScadenza, scadute, inScadenza, oreDisponibili, righeTempo, oreTotali, oreLibere, saturazione, attiveSenzaOre, lordoConOre, lordoOraMedio, nettoOraMedio, realeAnno, lordoOraReale, residuoTotale, pipeline, simulate, scenarioAttivo, commesseSimulate, commesseScenario, mesi12, tempo12, oreLibere12, barData, hasIncassatoReale, revenueHistory, sortedStorico, meseCorrente, meseCorrManc, meseRegistrato, lordoMese, nettoMese, nomeMese, costiFissi, costiFissiMensili, costiAnnuali, totaleCostiFissi, totaleCostiAnnuali, totaleCostiAnnualiMensile, cassaIniziale, cryptoAggiornato, patrimonio, cassaData, inizioCash, usciteMensili, mesiAutonomia, profittoMensile, breakEvenLordo, ytdLordo, ytdNetto, ytdMesi, ytdProfitto, lordoAnnoCorrente, redditiAnnuali, annoPrecImporto, yoyDeltaPct, yoyDeltaAbs, annualData, totReale, totProiezione, totAnno, mesiMancanti, contoAnno, taxRate, lordoAnnoNoto, tasseAnno, f24Override, modoTasse, tasseMaturate, f24Pagati, pianoF24, accontiVersati, keyGiugno, giugnoPagato, debitoFiscale, cassaLibera, prossimiF24, pipelinePesata, pipelinePiena, orario12, oreLibere12Scenario, calcCash, riserve, riserveVendibili, cashFlowData, lungo, fineCassa, fineRiserve, mesiAutonomiaRiserve, cassaFinale, cassaFinaleScenario, tasseCash, obiettivi, goals, serieClientiDati, datiClienti,
+    setup, now, storia6, aliquotaEffettiva, taxRateF24, anno, meseIdx, attive, hasSplit, lordoMensileAttivo, nettoMensileAttivo, statoCount, statoTotal, conScadenza, scadute, inScadenza, oreDisponibili, righeTempo, oreTotali, oreLibere, saturazione, attiveSenzaOre, lordoConOre, lordoOraMedio, nettoOraMedio, realeAnno, lordoOraReale, residuoTotale, pipeline, simulate, scenarioAttivo, commesseSimulate, commesseScenario, mesi12, tempo12, oreLibere12, barData, hasIncassatoReale, revenueHistory, sortedStorico, meseCorrente, meseCorrManc, meseRegistrato, lordoMese, nettoMese, nomeMese, costiFissi, costiFissiMensili, costiAnnuali, totaleCostiFissi, totaleCostiAnnuali, totaleCostiAnnualiMensile, cassaIniziale, cryptoAggiornato, patrimonio, cassaData, inizioCash, usciteMensili, mesiAutonomia, profittoMensile, breakEvenLordo, ytdLordo, ytdNetto, ytdMesi, ytdProfitto, lordoAnnoCorrente, redditiAnnuali, annoPrecImporto, yoyDeltaPct, yoyDeltaAbs, annualData, totReale, totProiezione, totAnno, mesiMancanti, contoAnno, taxRate, lordoAnnoNoto, tasseAnno, f24Override, modoTasse, tasseMaturate, f24Pagati, pianoF24, accontiVersati, keyGiugno, giugnoPagato, debitoFiscale, cassaLibera, prossimiF24, pipelinePesata, pipelinePiena, orario12, oreLibere12Scenario, calcCash, riserve, riserveVendibili, cashFlowData, lungo, fineCassa, fineRiserve, mesiAutonomiaRiserve, cassaFinale, cassaFinaleScenario, tasseCash, obiettivi, goals, serieClientiDati, datiClienti,
   };
 }
 

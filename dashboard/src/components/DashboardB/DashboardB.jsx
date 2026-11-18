@@ -49,7 +49,7 @@ export default function DashboardB({ commesse, setCommesse, setup, setSetup }) {
     attive, righeTempo, oreTotali, oreLibere, oreDisponibili, lordoOraMedio, nettoOraMedio, lordoOraReale,
     mesi12, tempo12, cashFlowData, fineCassa, fineRiserve, riserve, riserveVendibili, cassaIniziale, cassaData,
     patrimonio, debitoFiscale, cassaLibera, tasseMaturate, accontiVersati, prossimiF24, f24Override, modoTasse,
-    taxRate, contoAnno, annualData, lordoAnnoCorrente, annoPrecImporto, yoyDeltaPct, totaleCostiFissi, usciteMensili,
+    taxRate, taxRateF24, aliquotaEffettiva, contoAnno, annualData, lordoAnnoCorrente, annoPrecImporto, yoyDeltaPct, totaleCostiFissi, usciteMensili,
     pipeline, simulate, scenarioAttivo, mesiAutonomia, mesiAutonomiaRiserve, profittoMensile, totaleCostiAnnuali,
     goals, serieClientiDati, costiFissiMensili, totaleCostiAnnualiMensile, statoCount, statoTotal,
   } = D;
@@ -98,7 +98,9 @@ export default function DashboardB({ commesse, setCommesse, setup, setSetup }) {
     return 1 + Math.round(((ora - oraMin) / (oraMax - oraMin)) * (RAMPA - 1));
   };
   // Cassa e F24 allineati ai mesi dell'orario (il cash flow parte dal mese dopo la data della cassa)
-  const cassaDi = (m, y) => cashFlowData.find((r) => r.m === m && r.y === y) || null;
+  // il cash flow parte dal mese dopo la data della cassa: nel mese in corso vale la cassa di oggi
+  const cassaDi = (m, y) => cashFlowData.find((r) => r.m === m && r.y === y)
+    || (m === meseIdx && y === anno ? { cassa: cassaIniziale, cassaScenario: cassaIniziale, tasse: 0 } : null);
 
   // — Commesse ordinate per €/h —
   const perOra = [...righeTempo].sort((a, b) => (b.lordoOra ?? -1) - (a.lordoOra ?? -1));
@@ -470,7 +472,7 @@ export default function DashboardB({ commesse, setCommesse, setup, setSetup }) {
           <h3 className={s.sotto}>Cassa e tasse</h3>
           <dl className={s.libro}>
             <button onClick={() => setDrill("patrimonio")}><dt>Cassa sul conto</dt><dd>{fmtN(cassaIniziale)} €</dd></button>
-            <div><dt>Tasse {anno} maturate <small>{fmtN(lordoAnnoCorrente)} € × {Math.round(taxRate * 100)}%{accontiVersati ? `, versati ${fmtN(accontiVersati)}` : ""}</small></dt><dd>{fmtN(tasseMaturate)} €</dd></div>
+            <div><dt>Tasse {anno} maturate <small>{fmtN(lordoAnnoCorrente)} € × {Math.round(taxRateF24 * 100)}%{aliquotaEffettiva != null ? " (effettiva dai tuoi F24)" : ""}{accontiVersati ? `, versati ${fmtN(accontiVersati)}` : ""}</small></dt><dd>{fmtN(tasseMaturate)} €</dd></div>
             <div className={s.totale}><dt>Cassa libera dalle tasse</dt><dd className={cassaLibera < 0 ? s.neg : undefined}>{fmtN(cassaLibera)} €</dd></div>
           </dl>
 
@@ -510,7 +512,7 @@ export default function DashboardB({ commesse, setCommesse, setup, setSetup }) {
               <div className={s.totale}><dt>Mesi di autonomia <small>senza incassi: {mesiAutonomia ?? "—"} con la cassa</small></dt><dd>{mesiAutonomiaRiserve ?? "—"}</dd></div>
             )}
           </dl>
-          <p className={s.nota}>Stima: aliquota {Math.round(taxRate * 100)}%, acconti 50% a giugno e 50% a novembre. Scrivi gli importi reali negli spazi.</p>
+          <p className={s.nota}>Stima: aliquota {Math.round(taxRateF24 * 100)}%{aliquotaEffettiva != null ? " ricavata dai tuoi acconti reali" : " del Setup"}, acconti 50% a giugno e 50% a novembre. Scrivi gli importi reali negli spazi.</p>
         </section>
       </div>
 
