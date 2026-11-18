@@ -247,4 +247,3 @@
 .versione button:hover { color: var(--rail-ink); }
 .versione button.vOn { background: var(--rail-active); color: #fff; }
 .versione button:focus-visible { outline: 2px solid var(--rail-active); outline-offset: 2px; }
-:global(:root[data-theme="dark"]) .versione button.vOn { color: #121214; }

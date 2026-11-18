@@ -4,7 +4,6 @@ import { INITIAL_COMMESSE, INITIAL_SETUP, INITIAL_NETWORK, INITIAL_REDDITI_ANNUA
 import Sidebar from "./components/Sidebar/Sidebar";
 import PinGate from "./components/PinGate/PinGate";
 import styles from "./App.module.css";
-import "./components/DashboardB/tema.css";
 import { loadFromSupabase, enableSync } from "./lib/supabase";
 import { daysSinceLastBackup, exportData } from "./lib/backup";
 
@@ -90,9 +89,9 @@ export default function App() {
   const [network, setNetwork] = useLocalStorage("network", INITIAL_NETWORK);
   const [view, setView] = useState("dashboard");
   const [tema, setTema] = useState(temaIniziale);
-  // Due versioni della dashboard: "a" (attuale, ottimizzata) e "b" (Orario)
+  // Due versioni della dashboard: "b" (Orario, predefinita) e "a" (Classica)
   const [versione, setVersioneState] = useState(() => {
-    try { return localStorage.getItem("dashVersione") === "b" ? "b" : "a"; } catch { return "a"; }
+    try { return localStorage.getItem("dashVersione") === "a" ? "a" : "b"; } catch { return "b"; }
   });
   const setVersione = (v) => {
     setVersioneState(v);

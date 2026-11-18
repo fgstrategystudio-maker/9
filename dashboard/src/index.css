@@ -58,6 +58,13 @@
   --ease: cubic-bezier(.22,.61,.36,1);
   --dur: .5s;
   color-scheme: light;
+
+  /* scala del guadagno orario (Orario): un solo tono, chiaro → scuro */
+  --g1: #F4E4DA; --g1-ink: #272019;
+  --g2: #E8C6B2; --g2-ink: #272019;
+  --g3: #D69D80; --g3-ink: #272019;
+  --g4: #A65A40; --g4-ink: #FFFFFF;
+  --g5: #6E3322; --g5-ink: #FFFFFF;
 }
 
 /* --- THEME: Espresso (scuro) — stessi ruoli, toni calibrati sul fondo scuro --- */
@@ -90,6 +97,11 @@
   --sh-sm: 0 1px 2px rgba(0,0,0,.35);
   --sh: 0 1px 2px rgba(0,0,0,.3), 0 8px 18px -8px rgba(0,0,0,.55);
   --sh-lg: 0 2px 4px rgba(0,0,0,.3), 0 20px 44px -16px rgba(0,0,0,.7);
+  --g1: #3A2720; --g1-ink: #F0E8DB;
+  --g2: #5C3626; --g2-ink: #F0E8DB;
+  --g3: #8B4F38; --g3-ink: #F0E8DB;
+  --g4: #D07F62; --g4-ink: #17130F;
+  --g5: #EDB79E; --g5-ink: #17130F;
 }
 html { transition: background-color .3s; }
 body { transition: background-color .3s, color .3s; }

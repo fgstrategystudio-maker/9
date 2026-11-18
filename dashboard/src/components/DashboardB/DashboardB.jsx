@@ -2,7 +2,7 @@ import { useState } from "react";
 import Assistente from "../Assistente/Assistente";
 import Icon from "../Icon";
 import { calcolaDashboard, calcolaNote, fmtN, MESI_IT } from "../Dashboard/calcoli";
-import { PipelineEditor, ReportMese } from "../Dashboard/Parti";
+import { PipelineEditor, ReportMese, KpiDrillModal } from "../Dashboard/Parti";
 import { importoCompetenzaMese, oreCommessaMese, pipelineCommessa, dataBreve, icsPromemoria } from "../../utils/helpers";
 import s from "./DashboardB.module.css";
 
@@ -25,13 +25,16 @@ const breve = (v) => {
 const VAI = { "sez-cash": "vb-soldi", "sez-tasse": "vb-soldi", "sez-liberi": "vb-orario", "sez-clienti": "vb-commesse", "sez-tempo": "vb-commesse", "sez-pipeline": "vb-orario" };
 
 // Numero in evidenza dentro una frase
-function N({ children, tono }) {
-  return <b className={s.n + (tono ? " " + s[tono] : "")}>{children}</b>;
+function N({ children, tono, onClick }) {
+  const cls = s.n + (tono ? " " + s[tono] : "");
+  if (onClick) return <button className={cls + " " + s.nBtn} onClick={onClick}>{children}</button>;
+  return <b className={cls}>{children}</b>;
 }
 
 export default function DashboardB({ commesse, setCommesse, setup, setSetup }) {
   const [seed, setSeed] = useState(null);
   const [trattativeAperte, setTrattativeAperte] = useState(false);
+  const [drill, setDrill] = useState(null);
   const D = calcolaDashboard(commesse, setup);
   const {
     anno, meseIdx, meseCorrente, nomeMese, meseCorrManc, meseRegistrato, lordoMese, nettoMese,
@@ -40,6 +43,7 @@ export default function DashboardB({ commesse, setCommesse, setup, setSetup }) {
     patrimonio, debitoFiscale, cassaLibera, tasseMaturate, accontiVersati, prossimiF24, f24Override, modoTasse,
     taxRate, contoAnno, annualData, lordoAnnoCorrente, annoPrecImporto, yoyDeltaPct, totaleCostiFissi, usciteMensili,
     pipeline, simulate, scenarioAttivo, mesiAutonomia, mesiAutonomiaRiserve, profittoMensile, totaleCostiAnnuali,
+    goals, serieClientiDati, costiFissiMensili, totaleCostiAnnualiMensile, statoCount, statoTotal,
   } = D;
 
   const tasseMese = Math.round(lordoMese * taxRate);
@@ -90,6 +94,22 @@ export default function DashboardB({ commesse, setCommesse, setup, setSetup }) {
   const maxAnno = Math.max(1, ...annualData.map((d) => d.lordo));
 
   const prossimoF24 = prossimiF24.find((f) => f.importo > 0) || null;
+  // €/h reale mese per mese di una commessa (dai mesi con le ore registrate)
+  const andamento = (id) => {
+    const punti = serieClientiDati.righe.filter((r) => r[id] != null).map((r) => ({ k: r.k, v: r[id] }));
+    if (!punti.length) return null;
+    const ultimi = punti.slice(-4);
+    const primo = ultimi[0].v, ultimo = ultimi[ultimi.length - 1].v;
+    return (
+      <div className={s.trend}>
+        €/h reale: {ultimi.map((p, i) => {
+          const [y, m] = p.k.split("-");
+          return <span key={p.k}>{i > 0 ? " → " : ""}{MESI_IT[Number(m) - 1].slice(0, 3).toLowerCase()}{y !== String(anno) ? ` ${y.slice(2)}` : ""} <b>{fmtN(p.v)}</b></span>;
+        })}
+        {ultimi.length > 1 && ultimo < primo * 0.9 && <span className={s.warn}> · in calo</span>}
+      </div>
+    );
+  };
   const setOverride = (key, val) => setSetup((prev) => {
     const o = { ...(prev.f24 || {}) };
     if (val === "") delete o[key]; else o[key] = Number(val);
@@ -117,14 +137,14 @@ export default function DashboardB({ commesse, setCommesse, setup, setSetup }) {
   return (
     <div className={s.root}>
       <header className={s.testa}>
-        <h1 className={s.titolo}>{meseCorrente}</h1>
+        <h1 className="page-title">{meseCorrente}</h1>
         <div className={s.azioniTesta}>
-          <button className={s.quiet} onClick={() => window.print()} title="Apre la stampa: scegli «Salva come PDF»"><Icon name="file" size={16} /><span>Report PDF</span></button>
-          <button className={s.quiet} onClick={scaricaPromemoria} title="Evento ricorrente il 1° di ogni mese alle 9:00"><Icon name="bell" size={16} /><span>Promemoria</span></button>
+          <button className="btn btn-ghost" onClick={() => window.print()} title="Apre la stampa: scegli «Salva come PDF»" aria-label="Report PDF"><Icon name="file" size={16} /><span>Report PDF</span></button>
+          <button className="btn btn-ghost" onClick={scaricaPromemoria} title="Evento ricorrente il 1° di ogni mese alle 9:00" aria-label="Promemoria mensile"><Icon name="bell" size={16} /><span>Promemoria</span></button>
         </div>
       </header>
 
-      <div className={s.composer}>
+      <div id="vb-ai">
         <Assistente commesse={commesse} setCommesse={setCommesse} setup={setup} setSetup={setSetup}
           sempreAperto meseDaRegistrare={meseCorrManc ? meseCorrente : null} seed={seed} />
       </div>
@@ -132,10 +152,10 @@ export default function DashboardB({ commesse, setCommesse, setup, setSetup }) {
       {/* Il punto della situazione, in frasi */}
       <section className={s.punto} aria-label="Il punto">
         <p className={s.frase}>
-          {nomeMese}: <N>{fmtN(lordoMese)} €</N> lordi {meseRegistrato ? "incassati" : "previsti"} ({fmtN(nettoMese)} netti)
+          {nomeMese}: <N onClick={() => setDrill("lordoAttivo")}>{fmtN(lordoMese)} €</N> lordi {meseRegistrato ? "incassati" : "previsti"} (<N onClick={() => setDrill("nettoAttivo")}>{fmtN(nettoMese)}</N> netti, <N onClick={() => setDrill("profitto")}>{fmtN(profittoMensile)}</N> di profitto dopo i costi fissi)
           {" "}da {attive.length} {attive.length === 1 ? "commessa" : "commesse"}, con <N>{fmtN(oreTotali)} ore</N> di lavoro
-          {lordoOraMedio != null && <>: <N>{fmtN(lordoOraMedio)} €/h</N> ({fmtN(nettoOraMedio)} netti)</>}.
-          {" "}Ti restano <N tono="pos">{fmtN(oreLibere)} ore libere</N> su {oreDisponibili}.
+          {lordoOraMedio != null && <>: <N onClick={() => setDrill("orario")}>{fmtN(lordoOraMedio)} €/h</N> ({fmtN(nettoOraMedio)} netti)</>}.
+          {" "}Ti restano <N tono="pos" onClick={() => setDrill("tempo")}>{fmtN(oreLibere)} ore libere</N> su {oreDisponibili}.
         </p>
         <p className={s.frase}>
           {fineCassa
@@ -147,12 +167,36 @@ export default function DashboardB({ commesse, setCommesse, setup, setSetup }) {
           .
         </p>
 
-        <dl className={s.fatti}>
-          <div><dt>Cassa sul conto</dt><dd>{fmtN(cassaIniziale)} €</dd><span>{cassaData ? `al ${dataBreve(cassaData)}` : "aggiornala con l'assistente"}</span></div>
-          <div><dt>Da tenere per le tasse</dt><dd>{fmtN(debitoFiscale)} €</dd><span>libera {fmtN(cassaLibera)} €</span></div>
-          <div><dt>Prossimo F24</dt><dd>{prossimoF24 ? `${fmtN(prossimoF24.importo)} €` : "—"}</dd><span>{prossimoF24 ? `${dataBreve(prossimoF24.data)} · ${prossimoF24.manuale ? "reale" : "stima"}` : "nessuna scadenza"}</span></div>
-          <div><dt>Patrimonio</dt><dd>{fmtN(patrimonio.totale)} €</dd><span>{mesiAutonomia != null ? `${mesiAutonomia} mesi senza incassi` : ""}</span></div>
-        </dl>
+        <div className={s.fatti}>
+          <button className={s.fatto} onClick={() => setDrill("patrimonio")}><span className={s.fl}>Cassa sul conto</span><span className={s.fv}>{fmtN(cassaIniziale)} €</span><span>{cassaData ? `al ${dataBreve(cassaData)}` : "aggiornala con l'assistente"}</span></button>
+          <button className={s.fatto} onClick={() => setDrill("tasse")}><span className={s.fl}>Da tenere per le tasse</span><span className={s.fv}>{fmtN(debitoFiscale)} €</span><span>libera {fmtN(cassaLibera)} €</span></button>
+          <button className={s.fatto} onClick={() => vai("sez-tasse")}><span className={s.fl}>Prossimo F24</span><span className={s.fv}>{prossimoF24 ? `${fmtN(prossimoF24.importo)} €` : "—"}</span><span>{prossimoF24 ? `${dataBreve(prossimoF24.data)} · ${prossimoF24.manuale ? "reale" : "stima"}` : "nessuna scadenza"}</span></button>
+          <button className={s.fatto} onClick={() => setDrill("patrimonio")}><span className={s.fl}>Patrimonio</span><span className={s.fv}>{fmtN(patrimonio.totale)} €</span><span>{mesiAutonomia != null ? `${mesiAutonomia} mesi senza incassi` : ""}</span></button>
+        </div>
+
+        <div className={s.obiettivi}>
+          <span><Icon name="target" size={14} />Obiettivi</span>
+          {goals.length === 0 ? (
+            <button className={s.link} onClick={() => setDrill("obiettivi")}>Imposta lordo annuo, €/h minimo e ore libere</button>
+          ) : (
+            <>
+              {goals.map((g) => {
+                const pct = Math.min(100, Math.round((g.val / g.target) * 100));
+                const ok = g.val >= g.target;
+                return (
+                  <button key={g.id} className="goal" onClick={() => setDrill("obiettivi")} title={g.nota}>
+                    <span className="goal-top">
+                      <span>{g.label}</span>
+                      <b className={"num " + (ok ? "t-pos" : "t-warn")}>{g.fmt(g.val)} <span>/ {g.fmt(g.target)}</span></b>
+                    </span>
+                    <span className="statbar-track"><span className="statbar-fill" style={{ display: "block", width: pct + "%", background: ok ? "var(--pos)" : "var(--warn)" }}></span></span>
+                  </button>
+                );
+              })}
+              <button className="btn btn-quiet" onClick={() => setDrill("obiettivi")} aria-label="Modifica obiettivi"><Icon name="edit" size={14} /></button>
+            </>
+          )}
+        </div>
 
         {note.length > 0 && (
           <ul className={s.avvisi}>
@@ -170,7 +214,7 @@ export default function DashboardB({ commesse, setCommesse, setup, setSetup }) {
       {/* Firma: l'orario dei prossimi 12 mesi */}
       <section id="vb-orario" className={s.blocco}>
         <div className={s.bloccoTesta}>
-          <h2>I prossimi 12 mesi</h2>
+          <h2><Icon name="calendar" size={15} />I prossimi 12 mesi</h2>
           <p>Ogni riga è una commessa: la cella dice quanto incassi quel mese, il colore quanto guadagni all&apos;ora. In fondo, il tempo e i soldi che restano.</p>
         </div>
 
@@ -245,6 +289,16 @@ export default function DashboardB({ commesse, setCommesse, setup, setSetup }) {
                   return <td key={i} className={(i === 0 ? s.oggi + " " : "") + (v != null && v < 0 ? s.neg : "")}>{v != null ? breve(v) : "—"}</td>;
                 })}
               </tr>
+              {riserveVendibili > 0 && (
+                <tr className={s.rigaRiserve}>
+                  <th scope="row" className={s.colNome}>Con riserve vendute</th><td className={s.colOra}></td>
+                  {mesi12.map(({ m, y }, i) => {
+                    const r = cassaDi(m, y);
+                    const v = r ? (scenarioAttivo ? r.cassaScenario : r.cassa) + riserveVendibili : null;
+                    return <td key={i} className={(i === 0 ? s.oggi + " " : "") + (v != null && v < 0 ? s.neg : "")}>{v != null ? breve(v) : "—"}</td>;
+                  })}
+                </tr>
+              )}
             </tfoot>
           </table>
         </div>
@@ -299,7 +353,7 @@ export default function DashboardB({ commesse, setCommesse, setup, setSetup }) {
         {/* Commesse per guadagno orario */}
         <section id="vb-commesse" className={s.blocco}>
           <div className={s.bloccoTesta}>
-            <h2>Quanto vale la tua ora</h2>
+            <h2><Icon name="clock" size={15} />Quanto vale la tua ora</h2>
             <p>Media {lordoOraMedio != null ? `${fmtN(lordoOraMedio)} €/h lordi` : "—"}{lordoOraReale != null ? ` · reale ${anno} ${fmtN(lordoOraReale)} €/h` : ""}</p>
           </div>
           <ul className={s.classifica}>
@@ -316,20 +370,38 @@ export default function DashboardB({ commesse, setCommesse, setup, setSetup }) {
                   {r.realeOra != null && ` · reale ${fmtN(r.realeOra)}`}
                   {r.mesi != null && ` · ${r.mesi === 0 ? "scaduta" : `${r.mesi} ${r.mesi === 1 ? "mese" : "mesi"}`}`}
                 </div>
+                {andamento(r.c.id)}
               </li>
             ))}
             {perOra.length === 0 && <li className={s.meta}>Nessuna commessa attiva.</li>}
           </ul>
+          <h3 className={s.sotto}>Le tue commesse</h3>
+          <button className={s.statiBtn} onClick={() => setDrill("commesseAttive")} aria-label="Commesse attive">
+            <span className={s.stati}>
+              {statoCount.map((x) => <i key={x.name} style={{ flex: x.value, background: x.color }} />)}
+            </span>
+          </button>
+          <div className={s.statiLeg}>
+            {statoCount.map((x) => <span key={x.name}><i style={{ background: x.color }} />{x.name} {x.value}</span>)}
+            <span>· {statoTotal} in tutto</span>
+            <button className={s.link} onClick={() => setDrill("upsell")}>Upsell</button>
+          </div>
         </section>
 
         {/* Soldi: cassa, tasse, riserve */}
         <section id="vb-soldi" className={s.blocco}>
           <div className={s.bloccoTesta}>
-            <h2>Soldi</h2>
+            <h2><Icon name="wallet" size={15} />Soldi</h2>
             <p>Uscite {fmtN(usciteMensili)} €/mese ({fmtN(totaleCostiFissi)} fissi + spese annuali spalmate)</p>
           </div>
           <dl className={s.libro}>
-            <div><dt>Cassa sul conto</dt><dd>{fmtN(cassaIniziale)} €</dd></div>
+            <button onClick={() => setDrill("costiMensili")}><dt>Costi fissi mensili <small>{costiFissiMensili.length} voci · ogni mese</small></dt><dd>{fmtN(totaleCostiFissi)} €</dd></button>
+            <button onClick={() => setDrill("speseAnnuali")}><dt>Spese annuali <small>promemoria · non le stai pagando ora</small></dt><dd>{fmtN(totaleCostiAnnuali)} €</dd></button>
+            <button onClick={() => setDrill("equivMensile")}><dt>Equivalente mensile <small>se le spalmassi ogni mese · nel cash flow</small></dt><dd>{fmtN(totaleCostiAnnualiMensile)} €</dd></button>
+          </dl>
+          <h3 className={s.sotto}>Cassa e tasse</h3>
+          <dl className={s.libro}>
+            <button onClick={() => setDrill("patrimonio")}><dt>Cassa sul conto</dt><dd>{fmtN(cassaIniziale)} €</dd></button>
             <div><dt>Tasse {anno} maturate <small>{fmtN(lordoAnnoCorrente)} € × {Math.round(taxRate * 100)}%{accontiVersati ? `, versati ${fmtN(accontiVersati)}` : ""}</small></dt><dd>{fmtN(tasseMaturate)} €</dd></div>
             <div className={s.totale}><dt>Cassa libera dalle tasse</dt><dd className={cassaLibera < 0 ? s.neg : undefined}>{fmtN(cassaLibera)} €</dd></div>
           </dl>
@@ -377,7 +449,7 @@ export default function DashboardB({ commesse, setCommesse, setup, setSetup }) {
       {/* L'anno */}
       <section className={s.blocco}>
         <div className={s.bloccoTesta}>
-          <h2>{anno}, mese per mese</h2>
+          <h2><Icon name="bars" size={15} />{anno}, mese per mese</h2>
           <p>
             {fmtN(contoAnno.lordo)} € lordi tra registrati e previsti
             {yoyDeltaPct != null && <> · <span className={yoyDeltaPct >= 0 ? s.pos : s.neg}>{yoyDeltaPct >= 0 ? "+" : ""}{yoyDeltaPct}%</span> sul {anno - 1} ({fmtN(annoPrecImporto)} €)</>}
@@ -397,11 +469,15 @@ export default function DashboardB({ commesse, setCommesse, setup, setSetup }) {
           ))}
         </div>
         <div className={s.legenda}>
-          <span><i className={s.swReale} /> registrato</span>
-          <span><i className={s.swPrev} /> previsto dai contratti</span>
+          <span><i className={s.sw} style={{ background: "var(--pos)" }} />registrato</span>
+          <span><i className={s.sw} style={{ background: "var(--warn)" }} />questo mese, stimato</span>
+          <span><i className={s.sw} style={{ background: "var(--info)" }} />previsto dai contratti</span>
           <span>Costi dell&apos;anno {fmtN(contoAnno.costiFissiAnno + totaleCostiAnnuali)} € · tasse {fmtN(contoAnno.tasse)} €</span>
         </div>
       </section>
+
+      <KpiDrillModal drill={drill} onClose={() => setDrill(null)} commesse={commesse} setCommesse={setCommesse}
+        setup={setup} setSetup={setSetup} meseCorrente={meseCorrente} meseRegistrato={meseRegistrato} />
 
       <ReportMese r={{
         mese: meseCorrente, meseRegistrato, lordo: lordoMese, netto: nettoMese, costi: totaleCostiFissi, profitto: profittoMensile,
