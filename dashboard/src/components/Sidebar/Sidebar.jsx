@@ -53,8 +53,10 @@ export default function Sidebar({ view, onNavigate, tema, onTema, versione, onVe
           <div className={styles.versione} role="group" aria-label="Versione della dashboard">
             <span>Dashboard</span>
             <div>
-              <button className={versione === "b" ? styles.vOn : ""} aria-pressed={versione === "b"} onClick={() => { onVersione("b"); onNavigate("dashboard"); setOpen(false); }}>Orario</button>
-              <button className={versione === "a" ? styles.vOn : ""} aria-pressed={versione === "a"} onClick={() => { onVersione("a"); onNavigate("dashboard"); setOpen(false); }}>Classica</button>
+              {[["b", "Orario"], ["a", "Classica"], ["olivetti", "Olivetti"], ["rosa", "Rosa"], ["standard", "Standard"]].map(([id, nome]) => (
+                <button key={id} className={versione === id ? styles.vOn : ""} aria-pressed={versione === id}
+                  onClick={() => { onVersione(id); onNavigate("dashboard"); setOpen(false); }}>{nome}</button>
+              ))}
             </div>
           </div>
           <button className={styles.navItem} onClick={onTema} aria-label={tema === "dark" ? "Passa al tema chiaro" : "Passa al tema scuro"}>

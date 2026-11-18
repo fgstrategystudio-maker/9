@@ -184,7 +184,7 @@ td.oggi, th.oggi { background: color-mix(in oklab, var(--accent) 7%, transparent
   .legenda .link { margin-left: 0; }
   .anno { height: 170px; gap: 3px; }
   .annoMese { font-size: 11px; }
-  .annoVal { display: none; }
+  .annoVal { visibility: hidden; }
   .fv { font-size: 22px; }
   .campi :global(.input) { width: 96px; }
   .azioniTesta :global(.btn) span { display: none; }

@@ -1,0 +1,122 @@
+/* Tre direzioni a confronto (Impeccable): stessi token della app, valori diversi.
+   Attive con data-versione su <html>, così valgono anche per menu, riquadri di
+   dettaglio (portali) e le altre pagine. Contrasti testo ≥ 4.5:1 verificati. */
+
+/* ── Olivetti: grafica d'ufficio italiana, grigio macchina, nero dei tasti,
+   giallo Pintori = tempo, verde acqua → petrolio = €/h, blu = cassa ── */
+:root[data-versione="olivetti"] {
+  --font-sans: "Albert Sans", system-ui, sans-serif;
+  --font-serif: "Albert Sans", system-ui, sans-serif;
+  --canvas: #E9E7E1; --canvas-2: #E1DED6;
+  --panel: #FBFAF7; --panel-2: #F1EFEA;
+  --ink: #1B1C1E; --ink-2: #44454A; --ink-3: #66675F;
+  --hair: #D3D0C8; --hair-soft: #E4E1DA;
+  --accent: #1B1C1E; --accent-ink: #1B1C1E; --accent-wash: #FFF1C2;
+  --pos: #22695F; --pos-ink: #22695F; --pos-wash: #DCEFEA;
+  --warn: #94640F; --warn-wash: #FBEFD0;
+  --danger: #C8302A; --danger-wash: #F9E0DD;
+  --info: #2357A6; --info-wash: #E1E9F6;
+  --rail: #1B1C1E; --rail-2: #26272A; --rail-ink: #ECEAE4; --rail-ink-2: #A9A7A0; --rail-hair: #34353A; --rail-active: #F2B705;
+  --tempo: #F2B705; --tempo-ink: #1B1C1E; --cassa: #2357A6;
+  --g1: #DCEFEA; --g1-ink: #1B1C1E; --g2: #A9D5CB; --g2-ink: #1B1C1E; --g3: #6FB2A5; --g3-ink: #1B1C1E;
+  --g4: #2F7F72; --g4-ink: #FFFFFF; --g5: #164E46; --g5-ink: #FFFFFF;
+  --r-sm: 6px; --r: 10px; --r-lg: 14px;
+  --sh-sm: none; --sh: 0 1px 0 rgba(0,0,0,.08), 0 8px 18px -10px rgba(0,0,0,.25);
+}
+:root[data-versione="olivetti"][data-theme="dark"] {
+  --canvas: #141516; --canvas-2: #1A1B1D;
+  --panel: #1D1E20; --panel-2: #26272A;
+  --ink: #ECEAE4; --ink-2: #C9C7C1; --ink-3: #9C9A94;
+  --hair: #34353A; --hair-soft: #2A2B2F;
+  --accent: #ECEAE4; --accent-ink: #ECEAE4; --accent-wash: #3A3112;
+  --pos: #6FC2B3; --pos-ink: #6FC2B3; --pos-wash: #17302C;
+  --warn: #E5B04D; --warn-wash: #33290F;
+  --danger: #FF7A6E; --danger-wash: #3A1E1B;
+  --info: #8FB0EE; --info-wash: #1B2436; --cassa: #8FB0EE;
+  --rail: #0E0F10; --rail-2: #18191B; --rail-hair: #26272A;
+  --g1: #183531; --g1-ink: #ECEAE4; --g2: #1F4D46; --g2-ink: #ECEAE4; --g3: #2E7268; --g3-ink: #ECEAE4;
+  --g4: #6FB2A5; --g4-ink: #141516; --g5: #BFE3DA; --g5-ink: #141516;
+}
+
+/* ── Pagine rosa: le pagine finanziarie dei quotidiani economici. Fondo salmone,
+   colonne fitte, serif per i testi, condensato per le cifre, un blu inchiostro ── */
+:root[data-versione="rosa"] {
+  --font-sans: "Barlow Semi Condensed", system-ui, sans-serif;
+  --font-serif: "Source Serif 4", Georgia, serif;
+  --canvas: #F7E3D3; --canvas-2: #F2D8C5;
+  --panel: #FCEFE6; --panel-2: #F8E6D9;
+  --ink: #1E1A17; --ink-2: #463A33; --ink-3: #6A5649;
+  --hair: #E2C6B3; --hair-soft: #EED7C8;
+  --accent: #1D3E8A; --accent-ink: #1D3E8A; --accent-wash: #E2E7F4;
+  --pos: #1D6F3E; --pos-ink: #1D6F3E; --pos-wash: #DDEEDF;
+  --warn: #8A5A00; --warn-wash: #F6E6C6;
+  --danger: #B42318; --danger-wash: #F6DAD3;
+  --info: #1D3E8A; --info-wash: #E2E7F4;
+  --rail: #2A1F1B; --rail-2: #352722; --rail-ink: #F7E3D3; --rail-ink-2: #C9AD9C; --rail-hair: #45342D; --rail-active: #1D3E8A;
+  --tempo: #1D6F3E; --tempo-ink: #FFFFFF; --cassa: #1D3E8A;
+  --g1: #DCE3F2; --g1-ink: #1E1A17; --g2: #B3C3E6; --g2-ink: #1E1A17; --g3: #7E98D2; --g3-ink: #1E1A17;
+  --g4: #3E5FAE; --g4-ink: #FFFFFF; --g5: #1D3E8A; --g5-ink: #FFFFFF;
+  --r-sm: 2px; --r: 3px; --r-lg: 4px;
+  --sh-sm: none; --sh: 0 1px 2px rgba(60,30,20,.12);
+}
+:root[data-versione="rosa"][data-theme="dark"] {
+  --canvas: #1C1513; --canvas-2: #211916;
+  --panel: #251C19; --panel-2: #2E231F;
+  --ink: #F3E6DC; --ink-2: #D9C6B8; --ink-3: #B19A8C;
+  --hair: #3D2E28; --hair-soft: #32261F;
+  --accent: #9DB4F0; --accent-ink: #9DB4F0; --accent-wash: #1E2640;
+  --pos: #6CCB91; --pos-ink: #6CCB91; --pos-wash: #17301F;
+  --warn: #E7B45A; --warn-wash: #33290F;
+  --danger: #FF8577; --danger-wash: #3A1E1B;
+  --info: #9DB4F0; --info-wash: #1E2640;
+  --tempo: #6CCB91; --tempo-ink: #1C1513; --cassa: #9DB4F0;
+  --rail: #140F0D; --rail-2: #1E1714; --rail-hair: #2E231F; --rail-active: #9DB4F0;
+  --g1: #1E2A40; --g1-ink: #F3E6DC; --g2: #27406B; --g2-ink: #F3E6DC; --g3: #3560A3; --g3-ink: #F3E6DC;
+  --g4: #7E98D2; --g4-ink: #1C1513; --g5: #B3C3E6; --g5-ink: #1C1513;
+}
+
+/* ── Standard: la dashboard finanziaria convenzionale, fatta bene ── */
+:root[data-versione="standard"] {
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-serif: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --canvas: #F6F7F9; --canvas-2: #EEF0F3;
+  --panel: #FFFFFF; --panel-2: #F3F4F6;
+  --ink: #111827; --ink-2: #374151; --ink-3: #6B7280;
+  --hair: #E5E7EB; --hair-soft: #EEF0F3;
+  --accent: #2563EB; --accent-ink: #1D4ED8; --accent-wash: #DBEAFE;
+  --pos: #15803D; --pos-ink: #15803D; --pos-wash: #DCFCE7;
+  --warn: #B45309; --warn-wash: #FEF3C7;
+  --danger: #DC2626; --danger-wash: #FEE2E2;
+  --info: #2563EB; --info-wash: #DBEAFE;
+  --rail: #111827; --rail-2: #1F2937; --rail-ink: #F3F4F6; --rail-ink-2: #9CA3AF; --rail-hair: #1F2937; --rail-active: #2563EB;
+  --tempo: #15803D; --tempo-ink: #FFFFFF; --cassa: #2563EB;
+  --g1: #DBEAFE; --g1-ink: #111827; --g2: #BFDBFE; --g2-ink: #111827; --g3: #93C5FD; --g3-ink: #111827;
+  --g4: #2563EB; --g4-ink: #FFFFFF; --g5: #1E3A8A; --g5-ink: #FFFFFF;
+  --r-sm: 6px; --r: 8px; --r-lg: 12px;
+  --sh-sm: 0 1px 2px rgba(16,24,40,.05); --sh: 0 1px 3px rgba(16,24,40,.08), 0 4px 12px -4px rgba(16,24,40,.08);
+}
+:root[data-versione="standard"][data-theme="dark"] {
+  --canvas: #0B1220; --canvas-2: #0F172A;
+  --panel: #111827; --panel-2: #1F2937;
+  --ink: #F3F4F6; --ink-2: #D1D5DB; --ink-3: #9CA3AF;
+  --hair: #1F2937; --hair-soft: #172033;
+  --accent: #60A5FA; --accent-ink: #93C5FD; --accent-wash: #172554;
+  --pos: #4ADE80; --pos-ink: #4ADE80; --pos-wash: #052E16;
+  --warn: #FBBF24; --warn-wash: #2D2008;
+  --danger: #F87171; --danger-wash: #3B0D0D;
+  --info: #60A5FA; --info-wash: #172554;
+  --tempo: #4ADE80; --tempo-ink: #0B1220; --cassa: #60A5FA;
+  --rail: #060A14; --rail-2: #0F172A; --rail-hair: #1F2937; --rail-active: #60A5FA;
+  --g1: #172554; --g1-ink: #F3F4F6; --g2: #1E3A8A; --g2-ink: #F3F4F6; --g3: #1D4ED8; --g3-ink: #F3F4F6;
+  --g4: #60A5FA; --g4-ink: #0B1220; --g5: #BFDBFE; --g5-ink: #0B1220;
+}
+
+/* testo dei pulsanti principali leggibile su ogni accento */
+:root[data-versione="olivetti"] .btn-primary { background: #1B1C1E; color: #FBFAF7; }
+:root[data-versione="olivetti"][data-theme="dark"] .btn-primary { background: #F2B705; color: #1B1C1E; }
+:root[data-versione="rosa"] .btn-primary { background: #1D3E8A; color: #FCEFE6; }
+:root[data-versione="rosa"][data-theme="dark"] .btn-primary { background: #9DB4F0; color: #1C1513; }
+:root[data-versione="standard"] .btn-primary { background: #2563EB; color: #FFFFFF; }
+:root[data-versione="standard"][data-theme="dark"] .btn-primary { background: #60A5FA; color: #0B1220; }
+:root[data-versione="olivetti"] .page-title, :root[data-versione="standard"] .page-title { font-weight: 700; letter-spacing: -0.03em; }
+:root[data-versione="rosa"] .page-title { font-family: "Source Serif 4", Georgia, serif; font-weight: 600; }

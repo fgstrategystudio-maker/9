@@ -4,6 +4,7 @@ import { INITIAL_COMMESSE, INITIAL_SETUP, INITIAL_NETWORK, INITIAL_REDDITI_ANNUA
 import Sidebar from "./components/Sidebar/Sidebar";
 import PinGate from "./components/PinGate/PinGate";
 import styles from "./App.module.css";
+import "./components/DashboardC/temi.css";
 import { loadFromSupabase, enableSync } from "./lib/supabase";
 import { daysSinceLastBackup, exportData } from "./lib/backup";
 
@@ -11,11 +12,14 @@ import { daysSinceLastBackup, exportData } from "./lib/backup";
 const caricaDashboard = () => import("./components/Dashboard/Dashboard");
 const Dashboard = lazy(caricaDashboard);
 const DashboardB = lazy(() => import("./components/DashboardB/DashboardB"));
+const DashboardC = lazy(() => import("./components/DashboardC/DashboardC"));
 const Commesse = lazy(() => import("./components/Commesse/Commesse"));
 const Fiscale = lazy(() => import("./components/Fiscale/Fiscale"));
 const Setup = lazy(() => import("./components/Setup/Setup"));
 const Storico = lazy(() => import("./components/Storico/Storico"));
 const Network = lazy(() => import("./components/Network/Network"));
+
+const VERSIONI = ["b", "a", "olivetti", "rosa", "standard"];
 
 function temaIniziale() {
   try {
@@ -89,10 +93,12 @@ export default function App() {
   const [network, setNetwork] = useLocalStorage("network", INITIAL_NETWORK);
   const [view, setView] = useState("dashboard");
   const [tema, setTema] = useState(temaIniziale);
-  // Due versioni della dashboard: "b" (Orario, predefinita) e "a" (Classica)
+  // Versioni della dashboard: "b" Orario (predefinita), "a" Classica e le tre
+  // direzioni a confronto: Olivetti, Pagine rosa, Standard
   const [versione, setVersioneState] = useState(() => {
-    try { return localStorage.getItem("dashVersione") === "a" ? "a" : "b"; } catch { return "b"; }
+    try { const v = localStorage.getItem("dashVersione"); return VERSIONI.includes(v) ? v : "b"; } catch { return "b"; }
   });
+  useEffect(() => { document.documentElement.dataset.versione = versione; }, [versione]);
   const setVersione = (v) => {
     setVersioneState(v);
     try { localStorage.setItem("dashVersione", v); } catch { /* storage non disponibile */ }
@@ -187,6 +193,9 @@ export default function App() {
         )}
         {view === "dashboard" && versione === "b" && (
           <DashboardB commesse={commesse} setCommesse={setCommesse} setup={setup} setSetup={setSetup} />
+        )}
+        {view === "dashboard" && ["olivetti", "rosa", "standard"].includes(versione) && (
+          <DashboardC key={versione} variante={versione} commesse={commesse} setCommesse={setCommesse} setup={setup} setSetup={setSetup} />
         )}
         {view === "commesse" && (
           <Commesse
