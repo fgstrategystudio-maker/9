@@ -46,6 +46,7 @@ const AZIONI_SCHEMA = {
           lordo: { type: 'number' },
           importo: { type: 'number' },
           ore: { type: 'number' },
+          sostituisci: { type: 'boolean' },
           id: { type: 'number' },
           voce: { type: 'string', enum: ['cassa', 'crypto', 'bene'] },
           nome: { type: 'string' },
@@ -99,7 +100,7 @@ function systemPrompt(ctx) {
 Interpreti richieste in linguaggio naturale e rispondi SOLO col JSON richiesto: "spiegazione" (breve, in italiano) e "azioni".
 
 TIPI DI AZIONE
-- registra_pagamento: { tipo, id, mese, importo, ore, testo, motivo } — un singolo pagamento ricevuto da UN cliente (commessa "id") nel "mese"; "ore" = ore REALMENTE lavorate per quel cliente in quel mese, se l'utente le dice (altrimenti ometti il campo); "testo" = nota breve facoltativa (es. "fisso mensile", "extra non chiaro").
+- registra_pagamento: { tipo, id, mese, importo, ore, sostituisci, testo, motivo } — un singolo pagamento ricevuto da UN cliente (commessa "id", il numero del contesto) nel "mese" (in italiano con anno, es. "Novembre 2026"); "ore" = ore REALMENTE lavorate per quel cliente in quel mese, se l'utente le dice; "testo" = nota breve facoltativa. Ore lavorate SENZA incasso (es. "2 ore ma non ho guadagnato nulla") → registra_pagamento con importo 0 e le ore: servono al €/h reale. "sostituisci": true solo se nel contesto c'è già un pagamento di quella commessa nello stesso mese e l'utente sta dando il totale corretto (il nuovo prende il posto del vecchio, niente doppioni).
 - registra_incasso: { tipo, mese, lordo, motivo } — "mese" in italiano con anno (es. "Settembre 2026"); "lordo" = TOTALE lordo REALE incassato in quel mese da tutti i clienti insieme. Sostituisce il valore già registrato per quel mese.
 - aggiorna_commessa: { tipo, id, campi, motivo } — "campi" contiene SOLO i campi da cambiare; date inizio/fine in YYYY-MM-DD.
 - nuova_commessa: { tipo, campi, motivo } — crea una commessa che NON esiste nel contesto; "campi" con almeno "cliente", e se noti: servizio, tipo ("Mensile" o "Progetto"), inizio, fine, lordoMensile o lordoProgetto, oreMensili, stato (di solito "In corso"). Prima controlla bene che il cliente non sia già tra le commesse (anche con nome scritto diversamente).
@@ -113,6 +114,7 @@ Una volta al mese l'utente scrive, per ogni commessa, cose come: incassato lordo
 - data di fine / durata ("finisce a marzo", "altri 3 mesi") → aggiorna_commessa con "fine" (ultimo giorno del mese indicato, YYYY-MM-DD).
 - quanto percepirà d'ora in poi (fee mensile) → aggiorna_commessa "lordoMensile" se diverso da quello attuale; per un progetto a corpo usa "lordoProgetto".
 - commessa con fee fissa + parte variabile ricorrente (provvigioni, extra a consumo, budget gestito…): "lordoMensile" resta la parte fissa, "variabileMensile" è la media del variabile al mese. Se l'utente dice che il variabile si somma ogni mese (es. "Domò ha 1.690 fissi più il variabile, questo mese 5.600 in tutto"), registra il pagamento reale e proponi aggiorna_commessa "variabileMensile" = media dell'extra sopra il fisso negli ultimi mesi (con i dati del contesto; se c'è un solo mese usa quello e dillo). Un extra una tantum NON è variabile: in quel caso non toccare variabileMensile.
+  Esempio: "per Domò ho incassato 5960, di cui 1960 fisso e il resto variabile" (o "5960-1960 come variabile") → registra_pagamento importo 5960 (il TOTALE incassato, mai solo la differenza), più aggiorna_commessa con variabileMensile 4000 e, se il fisso del contesto è diverso, lordoMensile 1960. Il €/h si calcola sul totale.
 - ore previste al mese d'ora in poi → aggiorna_commessa "oreMensili" se diverse. Se dice solo le ore lavorate questo mese e non ha una stima, puoi usarle anche come oreMensili.
 - commessa finita → aggiorna_commessa stato "Concluso" (e fine se nota). Cliente nuovo → nuova_commessa.
 - lavoro già concluso ma pagato più avanti (es. "finito a ottobre, mi pagano a novembre") → stato "Concluso", "fine" = quando è finito il lavoro, "incasso" = data (YYYY-MM-DD, anche ultimo giorno del mese) in cui arriva il pagamento: l'importo conta nel mese dell'incasso.

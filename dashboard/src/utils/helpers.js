@@ -115,7 +115,7 @@ const MESI_PREFISSI = ["gen", "feb", "mar", "apr", "mag", "giu", "lug", "ago", "
 export function chiaveMese(meseStr) {
   const s = String(meseStr || "").toLowerCase().trim();
   if (!s) return null;
-  const iso = /^(\d{4})-(\d{1,2})$/.exec(s);
+  const iso = /^(\d{4})-(\d{1,2})(?:-\d{1,2})?$/.exec(s); // anche "2026-11-30"
   if (iso) return `${iso[1]}-${iso[2].padStart(2, "0")}`;
   const anno4 = /(\d{4})/.exec(s);
   const anno2 = /['’]\s*(\d{2})\b/.exec(s);

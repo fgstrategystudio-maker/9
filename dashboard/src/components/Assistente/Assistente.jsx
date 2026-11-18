@@ -54,7 +54,11 @@ export default function Assistente({ commesse, setCommesse, setup, setSetup, see
 
   const secondi = (ms) => (ms / 1000).toFixed(1).replace(".", ",");
 
-  const byId = (id) => commesse.find((c) => c.id === id);
+  // id dal modello: numero o stringa, confronto tollerante
+  const byId = (id) => commesse.find((c) => String(c.id) === String(id));
+  // mese mancante o in un formato strano → mese corrente
+  const meseDi = (a) => (chiaveMese(a.mese) ? a.mese : meseCorrente);
+  const giaNelMese = (c, mese) => (c.pagamenti || []).filter((p) => stessoMese(p.mese, mese));
   const meseCorrente = getMeseCorrente();
 
   // Controllo di coerenza: per ogni totale mese proposto, confronta con la
@@ -86,7 +90,7 @@ export default function Assistente({ commesse, setCommesse, setup, setSetup, see
         lordoMensile: c.lordoMensile, variabileMensile: c.variabileMensile || null, lordoProgetto: c.lordoProgetto,
         inizio: c.inizio, fine: c.fine, incasso: c.incasso || null, oreMensili: c.oreMensili,
         upsellTarget: c.upsellTarget, splitMezzoMese: !!c.splitMezzoMese,
-        pagamenti: (c.pagamenti || []).map((p) => ({ mese: p.mese, importo: p.importo, nota: p.nota })),
+        pagamenti: (c.pagamenti || []).map((p) => ({ mese: p.mese, importo: p.importo, ore: p.ore || null, nota: p.nota })),
       })),
       incassatoStorico: setup.incassatoStorico || [],
       patrimonio: {
@@ -144,12 +148,19 @@ export default function Assistente({ commesse, setCommesse, setup, setSetup, see
     if (a.tipo === "nessuna_azione") return { label: a.motivo || "Nessuna azione necessaria.", applicabile: false };
     if (a.tipo === "registra_pagamento") {
       const c = byId(a.id);
-      const importo = Number(a.importo);
-      if (!c || !chiaveMese(a.mese) || !(importo > 0)) return null;
+      const importo = Number(a.importo) || 0;
       const ore = Number(a.ore) > 0 ? Number(a.ore) : null;
+      if (!c) return { label: `Pagamento non applicabile: la commessa indicata (id ${a.id ?? "mancante"}) non esiste.`, applicabile: false };
+      if (!(importo > 0) && !ore) return { label: `«${c.cliente}»: né importo né ore da registrare.`, applicabile: false };
+      const mese = meseDi(a);
+      const prima = giaNelMese(c, mese);
+      const sostituisce = a.sostituisci && prima.length > 0;
       return {
-        label: `Pagamento da «${c.cliente}» — ${etichettaMese(a.mese)}: ${fmtN(importo)} €` +
-          (ore ? ` · ${fmtN(ore)} ore lavorate (${fmtN(importo / ore)} €/h)` : "") +
+        label: (importo > 0
+          ? `Pagamento da «${c.cliente}» — ${etichettaMese(mese)}: ${fmtN(importo)} €`
+          : `Ore lavorate senza incasso per «${c.cliente}» — ${etichettaMese(mese)}`) +
+          (ore ? ` · ${fmtN(ore)} ore (${fmtN(importo / ore)} €/h)` : "") +
+          (sostituisce ? ` · sostituisce ${fmtN(prima.reduce((t, p) => t + (Number(p.importo) || 0), 0))} € già registrati` : "") +
           (a.testo ? ` (${a.testo})` : ""),
         motivo: a.motivo, applicabile: true,
       };
@@ -166,7 +177,8 @@ export default function Assistente({ commesse, setCommesse, setup, setSetup, see
     }
     if (a.tipo === "aggiorna_commessa") {
       const c = byId(a.id);
-      if (!c || !a.campi) return null;
+      if (!c) return { label: `Modifica non applicabile: la commessa indicata (id ${a.id ?? "mancante"}) non esiste.`, applicabile: false };
+      if (!a.campi) return null;
       const cambi = Object.entries(a.campi)
         .filter(([k]) => CAMPI_NUM.includes(k) || CAMPI_STR.includes(k) || CAMPI_BOOL.includes(k))
         .filter(([k, v]) => !(k === "stato" && !STATI.includes(v)))
@@ -212,14 +224,18 @@ export default function Assistente({ commesse, setCommesse, setup, setSetup, see
     for (const a of proposta.azioni) {
       if (!descrivi(a)?.applicabile) continue;
       if (a.tipo === "registra_pagamento") {
-        const importo = Number(a.importo);
-        const mese = etichettaMese(a.mese);
+        const importo = Number(a.importo) || 0;
+        const mese = etichettaMese(meseDi(a));
         const ore = Number(a.ore) > 0 ? Number(a.ore) : null;
         const pagamento = { mese, importo, nota: a.testo || "", data: new Date().toISOString().slice(0, 10), ...(ore ? { ore } : {}) };
-        setCommesse((prev) => prev.map((c) =>
-          c.id === a.id ? { ...c, pagamenti: [...(c.pagamenti || []), pagamento] } : c
-        ));
-        riepilogo.push(`Pagamento ${fmtN(importo)} € da «${byId(a.id)?.cliente}» (${mese}) → nel dettaglio della commessa, sezione «Incassi registrati»`);
+        setCommesse((prev) => prev.map((c) => {
+          if (String(c.id) !== String(a.id)) return c;
+          const resto = a.sostituisci ? (c.pagamenti || []).filter((p) => !stessoMese(p.mese, mese)) : (c.pagamenti || []);
+          return { ...c, pagamenti: [...resto, pagamento] };
+        }));
+        riepilogo.push(importo > 0
+          ? `Pagamento ${fmtN(importo)} € da «${byId(a.id)?.cliente}» (${mese})${a.sostituisci ? ", al posto di quello già registrato" : ""} → nel dettaglio della commessa`
+          : `${fmtN(ore)} ore senza incasso su «${byId(a.id)?.cliente}» (${mese}) → abbassano il suo €/h reale`);
         applicate++;
       } else if (a.tipo === "registra_incasso") {
         const lordo = Number(a.lordo);
@@ -242,12 +258,12 @@ export default function Assistente({ commesse, setCommesse, setup, setSetup, see
           else if (k === "stato") { if (STATI.includes(v)) puliti[k] = v; }
           else if (CAMPI_STR.includes(k)) puliti[k] = v == null ? null : String(v);
         }
-        setCommesse((prev) => prev.map((c) => (c.id === a.id ? { ...c, ...puliti } : c)));
+        setCommesse((prev) => prev.map((c) => (String(c.id) === String(a.id) ? { ...c, ...puliti } : c)));
         riepilogo.push(`Commessa «${byId(a.id)?.cliente}» aggiornata → la vedi in Commesse (e nei box in alto se è cambiata la fee)`);
         applicate++;
       } else if (a.tipo === "aggiungi_nota") {
         setCommesse((prev) => prev.map((c) =>
-          c.id === a.id ? { ...c, note: `${c.note ? c.note + "\n" : ""}[${oggi}] ${a.testo}` } : c
+          String(c.id) === String(a.id) ? { ...c, note: `${c.note ? c.note + "\n" : ""}[${oggi}] ${a.testo}` } : c
         ));
         riepilogo.push(`Nota aggiunta a «${byId(a.id)?.cliente}» → la vedi aprendo la commessa in Commesse`);
         applicate++;
