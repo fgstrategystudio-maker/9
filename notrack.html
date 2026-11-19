@@ -70,8 +70,18 @@
     <li>Gli stessi comandi funzionano anche aggiungendo <code>?notrack=1</code> o <code>?notrack=0</code> a un indirizzo del sito.</li>
   </ul>
 
+  <h2>Coprire tutti i dispositivi in una volta</h2>
+  <p>L'interruttore qui sopra vale per un browser alla volta. Per non pensarci piu&#768; c'e&#768; la via del filtro su Analytics, che esclude un'intera connessione: copre computer, telefono e tablet sulla stessa rete, senza doverci tornare.</p>
+  <div class="stato">
+    <div class="etichetta">Indirizzo IP di questa connessione</div>
+    <div class="valore"><span id="ip">cerco&hellip;</span></div>
+    <p class="spiega">In Analytics: <strong>Amministrazione &rarr; Impostazioni dei dati &rarr; Filtri dei dati &rarr; Traffico interno</strong>, crea una regola con questo indirizzo e poi porta il filtro da <em>Test</em> ad <em>Attivo</em>.</p>
+  </div>
+  <p>Attenzione: l'indirizzo della connessione di casa o dell'ufficio cambia raramente, ma quello della rete dati del telefono cambia di continuo. Per il telefono fuori casa serve comunque l'interruttore qui sopra.</p>
+
   <h2>Come verificare che funzioni</h2>
-  <p>Attiva l'esclusione qui, poi apri la home del sito e guarda <strong>Tempo reale</strong> in Analytics: non devi comparire. Se compari, controlla di non aver aperto il sito da un altro browser o da un altro dispositivo.</p>
+  <p>Attiva l'esclusione qui, poi apri la home del sito: se in basso a sinistra compare la targhetta <em>Visite non conteggiate</em>, sei escluso.</p>
+  <p><strong>Tempo reale inganna.</strong> Mostra chi e&#768; passato negli ultimi trenta minuti: se avevi aperto il sito poco prima di escluderti, continui a comparire fino a mezz'ora dopo anche se adesso non vieni piu&#768; registrato. Aspetta, oppure guarda se la targhetta c'e&#768;.</p>
 
   <a class="torna" href="/">← Torna al sito</a>
 </div>
@@ -89,8 +99,21 @@
   var escludi = document.getElementById('escludi');
   var includi = document.getElementById('includi');
 
+  function cookieAcceso() {
+    return /(^|;\s*)fg_notrack=1/.test(document.cookie);
+  }
+
   function leggi() {
-    try { return localStorage.getItem(CHIAVE) === '1'; } catch (e) { return null; }
+    // Due memorie, perche' si cancellano con gesti diversi: basta che
+    // ne sopravviva una. Se nessuna delle due si puo' usare, si dice.
+    var l = null;
+    try { l = localStorage.getItem(CHIAVE) === '1'; } catch (e) {}
+    var c = cookieAcceso();
+    if (l === null && !c) {
+      try { localStorage.setItem('__prova', '1'); localStorage.removeItem('__prova'); }
+      catch (e) { return document.cookie === '' ? null : false; }
+    }
+    return l === true || c;
   }
 
   function mostra() {
@@ -105,7 +128,7 @@
     box.className = 'stato ' + (on ? 'acceso' : 'spento');
     valore.textContent = on ? 'Non viene contato' : 'Viene contato';
     spiega.textContent = on
-      ? 'Le visite fatte da qui non entrano nelle statistiche.'
+      ? 'Le visite fatte da qui non entrano nelle statistiche. La scelta e\u0300 salvata in due modi, memoria del sito e cookie, cosi\u0300 resta anche se ne cancelli uno.'
       : 'Le visite fatte da qui entrano nelle statistiche, come per chiunque altro.';
     escludi.hidden = on;
     includi.hidden = !on;
@@ -116,8 +139,24 @@
       if (on) localStorage.setItem(CHIAVE, '1');
       else localStorage.removeItem(CHIAVE);
     } catch (e) {}
+    try {
+      document.cookie = on
+        ? CHIAVE + '=1;path=/;max-age=31536000;samesite=lax'
+        : CHIAVE + '=;path=/;max-age=0';
+    } catch (e) {}
     mostra();
   }
+
+  // L'indirizzo lo sa solo chi sta fuori: lo chiediamo a un servizio
+  // pubblico. Se non risponde si dice, invece di lasciare "cerco...".
+  (function () {
+    var box = document.getElementById('ip');
+    if (!box || !window.fetch) return;
+    fetch('https://api.ipify.org?format=json')
+      .then(function (r) { return r.json(); })
+      .then(function (d) { box.textContent = d.ip || 'non disponibile'; })
+      .catch(function () { box.textContent = 'non sono riuscito a leggerlo'; });
+  })();
 
   escludi.addEventListener('click', function () { scrivi(true); });
   includi.addEventListener('click', function () { scrivi(false); });

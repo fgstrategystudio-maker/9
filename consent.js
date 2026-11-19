@@ -294,7 +294,10 @@
 // Qui si dice, con il rimando alla pagina che la spegne. La vede solo
 // chi l'ha accesa, cioe' praticamente solo il proprietario del sito.
 (function () {
-  try { if (localStorage.getItem('fg_notrack') !== '1') return; } catch (e) { return; }
+  var acceso = false;
+  try { acceso = localStorage.getItem('fg_notrack') === '1'; } catch (e) {}
+  if (!acceso) acceso = /(^|;\s*)fg_notrack=1/.test(document.cookie);
+  if (!acceso) return;
 
   function monta() {
     if (document.getElementById('fg-notrack')) return;

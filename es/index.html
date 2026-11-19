@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="es">
 <head>
-  <script>try{if(/[?&]notrack=1/.test(location.search))localStorage.setItem('fg_notrack','1');if(/[?&]notrack=0/.test(location.search))localStorage.removeItem('fg_notrack');if(localStorage.getItem('fg_notrack')==='1')window['ga-disable-G-BDW0NNT2XH']=true;}catch(e){}</script>
+  <script>!function(){var K='fg_notrack',q=location.search,on=0,C=/(^|;\s*)fg_notrack=1/;if(/[?&]notrack=1/.test(q)){try{localStorage.setItem(K,'1')}catch(e){}try{document.cookie=K+'=1;path=/;max-age=31536000;samesite=lax'}catch(e){}}if(/[?&]notrack=0/.test(q)){try{localStorage.removeItem(K)}catch(e){}try{document.cookie=K+'=;path=/;max-age=0'}catch(e){}}try{if(localStorage.getItem(K)==='1')on=1}catch(e){}if(!on&&C.test(document.cookie))on=1;if(on){window['ga-disable-G-BDW0NNT2XH']=true;window.__fgInterno=1}}();</script>
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-BDW0NNT2XH"></script>
   <script>
@@ -9,7 +9,7 @@
     function gtag(){dataLayer.push(arguments);}
     gtag('consent','default',{'analytics_storage':'denied','ad_storage':'denied','ad_user_data':'denied','ad_personalization':'denied'});
     gtag('js', new Date());
-    gtag('config', 'G-BDW0NNT2XH');
+    gtag('config', 'G-BDW0NNT2XH', window.__fgInterno?{traffic_type:'internal'}:{});
   </script>
   <meta charset="utf-8" />
   <!-- ChatGPT Ads pixel (OpenAI) - l'SDK parte solo col consenso -->
