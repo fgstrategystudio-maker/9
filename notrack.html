@@ -70,6 +70,10 @@
     <li>Gli stessi comandi funzionano anche aggiungendo <code>?notrack=1</code> o <code>?notrack=0</code> a un indirizzo del sito.</li>
   </ul>
 
+  <h2>Se qualcosa non torna</h2>
+  <p>Questi sono i dati che servono per capire dove si inceppa. Se la targhetta non compare sul sito, copiali e mandameli.</p>
+  <div class="stato"><p class="spiega" id="diagnosi" style="margin:0;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;line-height:1.9;"></p></div>
+
   <h2>Coprire tutti i dispositivi in una volta</h2>
   <p>L'interruttore qui sopra vale per un browser alla volta. Per non pensarci piu&#768; c'e&#768; la via del filtro su Analytics, che esclude un'intera connessione: copre computer, telefono e tablet sulla stessa rete, senza doverci tornare.</p>
   <div class="stato">
@@ -140,9 +144,16 @@
       else localStorage.removeItem(CHIAVE);
     } catch (e) {}
     try {
-      document.cookie = on
-        ? CHIAVE + '=1;path=/;max-age=31536000;samesite=lax'
-        : CHIAVE + '=;path=/;max-age=0';
+      // Sul dominio e non sull'host, cosi' vale sia per il sito con il
+      // www sia per quello senza: per il browser sono due posti diversi.
+      var D = /(^|\.)francescogizzi\.com$/.test(location.hostname)
+        ? ';domain=.francescogizzi.com' : '';
+      if (on) {
+        document.cookie = CHIAVE + '=1;path=/;max-age=31536000;samesite=lax' + D;
+      } else {
+        document.cookie = CHIAVE + '=;path=/;max-age=0' + D;
+        document.cookie = CHIAVE + '=;path=/;max-age=0';
+      }
     } catch (e) {}
     mostra();
   }
@@ -158,9 +169,29 @@
       .catch(function () { box.textContent = 'non sono riuscito a leggerlo'; });
   })();
 
+  function diagnosi() {
+    var d = document.getElementById('diagnosi');
+    if (!d) return;
+    var ls;
+    try { localStorage.setItem('__p', '1'); localStorage.removeItem('__p'); ls = 'funziona'; }
+    catch (e) { ls = 'BLOCCATA'; }
+    var righe = [
+      'indirizzo: ' + location.hostname,
+      'memoria del sito: ' + ls + ' (valore: ' + (function () {
+        try { return localStorage.getItem(CHIAVE) || 'vuoto'; } catch (e) { return '?'; } })() + ')',
+      'cookie: ' + (cookieAcceso() ? 'presente' : 'assente'),
+      'esito: ' + (leggi() ? 'ESCLUSO' : 'conteggiato')
+    ];
+    d.textContent = righe.join('\n');
+    d.style.whiteSpace = 'pre';
+  }
+  var mostraPrima = mostra;
+  mostra = function () { mostraPrima(); diagnosi(); };
+
   escludi.addEventListener('click', function () { scrivi(true); });
   includi.addEventListener('click', function () { scrivi(false); });
   mostra();
+  diagnosi();
 })();
 </script>
 </body>
