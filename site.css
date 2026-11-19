@@ -157,7 +157,10 @@ form input:not([type="checkbox"]):not([type="hidden"]), form select, form textar
   border-radius: 10px !important;
   color: var(--av-ink) !important;
   box-shadow: none !important;
+  font-size: 15px !important;
+  padding: 13px 14px !important;
 }
+form [type="submit"] { padding: 18px 26px !important; }
 form input:focus, form select:focus, form textarea:focus { border-color: var(--av-ink) !important; background: #fff !important; outline: none !important; }
 form input::placeholder, form textarea::placeholder { color: var(--av-faint) !important; }
 form input[type="checkbox"] { accent-color: var(--av-accent); }
@@ -247,7 +250,7 @@ form input[type="checkbox"] { accent-color: var(--av-accent); }
   .fx-in { animation: none !important; }
 }
 /* etichette dei moduli: grigie, non color bronzo */
-label [style*="text-transform:uppercase"], .form-grid span { color: var(--av-muted) !important; font-size: 12.5px !important; }
+label [style*="text-transform:uppercase"], .form-grid span { color: var(--av-muted) !important; font-size: 13px !important; font-weight: 500 !important; }
 
 /* ---------- Pagine EN/PT/ES: superfici azzurre e titoli bianchi residui ---------- */
 .compare-card.before, .compare-card.after, .feature, .brand-box, .service-point, .signal-item, .output-item,
