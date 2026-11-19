@@ -74,9 +74,10 @@
     <p class="spiega" id="esitoip" style="min-height:0;color:var(--accent);"></p>
   </div>
   <ol>
-    <li><b>Dichiara l&#8217;indirizzo.</b> In Analytics: <i>Amministrazione &rarr; Raccolta e modifica dei dati &rarr; Flussi di dati</i>, apri il flusso del sito, poi <i>Configura impostazioni tag &rarr; Mostra tutto &rarr; Definisci traffico interno &rarr; Crea</i>. Lascia <code>traffic_type</code> su <code>internal</code>, scegli <i>L&#8217;indirizzo IP e&#768; uguale a</i> e incolla l&#8217;indirizzo qui sopra.</li>
-    <li><b>Accendi il filtro.</b> In <i>Amministrazione &rarr; Impostazioni dei dati &rarr; Filtri dei dati</i> c&#8217;e&#768; un filtro <i>Internal Traffic</i> gia&#768; pronto, ma nasce in stato <b>Test</b>: finche&#769; resta li&#768; non esclude niente. Aprilo e portalo ad <b>Attivo</b>.</li>
+    <li><b>Dichiara l&#8217;indirizzo.</b> In Analytics: <i>Amministrazione &rarr; Raccolta e modifica dei dati &rarr; Flussi di dati</i>, apri il flusso del sito, poi <i>Configura impostazioni tag</i>, apri le impostazioni nascoste con <i>Mostra altro</i> in fondo alla lista, poi <i>Definisci traffico interno &rarr; Crea</i>. Lascia <code>traffic_type</code> su <code>internal</code>, scegli <i>L&#8217;indirizzo IP e&#768; uguale a</i> e incolla l&#8217;indirizzo qui sopra.</li>
+    <li><b>Accendi il filtro.</b> Sempre in <i>Amministrazione &rarr; Raccolta e modifica dei dati</i>, voce <i>Filtri dei dati</i>. Di solito c&#8217;e&#768; gia&#768; un filtro <i>Internal Traffic</i>; se manca, <i>Crea filtro &rarr; Traffico interno</i>, con operazione <i>Escludi</i>. Nasce in stato <b>Test</b>: finche&#769; resta li&#768; non esclude niente, si limita a contare quanto escluderebbe. Aprilo e portalo ad <b>Attivo</b>.</li>
   </ol>
+  <p>Due avvertenze sul secondo passaggio. Una volta passato ad <b>Attivo</b> il filtro non torna in <i>Test</i>: si puo&#768; solo spegnere del tutto. E non tocca i dati gia&#768; raccolti: le visite dei mesi scorsi restano come sono, il filtro vale da quando lo accendi in avanti.</p>
   <p>Da quel momento, qualsiasi dispositivo su quella rete e&#768; fuori dalle statistiche. L&#8217;indirizzo di casa o dell&#8217;ufficio cambia raramente; se un giorno qui sopra ne vedi un altro, aggiorna la regola. Per il telefono <b>fuori casa, sulla rete dati</b>, l&#8217;indirizzo cambia di continuo: li&#768; serve l&#8217;interruttore.</p>
 
   <h2>Su ogni browser che usi</h2>
