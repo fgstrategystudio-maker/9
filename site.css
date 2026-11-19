@@ -388,3 +388,20 @@ a { text-underline-offset: .16em; }
 .breadcrumb-sep {
   color: var(--av-faint) !important;
 }
+
+/* La misura del testo corrente.
+   Nelle pagine del blog le righe arrivavano a 88 caratteri, e dentro il
+   riquadro dell'autore a 100: oltre i 75 l'occhio perde il capo della
+   riga successiva e la lettura rallenta. I paragrafi che contengono
+   un'immagine restano larghi, altrimenti si rimpicciolirebbe la foto. */
+.article-wrap p:not(:has(img, iframe, video, picture)),
+.article-wrap li,
+.article-page-wrap p:not(:has(img, iframe, video, picture)),
+.article-page-wrap li,
+.author-box p,
+.privacy-wrap p, .privacy-wrap li,
+.section > .container > p,
+.soft-card > p,
+p[style*="Hanken Grotesk"] {
+  max-width: 52ch !important;
+}
