@@ -284,3 +284,35 @@
   if (iniziale) return;
   setTimeout(function () { mostra('banner'); }, 1200);
 })();
+
+// ── Targhetta "visite non conteggiate" ──
+//
+// L'esclusione dalle statistiche e' una voce nel localStorage che lo
+// snippet in testa a ogni pagina legge per spegnere Analytics. Funziona,
+// ma non si vede: senza un segnale non si sa se e' accesa, e si finisce
+// per non fidarsi dei numeri o per accorgersi tardi di essersi contati.
+// Qui si dice, con il rimando alla pagina che la spegne. La vede solo
+// chi l'ha accesa, cioe' praticamente solo il proprietario del sito.
+(function () {
+  try { if (localStorage.getItem('fg_notrack') !== '1') return; } catch (e) { return; }
+
+  function monta() {
+    if (document.getElementById('fg-notrack')) return;
+    var s = document.createElement('style');
+    s.textContent =
+      '#fg-notrack{position:fixed;left:14px;bottom:14px;z-index:9998;background:#121212;' +
+      'color:#C9C6BF;border-radius:999px;padding:7px 15px;opacity:.82;' +
+      'font:400 12px/1.3 "Geist","Helvetica Neue",Arial,sans-serif;' +
+      'box-shadow:0 6px 20px rgba(18,18,18,.22)}' +
+      '#fg-notrack:hover{opacity:1}' +
+      '#fg-notrack a{color:#F7F6F2;text-underline-offset:3px}';
+    document.head.appendChild(s);
+    var d = document.createElement('div');
+    d.id = 'fg-notrack';
+    d.innerHTML = 'Visite non conteggiate &middot; <a href="/notrack">cambia</a>';
+    document.body.appendChild(d);
+  }
+
+  if (document.body) monta();
+  else document.addEventListener('DOMContentLoaded', monta);
+})();
