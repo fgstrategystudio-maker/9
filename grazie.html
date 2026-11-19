@@ -15,7 +15,7 @@
        contare gli invii, non le visite. Il caso non e' teorico - il
        banner cookie, quando lo si accetta, ricarica la pagina apposta,
        e cosi' ogni lead di chi accettava qui veniva contato due volte. -->
-  <script>(function(){var n=(window.performance&&performance.getEntriesByType&&performance.getEntriesByType('navigation')[0])||{};if(n.type&&n.type!=='navigate')return;gtag('event','generate_lead',{method:'web3forms',form:'contatti',language:'it'});try{oaiq('measure','lead_created',{type:'customer_action'})}catch(e){}})();</script>
+  <script>(function(){try{var m=sessionStorage.getItem('fg_lead_inviata');if(m&&Date.now()-(+m)<300000){sessionStorage.removeItem('fg_lead_inviata');return}}catch(e){}var n=(window.performance&&performance.getEntriesByType&&performance.getEntriesByType('navigation')[0])||{};if(n.type&&n.type!=='navigate')return;gtag('event','generate_lead',{method:'web3forms',form:'contatti',language:'it'});try{oaiq('measure','lead_created',{type:'customer_action'})}catch(e){}})();</script>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Richiesta ricevuta | Francesco Gizzi</title>
   <meta name="description" content="Grazie per avermi scritto. Ti rispondo entro 24 ore per capire come posso esserti utile." />

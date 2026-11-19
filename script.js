@@ -16,15 +16,10 @@ document.addEventListener('DOMContentLoaded', function(){
     });
   });
 
-  // Form submission (conversione principale)
-  document.querySelectorAll('form').forEach(function(form){
-    form.addEventListener('submit', function(){
-      gev('generate_lead', {
-        form_id: form.id || 'contact_form',
-        page_location: location.pathname
-      });
-    });
-  });
+  // L'evento "generate_lead" sta in form.js, che e' l'unico posto da
+  // cui parte: qui, in home.js e in script.js c'erano tre ascoltatori
+  // diversi sullo stesso invio, e insieme alla pagina grazie contavano
+  // ogni richiesta due o tre volte.
 
   // Nav service links
   document.querySelectorAll('.nav-dropdown a').forEach(function(a){

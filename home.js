@@ -36,12 +36,10 @@
     document.querySelectorAll('.has-mega.open').forEach(function (m) { m.classList.remove('open'); var t = m.querySelector('.mega-trigger'); t.setAttribute('aria-expanded', 'false'); t.focus(); });
   });
 
-  // Richiesta inviata dal modulo: evento "generate_lead" per Google Analytics
-  document.querySelectorAll('form').forEach(function (f) {
-    f.addEventListener('submit', function () {
-      if (window.gtag) gtag('event', 'generate_lead', { form_location: location.pathname });
-    });
-  });
+  // L'evento "generate_lead" sta in form.js, che e' l'unico posto da
+  // cui parte: qui, in home.js e in script.js c'erano tre ascoltatori
+  // diversi sullo stesso invio, e insieme alla pagina grazie contavano
+  // ogni richiesta due o tre volte.
 
   // Loghi: comparsa a cascata riga per riga
   document.querySelectorAll('.logo').forEach(function (el, i) {
