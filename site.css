@@ -405,3 +405,16 @@ a { text-underline-offset: .16em; }
 p[style*="Hanken Grotesk"] {
   max-width: 52ch !important;
 }
+
+/* La tabella dei cookie sulle pagine privacy e cookie policy.
+   Ha width:100%, ma la larghezza minima del contenuto superava quella
+   del telefono e spingeva fuori la pagina. Le colonne uguali con le
+   parole spezzate a meta' erano peggio del problema: qui si stringe
+   soltanto quanto serve, e si spezza solo una parola che da sola non
+   entrerebbe comunque. */
+@media (max-width: 760px) {
+  .privacy-table { font-size: 12px !important; }
+  .privacy-table th, .privacy-table td { padding: 7px 6px !important; overflow-wrap: break-word; }
+  .privacy-table th:first-child, .privacy-table td:first-child { width: 22%; }
+  .privacy-table th:last-child, .privacy-table td:last-child { width: 20%; }
+}
