@@ -303,7 +303,8 @@
     if (document.getElementById('fg-notrack')) return;
     var s = document.createElement('style');
     s.textContent =
-      '#fg-notrack{position:fixed;left:14px;bottom:14px;z-index:9998;background:#121212;' +
+      '#fg-notrack{position:fixed;left:14px;z-index:9998;background:#121212;' +
+      'bottom:calc(14px + env(safe-area-inset-bottom,0px));' +
       'color:#C9C6BF;border-radius:999px;padding:7px 15px;opacity:.82;' +
       'font:400 12px/1.3 "Geist","Helvetica Neue",Arial,sans-serif;' +
       'box-shadow:0 6px 20px rgba(18,18,18,.22)}' +

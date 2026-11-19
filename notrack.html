@@ -70,6 +70,16 @@
     <li>Gli stessi comandi funzionano anche aggiungendo <code>?notrack=1</code> o <code>?notrack=0</code> a un indirizzo del sito.</li>
   </ul>
 
+
+  <h2>Sugli altri dispositivi</h2>
+  <p>La scelta vale per un browser alla volta: il telefono non sa cosa hai deciso sul computer. Questo collegamento la attiva ovunque lo apri, senza passare da questa pagina.</p>
+  <div class="stato">
+    <div class="etichetta">Da aprire sul telefono</div>
+    <div class="valore" style="font-size:17px;"><span id="collegamento">francescogizzi.com/?notrack=1</span></div>
+    <p class="spiega"><button type="button" class="chiaro" id="copia" style="padding:10px 18px;font-size:14px;">Copia il collegamento</button> <span id="esito" style="color:var(--accent);font-size:14px;"></span></p>
+  </div>
+  <p>Mandatelo via messaggio o salvalo fra i preferiti. Per rimetterti a contare, lo stesso indirizzo con <code>?notrack=0</code>.</p>
+
   <h2>Se qualcosa non torna</h2>
   <p>Questi sono i dati che servono per capire dove si inceppa. Se la targhetta non compare sul sito, copiali e mandameli.</p>
   <div class="stato"><p class="spiega" id="diagnosi" style="margin:0;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;line-height:1.9;"></p></div>
@@ -187,6 +197,22 @@
   }
   var mostraPrima = mostra;
   mostra = function () { mostraPrima(); diagnosi(); };
+
+  (function () {
+    var tasto = document.getElementById('copia');
+    var dove = document.getElementById('collegamento');
+    if (!tasto || !dove) return;
+    var url = location.origin + '/?notrack=1';
+    dove.textContent = url.replace(/^https?:\/\//, '');
+    tasto.addEventListener('click', function () {
+      var esito = document.getElementById('esito');
+      function detto(t) { if (esito) esito.textContent = t; }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(function () { detto('Copiato.'); },
+                                               function () { detto('Copialo a mano: ' + url); });
+      } else { detto('Copialo a mano: ' + url); }
+    });
+  })();
 
   escludi.addEventListener('click', function () { scrivi(true); });
   includi.addEventListener('click', function () { scrivi(false); });
