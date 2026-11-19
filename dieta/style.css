@@ -680,3 +680,81 @@ section[data-sec] > :last-child { margin-bottom: 0; }
 .df-grid button.today { box-shadow: inset 0 0 0 1.5px var(--accent); }
 .df-grid button.sel { background: var(--accent); color: var(--on-accent); box-shadow: none; }
 .grid2 > .date-field { grid-column: 1 / -1; }
+
+/* ---------- v38 · critique + audit (impeccable: polish, layout, clarify, harden, onboard, animate) ---------- */
+/* Contrasto: tre coppie sotto soglia nell'audit (oceano accento su tenue, oliva testo secondario, artico barra kcal) */
+:root[data-palette="oceano"]:not([data-scheme="dark"]) { --accent-soft: #e0f3f8; }
+@media (prefers-color-scheme: dark) { :root[data-palette="oceano"]:not([data-scheme="light"]) { --accent-soft: #0f3350; } }
+:root[data-palette="oliva"]:not([data-scheme="dark"]) { --muted: #66684f; }
+@media (prefers-color-scheme: dark) { :root[data-palette="oliva"]:not([data-scheme="light"]) { --muted: #a3a58c; } }
+:root[data-palette="artico"]:not([data-scheme="dark"]) { --kcal: #2c6fdc; }
+@media (prefers-color-scheme: dark) { :root[data-palette="artico"]:not([data-scheme="light"]) { --kcal: #a5c8f0; } }
+/* simbolo sul pallino ambra del calendario: scuro, leggibile (2,9:1 → 7:1) */
+.cal-day .dot.low { color: #2a1d00; }
+
+/* Comandi in alto: chevron disegnati come le altre icone, disabilitato dal CSS */
+.icon-btn { display: inline-flex; align-items: center; justify-content: center; color: var(--text); }
+.icon-btn:disabled { opacity: .35; cursor: default; }
+.date-btn { min-height: 40px; border-radius: 10px; }
+
+/* Aree di tocco ≥ 38 px anche per i pulsanti piccoli */
+.add-mini { min-height: 38px; }
+.nudge-acts .add-mini { min-width: 64px; }
+
+/* Acqua: bicchieri più grandi da toccare */
+.drops { gap: 6px; }
+.drop { width: 32px; height: 40px; border-radius: 7px 7px 14px 14px; transition: background-color .2s ease, transform .12s ease; }
+.drop:active { transform: scale(.92); }
+
+/* Pasti scorrevoli: sfumatura a destra che dice "c'è altro" */
+.qa-meals, .meal-pick { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); padding-right: 28px; }
+
+/* Grafici: etichette leggibili */
+.chart text { font-size: 11px; }
+.stat .v small { font-size: 13px; font-weight: 600; color: var(--muted); letter-spacing: 0; }
+
+/* Aggiungi: le tessere si distinguono dal pannello */
+.add-sheet .big-action:not(.primary) { background: var(--bg); box-shadow: inset 0 0 0 1px var(--line); }
+.add-dot { width: 32px; height: 32px; flex: none; border-radius: 50%; background: var(--accent-soft); color: var(--accent); display: inline-grid; place-items: center; align-self: center; }
+
+/* Suggerimento chiave AI: una riga, si può nascondere */
+.ai-hint { display: flex; align-items: center; gap: 10px; background: var(--accent-soft); border-radius: var(--radius); padding: 8px 6px 8px 14px; margin-bottom: 12px; font-size: 13px; line-height: 1.35; }
+.ai-hint b { color: color-mix(in srgb, var(--accent) 85%, var(--text)); }
+.ai-hint .add-mini { background: var(--card); flex: none; }
+.ai-hint .x-btn { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 50%; }
+.ai-hint-ico { font-size: 18px; }
+
+/* Benvenuto: quattro passi */
+.onboard { padding-bottom: 8px; }
+.ob-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.ob-head h2 { margin: 0 0 2px; }
+.ob-head p { margin: 0; }
+.ob-later { width: auto; padding: 8px 10px; font-size: 14px; flex: none; }
+.ob-bar { margin: 12px 0 4px; height: 6px; }
+.ob-bar i { background: var(--accent); transition: width .5s cubic-bezier(.2,.8,.2,1); }
+.ob-steps { list-style: none; margin: 0; padding: 0; }
+.ob-steps li + li { border-top: 1px solid var(--line); }
+.ob-step { width: 100%; display: flex; align-items: center; gap: 12px; border: 0; background: none; text-align: left; padding: 12px 0; min-height: 56px; }
+.ob-step b { display: block; font-size: 15px; }
+.ob-step .small { display: block; }
+.ob-n { width: 30px; height: 30px; flex: none; border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: 14px; background: var(--accent-soft); color: color-mix(in srgb, var(--accent) 85%, var(--text)); }
+.ob-step.done { cursor: default; }
+.ob-step.done .ob-n { background: var(--ok); color: #fff; animation: obPop .35s cubic-bezier(.2,1.4,.4,1); }
+.ob-step.done b { color: var(--muted); font-weight: 600; }
+.ob-go { color: var(--muted); font-size: 22px; }
+@keyframes obPop { from { transform: scale(.5); } }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+/* Righe dello storico (Corpo) raggiungibili da tastiera */
+.log li[role=button] { cursor: pointer; }
+
+/* Valori fuori scala nei moduli */
+input[aria-invalid="true"] { border-color: var(--danger); box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 18%, transparent); }
+
+/* Pannello: niente contorno quando riceve il focus all'apertura */
+.sheet:focus, .sheet:focus-visible { outline: none; }
+
+/* Movimento ridotto: nessuna animazione decorativa, ovunque */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}

@@ -19,5 +19,11 @@ Manrope variable 200–800, self-hosted. Title 24/800, card heading 17/700, body
 - Icons: stroke SVG (`ico()`), 2px, round caps; emoji only as food/meal content.
 - Sheets (`openSheet`) for focused edits; toasts for confirmation.
 
+- Onboarding `.onboard` (first run only, 4 steps, dismissible); AI hint `.ai-hint` one line under the quick bar, dismissible.
+- Horizontal chip rows fade at the right edge; the selected chip is always scrolled into view.
+- Sheets are dialogs: labelled by their h3, focus in/out, Esc closes. Toast is a live region.
+- Forms refuse implausible values with `aria-invalid` + toast + focus.
+- Signs use the true minus (−); counts use `plural()`.
+
 ## Motion
 150–250 ms state transitions; section switch fade-up 220 ms; celebration (confetti) only for achievements. All respect prefers-reduced-motion.

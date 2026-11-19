@@ -1,5 +1,5 @@
 // Cache dell'app per l'uso offline. Aumenta VERSION a ogni modifica dei file.
-const VERSION = 'dieta-v37';
+const VERSION = 'dieta-v38';
 const FILES = ['./', 'index.html', 'style.css', 'app.js', 'foods.js', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png', 'fonts/manrope.woff2'];
 
 self.addEventListener('install', e => {
@@ -14,9 +14,12 @@ self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET' || url.origin !== location.origin) return;
   e.respondWith(
     fetch(e.request).then(res => {
-      const copy = res.clone();
-      caches.open(VERSION).then(c => c.put(e.request, copy));
+      // in cache solo le risposte complete: un errore del server non deve sostituire la copia buona
+      if (res.ok && res.type === 'basic') {
+        const copy = res.clone();
+        caches.open(VERSION).then(c => c.put(e.request, copy));
+      }
       return res;
-    }).catch(() => caches.match(e.request).then(r => r || caches.match('index.html')))
+    }).catch(() => caches.match(e.request, { ignoreSearch: true }).then(r => r || (e.request.mode === 'navigate' ? caches.match('index.html') : Response.error())))
   );
 });

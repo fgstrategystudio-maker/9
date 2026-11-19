@@ -2,7 +2,7 @@
 'use strict';
 
 // ---------- Storage ----------
-const APP_VERSION = '37';
+const APP_VERSION = '38';
 const KEY = 'dieta.v1';
 // Icone dei comandi: SVG con lo stesso tratto della barra in basso
 const ICONS = {
@@ -15,6 +15,8 @@ const ICONS = {
   barcode: '<path d="M4 6v12M7.5 6v12M10 6v12M13.5 6v12M16 6v12M20 6v12"/>',
   calendar: '<rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
   share: '<path d="M12 15V4M7.5 8.5L12 4l4.5 4.5"/><path d="M5 13v5.5a1.5 1.5 0 0 0 1.5 1.5h11a1.5 1.5 0 0 0 1.5-1.5V13"/>',
+  check: '<path d="M5 12.5l4.2 4.2L19 7"/>',
+  x: '<path d="M6 6l12 12M18 6L6 18"/>',
   scale: '<rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="M8.5 9a4 4 0 0 1 7 0"/><path d="M12 9l1.4-2"/>',
 };
 const ico = (name, size = 20) => `<svg class="ico" viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name]}</svg>`;
@@ -139,6 +141,9 @@ const parseYmd = s => { const [y, m, d] = s.split('-').map(Number); return new D
 const addDays = (s, n) => { const d = parseYmd(s); d.setDate(d.getDate() + n); return ymd(d); };
 const today = () => ymd(new Date());
 const fmtDate = (s, opts = { weekday: 'short', day: 'numeric', month: 'short' }) => parseYmd(s).toLocaleDateString('it-IT', opts);
+// Porta in vista il chip selezionato in una fila scorrevole (senza muovere la pagina)
+const revealChip = row => { const on = row && $('.on', row); if (on && on.offsetLeft + on.offsetWidth > row.clientWidth - 28) row.scrollLeft = on.offsetLeft - 8; };
+const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
 const fmtNum = (n, d = 1) => n == null ? '–' : Number(n).toLocaleString('it-IT', { maximumFractionDigits: d });
 
 function nutrients(e) {
@@ -258,16 +263,22 @@ const porChips = (attr, cur = 1) => `<div class="por">${PORTIONS.map(([k, l]) =>
 
 // ---------- Sheet ----------
 let sheetCleanup = null;
+let sheetOpener = null; // elemento che aveva il focus prima del pannello: lo riprende alla chiusura
 function openSheet(html, onMount) {
   runSheetCleanup();
   const s = $('#sheet');
+  if (s.hidden) sheetOpener = document.activeElement;
   s.innerHTML = '<div class="sheet-handle" aria-hidden="true"></div>' + html;
+  const h = $('h3', s);
+  if (h) { h.id = 'sheetTitle'; s.setAttribute('aria-labelledby', 'sheetTitle'); s.removeAttribute('aria-label'); }
+  else { s.removeAttribute('aria-labelledby'); s.setAttribute('aria-label', 'Pannello'); }
   s.style.transform = ''; s.style.transition = '';
   s.hidden = false; $('#sheetBackdrop').hidden = false;
   s.scrollTop = 0;
   document.body.style.overflow = 'hidden';
   bindDateFields(s);
   onMount && onMount(s);
+  if (!s.contains(document.activeElement)) s.focus({ preventScroll: true });
 }
 function runSheetCleanup() {
   const fn = sheetCleanup; sheetCleanup = null;
@@ -278,7 +289,16 @@ function closeSheet() {
   $('#sheet').hidden = true; $('#sheetBackdrop').hidden = true;
   $('#sheet').innerHTML = '';
   document.body.style.overflow = '';
+  if (sheetOpener?.isConnected) sheetOpener.focus({ preventScroll: true });
+  sheetOpener = null;
 }
+// Esc (tastiera, telecomandi) chiude festeggiamenti e pannelli
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  const cel = $('.celebrate');
+  if (cel) { cel.querySelector('#cOk')?.click(); return; }
+  if (!$('#sheet').hidden) closeSheet();
+});
 $('#sheetBackdrop').addEventListener('click', closeSheet);
 // Trascina la maniglia (o la parte alta del pannello) verso il basso per chiudere
 (() => {
@@ -321,9 +341,11 @@ const navStack = []; // schermate precedenti, per il tasto indietro del telefono
 function go(t, push = true) {
   if (push && t !== tab) { navStack.push({ tab, curDate }); if (navStack.length > 30) navStack.shift(); }
   tab = t;
-  $$('.tabbar button').forEach(b => b.classList.toggle('active', b.dataset.tab === t));
+  $$('.tabbar button').forEach(b => { const on = b.dataset.tab === t; b.classList.toggle('active', on); on ? b.setAttribute('aria-current', 'page') : b.removeAttribute('aria-current'); });
   render();
   window.scrollTo(0, 0);
+  const v = $('#view');
+  if (!reduceMotion()) { v.classList.remove('sec-in'); void v.offsetWidth; v.classList.add('sec-in'); }
 }
 $$('.tabbar button').forEach(b => b.addEventListener('click', () => {
   if (b.dataset.tab === 'add') { openAddSheet(); return; }
@@ -373,7 +395,6 @@ function render() {
     const t = today();
     $('#dateLabel').textContent = curDate === t ? 'Oggi' : curDate === addDays(t, -1) ? 'Ieri' : fmtDate(curDate);
     $('#nextDay').disabled = curDate >= t;
-    $('#nextDay').style.opacity = curDate >= t ? .35 : 1;
   }
   const v = $('#view');
   ({ today: renderToday, add: renderAdd, progress: renderProgress, body: renderBody, goals: renderGoals })[tab](v);
@@ -465,7 +486,7 @@ function drawCalendar(s) {
     <div class="cal-head">
       <button class="icon-btn" id="calPrev" aria-label="Mese precedente">‹</button>
       <h3>${first.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' })}</h3>
-      <button class="icon-btn" id="calNext" aria-label="Mese successivo" ${isCurMonth ? 'disabled style="opacity:.35"' : ''}>›</button>
+      <button class="icon-btn" id="calNext" aria-label="Mese successivo" ${isCurMonth ? 'disabled' : ''}>›</button>
     </div>
     <div class="cal-grid">${['L', 'M', 'M', 'G', 'V', 'S', 'D'].map(x => `<span class="wd">${x}</span>`).join('')}${'<span></span>'.repeat(lead)}${cells}</div>
     <div class="legend" style="justify-content:center"><span><i style="background:var(--ok)"></i>nel target</span><span><i style="background:var(--danger)"></i>oltre</span><span><i style="background:var(--warn)"></i>sotto il 75%</span><span><i style="background:var(--line)"></i>vuoto</span></div>
@@ -473,7 +494,7 @@ function drawCalendar(s) {
       <div class="stat"><div class="v">${loggedStreak()}</div><div class="k">giorni di fila registrati</div></div>
       <div class="stat"><div class="v">${green}<span class="muted" style="font-size:15px">/${past.length}</span></div><div class="k">giorni verdi nel mese</div></div>
       <div class="stat"><div class="v">${signed(dW, 'kg')}</div><div class="k">peso nel mese</div></div>
-      <div class="stat"><div class="v">${r0(avg)}</div><div class="k">kcal medie (${logged.length} giorni registrati)</div></div>
+      <div class="stat"><div class="v">${r0(avg)}</div><div class="k">kcal medie (${plural(logged.length, 'giorno registrato', 'giorni registrati')})</div></div>
       ${(() => { const mb = monthBalance(calMonth); return mb.days || mb.start ? `<div class="stat" style="grid-column:1/-1"><div class="v">${fmtBalance(mb.total)}</div><div class="k">${db.goals.deficitRef === 'goal' ? `rispetto all'obiettivo nel mese` : `bilancio del mese ≈ ${fatKg(mb.total)} kg di grasso ${mb.total <= 0 ? 'persi' : 'in più'}`}</div></div>` : ''; })()}
     </div>
     <div class="btn-row" style="margin-top:12px"><button class="btn secondary" id="calClose">Chiudi</button><button class="btn" id="calToday">Vai a oggi</button></div>`;
@@ -542,9 +563,8 @@ function renderToday(v) {
   if (curDate !== today()) {
     html += `<div class="banner row between"><span>Stai vedendo <b>${fmtDate(curDate, { weekday: 'long', day: 'numeric', month: 'long' })}</b>: puoi aggiungere e modificare.</span><button class="add-mini" id="backToday">Oggi</button></div>`;
   }
-  if (!hasAiKey()) {
-    html += `<div class="banner">Per riconoscere i cibi da <b>foto</b> e <b>testo</b> inserisci una chiave AI in <b>Obiettivi → Impostazioni</b> (con Google Gemini è <b>gratis</b>). Intanto puoi cercare alimenti e prodotti di marca o leggere il codice a barre.</div>`;
-  }
+  const onboarding = onboardHtml();
+  html += onboarding;
   html += `<div class="card">
     <div class="summary">
       <div class="ring">${ringSvg(tot.kcal, budget, 'var(--ok)')}
@@ -569,8 +589,12 @@ function renderToday(v) {
     })()}
   </div>`;
 
-  html += nudgesHtml();
   html += quickBar();
+  if (!onboarding && !hasAiKey() && !db.settings.aiHintHidden && curDate === today()) {
+    html += `<div class="ai-hint"><span class="ai-hint-ico" aria-hidden="true">✨</span><span class="grow">Foto e frasi → calorie con una <b>chiave AI</b>, gratis con Gemini.</span>
+      <button class="add-mini" id="aiSetup">Configura</button><button class="x-btn" id="aiHide" aria-label="Nascondi il suggerimento">${ico('x', 18)}</button></div>`;
+  }
+  html += nudgesHtml();
   const exList = dayExercise(curDate);
   html += `<div class="card">
     <div class="meal-head">
@@ -618,9 +642,9 @@ function renderToday(v) {
   html += `<div class="card">
     <h2>Acqua <small>${fmtNum(water / 1000, 2)} / ${fmtNum(g.water / 1000, 1)} L</small></h2>
     <div class="water">
-      <div class="drops">${Array.from({ length: Math.max(glasses, filled) }, (_, i) => `<button class="drop ${i < filled ? 'on' : ''}" data-drop="${i}" aria-label="Bicchiere ${i + 1}"></button>`).join('')}</div>
+      <div class="drops">${Array.from({ length: Math.max(glasses, filled) }, (_, i) => `<button class="drop ${i < filled ? 'on' : ''}" data-drop="${i}" aria-pressed="${i < filled}" aria-label="Bicchiere ${i + 1} (${(i + 1) * 250} ml)"></button>`).join('')}</div>
     </div>
-    <div class="small muted" style="margin-top:6px">Ogni goccia = 250 ml</div>
+    <div class="small muted" style="margin-top:8px">Tocca un bicchiere per segnarlo: 250 ml ciascuno</div>
   </div>`;
 
   if (!weighed) {
@@ -641,6 +665,10 @@ function renderToday(v) {
   $('#nReport', v)?.addEventListener('click', () => openReport(lastWeekStart()));
   $('#nReportLater', v)?.addEventListener('click', () => { db.settings.reportSeen = lastWeekStart(); save(); render(); });
   watchMiniSum(v, tot, budget, left);
+  bindOnboard(v);
+  revealChip($('.qa-meals', v));
+  $('#aiSetup', v)?.addEventListener('click', () => goSub('goals', 'impostazioni'));
+  $('#aiHide', v)?.addEventListener('click', () => { db.settings.aiHintHidden = true; save(); render(); toast('La chiave si aggiunge in Obiettivi → Impostazioni'); });
   // alimenti appena aggiunti: compaiono nel pasto con un'animazione e una breve vibrazione
   if (justAdded.size) {
     const first = $('.just-added', v);
@@ -676,6 +704,42 @@ function renderToday(v) {
   }
   $('#closedDetail', v)?.addEventListener('click', () => { db.settings.closedSeen = prevMonth; save(); goSub('progress', 'peso'); });
   $$('[data-ex]', v).forEach(li => li.addEventListener('click', () => exerciseForm(li.dataset.ex)));
+}
+
+// ---------- Primo avvio: quattro passi, poi la scheda sparisce ----------
+function onboardSteps() {
+  return [
+    { id: 'profile', done: !!db.settings.profileSet, title: 'Il tuo profilo', sub: 'Età, altezza e giornata tipo, per calcolare il fabbisogno' },
+    { id: 'weigh', done: db.body.some(b => b.weight != null), title: 'La prima pesata', sub: 'Da qui partono obiettivi, grafici e kg persi' },
+    { id: 'ai', done: hasAiKey(), title: 'Chiave AI', sub: 'Facoltativa: per foto e frasi. Con Gemini è gratis' },
+    { id: 'meal', done: Object.values(db.entries).some(l => l?.length), title: 'Il primo pasto', sub: 'Scrivilo nella barra «Cosa hai mangiato?»' },
+  ];
+}
+function onboardHtml() {
+  if (curDate !== today() || db.settings.onboarded) return '';
+  const steps = onboardSteps();
+  if (steps.every(x => x.done)) { db.settings.onboarded = true; save(); setTimeout(() => toast('Tutto pronto: buon diario!'), 300); return ''; }
+  const n = steps.filter(x => x.done).length;
+  return `<div class="card onboard">
+    <div class="ob-head"><div><h2>Benvenuto 👋</h2><p class="small muted">Prepara l'app in un minuto · ${n} di ${steps.length}</p></div>
+      <button class="btn ghost ob-later" id="obLater">Più tardi</button></div>
+    <div class="bar ob-bar" aria-hidden="true"><i style="width:${(n / steps.length) * 100}%"></i></div>
+    <ol class="ob-steps">${steps.map((x, i) => `<li><button class="ob-step ${x.done ? 'done' : ''}" data-ob="${x.id}" ${x.done ? 'aria-disabled="true"' : ''}>
+      <span class="ob-n" aria-hidden="true">${x.done ? ico('check', 16) : i + 1}</span>
+      <span class="grow"><b>${x.title}</b><span class="small muted">${x.done ? 'Fatto' : x.sub}</span></span>
+      ${x.done ? '<span class="sr-only">completato</span>' : '<span class="ob-go" aria-hidden="true">›</span>'}</button></li>`).join('')}</ol>
+  </div>`;
+}
+function bindOnboard(v) {
+  $('#obLater', v)?.addEventListener('click', () => { db.settings.onboarded = true; save(); render(); toast('Profilo e chiave AI restano in Obiettivi'); });
+  $$('[data-ob]', v).forEach(b => b.addEventListener('click', () => {
+    if (b.classList.contains('done')) return;
+    const id = b.dataset.ob;
+    if (id === 'profile') goSub('goals', 'obiettivi');
+    else if (id === 'weigh') bodyForm(null, today());
+    else if (id === 'ai') goSub('goals', 'impostazioni');
+    else { const i = $('#qaInput', v); i?.scrollIntoView({ block: 'center', behavior: reduceMotion() ? 'auto' : 'smooth' }); i?.focus({ preventScroll: true }); }
+  }));
 }
 
 function exerciseForm(id) {
@@ -802,7 +866,7 @@ function bindQuickBar(v) {
     const label = MEALS.find(m => m.id === t).label.toLowerCase();
     rows = [];
     if (!term) {
-      db.savedMeals.filter(sm => sm.meal === t).slice(0, 3).forEach(sm => rows.push({ kind: 'saved', sm, icon: '⭐', title: esc(sm.name), sub: `${sm.items.length} alimenti`, kcal: sumNutr(sm.items).kcal }));
+      db.savedMeals.filter(sm => sm.meal === t).slice(0, 3).forEach(sm => rows.push({ kind: 'saved', sm, icon: '⭐', title: esc(sm.name), sub: plural(sm.items.length, 'alimento', 'alimenti'), kcal: sumNutr(sm.items).kcal }));
       const y = dayEntries(addDays(curDate, -1)).filter(e => e.meal === t);
       if (y.length) rows.push({ kind: 'yesterday', items: y, icon: '↺', title: `Come ${label} di ieri`, sub: esc(y.map(e => e.name).join(', ')).slice(0, 70), kcal: sumNutr(y).kcal });
       frequentFor(t).forEach(f => rows.push({ kind: 'food', food: f, icon: foodIcon(f.name), title: esc(f.name), sub: `${r0(f.grams)} g · ${f.freq} volte di recente a ${label}`, kcal: nutrients(f).kcal }));
@@ -815,7 +879,7 @@ function bindQuickBar(v) {
         rows.push(items.length ? { kind: 'ref', items, title, icon: '↺', sub: esc(items.map(e => e.name).join(', ')).slice(0, 70), kcal: sumNutr(items).kcal } : { kind: 'none', icon: '∅', title: `${title}: niente registrato` });
       }
       db.savedMeals.filter(sm => normName(sm.name).includes(term) || sm.items.some(e => normName(e.name).includes(term))).slice(0, 3)
-        .forEach(sm => rows.push({ kind: 'saved', sm, icon: '⭐', title: esc(sm.name), sub: `${sm.items.length} alimenti`, kcal: sumNutr(sm.items).kcal }));
+        .forEach(sm => rows.push({ kind: 'saved', sm, icon: '⭐', title: esc(sm.name), sub: plural(sm.items.length, 'alimento', 'alimenti'), kcal: sumNutr(sm.items).kcal }));
       const seen = new Set();
       const base = window.FOODS.map(([name, kcal, p, c, f, fib, portion]) => ({ name, grams: portion, per100: { kcal, p, c, f, fib } }));
       [...db.recent, ...base].filter(x => { const k = normName(x.name); if (!k.includes(term) || seen.has(k)) return false; seen.add(k); return true; }).slice(0, 6)
@@ -1160,8 +1224,8 @@ function renderAdd(v) {
     </div>
     <div class="card">
       <h2>Pasti salvati <small>${db.savedMeals.length || ''}</small></h2>
-      ${db.savedMeals.length ? `<ul class="search-results">${db.savedMeals.map((sm, i) => `<li><button data-sm="${i}"><span class="grow"><span class="name">⭐ ${esc(sm.name)}</span><br><span class="small muted">${sm.items.length} alimenti · ${r0(sumNutr(sm.items).kcal)} kcal</span></span><span class="add-mini">+</span></button></li>`).join('')}</ul>`
-        : `<p class="small muted" style="margin:0">Nel Diario tocca ⭐ accanto a un pasto per salvarlo e rimetterlo con un tocco.</p>`}
+      ${db.savedMeals.length ? `<ul class="search-results">${db.savedMeals.map((sm, i) => `<li><button data-sm="${i}"><span class="grow"><span class="name">⭐ ${esc(sm.name)}</span><br><span class="small muted">${plural(sm.items.length, 'alimento', 'alimenti')} · ${r0(sumNutr(sm.items).kcal)} kcal</span></span><span class="add-dot" aria-hidden="true">${ico('plus', 16)}</span></button></li>`).join('')}</ul>`
+        : `<p class="small muted" style="margin:0">Nel Diario tocca <b>Salva</b> sotto un pasto per rimetterlo poi con un tocco.</p>`}
       <button class="btn secondary" id="pastMeals" style="margin-top:10px">↺ Ripeti un pasto passato</button>
     </div>
     <div class="card">
@@ -1176,6 +1240,7 @@ function renderAdd(v) {
       <ul class="search-results" id="brandResults"></ul>
       <button class="btn ghost" id="manualAdd" style="margin-top:6px">Inserisci valori a mano</button>
     </div>`;
+  revealChip($('.meal-pick', v));
   $$('[data-m]', v).forEach(c => c.addEventListener('click', () => { addMeal = c.dataset.m; $$('[data-m]', v).forEach(x => x.classList.toggle('on', x === c)); }));
   $('#takePhoto', v).addEventListener('click', () => { photoQueue = []; requireKey() && $('#photoInput').click(); });
   $('#pickPhoto', v).addEventListener('click', () => { photoQueue = []; requireKey() && $('#galleryInput').click(); });
@@ -1200,7 +1265,7 @@ function renderAdd(v) {
   }));
   $('#pastMeals', v).addEventListener('click', () => pastMealsSheet());
   const si = $('#foodSearch', v);
-  const row = (x, i, attr) => `<li><button ${attr}="${i}"><span class="food-ico">${foodIcon(x.name)}</span><span class="grow"><span class="name">${esc(x.name)}</span><br><span class="small muted">${r0(x.grams)} g · ${r0(x.per100.kcal * x.grams / 100)} kcal</span></span><span class="add-mini">+</span></button></li>`;
+  const row = (x, i, attr) => `<li><button ${attr}="${i}"><span class="food-ico">${foodIcon(x.name)}</span><span class="grow"><span class="name">${esc(x.name)}</span><br><span class="small muted">${r0(x.grams)} g · ${r0(x.per100.kcal * x.grams / 100)} kcal</span></span><span class="add-dot" aria-hidden="true">${ico('plus', 16)}</span></button></li>`;
   let brandTimer, brandSeq = 0;
   const drawResults = () => {
     const term = si.value.trim().toLowerCase();
@@ -1389,7 +1454,7 @@ function mealPreview({ title, items: src, meal, saved }) {
     $$('[data-dec]', s).forEach(b => b.addEventListener('click', () => { const it = items[+b.dataset.dec]; it.grams = Math.max(0, it.grams - 10); draw(s); }));
     $$('[data-inc]', s).forEach(b => b.addEventListener('click', () => { items[+b.dataset.inc].grams += 10; draw(s); }));
   };
-  const row = (x, i) => `<li><button data-pick="${i}"><span class="food-ico">${foodIcon(x.name)}</span><span class="grow"><span class="name">${esc(x.name)}</span><br><span class="small muted">${r0(x.grams)} g · ${r0(x.per100.kcal * x.grams / 100)} kcal</span></span><span class="add-mini">+</span></button></li>`;
+  const row = (x, i) => `<li><button data-pick="${i}"><span class="food-ico">${foodIcon(x.name)}</span><span class="grow"><span class="name">${esc(x.name)}</span><br><span class="small muted">${r0(x.grams)} g · ${r0(x.per100.kcal * x.grams / 100)} kcal</span></span><span class="add-dot" aria-hidden="true">${ico('plus', 16)}</span></button></li>`;
   // Aggiungere altri alimenti senza uscire: ricerca veloce (recenti + elenco) o descrizione all'AI
   const bindMore = s => {
     const q = $('#mpQ', s);
@@ -2050,7 +2115,7 @@ function saveMealEdit(edit, valid, meal) {
 // ---------- Charts ----------
 function lineChart(points, { color = 'var(--accent)', target = null, unit = '', height = 150 } = {}) {
   if (points.length < 2) return `<p class="muted small">Servono almeno due misurazioni per il grafico.</p>`;
-  const W = 340, H = height, pl = 34, pr = 8, pt = 10, pb = 20;
+  const W = 340, H = height, pl = 38, pr = 8, pt = 10, pb = 20;
   const xs = points.map(p => parseYmd(p.date).getTime());
   const ys = points.map(p => p.y).concat(target != null ? [target] : []);
   let minY = Math.min(...ys), maxY = Math.max(...ys);
@@ -2060,7 +2125,9 @@ function lineChart(points, { color = 'var(--accent)', target = null, unit = '', 
   const Y = y => pt + (1 - (y - minY) / (maxY - minY)) * (H - pt - pb);
   const d = points.map((p, i) => `${i ? 'L' : 'M'}${X(xs[i]).toFixed(1)},${Y(p.y).toFixed(1)}`).join('');
   const ticks = [minY + pad, (minY + maxY) / 2, maxY - pad];
-  return `<svg class="chart" viewBox="0 0 ${W} ${H}">
+  const first = points[0], last = points[points.length - 1];
+  const aria = `Andamento dal ${fmtDate(first.date, { day: 'numeric', month: 'long' })} (${fmtNum(first.y)}${unit ? ' ' + unit : ''}) al ${fmtDate(last.date, { day: 'numeric', month: 'long' })} (${fmtNum(last.y)}${unit ? ' ' + unit : ''})${target != null ? `, obiettivo ${fmtNum(target)}` : ''}`;
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(aria)}">
     ${ticks.map(t => `<line x1="${pl}" x2="${W - pr}" y1="${Y(t)}" y2="${Y(t)}" stroke="var(--line)"/><text x="${pl - 4}" y="${Y(t) + 3}" text-anchor="end">${fmtNum(t, 1)}</text>`).join('')}
     ${target != null ? `<line x1="${pl}" x2="${W - pr}" y1="${Y(target)}" y2="${Y(target)}" stroke="var(--warn)" stroke-dasharray="4 4"/>` : ''}
     <path d="${d}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
@@ -2071,12 +2138,14 @@ function lineChart(points, { color = 'var(--accent)', target = null, unit = '', 
 }
 
 function barChart(days, goal) {
-  const W = 340, H = 150, pl = 34, pr = 8, pt = 10, pb = 20;
+  const W = 340, H = 150, pl = 38, pr = 8, pt = 10, pb = 20;
   const max = Math.max(goal * 1.2, ...days.map(d => d.v)) || 1;
   const bw = (W - pl - pr) / days.length;
   const Y = v => pt + (1 - v / max) * (H - pt - pb);
   const labelEvery = Math.ceil(days.length / 6);
-  return `<svg class="chart" viewBox="0 0 ${W} ${H}">
+  const logged = days.filter(d => d.v > 0);
+  const aria = `Calorie per giorno: ${plural(logged.length, 'giorno', 'giorni')} con dati, obiettivo ${r0(goal)} kcal, ${logged.filter(d => d.v > (d.b || goal) * 1.1).length} oltre il 10%`;
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(aria)}">
     <line x1="${pl}" x2="${W - pr}" y1="${Y(goal)}" y2="${Y(goal)}" stroke="var(--warn)" stroke-dasharray="4 4"/>
     <text x="${pl - 4}" y="${Y(goal) + 3}" text-anchor="end">${r0(goal)}</text>
     <text x="${pl - 4}" y="${Y(0) + 3}" text-anchor="end">0</text>
@@ -2107,7 +2176,7 @@ function rangeStats(fromDate, toDate) {
   };
   return { days, logged: logged.length, kcal: avg('kcal'), p: avg('p'), c: avg('c'), f: avg('f'), fib: avg('fib'), inTarget, workouts, burned, dW: delta('weight'), dBF: delta('bodyFat') };
 }
-const signed = (n, u) => n == null ? '–' : `${n > 0 ? '+' : ''}${fmtNum(n, 1)} ${u}`;
+const signed = (n, u) => n == null ? '–' : `${n > 0 ? '+' : n < 0 ? '−' : ''}${fmtNum(Math.abs(n), 1)} ${u}`;
 
 function renderProgress(v) {
   const t = today();
@@ -2248,7 +2317,7 @@ function balanceCard() {
     <div class="seg seg3">
       <button data-ref="tdee" class="${ref === 'tdee' ? 'on' : ''}">Fabbisogno</button>
       <button data-ref="goal" class="${ref === 'goal' ? 'on' : ''}">Obiettivo</button>
-      <button data-ref="bmr" class="${ref === 'bmr' ? 'on' : ''}">Metabolismo basale</button>
+      <button data-ref="bmr" class="${ref === 'bmr' ? 'on' : ''}">Solo basale</button>
     </div>
     <p class="small muted" style="margin-top:-4px">${ref === 'tdee'
       ? `Calorie mangiate − calorie consumate (metabolismo basale + giornata tipo + attività fissa + allenamenti, oggi circa ${r0(dayBurn(today()) ?? 0)} kcal). È il deficit reale che fa perdere grasso.`
@@ -2576,7 +2645,7 @@ function monthResultsCard() {
     <h2>🏁 ${cap(monthName(m))} finora</h2>
     <div class="stats">
       ${dW != null ? tile(Math.round(dW * 10) / 10, 1, 'kg', 'sulla bilancia', dW <= 0 ? 'good' : 'bad') : `<div class="stat res"><div class="v">–</div><div class="k">peso: pesati per vedere i kg persi</div></div>`}
-      ${!vsGoal && (mb.days || mb.start) ? tile(-Math.round(-mb.total / 770) / 10, 1, 'kg', 'di grasso stimato', mb.total <= 0 ? 'good' : 'bad') : tile(Math.round(mb.total), 0, 'kcal', 'rispetto all\'obiettivo', mb.total <= 0 ? 'good' : 'bad')}
+      ${!mb.days && !mb.start ? `<div class="stat res"><div class="v">–</div><div class="k">bilancio: registra i pasti per vederlo</div></div>` : !vsGoal ? tile(-Math.round(-mb.total / 770) / 10, 1, 'kg', 'di grasso stimato', mb.total <= 0 ? 'good' : 'bad') : tile(Math.round(mb.total), 0, 'kcal', 'rispetto all\'obiettivo', mb.total <= 0 ? 'good' : 'bad')}
       <div class="stat res"><div class="v"><span data-count="${green}">${green}</span> <small>/ ${days.length}</small></div><div class="k">giorni verdi</div></div>
       <div class="stat res"><div class="v">🔥 <span data-count="${greenStreak()}">${greenStreak()}</span></div><div class="k">giorni verdi di fila</div></div>
     </div>
@@ -2641,11 +2710,13 @@ function celebrate(list) {
     if (!a) return;
     const el = document.createElement('div');
     el.className = 'celebrate';
+    el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', a.title);
     el.innerHTML = `<div class="cbox"><div class="cemoji">${a.emoji}</div><h3>${esc(a.title)}</h3><p>${esc(a.text)}</p><button class="btn" id="cOk">Grande! 💪</button></div>`;
     document.body.appendChild(el);
     confetti();
     const close = () => { el.remove(); setTimeout(next, 250); };
     el.querySelector('#cOk').addEventListener('click', close);
+    el.querySelector('#cOk').focus({ preventScroll: true });
     el.addEventListener('click', e => { if (e.target === el) close(); });
   };
   next();
@@ -2717,7 +2788,7 @@ function nudgesHtml() {
   if (curDate !== today()) return '';
   let h = '';
   const ws = lastWeekStart();
-  if (db.settings.reportSeen !== ws && weekDays(ws).filter(d => dayEntries(d).length).length >= 3) {
+  if (db.settings.reportSeen !== ws && (hasAiKey() || db.reports?.[ws]) && weekDays(ws).filter(d => dayEntries(d).length).length >= 3) {
     h += `<div class="card nudge"><span class="nudge-ico">📝</span><div class="grow"><b>Resoconto della settimana</b><div class="small muted">${weekLabel(ws)} · cosa è andato bene e cosa migliorare</div></div>
       <div class="nudge-acts"><button class="add-mini" id="nReportLater">Dopo</button><button class="add-mini on" id="nReport">Leggi</button></div></div>`;
   }
@@ -2958,11 +3029,11 @@ function renderBody(v) {
   const lastWH = sorted.find(b => b.waist && b.hips);
   const navy = navyBodyFat(p);
 
-  let html = `<button class="btn" id="newBody" style="margin-bottom:12px">+ Nuova misurazione</button>`;
+  let html = `<button class="btn" id="newBody" style="margin-bottom:12px">${ico('plus', 18)} Nuova misurazione</button>`;
   html += `<div class="card"><h2>Situazione attuale</h2><div class="stats">
-    <div class="stat"><div class="v">${w ? fmtNum(w.weight) : '–'}</div><div class="k">Peso kg${g.weightTarget != null ? ` · obiettivo ${fmtNum(g.weightTarget)}` : ''}</div></div>
-    <div class="stat"><div class="v">${bf ? fmtNum(bf.bodyFat) : '–'}</div><div class="k">Massa grassa %${g.bodyFatTarget != null ? ` · obiettivo ${fmtNum(g.bodyFatTarget)}` : ''}</div></div>
-    <div class="stat"><div class="v">${lean ? fmtNum(lean) : '–'}</div><div class="k">Massa magra kg</div></div>
+    <div class="stat"><div class="v">${w ? `${fmtNum(w.weight)} <small>kg</small>` : '–'}</div><div class="k">Peso${g.weightTarget != null ? ` · obiettivo ${fmtNum(g.weightTarget)} kg` : ''}</div></div>
+    <div class="stat"><div class="v">${bf ? `${fmtNum(bf.bodyFat)} <small>%</small>` : '–'}</div><div class="k">Massa grassa${g.bodyFatTarget != null ? ` · obiettivo ${fmtNum(g.bodyFatTarget)} %` : ''}</div></div>
+    <div class="stat"><div class="v">${lean ? `${fmtNum(lean)} <small>kg</small>` : '–'}</div><div class="k">Massa magra</div></div>
     <div class="stat"><div class="v">${bmi ? fmtNum(bmi) : '–'}</div><div class="k">BMI</div></div>
     ${lastWH ? `<div class="stat"><div class="v">${fmtNum(lastWH.waist / lastWH.hips, 2)}</div><div class="k">Rapporto vita/fianchi</div></div>` : ''}
     ${lastWH && p.height ? `<div class="stat"><div class="v">${fmtNum(lastWH.waist / p.height, 2)}</div><div class="k">Vita/altezza (ideale &lt; 0,5)</div></div>` : ''}
@@ -2978,17 +3049,20 @@ function renderBody(v) {
     html += `<div class="card"><h2>Andamento</h2>
       <div class="meal-pick">${available.map(x => `<button class="chip ${x.k === bodyMetric ? 'on' : ''}" data-bm="${x.k}">${x.label}</button>`).join('')}</div>
       ${lineChart(pts, { target, unit: f.unit })}</div>`;
-    html += `<div class="card"><h2>Storico <small>${sorted.length} misurazioni</small></h2><ul class="log">${(showAllBody ? sorted : sorted.slice(0, 10)).map(b => `<li data-b="${b.date}">
+    html += `<div class="card"><h2>Storico <small>${sorted.length} misurazioni</small></h2><ul class="log">${(showAllBody ? sorted : sorted.slice(0, 10)).map(b => `<li data-b="${b.date}" role="button" tabindex="0" aria-label="Modifica la misurazione del ${fmtDate(b.date, { day: 'numeric', month: 'long', year: 'numeric' })}">
       <div class="grow"><div><b>${fmtDate(b.date, { day: 'numeric', month: 'short', year: 'numeric' })}</b></div>
       <div class="small muted">${BODY_FIELDS.filter(f => b[f.k] != null).map(f => `${f.label} ${fmtNum(b[f.k])}${f.unit ? ' ' + f.unit : ''}`).join(' · ')}</div></div>
-      <span class="muted">›</span></li>`).join('')}</ul>${!showAllBody && sorted.length > 10 ? '<button class="btn ghost" id="allBody">Mostra tutto</button>' : ''}</div>`;
+      <span class="muted" aria-hidden="true">›</span></li>`).join('')}</ul>${!showAllBody && sorted.length > 10 ? '<button class="btn ghost" id="allBody">Mostra tutto</button>' : ''}</div>`;
   } else {
     html += `<div class="card empty-card"><div class="empty-ico">⚖️</div><b>Inizia dalla prima pesata</b><p class="small muted">Registra peso, massa grassa e circonferenze: qui vedrai grafici, massa grassa stimata e i kg persi mese per mese.</p></div>`;
   }
   v.innerHTML = html;
   $('#newBody', v).addEventListener('click', () => bodyForm(null, today()));
   $$('[data-bm]', v).forEach(c => c.addEventListener('click', () => { bodyMetric = c.dataset.bm; render(); }));
-  $$('[data-b]', v).forEach(li => li.addEventListener('click', () => bodyForm(li.dataset.b)));
+  $$('[data-b]', v).forEach(li => {
+    li.addEventListener('click', () => bodyForm(li.dataset.b));
+    li.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); bodyForm(li.dataset.b); } });
+  });
   $('#allBody', v)?.addEventListener('click', () => { showAllBody = true; render(); });
 }
 
@@ -3033,6 +3107,8 @@ function measureFigure() {
   </svg>`;
 }
 
+// Valori plausibili: un errore di battitura (800 invece di 80,0) non deve rovinare grafici e obiettivi
+const BODY_RANGE = { weight: [25, 350], bodyFat: [2, 70], muscle: [10, 150], water: [20, 80], visceral: [1, 60], circ: [15, 250] };
 function bodyForm(date, newDate) {
   const existing = date ? db.body.find(b => b.date === date) : db.body.find(b => b.date === newDate);
   const rec = existing || { date: newDate || today() };
@@ -3058,8 +3134,19 @@ function bodyForm(date, newDate) {
     $('#bSave', s).addEventListener('click', () => {
       const d = $('#bDate', s).value || today();
       const out = { date: d };
-      let any = false;
-      $$('[data-f]', s).forEach(i => { const n = num(i.value); if (n != null) { out[i.dataset.f] = n; any = true; } });
+      let any = false, bad = null;
+      $$('[data-f]', s).forEach(i => {
+        const n = num(i.value), [lo, hi] = BODY_RANGE[i.dataset.f] || BODY_RANGE.circ;
+        i.removeAttribute('aria-invalid');
+        if (n == null) return;
+        if (n < lo || n > hi) { i.setAttribute('aria-invalid', 'true'); bad ||= { i, lo, hi }; return; }
+        out[i.dataset.f] = n; any = true;
+      });
+      if (bad) {
+        const f = BODY_FIELDS.find(x => x.k === bad.i.dataset.f);
+        toast(`${f.label}: inserisci un valore tra ${fmtNum(bad.lo)} e ${fmtNum(bad.hi)}${f.unit ? ' ' + f.unit : ''}`);
+        bad.i.focus(); return;
+      }
       const note = $('#bNote', s).value.trim();
       if (note) out.note = note;
       if (!any) { toast('Inserisci almeno un valore'); return; }
@@ -3260,6 +3347,7 @@ function renderGoals(v) {
   drawCalc();
   $('#applyCalc', v).addEventListener('click', () => {
     db.profile = readProfile();
+    db.settings.profileSet = true;
     db.goals.auto = $('#gAuto', v).checked;
     if (!sg) { save(); toast('Profilo salvato. Registra il peso per calcolare gli obiettivi'); return; }
     Object.assign(db.goals, { kcal: sg.kcal, protein: sg.protein, carbs: sg.carbs, fat: sg.fat, fiber: sg.fiber, water: sg.water });
@@ -3291,6 +3379,17 @@ function renderGoals(v) {
   $('#saveGoals', v).addEventListener('click', () => {
     const val = id => num($(id, v).value);
     const kcal = val('#gKcal') || g.kcal;
+    const checks = [['#gKcal', 'Calorie', 800, 6000, 'kcal'], ['#gProt', 'Proteine', 0, 400, 'g'], ['#gCarb', 'Carboidrati', 0, 800, 'g'], ['#gFat', 'Grassi', 0, 300, 'g'],
+      ['#gFib', 'Fibre', 0, 100, 'g'], ['#gWater', 'Acqua', 0, 8000, 'ml'], ['#gWT', 'Peso obiettivo', 25, 350, 'kg'], ['#gBF', 'Massa grassa obiettivo', 2, 70, '%'],
+      ['#gMW', 'Peso a fine mese', 25, 350, 'kg'], ['#gMD', 'Giorni in target', 0, 31, '']];
+    $$('#gKcal,#gProt,#gCarb,#gFat,#gFib,#gWater,#gWT,#gBF,#gMW,#gMD', v).forEach(i => i.removeAttribute('aria-invalid'));
+    const wrong = checks.find(([id, , lo, hi]) => { const n = val(id); return n != null && (n < lo || n > hi); });
+    if (wrong) {
+      const [id, label, lo, hi, u] = wrong;
+      $(id, v).setAttribute('aria-invalid', 'true'); $(id, v).focus();
+      toast(`${label}: inserisci un valore tra ${fmtNum(lo)} e ${fmtNum(hi)}${u ? ' ' + u : ''}`);
+      return;
+    }
     // Se l'obiettivo calorie viene cambiato a mano, disattiva l'aggiornamento automatico
     if (kcal !== g.kcal && db.goals.auto) { db.goals.auto = false; toast('Aggiornamento automatico disattivato: usi obiettivi personalizzati'); }
     Object.assign(db.goals, {
@@ -3362,11 +3461,15 @@ $('#importInput').addEventListener('change', async e => {
   if (!f) return;
   try {
     const d = JSON.parse(await f.text());
-    if (!d || typeof d !== 'object' || !d.entries) throw new Error();
-    if (!confirm('Sostituire i dati attuali con quelli del backup?')) return;
+    const isObj = x => x && typeof x === 'object' && !Array.isArray(x);
+    if (!isObj(d) || !isObj(d.entries) || (d.body != null && !Array.isArray(d.body)) || !Object.values(d.entries).every(Array.isArray)) throw new Error();
+    const days = Object.keys(d.entries).filter(k => d.entries[k].length).length;
+    if (!confirm(`Sostituire i dati attuali con quelli del backup (${plural(days, 'giorno', 'giorni')} di diario, ${plural((d.body || []).length, 'misurazione', 'misurazioni')})?`)) return;
     const { apiKey, geminiKey } = db.settings;
-    localStorage.setItem(KEY, JSON.stringify(d));
+    try { localStorage.setItem(KEY, JSON.stringify(d)); }
+    catch { toast('Memoria piena: impossibile importare il backup'); return; }
     db = load();
+    db.settings.onboarded = true; db.settings.profileSet = true;
     if (!db.settings.apiKey) db.settings.apiKey = apiKey;
     if (!db.settings.geminiKey) db.settings.geminiKey = geminiKey;
     save(); render(); toast('Backup importato');
@@ -3446,6 +3549,12 @@ let baseFix = null;
   save();
   baseFix = { ...before, newKcal: db.goals.kcal, newHist: balanceHistory().total, newMonth: monthBalance(today().slice(0, 7)).total };
 })();
+// Chi usa già l'app non vede la scheda di benvenuto
+if (db.settings.onboarded === undefined) {
+  db.settings.onboarded = db.body.length > 0 || Object.values(db.entries).some(l => l?.length);
+  if (db.settings.onboarded) db.settings.profileSet = true;
+  save();
+}
 // il selettore delle sezioni si ferma subito sotto la barra in cima, qualunque sia la sua altezza
 const topbarH = () => document.documentElement.style.setProperty('--top-h', `${$('.topbar').offsetHeight}px`);
 new ResizeObserver(topbarH).observe($('.topbar'));
@@ -3486,5 +3595,10 @@ window.addEventListener('popstate', () => {
 });
 // Chiede al browser di non cancellare mai i dati salvati (diario, misure, chiave)
 navigator.storage?.persist?.().catch(() => {});
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+if ('serviceWorker' in navigator) {
+  // Una versione nuova ha preso il controllo: si propone di ricaricare (i dati restano)
+  const hadController = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (hadController) toast('Nuova versione dell\'app pronta', { label: 'Aggiorna', fn: () => location.reload() }); });
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
 })();
