@@ -45,6 +45,10 @@
   li b { color: var(--ink); font-weight: 500; }
   .torna { display: inline-block; margin-top: 52px; font-size: 15px; color: var(--muted); }
   code { background: var(--bg-2); padding: 2px 6px; border-radius: 4px; font-size: 13.5px; }
+  .qr { display: flex; gap: clamp(18px, 4vw, 28px); align-items: center; flex-wrap: wrap; }
+  .qr img { display: block; flex: 0 0 auto; border-radius: 4px; }
+  .qr > div { flex: 1 1 240px; min-width: 0; }
+  .qr .spiega { font-size: 14px; }
 </style>
 </head>
 <body>
@@ -65,8 +69,27 @@
     <a class="tasto chiaro" id="includi" href="/includimi">Torna a contarle</a>
   </p>
 
-  <h2>Il modo che non si rompe</h2>
-  <p>L&#8217;interruttore qui sopra vale per un browser alla volta e si perde se cancelli i dati del sito. Il filtro su Analytics invece esclude <strong>un&#8217;intera connessione</strong>: computer, telefono e tablet sulla stessa rete, per sempre, senza doverci tornare. Si fa una volta, in due passaggi &mdash; e il secondo e&#768; quello che tutti dimenticano.</p>
+  <h2>Il telefono: inquadra e basta</h2>
+  <p>Punta la fotocamera del telefono su questo quadrato e tocca la notifica che compare. Non serve altro: la pagina che si apre attiva l&#8217;esclusione da sola e te lo conferma.</p>
+  <div class="stato qr">
+    <img src="/assets/img/qr-escludimi.svg" width="190" height="190"
+         alt="Codice QR che porta a francescogizzi.com/escludimi" />
+    <div>
+      <div class="etichetta">Perch&eacute; proprio la fotocamera</div>
+      <p class="spiega" style="margin-top:8px;">Se lo stesso link te lo mandi in chat e lo apri da li&#768;, WhatsApp e LinkedIn non usano Safari: aprono una loro finestra interna, con una memoria separata che si svuota appena la chiudi. L&#8217;esclusione finisce li&#768; dentro e sparisce &mdash; <b>e&#768; quasi certamente quello che e&#768; successo la prima volta</b>. La fotocamera invece passa sempre dal browser vero.</p>
+    </div>
+  </div>
+
+  <h2>Gli altri browser</h2>
+  <p>La scelta vale per un browser alla volta. Sul computer apri questo indirizzo una volta, in quello che usi di solito.</p>
+  <div class="stato">
+    <div class="etichetta">Da aprire una volta per browser</div>
+    <div class="valore" style="font-size:17px;"><span id="collegamento">francescogizzi.com/escludimi</span></div>
+    <p class="spiega"><button type="button" class="chiaro" id="copia" style="padding:10px 18px;font-size:14px;">Copia il collegamento</button> <span id="esito" style="color:var(--accent);font-size:14px;"></span></p>
+  </div>
+
+  <h2>Se vuoi non pensarci mai piu&#768;</h2>
+  <p>Tutto quello che c&#8217;e&#768; qui sopra vive dentro un browser, e si perde se cancelli i dati dei siti. Il filtro su Analytics invece esclude <strong>un&#8217;intera connessione</strong>: computer, telefono e tablet sulla stessa rete, per sempre, senza doverci tornare. Costa dieci minuti dentro Analytics, una volta sola, in due passaggi &mdash; e il secondo e&#768; quello che tutti dimenticano.</p>
   <div class="stato">
     <div class="etichetta">Indirizzo IP di questa connessione</div>
     <div class="valore"><span id="ip">cerco&hellip;</span>
@@ -79,15 +102,6 @@
   </ol>
   <p>Due avvertenze sul secondo passaggio. Una volta passato ad <b>Attivo</b> il filtro non torna in <i>Test</i>: si puo&#768; solo spegnere del tutto. E non tocca i dati gia&#768; raccolti: le visite dei mesi scorsi restano come sono, il filtro vale da quando lo accendi in avanti.</p>
   <p>Da quel momento, qualsiasi dispositivo su quella rete e&#768; fuori dalle statistiche. L&#8217;indirizzo di casa o dell&#8217;ufficio cambia raramente; se un giorno qui sopra ne vedi un altro, aggiorna la regola. Per il telefono <b>fuori casa, sulla rete dati</b>, l&#8217;indirizzo cambia di continuo: li&#768; serve l&#8217;interruttore.</p>
-
-  <h2>Su ogni browser che usi</h2>
-  <p>Questo collegamento attiva l&#8217;esclusione da solo, senza passare da questa pagina. Aprilo una volta per browser: Safari sul telefono, Chrome sul computer, e cosi&#768; via.</p>
-  <div class="stato">
-    <div class="etichetta">Da aprire su ogni dispositivo</div>
-    <div class="valore" style="font-size:17px;"><span id="collegamento">francescogizzi.com/escludimi</span></div>
-    <p class="spiega"><button type="button" class="chiaro" id="copia" style="padding:10px 18px;font-size:14px;">Copia il collegamento</button> <span id="esito" style="color:var(--accent);font-size:14px;"></span></p>
-  </div>
-  <p><strong>Il tranello.</strong> Se apri quel link da una chat, WhatsApp e LinkedIn non usano Safari o Chrome: aprono una loro finestra interna, con una memoria separata che spesso si svuota appena la chiudi. L&#8217;esclusione viene attivata li&#768; dentro e poi sparisce. Per questo, dopo averlo aperto dalla chat, <b>toccalo di nuovo dal browser vero</b> &mdash; o meglio, salvalo fra i preferiti e aprilo da li&#768;. E&#768; quasi certamente quello che e&#768; successo la prima volta.</p>
 
   <h2>Cosa c&#39;e&#768; da sapere</h2>
   <ul>
