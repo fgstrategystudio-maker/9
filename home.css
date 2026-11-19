@@ -109,7 +109,7 @@ h1, h2, h3 { margin: 0; text-wrap: balance; font-weight: 300; letter-spacing: -.
    Le altezze sono calibrate marchio per marchio via --h sulla singola img:
    a parita' di altezza un wordmark largo pesa il doppio di un marchio compatto. */
 .hero-proof { border-top: 1px solid var(--line); padding: 24px 0 26px; }
-.hero-proof-et { font: 500 10.5px/1 var(--sans); letter-spacing: .26em; text-transform: uppercase; color: var(--muted); margin-bottom: 22px; }
+.hero-proof-et { font: 500 11.5px/1 var(--sans); letter-spacing: .22em; text-transform: uppercase; color: var(--muted); margin-bottom: 22px; }
 .hero-proof-row { display: flex; align-items: center; flex-wrap: wrap; gap: clamp(26px, 3.4vw, 46px); }
 .hero-proof img { height: var(--h); width: auto; object-fit: contain; filter: grayscale(1); mix-blend-mode: multiply; opacity: .7; }
 @media (max-width: 1024px) {
@@ -199,7 +199,7 @@ section.alt { background: var(--bg-2); }
 .tile-sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0 !important; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 @media (max-width: 620px) {
   .tile-back { gap: 5px; padding: 10px; }
-  .tile-back .tile-name { font-size: 9.5px; letter-spacing: .06em; }
+  .tile-back .tile-name { font-size: 11px; letter-spacing: .04em; }
   .tile-back .tile-rule { width: 18px; }
   .tile-back .tile-sector { font-size: 13px; }
   .tile-back .tile-work { font-size: 11px; line-height: 1.25; }
@@ -428,7 +428,7 @@ footer.foot .payoff { display: block; margin-top: 7px; color: var(--accent-testo
 .mega-card .mega-q { font: 400 19px/1.2 "Geist", Arial, sans-serif !important; color: #121212 !important; letter-spacing: -.02em; }
 .mega-cta { margin-top: 8px; align-self: flex-start; background: #121212; color: #F7F6F2 !important; text-decoration: none; font: 500 13.5px "Geist", Arial, sans-serif; padding: 10px 16px; border-radius: 999px; transition: background-color .3s; }
 .mega-cta:hover { background: var(--accent-testo); }
-.mega-all { font: 500 13px "Geist", Arial, sans-serif; color: #121212 !important; text-decoration: none; border-bottom: 1px solid #CFC8BC; align-self: flex-start; margin-top: 6px; }
+.mega-all { font: 500 13px "Geist", Arial, sans-serif; color: #121212 !important; text-decoration: none; border-bottom: 1px solid #CFC8BC; align-self: flex-start; margin-top: 6px; padding-bottom: 4px; }
 /* menu mobile */
 .mm-services { border-bottom: 1px solid #DEDBD3; }
 .mm-services summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; font-size: 20px; font-weight: 300; letter-spacing: -.02em; padding: 10px 0; color: #121212; }
