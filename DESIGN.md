@@ -7,7 +7,7 @@ colors:
   avorio-scheda: "#FBFAF7"
   inchiostro: "#121212"
   grafite: "#625F58"
-  grafite-tenue: "#706C65"
+  grafite-tenue: "#67635C"
   filo: "#DEDBD3"
   filo-marcato: "#CFC8BC"
   bronzo: "#8A6F4E"
@@ -16,10 +16,10 @@ colors:
 typography:
   display:
     fontFamily: "Geist, Helvetica Neue, Arial, sans-serif"
-    fontSize: "clamp(42px, 7.4vw, 104px)"
+    fontSize: "clamp(40px, 6.9vw, 96px)"
     fontWeight: 300
-    lineHeight: 0.98
-    letterSpacing: "-0.05em"
+    lineHeight: 0.99
+    letterSpacing: "-0.04em"
   headline:
     fontFamily: "Geist, Helvetica Neue, Arial, sans-serif"
     fontSize: "clamp(30px, 4vw, 46px)"
@@ -117,8 +117,9 @@ foglia d'oro.
 ### Neutral
 - **Inchiostro** (#121212): titoli, testo forte, fondo dei bottoni primari.
 - **Grafite** (#625F58): testo secondario, sottotitoli, voci di menu a riposo.
-- **Grafite tenue** (#706C65): segnaposto dei campi e didascalie minime. Più
-  chiaro di così non si scende: sotto, il contrasto cade.
+- **Grafite tenue** (#67635C): segnaposto dei campi e didascalie minime. Più
+  chiaro di così non si scende: a #706C65 reggeva sull'avorio ma cadeva a
+  4,46 sul fondo secondario e a 3,96 sul sabbia.
 - **Avorio** (#F7F6F2): il fondo di tutto.
 - **Avorio fondo** (#EFEDE7): sezioni alternate e celle dei loghi.
 - **Avorio scheda** (#FBFAF7): le poche superfici che devono staccare appena.
@@ -151,8 +152,10 @@ molte parole piccole, niente in mezzo. I titoli sono leggeri e stretti, il testo
 è normale e arioso.
 
 ### Hierarchy
-- **Display** (300, `clamp(42px, 7.4vw, 104px)`, 0.98, −0.05em): il titolo
-  dell'hero, uno per pagina.
+- **Display** (300, `clamp(40px, 6.9vw, 96px)`, 0.99, −0.04em): il titolo
+  dell'hero, uno per pagina. I 96px e il −0.04em sono soglie, non gusto:
+  oltre, il titolo smette di essere leggibile come testo e le lettere si
+  toccano.
 - **Headline** (300, `clamp(30px, 4vw, 46px)`, 1.1, −0.04em): i titoli di
   sezione.
 - **Title** (500, 18–22px): titoli dei passi del metodo e delle schede.

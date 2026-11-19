@@ -10,9 +10,11 @@
   --av-card: #FBFAF7;
   --av-ink: #121212;
   --av-muted: #625F58;
-  --av-faint: #706C65;   /* era #8A867E: 3,35:1, sotto la soglia WCAG */
+  --av-faint: #67635C;   /* era #8A867E (3,35:1) poi #706C65, che pero'
+                            cadeva a 4,46 sul fondo secondario e 3,96 sul sabbia */
   --av-line: #DEDBD3;
   --av-line-2: #CFC8BC;
+  --av-line-forte: #C6C1B6;  /* la riga quando deve reggere da sola */
   --av-accent: #8A6F4E;
   --av-accent-testo: #765F43;   /* il bronzo quando fa testo */
   --av-soft: #E8DFD2;
@@ -79,7 +81,7 @@ em[style*="gold"], [style*="color:var(--gold)"] em { font-style: normal !importa
   font-family: var(--av-sans) !important;
   font-weight: 500 !important;
   font-size: 13px !important;
-  color: var(--av-accent) !important;
+  color: var(--av-accent-testo) !important;
 }
 .article-wrap .gold-rule, [style*="linear-gradient(90deg,var(--gold),transparent)"] { background: var(--av-line) !important; }
 
@@ -139,7 +141,7 @@ a[href]:hover { opacity: 1; }
   box-shadow: none !important;
   border-radius: 8px !important;
 }
-.inst-service-icon, .audience-icon { background: var(--av-soft) !important; color: var(--av-accent) !important; }
+.inst-service-icon, .audience-icon { background: var(--av-soft) !important; color: var(--av-accent-testo) !important; }
 .partner-chip:hover { border-color: var(--av-ink) !important; color: var(--av-ink) !important; }
 
 /* Contatti nelle pagine EN/PT/ES */
@@ -267,7 +269,7 @@ label [style*="text-transform:uppercase"], .form-grid span { color: var(--av-mut
 .blog-pill[class*="blog-pill--"] { background: var(--av-bg-2) !important; color: var(--av-muted) !important; }
 .article a[href^="blog-"] { background: var(--av-bg-2) !important; }
 .article a[href^="blog-"]:hover { background: var(--av-soft) !important; }
-.logo-chip .chip-initials, .grazie-icon { background: var(--av-soft) !important; color: var(--av-accent) !important; }
+.logo-chip .chip-initials, .grazie-icon { background: var(--av-soft) !important; color: var(--av-accent-testo) !important; }
 .inst-press-item:hover { background: var(--av-bg-2) !important; }
 .menu-toggle, .site-header { display: none !important; }
 .mini-nav a { background: var(--av-bg) !important; border: 1px solid var(--av-line) !important; border-radius: 999px !important; color: var(--av-ink) !important; box-shadow: none !important; }
@@ -348,3 +350,41 @@ a[style*="background:var(--gold)"]:hover, button[style*="background:var(--gold)"
 @media (max-width: 1080px) { .topbar.open .tb-panel { max-height: calc(100vh - 72px); max-height: calc(100dvh - 72px); overflow-y: auto; overscroll-behavior: contain; } }
 .article .article-cover { width: 100%; height: auto; aspect-ratio: 16 / 10; object-fit: cover; display: block; margin: 0 0 28px; border-radius: 8px; }
 .article .related-services { margin-top: 34px; padding-top: 22px; border-top: 1px solid var(--av-line); font-size: 15px; }
+
+/* Le superfici che disegna il browser: selezione, cursore di scrittura,
+   anello di messa a fuoco, barra di scorrimento, pallini degli elenchi.
+   Arrivano coi colori del sistema operativo, che non stanno in nessuna
+   palette. Stesse regole di home.css, sui token di queste pagine. */
+::selection { background: var(--av-soft); color: var(--av-ink); }
+::marker { color: var(--av-accent-testo); }
+:root { accent-color: var(--av-accent-testo); caret-color: var(--av-accent-testo); }
+html { scrollbar-color: var(--av-line-forte) var(--av-bg-2); }
+:focus-visible { outline: 2px solid var(--av-accent-testo) !important; outline-offset: 3px; border-radius: 3px; }
+a { text-underline-offset: .16em; }
+
+/* Il bronzo quando fa testo.
+   #8A6F4E sull'avorio e' 4,35:1, sotto la soglia AA di 4,5. Queste classi
+   di style.css e premium.css lo prendono da --gold; qui passano al bronzo
+   scuro, 5,57:1. Il bronzo di marchi, bordi e fondi resta quello: li' il
+   contrasto non e' un problema di lettura. */
+.eyebrow, .section-title, .project-col-label, .blog-meta, .service-page-grid .section-title,
+.sidebar-label, .sidebar-article-link:hover, .sidebar-article-cat, .logo-chip .chip-initials,
+.formation-box .section-title, .formation-text a, .hero-stat-n, #chi-sono .section-title,
+#chi-sono .rich strong, #chi-sono .metric-value, .section:has(.logo-marquee) .section-title,
+.section-soft .section-title, .blog-link, :is(#contatti, #contact, #contacto) .section-title,
+.linkedin-link, .footer-linkedin:hover, .footer-privacy:hover, .inst-service-icon,
+.partner-chip:hover, .inst-press-source, .audience-icon, .article-wrap .eyebrow {
+  color: var(--av-accent-testo) !important;
+}
+
+/* Il bronzo scritto dentro l'attributo style, 306 volte su 22 pagine.
+   Stesso motivo del blocco qui sopra: come testo serve il bronzo scuro.
+   Il separatore delle briciole di pane stava a 1,54:1, praticamente
+   invisibile: e' punteggiatura, ma e' testo. */
+[style*="color:var(--gold)"], [style*="color: var(--gold)"] {
+  color: var(--av-accent-testo) !important;
+}
+[style*="color:var(--line-strong)"], [style*="color: var(--line-strong)"],
+.breadcrumb-sep {
+  color: var(--av-faint) !important;
+}

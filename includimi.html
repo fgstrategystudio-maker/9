@@ -11,6 +11,9 @@
   :root { --bg:#F7F6F2; --ink:#121212; --muted:#625F58; --line:#DEDBD3; --accent:#8A6F4E;
           --sans:"Helvetica Neue",Arial,sans-serif; }
   * { box-sizing: border-box; }
+  ::selection { background: #E8DFD2; color: var(--ink); }
+  :root { accent-color: var(--accent-testo); caret-color: var(--accent-testo); }
+  :focus-visible { outline: 2px solid var(--accent-testo); outline-offset: 3px; border-radius: 3px; }
   body { margin:0; background:var(--bg); color:var(--ink);
          font:400 16px/1.6 var(--sans); -webkit-font-smoothing:antialiased;
          min-height:100vh; display:flex; align-items:center; justify-content:center; }

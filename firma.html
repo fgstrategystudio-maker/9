@@ -10,17 +10,20 @@
 <style>
   :root {
     --bg: #F7F6F2; --bg-2: #EFEDE7; --ink: #121212; --muted: #625F58;
-    --line: #DEDBD3; --accent: #8A6F4E;
+    --line: #DEDBD3; --accent: #8A6F4E; --accent-testo: #765F43;
     --sans: "Helvetica Neue", Arial, sans-serif;
   }
   * { box-sizing: border-box; }
+  ::selection { background: #E8DFD2; color: var(--ink); }
+  :root { accent-color: var(--accent-testo); caret-color: var(--accent-testo); }
+  :focus-visible { outline: 2px solid var(--accent-testo); outline-offset: 3px; border-radius: 3px; }
   body { margin: 0; background: var(--bg); color: var(--ink);
          font: 400 16px/1.6 var(--sans); -webkit-font-smoothing: antialiased; }
   .wrap { max-width: 760px; margin: 0 auto; padding: clamp(32px, 7vw, 72px) clamp(16px, 5vw, 32px) 96px; }
   h1 { margin: 0 0 10px; font-weight: 300; letter-spacing: -.03em; font-size: clamp(28px, 5vw, 38px); }
   h2 { margin: 48px 0 14px; font-weight: 500; font-size: 15px; letter-spacing: .02em; }
   p { margin: 0 0 14px; color: var(--muted); font-size: 15px; }
-  .eyebrow { font: 500 12px/1.4 var(--sans); letter-spacing: .18em; text-transform: uppercase; color: var(--accent); margin-bottom: 14px; }
+  .eyebrow { font: 500 12px/1.4 var(--sans); letter-spacing: .18em; text-transform: uppercase; color: var(--accent-testo); margin-bottom: 14px; }
   .anteprima { background: #fff; border: 1px solid var(--line); border-radius: 4px;
                padding: clamp(18px, 4vw, 30px); margin: 24px 0 20px; }
   .azioni { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
