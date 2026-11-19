@@ -10,10 +10,11 @@
   --av-card: #FBFAF7;
   --av-ink: #121212;
   --av-muted: #625F58;
-  --av-faint: #8A867E;
+  --av-faint: #706C65;   /* era #8A867E: 3,35:1, sotto la soglia WCAG */
   --av-line: #DEDBD3;
   --av-line-2: #CFC8BC;
   --av-accent: #8A6F4E;
+  --av-accent-testo: #765F43;   /* il bronzo quando fa testo */
   --av-soft: #E8DFD2;
   --av-sans: "Geist", "Helvetica Neue", Arial, sans-serif;
   --av-ease: cubic-bezier(.2, .7, .1, 1);
@@ -64,7 +65,7 @@ h1, h2 { font-weight: 300 !important; letter-spacing: -.04em !important; }
 h1 { line-height: 1.02 !important; }
 h2 { line-height: 1.06 !important; }
 h3, h4 { font-weight: 500 !important; letter-spacing: -.015em !important; }
-h1 em, h2 em, h3 em { font-style: normal !important; color: var(--av-accent) !important; }
+h1 em, h2 em, h3 em { font-style: normal !important; color: var(--av-accent-testo) !important; }
 [style*="Newsreader"] { font-family: var(--av-sans) !important; font-style: normal !important; }
 [style*="Newsreader"]:not(h3):not(h4) { font-weight: 300 !important; letter-spacing: -.035em !important; }
 [style*="Hanken Grotesk"] { font-family: var(--av-sans) !important; }
@@ -207,7 +208,8 @@ form input[type="checkbox"] { accent-color: var(--av-accent); }
 .tb-links a:hover, .tb-links a[aria-current="page"] { color: var(--av-ink) !important; }
 .tb-links a:hover::after, .tb-links a[aria-current="page"]::after { transform: scaleX(1); transform-origin: left; }
 .tb-langs { display: flex; gap: 2px; font-size: 12.5px; }
-.tb-langs a { color: var(--av-muted) !important; text-decoration: none; padding: 4px 6px; border-radius: 6px; }
+.tb-langs a { color: var(--av-muted) !important; text-decoration: none; padding: 4px 6px; border-radius: 6px;
+  min-width: 24px; min-height: 24px; display: inline-flex; align-items: center; justify-content: center; }
 .tb-langs a[aria-current="true"] { color: var(--av-ink) !important; background: var(--av-bg-2); }
 .tb-langs a:hover { color: var(--av-ink) !important; }
 .tb-pill { color: var(--av-bg) !important; background: var(--av-ink); padding: 10px 18px; border-radius: 999px; text-decoration: none; font-size: 14px; white-space: nowrap; transition: background-color .3s; }
@@ -219,9 +221,9 @@ form input[type="checkbox"] { accent-color: var(--av-accent); }
 .sitefoot { background: var(--av-bg) !important; border-top: 1px solid var(--av-line) !important; color: var(--av-muted) !important; font-size: 14px; }
 .sf-wrap { max-width: 1200px; margin: 0 auto; padding: 30px clamp(16px, 4vw, 48px) !important; display: flex !important; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px 24px; }
 .sf-links { display: flex; flex-wrap: wrap; gap: 20px; }
-.sitefoot a { color: var(--av-muted) !important; text-decoration: none; }
+.sitefoot a { color: var(--av-muted) !important; text-decoration: none; padding-block: 4px; }
 .sitefoot a:hover { color: var(--av-ink) !important; }
-.sitefoot .payoff { display: block; margin-top: 7px; color: var(--av-accent) !important; }
+.sitefoot .payoff { display: block; margin-top: 7px; color: var(--av-accent-testo) !important; }
 
 /* ---------- Comparsa allo scorrimento (anim.js) ---------- */
 .fx-in { animation: av-up .9s var(--av-ease) both; animation-delay: var(--fx-d, 0ms); }
@@ -282,8 +284,8 @@ a[style*="background:var(--gold)"], button[style*="background:var(--gold)"] {
 }
 a[style*="background:var(--gold)"]:hover, button[style*="background:var(--gold)"]:hover { background: var(--av-accent) !important; }
 [style*="color:#1a1305"] { color: var(--av-bg) !important; }
-[style*="color:#b8902f"] { color: var(--av-accent) !important; }
-[style*="color:#b9933f"] { color: var(--av-accent) !important; }
+[style*="color:#b8902f"] { color: var(--av-accent-testo) !important; }
+[style*="color:#b9933f"] { color: var(--av-accent-testo) !important; }
 /* fasce e riquadri scuri scritti nell'HTML: diventano color sabbia, testo scuro */
 [style*="background:var(--ink)"] { background: var(--av-soft) !important; border-color: transparent !important; }
 [style*="color:#f8f4e9"] { color: var(--av-ink) !important; }
