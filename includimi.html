@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Visite di nuovo conteggiate — Francesco Gizzi</title>
+<link rel="icon" href="/favicon.ico" sizes="any" />
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+<style>
+  :root { --bg:#F7F6F2; --ink:#121212; --muted:#625F58; --line:#DEDBD3; --accent:#8A6F4E;
+          --sans:"Helvetica Neue",Arial,sans-serif; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink);
+         font:400 16px/1.6 var(--sans); -webkit-font-smoothing:antialiased;
+         min-height:100vh; display:flex; align-items:center; justify-content:center; }
+  .wrap { max-width:520px; padding:clamp(28px,7vw,48px) clamp(18px,5vw,32px); text-align:center; }
+  .segno { width:62px; height:62px; margin:0 auto 26px; border-radius:50%;
+           border:1px solid var(--line); background:#fff;
+           display:flex; align-items:center; justify-content:center; }
+  h1 { margin:0 0 14px; font-weight:300; letter-spacing:-.03em;
+       font-size:clamp(25px,5vw,33px); line-height:1.2; }
+  p { margin:0 0 16px; color:var(--muted); font-size:15px; }
+  .nota { font-size:14px; border-top:1px solid var(--line); padding-top:20px; margin-top:28px; }
+  a.tasto { display:inline-block; font:500 15px/1 var(--sans);
+            border:1px solid var(--ink); border-radius:999px; padding:14px 26px;
+            background:var(--ink); color:#F7F6F2; text-decoration:none; }
+  a.tasto:hover { background:var(--accent); border-color:var(--accent); }
+  a.piano { color:var(--muted); font-size:14px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="segno">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="8.4" stroke="#8A6F4E" stroke-width="2"/>
+      <circle cx="12" cy="12" r="3" fill="#8A6F4E"/>
+    </svg>
+  </div>
+  <h1>Le visite tornano nel conteggio</h1>
+  <p>Da questo browser le visite entrano nelle statistiche, come per chiunque altro. La targhetta in fondo alle pagine sparirà.</p>
+  <a class="tasto" href="/">Vai al sito</a>
+  <p class="nota"><a class="piano" href="/notrack">Stato e verifica &rarr;</a></p>
+</div>
+<script>
+(function () {
+  var K = 'fg_notrack';
+  try { localStorage.removeItem(K); } catch (e) {}
+  try {
+    var D = /(^|\.)francescogizzi\.com$/.test(location.hostname)
+      ? ';domain=.francescogizzi.com' : '';
+    document.cookie = K + '=;path=/;max-age=0' + D;
+    document.cookie = K + '=;path=/;max-age=0';
+  } catch (e) {}
+})();
+</script>
+</body>
+</html>

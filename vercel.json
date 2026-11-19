@@ -7,6 +7,47 @@
   },
   "cleanUrls": true,
   "trailingSlash": false,
+  "headers": [
+    {
+      "source": "/escludimi",
+      "headers": [
+        {
+          "key": "Set-Cookie",
+          "value": "fg_notrack=1; Path=/; Max-Age=31536000; SameSite=Lax; Domain=.francescogizzi.com"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        }
+      ]
+    },
+    {
+      "source": "/firma",
+      "headers": [
+        {
+          "key": "Set-Cookie",
+          "value": "fg_notrack=1; Path=/; Max-Age=31536000; SameSite=Lax; Domain=.francescogizzi.com"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        }
+      ]
+    },
+    {
+      "source": "/includimi",
+      "headers": [
+        {
+          "key": "Set-Cookie",
+          "value": "fg_notrack=; Path=/; Max-Age=0; SameSite=Lax; Domain=.francescogizzi.com"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        }
+      ]
+    }
+  ],
   "rewrites": [
     {
       "source": "/en",

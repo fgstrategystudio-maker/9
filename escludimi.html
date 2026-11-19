@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Fatto: visite non conteggiate — Francesco Gizzi</title>
+<link rel="icon" href="/favicon.ico" sizes="any" />
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+<style>
+  :root { --bg:#F7F6F2; --bg-2:#EFEDE7; --ink:#121212; --muted:#625F58;
+          --line:#DEDBD3; --accent:#8A6F4E;
+          --sans:"Helvetica Neue",Arial,sans-serif; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink);
+         font:400 16px/1.6 var(--sans); -webkit-font-smoothing:antialiased;
+         min-height:100vh; display:flex; align-items:center; justify-content:center; }
+  .wrap { max-width:520px; padding:clamp(28px,7vw,48px) clamp(18px,5vw,32px); text-align:center; }
+  .segno { width:62px; height:62px; margin:0 auto 26px; border-radius:50%;
+           background:var(--accent); display:flex; align-items:center; justify-content:center; }
+  .segno svg { display:block; }
+  h1 { margin:0 0 14px; font-weight:300; letter-spacing:-.03em;
+       font-size:clamp(25px,5vw,33px); line-height:1.2; }
+  p { margin:0 0 16px; color:var(--muted); font-size:15px; }
+  .nota { font-size:14px; border-top:1px solid var(--line); padding-top:20px; margin-top:28px; }
+  a.tasto { display:inline-block; margin:8px 0 0; font:500 15px/1 var(--sans);
+            border:1px solid var(--ink); border-radius:999px; padding:14px 26px;
+            background:var(--ink); color:#F7F6F2; text-decoration:none; }
+  a.tasto:hover { background:var(--accent); border-color:var(--accent); }
+  a.piano { color:var(--muted); font-size:14px; }
+  .male { background:#C3302F; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="segno" id="segno">
+    <svg width="26" height="26" viewBox="0 0 26 26" fill="none" aria-hidden="true">
+      <path d="M5 13.6 10.2 19 21 7.5" stroke="#F7F6F2" stroke-width="2.2"
+            stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
+  <h1 id="titolo">Da qui non vieni contato</h1>
+  <p id="testo">Le visite fatte con <strong>questo browser</strong> non entrano piu&#768; nelle statistiche del sito. Non serve rifarlo: vale anche domani, e su tutte le pagine.</p>
+  <a class="tasto" href="/">Vai al sito</a>
+  <p class="nota">
+    Se hai aperto questo link dentro WhatsApp, Instagram o LinkedIn, vale <strong>solo l&#8217;anteprima di quell&#8217;app</strong>: aprilo anche in Safari o Chrome.<br />
+    <a class="piano" href="/notrack">Stato, verifica e altri dispositivi &rarr;</a>
+  </p>
+</div>
+<script>
+// Il cookie lo mette gia' il server (vedi vercel.json): e' la memoria che
+// dura piu' a lungo, perche' Safari cancella dopo una settimana tutto
+// quello che scrive JavaScript. Qui si aggiunge la seconda memoria e si
+// ripete il cookie senza dominio, utile sulle anteprime di Vercel.
+(function () {
+  var K = 'fg_notrack', ok = false;
+  try { localStorage.setItem(K, '1'); ok = true; } catch (e) {}
+  try {
+    var D = /(^|\.)francescogizzi\.com$/.test(location.hostname)
+      ? ';domain=.francescogizzi.com' : '';
+    document.cookie = K + '=1;path=/;max-age=31536000;samesite=lax' + D;
+  } catch (e) {}
+  var c = /(^|;\s*)fg_notrack=1/.test(document.cookie);
+  if (ok || c) return;
+  // Nessuna delle due memorie ha tenuto: va detto, invece di far credere
+  // che sia fatta.
+  document.getElementById('segno').className = 'segno male';
+  document.getElementById('titolo').textContent = 'Qui non si può salvare';
+  document.getElementById('testo').innerHTML =
+    'Questo browser non permette di ricordare la scelta: succede in navigazione anonima o con i dati dei siti bloccati. Prova da una finestra normale, oppure usa il filtro su Analytics, che non dipende dal browser.';
+})();
+</script>
+</body>
+</html>

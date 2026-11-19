@@ -31,14 +31,17 @@
   .spento .pallino { background: #C3302F; }
   .stato .spiega { margin: 12px 0 0; font-size: 14px; }
 
-  button { font: 500 15px/1 var(--sans); border: 1px solid var(--ink); border-radius: 999px;
-           padding: 14px 24px; cursor: pointer; background: var(--ink); color: #F7F6F2; }
-  button.chiaro { background: none; color: var(--ink); border-color: var(--line); }
-  button:hover { background: var(--accent); color: #F7F6F2; border-color: var(--accent); }
-  button[hidden] { display: none; }
+  button, a.tasto { font: 500 15px/1 var(--sans); border: 1px solid var(--ink); border-radius: 999px;
+           padding: 14px 24px; cursor: pointer; background: var(--ink); color: #F7F6F2;
+           text-decoration: none; display: inline-block; }
+  button.chiaro, a.tasto.chiaro { background: none; color: var(--ink); border-color: var(--line); }
+  button:hover, a.tasto:hover { background: var(--accent); color: #F7F6F2; border-color: var(--accent); }
+  button[hidden], a.tasto[hidden] { display: none; }
 
-  ul { margin: 0 0 14px; padding-left: 20px; color: var(--muted); font-size: 15px; }
-  li { margin-bottom: 8px; }
+  ul, ol { margin: 0 0 14px; padding-left: 20px; color: var(--muted); font-size: 15px; }
+  li { margin-bottom: 10px; }
+  ol li { margin-bottom: 14px; }
+  li i { color: var(--ink); font-style: normal; font-weight: 500; }
   li b { color: var(--ink); font-weight: 500; }
   .torna { display: inline-block; margin-top: 52px; font-size: 15px; color: var(--muted); }
   code { background: var(--bg-2); padding: 2px 6px; border-radius: 4px; font-size: 13.5px; }
@@ -58,40 +61,45 @@
   </div>
 
   <p>
-    <button type="button" id="escludi">Non contare le mie visite</button>
-    <button type="button" id="includi" class="chiaro">Torna a contarle</button>
+    <a class="tasto" id="escludi" href="/escludimi">Non contare le mie visite</a>
+    <a class="tasto chiaro" id="includi" href="/includimi">Torna a contarle</a>
   </p>
 
-  <h2>Cosa c'è da sapere</h2>
-  <ul>
-    <li>Vale <b>per questo browser e questo dispositivo</b>. Se provi il sito anche dal telefono, apri questa pagina anche da lì.</li>
-    <li>Non vale <b>in navigazione anonima</b>, e si perde se cancelli i dati del sito.</li>
-    <li>Quando è attivo, in fondo a ogni pagina del sito compare una <b>targhetta</b> che te lo ricorda. La vedi solo tu.</li>
-    <li>Gli stessi comandi funzionano anche aggiungendo <code>?notrack=1</code> o <code>?notrack=0</code> a un indirizzo del sito.</li>
-  </ul>
-
-
-  <h2>Sugli altri dispositivi</h2>
-  <p>La scelta vale per un browser alla volta: il telefono non sa cosa hai deciso sul computer. Questo collegamento la attiva ovunque lo apri, senza passare da questa pagina.</p>
+  <h2>Il modo che non si rompe</h2>
+  <p>L&#8217;interruttore qui sopra vale per un browser alla volta e si perde se cancelli i dati del sito. Il filtro su Analytics invece esclude <strong>un&#8217;intera connessione</strong>: computer, telefono e tablet sulla stessa rete, per sempre, senza doverci tornare. Si fa una volta, in due passaggi &mdash; e il secondo e&#768; quello che tutti dimenticano.</p>
   <div class="stato">
-    <div class="etichetta">Da aprire sul telefono</div>
-    <div class="valore" style="font-size:17px;"><span id="collegamento">francescogizzi.com/?notrack=1</span></div>
+    <div class="etichetta">Indirizzo IP di questa connessione</div>
+    <div class="valore"><span id="ip">cerco&hellip;</span>
+      <button type="button" class="chiaro" id="copiaip" style="padding:9px 16px;font-size:13.5px;">Copia</button></div>
+    <p class="spiega" id="esitoip" style="min-height:0;color:var(--accent);"></p>
+  </div>
+  <ol>
+    <li><b>Dichiara l&#8217;indirizzo.</b> In Analytics: <i>Amministrazione &rarr; Raccolta e modifica dei dati &rarr; Flussi di dati</i>, apri il flusso del sito, poi <i>Configura impostazioni tag &rarr; Mostra tutto &rarr; Definisci traffico interno &rarr; Crea</i>. Lascia <code>traffic_type</code> su <code>internal</code>, scegli <i>L&#8217;indirizzo IP e&#768; uguale a</i> e incolla l&#8217;indirizzo qui sopra.</li>
+    <li><b>Accendi il filtro.</b> In <i>Amministrazione &rarr; Impostazioni dei dati &rarr; Filtri dei dati</i> c&#8217;e&#768; un filtro <i>Internal Traffic</i> gia&#768; pronto, ma nasce in stato <b>Test</b>: finche&#769; resta li&#768; non esclude niente. Aprilo e portalo ad <b>Attivo</b>.</li>
+  </ol>
+  <p>Da quel momento, qualsiasi dispositivo su quella rete e&#768; fuori dalle statistiche. L&#8217;indirizzo di casa o dell&#8217;ufficio cambia raramente; se un giorno qui sopra ne vedi un altro, aggiorna la regola. Per il telefono <b>fuori casa, sulla rete dati</b>, l&#8217;indirizzo cambia di continuo: li&#768; serve l&#8217;interruttore.</p>
+
+  <h2>Su ogni browser che usi</h2>
+  <p>Questo collegamento attiva l&#8217;esclusione da solo, senza passare da questa pagina. Aprilo una volta per browser: Safari sul telefono, Chrome sul computer, e cosi&#768; via.</p>
+  <div class="stato">
+    <div class="etichetta">Da aprire su ogni dispositivo</div>
+    <div class="valore" style="font-size:17px;"><span id="collegamento">francescogizzi.com/escludimi</span></div>
     <p class="spiega"><button type="button" class="chiaro" id="copia" style="padding:10px 18px;font-size:14px;">Copia il collegamento</button> <span id="esito" style="color:var(--accent);font-size:14px;"></span></p>
   </div>
-  <p>Mandatelo via messaggio o salvalo fra i preferiti. Per rimetterti a contare, lo stesso indirizzo con <code>?notrack=0</code>.</p>
+  <p><strong>Il tranello.</strong> Se apri quel link da una chat, WhatsApp e LinkedIn non usano Safari o Chrome: aprono una loro finestra interna, con una memoria separata che spesso si svuota appena la chiudi. L&#8217;esclusione viene attivata li&#768; dentro e poi sparisce. Per questo, dopo averlo aperto dalla chat, <b>toccalo di nuovo dal browser vero</b> &mdash; o meglio, salvalo fra i preferiti e aprilo da li&#768;. E&#768; quasi certamente quello che e&#768; successo la prima volta.</p>
+
+  <h2>Cosa c&#39;e&#768; da sapere</h2>
+  <ul>
+    <li>L&#8217;interruttore vale <b>per questo browser e questo dispositivo</b>. Il filtro su Analytics, no: vale per tutta la connessione.</li>
+    <li>Non vale <b>in navigazione anonima</b>, e si perde se cancelli i dati dei siti.</li>
+    <li>Quando e&#768; attivo, in fondo a ogni pagina compare una <b>targhetta</b> che te lo ricorda. La vedi solo tu.</li>
+    <li>La scelta e&#768; salvata in due modi: un cookie scritto <b>dal server</b>, che e&#768; quello che dura, e la memoria del sito come riserva.</li>
+    <li>Funzionano anche <code>?notrack=1</code> e <code>?notrack=0</code> aggiunti a qualsiasi indirizzo del sito.</li>
+  </ul>
 
   <h2>Se qualcosa non torna</h2>
   <p>Questi sono i dati che servono per capire dove si inceppa. Se la targhetta non compare sul sito, copiali e mandameli.</p>
   <div class="stato"><p class="spiega" id="diagnosi" style="margin:0;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;line-height:1.9;"></p></div>
-
-  <h2>Coprire tutti i dispositivi in una volta</h2>
-  <p>L'interruttore qui sopra vale per un browser alla volta. Per non pensarci piu&#768; c'e&#768; la via del filtro su Analytics, che esclude un'intera connessione: copre computer, telefono e tablet sulla stessa rete, senza doverci tornare.</p>
-  <div class="stato">
-    <div class="etichetta">Indirizzo IP di questa connessione</div>
-    <div class="valore"><span id="ip">cerco&hellip;</span></div>
-    <p class="spiega">In Analytics: <strong>Amministrazione &rarr; Impostazioni dei dati &rarr; Filtri dei dati &rarr; Traffico interno</strong>, crea una regola con questo indirizzo e poi porta il filtro da <em>Test</em> ad <em>Attivo</em>.</p>
-  </div>
-  <p>Attenzione: l'indirizzo della connessione di casa o dell'ufficio cambia raramente, ma quello della rete dati del telefono cambia di continuo. Per il telefono fuori casa serve comunque l'interruttore qui sopra.</p>
 
   <h2>Come verificare che funzioni</h2>
   <p>Attiva l'esclusione qui, poi apri la home del sito: se in basso a sinistra compare la targhetta <em>Visite non conteggiate</em>, sei escluso.</p>
@@ -101,10 +109,12 @@
 </div>
 
 <script>
-// L'interruttore è una voce nel localStorage che lo snippet in testa a
-// ogni pagina legge per spegnere Google Analytics. Qui si limita a
-// mostrarne lo stato e a cambiarlo: la logica vera sta lì, perché deve
-// agire prima che il tag parta.
+// L'esclusione vera sta nello snippet in testa a ogni pagina del sito,
+// che legge cookie e memoria per spegnere Analytics prima che il tag
+// parta. Qui si mostra solo lo stato: ad accenderla e spegnerla ci
+// pensano /escludimi e /includimi, perche' il cookie che dura davvero
+// deve arrivare dal server (Safari cancella dopo una settimana tutto
+// quello che scrive JavaScript).
 (function () {
   var CHIAVE = 'fg_notrack';
   var box = document.getElementById('stato');
@@ -117,77 +127,68 @@
     return /(^|;\s*)fg_notrack=1/.test(document.cookie);
   }
 
+  function memoriaUsabile() {
+    try { localStorage.setItem('__p', '1'); localStorage.removeItem('__p'); return true; }
+    catch (e) { return false; }
+  }
+
   function leggi() {
-    // Due memorie, perche' si cancellano con gesti diversi: basta che
-    // ne sopravviva una. Se nessuna delle due si puo' usare, si dice.
-    var l = null;
+    var l = false;
     try { l = localStorage.getItem(CHIAVE) === '1'; } catch (e) {}
-    var c = cookieAcceso();
-    if (l === null && !c) {
-      try { localStorage.setItem('__prova', '1'); localStorage.removeItem('__prova'); }
-      catch (e) { return document.cookie === '' ? null : false; }
-    }
-    return l === true || c;
+    return l || cookieAcceso();
   }
 
   function mostra() {
     var on = leggi();
-    if (on === null) {
+    if (!on && !memoriaUsabile() && document.cookie === '') {
       box.className = 'stato';
-      valore.textContent = 'Non si può sapere';
-      spiega.textContent = 'Il browser non permette di salvare questa scelta: succede in navigazione anonima o con i dati dei siti bloccati. Qui l’esclusione non si può attivare.';
+      valore.textContent = 'Non si pu\u00f2 sapere';
+      spiega.textContent = 'Il browser non permette di salvare questa scelta: succede in navigazione anonima o con i dati dei siti bloccati. Qui l\u2019interruttore non pu\u00f2 funzionare: usa il filtro su Analytics, che non dipende dal browser.';
       escludi.hidden = includi.hidden = true;
       return;
     }
     box.className = 'stato ' + (on ? 'acceso' : 'spento');
     valore.textContent = on ? 'Non viene contato' : 'Viene contato';
     spiega.textContent = on
-      ? 'Le visite fatte da qui non entrano nelle statistiche. La scelta e\u0300 salvata in due modi, memoria del sito e cookie, cosi\u0300 resta anche se ne cancelli uno.'
+      ? 'Le visite fatte da qui non entrano nelle statistiche. Resta valido anche chiudendo il browser.'
       : 'Le visite fatte da qui entrano nelle statistiche, come per chiunque altro.';
     escludi.hidden = on;
     includi.hidden = !on;
   }
 
-  function scrivi(on) {
-    try {
-      if (on) localStorage.setItem(CHIAVE, '1');
-      else localStorage.removeItem(CHIAVE);
-    } catch (e) {}
-    try {
-      // Sul dominio e non sull'host, cosi' vale sia per il sito con il
-      // www sia per quello senza: per il browser sono due posti diversi.
-      var D = /(^|\.)francescogizzi\.com$/.test(location.hostname)
-        ? ';domain=.francescogizzi.com' : '';
-      if (on) {
-        document.cookie = CHIAVE + '=1;path=/;max-age=31536000;samesite=lax' + D;
-      } else {
-        document.cookie = CHIAVE + '=;path=/;max-age=0' + D;
-        document.cookie = CHIAVE + '=;path=/;max-age=0';
-      }
-    } catch (e) {}
-    mostra();
-  }
-
   // L'indirizzo lo sa solo chi sta fuori: lo chiediamo a un servizio
   // pubblico. Se non risponde si dice, invece di lasciare "cerco...".
   (function () {
-    var box = document.getElementById('ip');
-    if (!box || !window.fetch) return;
+    var dove = document.getElementById('ip');
+    var tasto = document.getElementById('copiaip');
+    var esito = document.getElementById('esitoip');
+    if (!dove) return;
+    if (tasto) tasto.hidden = true;
+    if (!window.fetch) { dove.textContent = 'non disponibile'; return; }
     fetch('https://api.ipify.org?format=json')
       .then(function (r) { return r.json(); })
-      .then(function (d) { box.textContent = d.ip || 'non disponibile'; })
-      .catch(function () { box.textContent = 'non sono riuscito a leggerlo'; });
+      .then(function (d) {
+        if (!d.ip) { dove.textContent = 'non disponibile'; return; }
+        dove.textContent = d.ip;
+        if (!tasto) return;
+        tasto.hidden = false;
+        tasto.addEventListener('click', function () {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(d.ip).then(
+              function () { if (esito) esito.textContent = 'Copiato.'; },
+              function () { if (esito) esito.textContent = 'Copialo a mano.'; });
+          } else if (esito) { esito.textContent = 'Copialo a mano.'; }
+        });
+      })
+      .catch(function () { dove.textContent = 'non sono riuscito a leggerlo'; });
   })();
 
   function diagnosi() {
     var d = document.getElementById('diagnosi');
     if (!d) return;
-    var ls;
-    try { localStorage.setItem('__p', '1'); localStorage.removeItem('__p'); ls = 'funziona'; }
-    catch (e) { ls = 'BLOCCATA'; }
     var righe = [
       'indirizzo: ' + location.hostname,
-      'memoria del sito: ' + ls + ' (valore: ' + (function () {
+      'memoria del sito: ' + (memoriaUsabile() ? 'funziona' : 'BLOCCATA') + ' (valore: ' + (function () {
         try { return localStorage.getItem(CHIAVE) || 'vuoto'; } catch (e) { return '?'; } })() + ')',
       'cookie: ' + (cookieAcceso() ? 'presente' : 'assente'),
       'esito: ' + (leggi() ? 'ESCLUSO' : 'conteggiato')
@@ -195,14 +196,12 @@
     d.textContent = righe.join('\n');
     d.style.whiteSpace = 'pre';
   }
-  var mostraPrima = mostra;
-  mostra = function () { mostraPrima(); diagnosi(); };
 
   (function () {
     var tasto = document.getElementById('copia');
     var dove = document.getElementById('collegamento');
     if (!tasto || !dove) return;
-    var url = location.origin + '/?notrack=1';
+    var url = location.origin + '/escludimi';
     dove.textContent = url.replace(/^https?:\/\//, '');
     tasto.addEventListener('click', function () {
       var esito = document.getElementById('esito');
@@ -214,8 +213,6 @@
     });
   })();
 
-  escludi.addEventListener('click', function () { scrivi(true); });
-  includi.addEventListener('click', function () { scrivi(false); });
   mostra();
   diagnosi();
 })();
