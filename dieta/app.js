@@ -2,7 +2,7 @@
 'use strict';
 
 // ---------- Storage ----------
-const APP_VERSION = '38';
+const APP_VERSION = '39';
 const KEY = 'dieta.v1';
 // Icone dei comandi: SVG con lo stesso tratto della barra in basso
 const ICONS = {
@@ -1222,11 +1222,21 @@ function renderAdd(v) {
       <button class="big-action" id="pickPhoto"><span class="ic">${ico('image', 28)}</span>Galleria</button>
       <button class="big-action" id="scanCode"><span class="ic">${ico('barcode', 28)}</span>Codice a barre</button>
     </div>
-    <div class="card">
-      <h2>Pasti salvati <small>${db.savedMeals.length || ''}</small></h2>
-      ${db.savedMeals.length ? `<ul class="search-results">${db.savedMeals.map((sm, i) => `<li><button data-sm="${i}"><span class="grow"><span class="name">⭐ ${esc(sm.name)}</span><br><span class="small muted">${plural(sm.items.length, 'alimento', 'alimenti')} · ${r0(sumNutr(sm.items).kcal)} kcal</span></span><span class="add-dot" aria-hidden="true">${ico('plus', 16)}</span></button></li>`).join('')}</ul>`
-        : `<p class="small muted" style="margin:0">Nel Diario tocca <b>Salva</b> sotto un pasto per rimetterlo poi con un tocco.</p>`}
-      <button class="btn secondary" id="pastMeals" style="margin-top:10px">↺ Ripeti un pasto passato</button>
+    <div class="card saved-box">
+      <button class="saved-row" id="savedToggle" aria-expanded="false" aria-controls="savedList">
+        <span class="saved-ico" aria-hidden="true">${ico('star', 18)}</span>
+        <span class="grow"><b>Pasti salvati</b><span class="small muted">${db.savedMeals.length ? `${plural(db.savedMeals.length, 'pasto', 'pasti')} · tocca per sceglierne uno` : 'Nessuno ancora'}</span></span>
+        <span class="df-chev" aria-hidden="true">›</span>
+      </button>
+      <div id="savedList" hidden>
+        ${db.savedMeals.length ? `<ul class="search-results">${db.savedMeals.map((sm, i) => [sm, i]).sort(([a], [b]) => (b.meal === addMeal) - (a.meal === addMeal)).map(([sm, i]) => `<li><button data-sm="${i}"><span class="grow"><span class="name">${esc(sm.name)}</span><br><span class="small muted">${MEALS.find(m => m.id === sm.meal)?.label || ''}${sm.meal ? ' · ' : ''}${plural(sm.items.length, 'alimento', 'alimenti')} · ${r0(sumNutr(sm.items).kcal)} kcal</span></span><span class="add-dot" aria-hidden="true">${ico('plus', 16)}</span></button></li>`).join('')}</ul>`
+          : `<p class="small muted" style="margin:6px 0 4px">Nel Diario tocca <b>Salva</b> sotto un pasto per rimetterlo poi con un tocco.</p>`}
+      </div>
+      <button class="saved-row" id="pastMeals">
+        <span class="saved-ico" aria-hidden="true">↺</span>
+        <span class="grow"><b>Ripeti un pasto</b><span class="small muted">Dai giorni passati</span></span>
+        <span class="df-chev" aria-hidden="true">›</span>
+      </button>
     </div>
     <div class="card">
       <h2>Descrivi cosa hai mangiato</h2>
@@ -1264,6 +1274,12 @@ function renderAdd(v) {
     mealPreview({ title: sm.name, items: sm.items, meal: addMeal, saved: sm });
   }));
   $('#pastMeals', v).addEventListener('click', () => pastMealsSheet());
+  // Pasti salvati chiusi di default: si aprono solo se servono
+  $('#savedToggle', v).addEventListener('click', e => {
+    const b = e.currentTarget, list = $('#savedList', v), open = list.hidden;
+    list.hidden = !open; b.setAttribute('aria-expanded', open);
+    $('.saved-box', v).classList.toggle('open', open);
+  });
   const si = $('#foodSearch', v);
   const row = (x, i, attr) => `<li><button ${attr}="${i}"><span class="food-ico">${foodIcon(x.name)}</span><span class="grow"><span class="name">${esc(x.name)}</span><br><span class="small muted">${r0(x.grams)} g · ${r0(x.per100.kcal * x.grams / 100)} kcal</span></span><span class="add-dot" aria-hidden="true">${ico('plus', 16)}</span></button></li>`;
   let brandTimer, brandSeq = 0;
